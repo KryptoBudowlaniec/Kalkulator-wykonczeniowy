@@ -234,11 +234,45 @@ elif branza == "🧱 Szpachlowanie":
 
 # --- SEKCJA: PODŁOGI ---
 elif branza == "📐 Podłogi (Panele/Deska)":
-    st.header("Kalkulator Podłóg")
-    col1, col2 = st.columns(2)
-    with col1:
-        m2_podlogi = st.number_input("Powierzchnia podłogi (m2):", min_value=0.0)
-        zapas = st.slider("Zapas na dylatacje/docinki (%)", 5, 20, 10)
+    st.header("Kalkulator Układania Podłóg")
     
-    suma_podloga = m2_podlogi * (1 + zapas/100)
-    st.metric("Potrzebny materiał (z zapasem)", f"{round(suma_podloga, 2)} m2")
+    col_p1, col_p2 = st.columns(2)
+    
+    with col_p1:
+        m2_p = st.number_input("Metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1)
+        typ_ukladania = st.selectbox("Sposób układania:", ["Zwykły panel (7% zapasu)", "Jodełka (20% zapasu)"])
+        m2_w_paczce = st.number_input("M2 w paczce paneli:", min_value=0.1, value=2.22, step=0.01)
+        
+        st.markdown("---")
+        typ_podkladu = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)"])
+        
+        st.markdown("---")
+        typ_listwy = st.selectbox("Rodzaj listew:", ["MDF (Cięcie 45°)", "PCV (Z akcesoriami)"])
+        n_naroznikow = st.number_input("Liczba narożników/łączników (tylko dla PCV):", min_value=0, value=4)
+
+    # --- LOGIKA PODŁOGI ---
+    zapas = 0.07 if "Zwykły" in typ_ukladania else 0.20
+    pow_z_zapasem = m2_p * (1 + zapas)
+    paczki_szt = pow_z_zapasem / m2_w_paczce
+    
+    wyd_podkladu = 8 if "Premium" in typ_podkladu else 7
+    podklad_szt = m2_p / wyd_podkladu
+    
+    # Obliczanie listew (obwód + zapas 10%)
+    mb_listew = (4 * (m2_p**0.5)) * 1.1 
+    szt_listew_25m = mb_listew / 2.5 # Listwy mają zazwyczaj 2.5m
+
+    with col_p2:
+        st.subheader("📦 Lista zakupów")
+        st.write(f"• **Panele:** {int(paczki_szt + 0.99)} paczek ({round(pow_z_zapasem, 1)} m2)")
+        st.write(f"• **Podkład ({typ_podkladu}):** {int(podklad_szt + 0.99)} szt.")
+        st.write(f"• **Listwy (2.5m):** {int(szt_listew_25m + 0.99)} szt. ({round(mb_listew, 1)} mb)")
+        
+        if typ_listwy == "PCV (Z akcesoriami)":
+            st.info(f"Pamiętaj o zakupie {n_naroznikow} szt. akcesoriów (narożniki/łączniki).")
+        else:
+            st.warning("Wybrano MDF: Pamiętaj o kleju montażowym i akrylu do wykończenia.")
+
+        # --- WYCENA ROBOCIZNY ---
+        cena_m = 25 if "Zwykły" in typ_ukladania else 65 # Jodełka droższa
+        st.metric("Szacowana robocizna", f"{round(m2_p * cena_m + mb_listew * 15)} zł")
