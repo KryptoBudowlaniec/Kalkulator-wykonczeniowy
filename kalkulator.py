@@ -70,45 +70,76 @@ if branza == "🎨 Malowanie":
             st.write(f"• **Folia ochronna:** {round(opk_folia + 0.4)} szt.")
             st.caption(f"Wyliczenia dla {round(m2_razem)} m2 powierzchni malowania.")
         st.write("Szybki szacunek malowania...")
-        
+     # --- 2. ZAKŁADKA: KOSZTORYS PRO ---   
     with tab_pro:
         st.subheader("Precyzyjne planowanie ścian i kolorów")
     
-    # Formularz dodawania ścian (Twój nowy kod)
-    with st.expander("➕ DODAJ ŚCIANĘ DO PROJEKTU", expanded=True):
+    # Formularz dodawania ścian 
+     with st.expander("➕ DODAJ ŚCIANĘ DO PROJEKTU", expanded=True):
         c1, c2, c3 = st.columns(3)
-        nazwa_p = c1.text_input("Nazwa pokoju:", "Salon")
-        szer = c2.number_input("Szerokość (m):", min_value=0.1, step=0.1, value=1.0)
-        wys = c3.number_input("Wysokość (m):", min_value=0.1, step=0.1, value=2.6)
+        nazwa_p = c1.text_input("Nazwa pokoju:", "Salon", key="pro_room")
+        szer = c2.number_input("Szerokość ściany (m):", min_value=0.1, value=4.0, step=0.1)
+        wys = c3.number_input("Wysokość ściany (m):", min_value=0.1, value=2.6, step=0.1)
         
         kolor_hex = st.color_picker("Wybierz kolor tej ściany:", "#D3D3D3")
         
-        if st.button("Zatwierdź ścianę"):
-            st.session_state.pokoje_pro.append({"pokoj": nazwa_p, "szer": szer, "wys": wys, "kolor": kolor_hex})
+        if st.button("Zatwierdź i dodaj ścianę"):
+            # Dodajemy nową ścianę do listy w pamięci (session_state)
+            st.session_state.pokoje_pro.append({
+                "pokoj": nazwa_p, 
+                "szer": szer, 
+                "wys": wys, 
+                "kolor": kolor_hex
+            })
+            st.success(f"Dodano ścianę do pokoju: {nazwa_p}")
             st.rerun()
 
+    st.markdown("---")
+            
+
     # Wyświetlanie i podliczanie PRO
-    if st.session_state.pokoje_pro:
+    if not st.session_state.pokoje_pro:
+        # Stan domyślny, gdy lista jest pusta
+        st.info("💡 Twój kosztorys PRO jest pusty. Wypełnij powyższy formularz i kliknij 'Zatwierdź', aby zacząć.")
+    else:
+        # Jeśli są dane, to je podliczamy
         total_m2_pro = 0
         zestawienie_kolorow = {}
 
-        for s in st.session_state.pokoje_pro:
+        st.subheader("📋 Twoje zestawienie ścian:")
+        
+        # Wyświetlamy listę dodanych ścian (żebyś wiedział co już dodałeś)
+        for i, s in enumerate(st.session_state.pokoje_pro):
             pow = s['szer'] * s['wys']
             total_m2_pro += pow
+            
+            # Grupowanie kolorów
             zestawienie_kolorow[s['kolor']] = zestawienie_kolorow.get(s['kolor'], 0) + pow
+            
+            # Mały pasek z opisem każdej ściany
+            st.write(f"{i+1}. **{s['pokoj']}**: {s['szer']}m x {s['wys']}m = **{round(pow, 2)} m²** (Kolor: {s['kolor']})")
 
+        st.markdown("---")
+        st.subheader(f"📊 Razem do pomalowania: {round(total_m2_pro, 1)} m² ścian")
         # Wyniki PRO
         st.subheader(f"📊 Wyniki precyzyjne: {round(total_m2_pro, 1)} m2 ścian")
         
         # Wyświetlanie kółek z kolorami
-        for k, m in zestawienie_kolorow.items():
+       cols_palette = st.columns(len(zestawienie_kolorow) if len(zestawienie_kolorow) > 0 else 1)
+        for idx, (k, m) in enumerate(zestawienie_kolorow.items()):
             litry = (m / 10) * 2
-            st.markdown(f'<div style="display:flex; align-items:center;"><div style="width:20px; height:20px; background:{k}; border-radius:50%; margin-right:10px;"></div><b>{k}</b>: {round(litry,1)} L (na {round(m,1)} m2)</div>', unsafe_allow_html=True)
-            
-        if st.button("Wyczyść dane PRO"):
+            st.markdown(f"""
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="width: 25px; height: 25px; background-color: {k}; border-radius: 50%; border: 1px solid #ddd; margin-right: 10px;"></div>
+                    <b>{round(litry, 1)} L</b> (Kolor: {k})
+                </div>
+            """, unsafe_allow_html=True)
+
+        # PRZYCISK CZYSZCZENIA
+        st.write("##")
+        if st.button("🗑️ Wyczyść wszystkie dane PRO"):
             st.session_state.pokoje_pro = []
             st.rerun()
-        st.write("Szczegółowy plan ścian...")
 
 # --- SEKCJA: SZPACHLOWANIE ---
 elif branza == "🧱 Szpachlowanie":
