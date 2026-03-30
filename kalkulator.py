@@ -1,7 +1,13 @@
 import streamlit as st
 
 # 1. KONFIGURACJA GŁÓWNA
-st.set_page_config(page_title="System Ekspert Wykończeń", layout="wide")
+st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
+
+if 'pokoje_pro' not in st.session_state:
+    st.session_state.pokoje_pro = []
+
+if 'pokoje' not in st.session_state:
+    st.session_state.pokoje = []
 
 # Menu boczne do wyboru branży
 with st.sidebar:
