@@ -125,7 +125,7 @@ if branza == "🎨 Malowanie":
         st.subheader(f"📊 Wyniki precyzyjne: {round(total_m2_pro, 1)} m2 ścian")
         
         # Wyświetlanie kółek z kolorami
-       cols_palette = st.columns(len(zestawienie_kolorow) if len(zestawienie_kolorow) > 0 else 1)
+        cols_palette = st.columns(len(zestawienie_kolorow) if len(zestawienie_kolorow) > 0 else 1)
         for idx, (k, m) in enumerate(zestawienie_kolorow.items()):
             litry = (m / 10) * 2
             st.markdown(f"""
