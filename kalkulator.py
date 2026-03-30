@@ -75,7 +75,7 @@ if branza == "🎨 Malowanie":
         st.subheader("Precyzyjne planowanie ścian i kolorów")
     
     # Formularz dodawania ścian 
-     with st.expander("➕ DODAJ ŚCIANĘ DO PROJEKTU", expanded=True):
+    with st.expander("➕ DODAJ ŚCIANĘ DO PROJEKTU", expanded=True):
         c1, c2, c3 = st.columns(3)
         nazwa_p = c1.text_input("Nazwa pokoju:", "Salon", key="pro_room")
         szer = c2.number_input("Szerokość ściany (m):", min_value=0.1, value=4.0, step=0.1)
