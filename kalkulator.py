@@ -415,7 +415,7 @@ elif branza == "🏗️ Tynkowanie":
             
             st.markdown("---")
             grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
-            stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 40, 55, 45)
+            stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 1, 100, 45)
 
         # --- LOGIKA OBLICZEŃ (Twoje m2 ścian) ---
         m2_scian_t = m2_podl_t * 3.5
