@@ -592,7 +592,9 @@ elif branza == "⚒️ Sucha Zabudowa":
                 else:
                     st.write(f"• Profile CW{szer_profilu}: {szt_cw} szt.")
                     st.write(f"• Profile UW{szer_profilu}: {szt_uw} szt.")
-                st.write(f"• Płyty GK (120x240): {szt_plyt} szt.")
+                st.write(f"• Płyty GK (1.2x2.6m): {szt_plyt} szt.")
+                if izolacja_gk:
+                    st.write(f"• Wełna mineralna: {round(m2_gk, 2)} m²")
                 st.write(f"• Masa ({wybrana_masa}): {int(m2_gk*0.5)} kg")
                 st.write(f"• Łączniki krzyżowe: {laczniki_krzyzowe} szt.")
             
