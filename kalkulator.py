@@ -12,8 +12,9 @@ if 'pokoje' not in st.session_state:
 # Menu boczne do wyboru branży
 with st.sidebar:
     st.title("🛠️ Menu Wykonawcy")
-    branza = st.selectbox("Wybierz rodzaj prac:", 
-        ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi (Panele/Deska)", "🚿 Łazienka"])
+    branza = st.sidebar.selectbox("Wybierz rodzaj prac:", 
+    ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi (Panele/Deska)", 
+     "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka", "🚪 Drzwi"])
     st.info(f"Aktualnie edytujesz: {branza}")
 
 # --- SEKCJA: MALOWANIE ---
@@ -361,3 +362,76 @@ elif branza == "📐 Podłogi (Panele/Deska)":
             # Czas pracy (klejenie trwa dłużej)
             tempo = 25 if system_montazu == "Pływający (Na podkładzie)" else 12
             st.warning(f"⏳ Czas realizacji: ok. **{round(m2_p/tempo + 1)} dni**")
+
+# --- SEKCJA: TYNKOWANIE ---
+elif branza == "🏗️ Tynkowanie":
+    st.header("🏗️ Kalkulator Tynków (Maszynowe/Ręczne)")
+    m2_t = st.number_input("Metraż ścian do tynkowania (m2):", min_value=1.0, value=150.0)
+    typ_t = st.radio("Rodzaj tynku:", ["Gipsowy (Lekki)", "Cementowo-Wapienny"])
+    
+    # Logika: Gipsowy ok. 10kg/m2, Cem-Wap ok. 25kg/m2 (przy 1.5cm)
+    norma_t = 10 if "Gipsowy" in typ_t else 25
+    kg_t = m2_t * norma_t
+    worki_t = kg_t / 30 # worki 30kg
+    
+    col1, col2 = st.columns(2)
+    col1.metric("Potrzebny materiał", f"{round(kg_t)} kg", f"{int(worki_t + 0.99)} worków")
+    col2.metric("Szacowana robocizna", f"{round(m2_t * 35)} zł", "35 zł/m2")
+
+# --- SEKCJA: SUCHA ZABUDOWA ---
+elif branza == "⚒️ Sucha Zabudowa":
+    st.header("⚒️ Systemy Suchej Zabudowy (G-K)")
+    typ_gk = st.selectbox("Co budujemy?", ["Ściana działowa (dwustronna)", "Sufit podwieszany", "Zabudowa poddasza"])
+    m2_gk = st.number_input("Metraż zabudowy (m2):", min_value=1.0, value=20.0)
+    
+    # Logika: Średnio 2.1 m2 płyty na 1 m2 ściany (odpady + 2 strony)
+    m2_plyt = m2_gk * (2.1 if "Ściana" in typ_gk else 1.1)
+    
+    st.metric("Potrzebne płyty G-K", f"{round(m2_plyt, 1)} m2", f"ok. {int(m2_plyt/3 + 0.99)} szt. (1.2x2.5m)")
+    st.info("Logika PRO doliczy tu profile (CD/UD/CW/UW), wkręty i wełnę.")
+
+# --- SEKCJA: ELEKTRYKA ---
+elif branza == "⚡ Elektryka":
+    st.header("⚡ Kalkulator Instalacji Elektrycznej")
+    punkty = st.number_input("Liczba punktów elektrycznych (gniazdka, wypusty):", min_value=1, value=40)
+    typ_inst = st.selectbox("Standard instalacji:", ["Podstawowy (Mieszkanie)", "Rozbudowany (Smart Home)"])
+    
+    stawka_pkt = 80 if "Podstawowy" in typ_inst else 150
+    st.metric("Szacowany koszt robocizny", f"{punkty * stawka_pkt} zł", f"{stawka_pkt} zł/pkt")
+    st.warning("⚠️ Cena nie zawiera osprzętu (gniazdek) i rozdzielni.")
+
+elif branza == "🚪 Drzwi":
+    st.header("🚪 Kalkulator Montażu Drzwi Wewnętrznych")
+    
+    col_d1, col_p2 = st.columns(2)
+    
+    with col_d1:
+        szt_drzwi = st.number_input("Liczba kompletów (skrzydło + ościeżnica):", min_value=1, value=5)
+        typ_drzwi = st.selectbox("Rodzaj drzwi:", ["Przylgowe (Standard)", "Bezprzylgowe (Ukryte zawiasy)", "Przesuwne"])
+        szerokosc_opaski = st.radio("Szerokość muru (zakres):", ["80-100mm", "100-140mm", "140mm+ (Dopłata)"])
+        
+        st.markdown("---")
+        podciecie = st.checkbox("Podcięcie wentylacyjne (łazienkowe)?")
+        demontaz = st.checkbox("Demontaż starych drzwi/ościeżnic?")
+
+    # --- LOGIKA DRZWI ---
+    stawka_base = 250 if "Standard" in typ_drzwi else 350
+    if "Ukryte" in typ_drzwi: stawka_base = 450
+    
+    dodatki = 0
+    if podciecie: dodatki += (szt_drzwi * 30)
+    if demontaz: dodatki += (szt_drzwi * 100)
+    
+    robocizna_drzwi = (szt_drzwi * stawka_base) + dodatki
+    
+    with col_p2:
+        st.subheader("💰 Wycena Montażu")
+        st.metric("Łączna robocizna", f"{round(robocizna_drzwi)} zł")
+        st.write(f"• Stawka za sztukę: {stawka_base} zł")
+        
+        with st.expander("📦 Co musisz kupić (Materiały):"):
+            st.write(f"• **Pianka montażowa (niskoprężna):** {int(szt_drzwi/2 + 0.99)} szt. (wydajna)")
+            st.write(f"• **Klej do listew/opasek:** 1-2 tubki")
+            st.write(f"• **Kliny montażowe:** zestaw 1 opk.")
+        
+        st.warning(f"⏳ Czas montażu: ok. **{int(szt_drzwi/2 + 1)} dni** (średnio 2-3 pary dziennie)")
