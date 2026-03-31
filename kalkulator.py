@@ -57,9 +57,9 @@ if branza == "🎨 Malowanie":
             stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 70, 35)
 
             st.markdown("---")
-                st.subheader("⚜️ Sztukateria (Listwy ścienne/sufitowe)")
-                mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0)
-                typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"])
+            st.subheader("⚜️ Sztukateria (Listwy ścienne/sufitowe)")
+            mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0)
+            typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"])
 
         # --- LOGIKA OBLICZEŃ (Najpierw liczymy...) ---
         m2_sufit = m_uzytkowy * 1.0
@@ -74,6 +74,7 @@ if branza == "🎨 Malowanie":
         koszt_akrylu = (szt_akryl + 0.4) * 15 # przyjmijmy średnio 15 zł za tubkę
         szt_tasma = (m_uzytkowy / 15) * mnoznik
         opk_folia = (m_uzytkowy / 20) * mnoznik
+        szt_klej_sztukateria = mb_sztukaterii / 8  # Przyjmujemy: 1 tubka kleju montażowego na 8 mb listew
             
         margines = 0.10 # 10% widełek
         k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
@@ -82,6 +83,11 @@ if branza == "🎨 Malowanie":
         k_mat_min = k_mat_sredni * (1 - margines)
         k_mat_max = k_mat_sredni * (1 + margines)
         k_rob = m2_razem * stawka
+
+        # Stawka za montaż mb (cięcie, klejenie, akrylowanie łączeń)
+        stawki_szt = {"Styropianowe (Eko)": 25, "Poliuretanowe (Twarde)": 45, "Gipsowe (Premium)": 65}
+        koszt_rob_sztukateria = mb_sztukaterii * stawki_szt[typ_sztukaterii]
+
 
         # --- WYŚWIETLANIE WYNIKÓW (Potem pokazujemy!) ---
         with col_f2:
@@ -131,6 +137,7 @@ if branza == "🎨 Malowanie":
             st.write(f"- Grunt **{f_grunt}**: {round(l_grunt)} L (ok. {int(l_grunt/5 + 0.99)} bańki 5L) — **{round(l_grunt * baza_grunty[f_grunt])} zł**")
             st.write(f"- Taśma **{f_tasma}**: {round(szt_tasma + 0.4)} szt. — **{round((szt_tasma + 0.4) * baza_tasmy[f_tasma])} zł**")
             st.write(f"- **Akryl szpachlowy (300ml):** {round(szt_akryl + 0.4)} szt. — **{round((szt_akryl + 0.4) * 15)} zł**")
+            koszt_mat_sztukateria = (szt_klej_sztukateria + 0.4) * 25 # ok. 25 zł za dobry klej hybrydowy
             
             st.info("💡 Podpowiedzi opakowań są orientacyjne. Wybieraj największe dostępne puszki, aby zaoszczędzić.")
     with tab_pro:
