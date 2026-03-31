@@ -629,7 +629,7 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         from fpdf import FPDF
         import base64
 
-        def create_pdf(koszty_dict, total, metraz, std):
+        def create_pdf(koszty_dict, total, metraz, std, lista_tekst):
             def pl_to_en(text):
                 pl = "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ"
                 en = "acelnoszzACELNOSZZ"
@@ -639,36 +639,49 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
 
             pdf = FPDF()
             pdf.add_page()
+            
+            # Nagłówek
             pdf.set_font("Arial", "B", 16)
             pdf.cell(200, 10, pl_to_en("KOSZTORYS INWESTORSKI - RAPORT"), ln=True, align='C')
             pdf.set_font("Arial", "", 12)
             pdf.cell(200, 10, pl_to_en(f"Metraz: {metraz} m2 | Standard: {std}"), ln=True, align='C')
             pdf.ln(10)
             
+            # Tabela kosztów robocizny/etapów
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(200, 10, pl_to_en("1. PODSUMOWANIE ETAPOW (Robocizna + Material):"), ln=True)
+            pdf.set_font("Arial", "", 11)
             for k, v in koszty_dict.items():
-                pdf.cell(100, 10, pl_to_en(f"{k}:"), border=1)
+                pdf.cell(100, 10, pl_to_en(f"- {k}:"), border=1)
                 pdf.cell(90, 10, f"{round(v)} zl", border=1, ln=True)
             
-            pdf.ln(5)
-            pdf.set_font("Arial", "B", 12)
+            pdf.set_font("Arial", "B", 11)
             pdf.cell(100, 10, pl_to_en("SUMA CALKOWITA:"), border=1)
             pdf.cell(90, 10, f"{round(total)} zl", border=1, ln=True)
             
-            pdf.ln(20)
-            pdf.set_font("Arial", "I", 10)
-            pdf.cell(200, 10, pl_to_en("Wygenerowano przez Kalkulator Wykonczeniowy."), ln=True, align='C')
+            # --- NOWA SEKCJA: LISTA ZAKUPÓW ---
+            pdf.ln(10)
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(200, 10, pl_to_en("2. SZCZEGOLOWA LISTA ZAKUPOW:"), ln=True)
+            pdf.set_font("Arial", "", 10)
+            
+            # Rozbijamy tekst listy na linie i dodajemy do PDF
+            for linia in lista_tekst.split('\n'):
+                if linia.strip():
+                    pdf.multi_cell(190, 7, pl_to_en(linia))
             
             return pdf.output(dest="S").encode("latin-1")
 
-        # --- 2. PRZYCISK I GENEROWANIE (Akcja) ---
-        st.markdown("---")
-        if st.button("📄 Generuj i Pobierz Raport PDF"):
-            try:
-                pdf_data = create_pdf(koszty, total_sum, m2_total, standard)
-                b64 = base64.b64encode(pdf_data).decode()
-                # To tworzy klikalny link do pobrania pliku
-                href = f'<a href="data:application/octet-stream;base64,{b64}" download="kosztorys_{m2_total}m2.pdf" style="text-decoration: none; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px;">📥 POBIERZ PLIK PDF</a>'
-                st.markdown(href, unsafe_allow_html=True)
-                st.success("Plik został przygotowany!")
-            except Exception as e:
-                st.error(f"Błąd przy generowaniu PDF: {e}")
+        # Przygotowanie tekstu listy zakupów do PDF
+        tekst_listy = ""
+        if do_tynki: tekst_listy += f"Tynki: {int((m2_total*3.5*15/30)+1)} workow, {int((m2_total*3.5*0.3/20)+1)} wiadra gruntu\n"
+        if do_gladzie: tekst_listy += f"Gladzie: {int((m2_total*3.5*2/20)+1)} wiader, {round(m2_total*0.8)} szt. naroznikow\n"
+        if do_podlogi: tekst_listy += f"Podlogi: {int((m2_total*1.07/2.22)+1)} paczek paneli, {int((m2_total*0.8/2.5)+1)} szt. listew\n"
+        if do_malowanie: tekst_listy += f"Malowanie: {int((m2_total*1.0/10*2)/10+1)} wiader bialej, {int((m2_total*2.5/10*2)/5+1)} puszek koloru\n"
+
+        # Przycisk generowania
+        if st.button("📄 Generuj Raport z Lista Zakupow"):
+            pdf_data = create_pdf(koszty, total_sum, m2_total, standard, tekst_listy)
+            b64 = base64.b64encode(pdf_data).decode()
+            href = f'<a href="data:application/octet-stream;base64,{b64}" download="kosztorys_pelny.pdf" style="text-decoration:none; background-color:#4CAF50; color:white; padding:10px; border-radius:5px;">📥 POBIERZ PELNY KOSZTORYS PDF</a>'
+            st.markdown(href, unsafe_allow_html=True)
