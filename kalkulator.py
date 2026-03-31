@@ -585,6 +585,72 @@ elif branza == "⚒️ Sucha Zabudowa":
             else:
                 wkret_25 = int(m2_gk * 20)
 
+# --- LOGIKA OBLICZEŃ MATERIAŁOWYCH ---
+        mnoznik_plyt = 1.15 if rodzaj_gk == "Sufit Podwieszany" else (2.3 if plytowanie == "Pojedyncze (1xGK)" else 4.6)
+        szt_plyt = (m2_gk * mnoznik_plyt) / 3.12
+
+        szt_kolki = m2_gk * 4 if rodzaj_gk == "Sufit Podwieszany" else (m2_gk * 2)
+
+        # --- SPOINOWANIE ---
+        if typ_tasmy == "Tuff-Tape (Całość)":
+            mb_tuff_tape = m2_gk * 1.5
+            mb_flizelina = 0
+            koszt_tasm = (mb_tuff_tape / 30) * 120
+        else:
+            mb_tuff_tape = (m2_gk ** 0.5 * 4)
+            mb_flizelina = m2_gk * 1.2
+            koszt_tasm = (mb_tuff_tape / 30 * 120) + (mb_flizelina / 25 * 15)
+
+        zuzycie_masy = 0.8 if rodzaj_gk == "Ściana Działowa" and plytowanie == "Podwójne (2xGK)" else 0.5
+        worki_masy = int((m2_gk * zuzycie_masy) / 25 + 0.99)
+
+        koszt_plyt = int(szt_plyt + 0.99) * baza_mat_gk["Plyta GK 12.5mm (szt)"]
+        koszt_wkrety = (int(wkret_25 / 1000 + 1) * baza_mat_gk["Wkrety TN25 (1000szt)"]) + \
+                       (int(wkret_35 / 1000 + 1) * baza_mat_gk["Wkrety TN35 (1000szt)"] if wkret_35 > 0 else 0)
+        koszt_kolki = int(szt_kolki / 100 + 1) * baza_mat_gk["Kolki 8x60 (100szt)"]
+        koszt_masy = worki_masy * baza_masy_gk[wybrana_masa]
+
+        total_material = koszt_plyt + koszt_wkrety + koszt_kolki + koszt_masy + koszt_tasm
+        if izolacja_gk:
+            total_material += m2_gk * baza_mat_gk["Welna (m2)"]
+
+        # --- PRAWA KOLUMNA (PODSUMOWANIE) ---
+        with col_g2:
+            st.subheader("💰 Podsumowanie Systemu G-K")
+            st.success(f"### RAZEM: **{round(total_material + (m2_gk * stawka_gk))} zł**")
+
+            c1, c2 = st.columns(2)
+            c1.metric("Robocizna", f"{round(m2_gk * stawka_gk)} zł")
+            c2.metric("Materiały", f"{round(total_material)} zł")
+
+            with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
+
+                st.write("### 📏 PROFILE")
+                if rodzaj_gk == "Sufit Podwieszany":
+                    st.write(f"• Profil CD60: {szt_cd} szt.")
+                    st.write(f"• Profil UD27: {szt_ud} szt.")
+                    st.write(f"• Wieszaki: {szt_wieszaki} szt.")
+                else:
+                    st.write(f"• Profil UW{szer_profilu}: {szt_uw} szt.")
+                    st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
+                    if szt_ua > 0:
+                        st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
+
+                st.write("### 🔩 WKRĘTY")
+                st.write(f"• Wkręty TN25: {wkret_25} szt.")
+                if wkret_35 > 0:
+                    st.write(f"• Wkręty TN35: {wkret_35} szt.")
+
+                st.write("### 🧪 SPOINOWANIE")
+                st.write(f"• Masa {wybrana_masa}: {worki_masy} szt. (25kg)")
+                if mb_flizelina > 0:
+                    st.write(f"• Taśma Tuff-Tape (Naroża): {round(mb_tuff_tape)} mb")
+                    st.write(f"• Flizelina (Łączenia): {round(mb_flizelina)} mb")
+                else:
+                    st.write(f"• Taśma Tuff-Tape (Całość): {round(mb_tuff_tape)} mb")
+
+                st.write(f"• Koszt zbrojenia i mas: ok. {round(koszt_masy + koszt_tasm)} zł")
+
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
