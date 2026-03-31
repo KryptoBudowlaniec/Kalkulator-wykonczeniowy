@@ -534,8 +534,11 @@ elif branza == "⚒️ Sucha Zabudowa":
                     szt_cd2 = liczba_cd2 * (odcinki_cd2 + (1 if reszta_cd2 > 0 else 0))
                     laczniki_cd2 = odcinki_cd2 * liczba_cd2
                     laczniki_krzyzowe = liczba_cd1 * liczba_cd2
-                else:
                     szt_cd2 = laczniki_cd2 = laczniki_krzyzowe = 0
+                else:
+                    szt_cd2 = 0
+                    laczniki_cd2 = 0
+                    laczniki_krzyzowe = 0
                 
                 szt_cd = szt_cd1 + szt_cd2
                 szt_ud = int(((dl_sufitu + sz_sufitu) * 2 * 1.1) / 3) + 1
