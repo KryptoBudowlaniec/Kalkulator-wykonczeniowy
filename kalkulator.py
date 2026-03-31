@@ -74,15 +74,20 @@ if branza == "🎨 Malowanie":
         koszt_akrylu = (szt_akryl + 0.4) * 15 # przyjmijmy średnio 15 zł za tubkę
         szt_tasma = (m_uzytkowy / 15) * mnoznik
         opk_folia = (m_uzytkowy / 20) * mnoznik
-        szt_klej_sztukateria = mb_sztukaterii / 8  # Przyjmujemy: 1 tubka kleju montażowego na 8 mb listew
+        # SZTUKATERIA (Logika)
+        szt_klej_sztukateria = mb_sztukaterii / 8
+        stawki_szt = {"Styropianowe (Eko)": 25, "Poliuretanowe (Twarde)": 45, "Gipsowe (Premium)": 65}
+        koszt_rob_sztukateria = mb_sztukaterii * stawki_szt[typ_sztukaterii]
+        koszt_mat_sztukateria = (szt_klej_sztukateria + 0.4) * 25
+
             
-        margines = 0.10 # 10% widełek
+        margines = 0.10
         k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
-                       (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 150
+                       (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + \
+                       koszt_mat_sztukateria + 150 # 150zł na drobnicę (folie/wałki)
         
-        k_mat_min = k_mat_sredni * (1 - margines)
-        k_mat_max = k_mat_sredni * (1 + margines)
-        k_rob = m2_razem * stawka
+        k_mat_min, k_mat_max = k_mat_sredni * (1 - margines), k_mat_sredni * (1 + margines)
+        k_rob_total = (m2_razem * stawka) + koszt_rob_sztukateria
 
         # Stawka za montaż mb (cięcie, klejenie, akrylowanie łączeń)
         stawki_szt = {"Styropianowe (Eko)": 25, "Poliuretanowe (Twarde)": 45, "Gipsowe (Premium)": 65}
@@ -118,9 +123,9 @@ if branza == "🎨 Malowanie":
                 st.write(f"- Kup dodatkowo: **1 x puszka {pucha}**")
             st.write(f"Szacowany koszt bieli: **{round(koszt_b)} zł**")
             if mb_sztukaterii > 0:
-                    st.write(f"• **Klej do sztukaterii:** {int(szt_klej_sztukateria + 0.99)} szt. — **{round(koszt_mat_sztukateria)} zł**")
-                    st.write(f"• **Akryl do łączeń:** {int(mb_sztukaterii/15 + 1)} szt.")
-
+                    st.write("### ⚜️ SZTUKATERIA")
+                    st.write(f"- Klej: {int(szt_klej_sztukateria + 0.99)} szt.")
+                    st.write(f"- Akryl do łączeń: {int(mb_sztukaterii/15 + 1)} szt.")
             st.markdown("---")
 
             # --- LOGIKA PAKOWANIA KOLORU (Puszki 5L / 2.5L) ---
