@@ -85,7 +85,7 @@ if branza == "🎨 Malowanie":
             st.metric("Twoja Robocizna (Stała)", f"{round(k_rob)} zł")
             st.info(f"**Materiały (widełki):** {round(k_mat_min)} - {round(k_mat_max)} zł")
         
-            with st.expander("📦 Twoja lista zakupów"):
+        with st.expander("📦 Twoja lista zakupów"):
                 # --- LOGIKA PAKOWANIA BIAŁEJ (Wiadra 10L / 5L / 2.5L) ---
             ile_biala = round(l_biala, 1)
             w10 = int(ile_biala // 10)
