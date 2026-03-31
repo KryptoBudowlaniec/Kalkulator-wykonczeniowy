@@ -14,7 +14,7 @@ with st.sidebar:
     st.title("🛠️ Menu Wykonawcy")
     branza = st.sidebar.selectbox("Wybierz rodzaj prac:", 
     ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi (Panele/Deska)", 
-     "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka", "🚪 Drzwi"])
+     "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka", "🚪 Drzwi", "🚀 PANEL INWESTORA (PREMIUM)"])
     st.info(f"Aktualnie edytujesz: {branza}")
 
 # --- SEKCJA: MALOWANIE ---
@@ -532,3 +532,61 @@ elif branza == "🚪 Drzwi":
             st.write(f"• **Kliny montażowe:** zestaw 1 opk.")
         
         st.warning(f"⏳ Czas montażu: ok. **{int(szt_drzwi/2 + 1)} dni** (średnio 2-3 pary dziennie)")
+
+elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
+    st.title("🚀 Szybki Kosztorys Inwestorski (All-in-One)")
+    st.info("Opcja dla firm i flipperów: Pełna wycena całego remontu na jednym ekranie.")
+
+    # --- 1. DANE WEJŚCIOWE ---
+    col_inv1, col_inv2 = st.columns([1, 1.5])
+    
+    with col_inv1:
+        m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
+        standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
+        stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Do remontu (Rynek wtórny)"])
+        
+        st.markdown("---")
+        st.subheader("Wybierz zakres prac:")
+        do_elektryka = st.checkbox("Instalacja elektryczna", value=True)
+        do_tynki = st.checkbox("Tynkowanie ścian", value=False)
+        do_gladzie = st.checkbox("Gładzie i szlifowanie", value=True)
+        do_podlogi = st.checkbox("Podłogi (panele/listwy)", value=True)
+        do_lazienka = st.checkbox("Łazienka (płytki/biały montaż)", value=True)
+        do_drzwi = st.checkbox("Drzwi wewnętrzne", value=True)
+        do_malowanie = st.checkbox("Malowanie końcowe", value=True)
+
+    # --- 2. LOGIKA MATEMATYCZNA (Uśredniona na m2) ---
+    # Ceny za m2 robocizna + materiał zależnie od standardu
+    mnoznik = 1.0 if standard == "Standard" else (0.75 if standard == "Ekonomiczny" else 1.5)
+    dodatek_wtórny = 1.2 if stan_lokalu == "Do remontu (Rynek wtórny)" else 1.0
+
+    koszty = {}
+    if do_elektryka: koszty["Elektryka"] = m2_total * 120 * mnoznik
+    if do_tynki: koszty["Tynki"] = (m2_total * 3.5) * 65 * mnoznik
+    if do_gladzie: koszty["Gładzie"] = (m2_total * 3.5) * 55 * mnoznik
+    if do_podlogi: koszty["Podłogi"] = m2_total * 160 * mnoznik
+    if do_lazienka: koszty["Łazienka"] = 15000 * mnoznik * dodatek_wtórny # stała na 1 łazienkę
+    if do_drzwi: koszty["Drzwi"] = (m2_total // 12 + 1) * 1200 * mnoznik # średnio 1 para na 12m2
+    if do_malowanie: koszty["Malowanie"] = (m2_total * 3.5) * 45 * mnoznik
+
+    # --- 3. WYNIKI ---
+    with col_inv2:
+        st.subheader(f"📊 Budżet Remontowy: {standard}")
+        total_sum = sum(koszty.values())
+        
+        st.success(f"### SZACOWANY KOSZT CAŁOŚCI: **{round(total_sum)} zł**")
+        st.caption(f"Średni koszt za m2: {round(total_sum/m2_total)} zł")
+        
+        # Wykres/Tabela kosztów
+        for etap, kwota in koszty.items():
+            st.write(f"• {etap}: **{round(kwota)} zł**")
+        
+        st.markdown("---")
+        with st.expander("💼 Raport Opłacalności (Dla Flipperów)"):
+            cena_zakupu = st.number_input("Cena zakupu mieszkania:", value=400000)
+            cena_sprzedazy = st.number_input("Przewidywana cena sprzedaży:", value=550000)
+            podatek = (cena_sprzedazy - cena_zakupu) * 0.19 # uproszczony podatek
+            zysk_netto = cena_sprzedazy - cena_zakupu - total_sum - podatek
+            
+            st.metric("Przewidywany ZYSK NETTO", f"{round(zysk_netto)} zł", delta=f"{round((zysk_netto/cena_zakupu)*100)}% ROI")
+            st.warning("⚠️ Uwzględniono podatek 19% od dochodu i uśrednione koszty remontu.")
