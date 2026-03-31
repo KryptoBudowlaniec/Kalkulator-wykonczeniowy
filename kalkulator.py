@@ -489,6 +489,13 @@ elif branza == "⚒️ Sucha Zabudowa":
     baza_masy_gk = {"Knauf Uniflot": 115, "Knauf Vario": 95, "Dolina Nidy Start": 45, "Franspol": 55}
 
     with tab_gk1:
+        
+        # --- WARTOŚCI DOMYŚLNE (Zapobiegają błędom NameError) ---
+        m2_gk = 0
+        robocizna = 0
+        total_material = 0
+        szer_profilu = 50 
+        
         col_g1, col_g2 = st.columns([1, 1.2])
 
         with col_g1:
