@@ -97,11 +97,11 @@ if branza == "🎨 Malowanie":
         # --- WYŚWIETLANIE WYNIKÓW (Potem pokazujemy!) ---
         with col_f2:
             st.subheader("💰 Przewidywany budżet")
-            total_min = k_mat_min + k_rob
-            total_max = k_mat_max + k_rob
+            total_min = k_mat_min + k_rob_total
+            total_max = k_mat_max + k_rob_total
             
             st.success(f"### RAZEM: **{round(total_min)} - {round(total_max)} zł**")
-            st.metric("Twoja Robocizna (Stała)", f"{round(k_rob)} zł")
+            st.metric("Twoja Robocizna (Stała)", f"{round(k_rob_total)} zł")
             st.info(f"**Materiały (widełki):** {round(k_mat_min)} - {round(k_mat_max)} zł")
             total_z_sztukateria = total_max + koszt_rob_sztukateria + koszt_mat_sztukateria
             st.success(f"### RAZEM Z SZTUKATERIĄ: **{round(total_z_sztukateria)} zł**")
