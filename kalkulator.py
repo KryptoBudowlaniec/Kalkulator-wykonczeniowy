@@ -547,10 +547,20 @@ elif branza == "⚒️ Sucha Zabudowa":
         wkret_25 = m2_gk * 20 if "Pojedyncze" in locals() or rodzaj_gk == "Sufit Podwieszany" else m2_gk * 40
         wkret_35 = m2_gk * 20 if rodzaj_gk == "Ściana Działowa" and "Podwójne" in plytowanie else 0
         
-        # Masy i Taśmy
-        worki_masy = int((m2_gk * (0.5 if rodzaj_gk == "Sufit" else 0.8)) / 25 + 0.99)
-        cena_tasmy = 140 if "Tuff-Tape" in typ_tasmy else 60
+        # --- PRECYZYJNA LOGIKA SPOINOWANIA ---
+        if typ_tasmy == "Tuff-Tape (Całość)":
+            mb_tuff_tape = m2_gk * 1.5  # całe zbrojenie na pancernej taśmie
+            mb_flizelina = 0
+            koszt_tasm = (mb_tuff_tape / 30) * 120  # Rolka 30m ok. 120 zł
+        else:
+            # TWOJE ROZWIĄZANIE: Tuff-Tape w naroża (obwód), reszta flizelina
+            mb_tuff_tape = (m2_gk**0.5 * 4)  # obwód ścianki/sufitu (naroża wewnętrzne)
+            mb_flizelina = m2_gk * 1.2       # pozostałe łączenia płyt
+            koszt_tasm = (mb_tuff_tape / 30 * 120) + (mb_flizelina / 25 * 15) # Flizelina ok. 15 zł/rolka
 
+        # Masa do spoinowania (Norma: 0.5kg/m2 na łączenia + 0.3kg/m2 na wkręty)
+        zuzycie_masy = 0.8 if "Podwójne" in locals() and plytowanie == "Podwójne (2xGK)" else 0.5
+        worki_masy = int((m2_gk * zuzycie_masy) / 25 + 0.99)
         # --- FINANSE ---
         koszt_plyt = int(szt_plyt + 0.99) * baza_mat_gk["Plyta GK 12.5mm (szt)"]
         koszt_wkrety = (int(wkret_25/1000 + 1) * baza_mat_gk["Wkrety TN25 (1000szt)"]) + (int(wkret_35/1000 + 1) * baza_mat_gk["Wkrety TN35 (1000szt)"] if wkret_35 > 0 else 0)
