@@ -20,11 +20,40 @@ with st.sidebar:
 if branza == "🎨 Malowanie":
     st.subheader("Kalkulator Malarski")
     tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
+
+    # --- BAZA WIEDZY (Ceny rynkowe) ---
+    baza_biale = {
+        "Śnieżka Eko (Akryl)": 14, "Dekoral Polinak": 19, "Tikkurila Anti-Reflex 2": 38,
+        "Bondex Super White": 28, "Magnat Ultra Matt": 34, "Greinplast Comfort": 24
+    }
+    baza_kolory = {
+        "Dekoral Akrylit W": 24, "Beckers It's Simple": 38, "Tikkurila Optiva 5": 52,
+        "Magnat Ceramic": 62, "Dulux Kolory Świata": 28, "Bondex Smart Paint": 44
+    }
+    baza_grunty = {
+        "Unigrunt Atlas (Standard)": 7, "Mapei Primer G (Premium)": 15,
+        "Knauf Tiefengrund (Specjalistyczny)": 19, "Grunt Marketowy (Eko)": 4
+    }
+    baza_tasmy = {
+        "Żółta Papierowa (Market)": 12, "Solid (Niebieska)": 24,
+        "Blue Dolphin (Profesjonalna)": 34, "Tesa Precision (Premium)": 52, "3M / Scotch": 58
+    }
     
     with tab_fast:
         st.header("⚡ Szybki szacunek materiałów i robocizny")
     
     col_f1, col_f2 = st.columns([1, 2])
+
+     m2_mieszkania = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="m_fast")
+            stan_m = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="s_fast")
+            
+            st.subheader("Wybór Produktów")
+            f_biala = st.selectbox("Farba BIAŁA (Sufity):", list(baza_biale.keys()))
+            f_kolor = st.selectbox("Farba KOLOR (Ściany):", list(baza_kolory.keys()))
+            f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()))
+            f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()))
+            
+            st.markdown("---")
     
     with col_f1:
         m_uzytkowy = st.number_input("Metraż mieszkania (m2):", min_value=0.0, value=50.0, key="fast_m")
@@ -36,6 +65,15 @@ if branza == "🎨 Malowanie":
     m2_sciany = m_uzytkowy * 2.5
     m2_razem = m2_sufit + m2_sciany
     mnoznik = 1.0 if stan_f == "Deweloperski" else 1.3
+
+    l_biala = (m2_sufit / 10) * 2
+    l_kolor = (m2_sciany / 10) * 2
+    l_grunt = m2_razem * 0.15
+    szt_tasma = (m2_mieszkania / 15) * mnoznik
+        
+    k_mat = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
+                (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 100 # +100 na folie/wałek
+    k_rob = m2_razem * stawka
     
     # Ceny jednostkowe dla szybkiej wyceny
     ceny_f = {
@@ -56,11 +94,12 @@ if branza == "🎨 Malowanie":
     koszt_rob = m2_razem * cf["robocizna"]
 
     with col_f2:
-        st.subheader("💰 Podsumowanie finansowe")
-        c1, c2 = st.columns(2)
-        c1.metric("Materiały", f"{round(koszt_mat)} zł")
-        c2.metric("Robocizna", f"{round(koszt_rob)} zł")
-        st.metric("RAZEM DO ZAPŁATY", f"{round(koszt_mat + koszt_rob)} zł")
+            st.subheader("💰 Podsumowanie 95% pewności")
+            st.metric("RAZEM (Materiały + Praca)", f"{round(k_mat + k_rob)} zł")
+            
+            c1, c2 = st.columns(2)
+            c1.metric("Twoja Robocizna", f"{round(k_rob)} zł")
+            c2.metric("Koszt Materiałów", f"{round(k_mat)} zł")
         
         with st.expander("📦 Lista zakupów (Szacunkowa)"):
             st.write(f"• **Farba BIAŁA (sufity):** {round(l_biala)} L")
