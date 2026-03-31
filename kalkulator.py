@@ -200,11 +200,10 @@ if branza == "🎨 Malowanie":
             st.session_state.pokoje_pro = []
             st.rerun()
 
-# --- SEKCJA: SZPACHLOWANIE ---
 elif branza == "🧱 Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
 
-    # --- TUTAJ WKLEJASZ BAZĘ WIEDZY ---
+    # 1. TWOJA BAZA WIEDZY
     baza_sypkie = {
         "Cekol C-45 (20kg)": {"cena": 58, "waga": 20},
         "Atlas Gipsar Uni (20kg)": {"cena": 52, "waga": 20}
@@ -223,42 +222,34 @@ elif branza == "🧱 Szpachlowanie":
 
     with tab_s1:
         m2_podl = st.number_input("Metraż podłogi (m2):", min_value=0.0, value=50.0, key="szp_m")
+        warstwy = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="szp_w")
         typ_g = st.radio("Rodzaj gładzi:", ["Sypka (Worek)", "Gotowa (Wiadro)"])
 
+        # Wybór konkretnej marki z bazy
         if typ_g == "Sypka (Worek)":
             marka = st.selectbox("Wybierz produkt:", list(baza_sypkie.keys()))
-            dane = baza_sypkie[marka]
+            dane_produktu = baza_sypkie[marka]
             norma = 1.2
         else:
             marka = st.selectbox("Wybierz produkt:", list(baza_gotowe.keys()))
-            dane = baza_gotowe[marka]
+            dane_produktu = baza_gotowe[marka]
             norma = 2.0
-
-
         
-        # --- LOGIKA SZPACHLOWANIA ---
+        # --- LOGIKA OBLICZEŃ ---
         m2_scian = m2_podl * 3.5
-        # Zużycie: ok 2kg/m2 na warstwę (gotowa) lub 1.5kg/m2 (sypka)
-        norma = 1.2 if typ_gladzi == "Sypka (do rozrobienia)" else 2
         kg_razem = m2_scian * norma * warstwy
         
-        # Opakowania
-        waga_opk = 20 if typ_gladzi == "Sypka (do rozrobienia)" else 18
-        szt_opk = kg_razem / waga_opk
-
-# --- CENNIK MATERIAŁÓW SZPACHLARSKICH ---
-        ceny_mat = {
-            "Sypka (do rozrobienia)": 65,  # cena za worek 20kg (np. Cekol/Knauf)
-            "Gotowa (w wiadrze)": 95       # cena za wiadro 18-20kg (np. Śmig/Sheetrock)
-        }
-        cena_opk = ceny_mat[typ_gladzi]
+        # Liczymy opakowania na podstawie wagi z bazy
+        szt_opk = kg_razem / dane_produktu["waga"]
+        cena_opk = dane_produktu["cena"]
         
         # Koszty dodatków
-        koszt_naroznikow = (m2_podl * 0.8 / 2.5) * 12  # ok. 12 zł za narożnik z osadzeniem
-        koszt_tasmy = (m2_podl * 1.0) * 3               # ok. 3 zł za mb taśmy (rolka 30m ok. 90-100 zł)
-        koszt_gruntu = (m2_scian * 0.15) * 6            # ok. 6 zł za litr gruntu
+        koszt_naroznikow = (m2_podl * 0.8 / 2.5) * 12
+        koszt_tasmy = (m2_podl * 1.0) * 3
+        koszt_gruntu = (m2_scian * 0.15) * 6
         
         suma_material_szp = (szt_opk * cena_opk) + koszt_naroznikow + koszt_tasmy + koszt_gruntu
+        koszt_rob_szp = m2_scian * 45
 
         # --- WYŚWIETLANIE FINANSÓW ---
         st.markdown("---")
@@ -266,53 +257,32 @@ elif branza == "🧱 Szpachlowanie":
         col_f1, col_f2 = st.columns(2)
         
         with col_f1:
-            st.metric("Koszt materiałów", f"{round(suma_material_szp)} zł")
-            st.caption(f"W tym gładź ({typ_gladzi}): {round(szt_opk * cena_opk)} zł")
+            st.metric("Materiały (Widełki)", f"{round(suma_material_szp * 0.9)} - {round(suma_material_szp * 1.1)} zł")
+            st.caption(f"Wybrany produkt: {marka}")
             
         with col_f2:
-            # Zakładamy 45 zł/m2 za robociznę (grunt + 2x gładź + szlifowanie)
-            koszt_rob_szp = m2_scian * 45
             st.metric("Robocizna (45 zł/m2)", f"{round(koszt_rob_szp)} zł")
             
-        st.success(f"**ŁĄCZNY KOSZT ETAPU: {round(suma_material_szp + koszt_rob_szp)} zł**")
-        
-        # Finanse
-        cena_rob_szp = 45 # zł/m2 za kompleks (grunt + 2x gładź + szlif)
+        st.success(f"**ŁĄCZNY KOSZT ETAPU: ok. {round(suma_material_szp + koszt_rob_szp)} zł**")
 
-        # --- ZAKRES PRAC (Co płaci klient) ---
+        # --- DODATKOWE INFORMACJE ---
         with st.expander("🛠️ Zobacz co wchodzi w cenę robocizny:"):
-            # Możemy rozbić stawkę 45 zł na etapy (szacunkowo)
-            st.write(f"1. **Gruntowanie wstępne:** przygotowanie podłoża")
-            st.write(f"2. **Szpachlowanie ({warstwy} warstwy):** nałożenie masy")
-            st.write(f"3. **Szlifowanie mechaniczne:** wyrównanie powierzchni")
-            st.write(f"4. **Odpylanie:** przygotowanie pod malowanie")
-            st.write(f"5. **Gruntowanie końcowe:** stabilizacja gładzi")
-            st.info(f"Łączna powierzchnia prac: {round(m2_scian)} m²")
+            st.write("1. Gruntowanie wstępne")
+            st.write(f"2. Szpachlowanie ({warstwy} warstwy)")
+            st.write("3. Szlifowanie mechaniczne i odpylanie")
+            st.write("4. Gruntowanie końcowe")
 
-        # --- DODATKOWY SMACZEK: CZAS PRACY ---
-        # Zakładamy, że jeden fachowiec robi ok. 50 m2 "na gotowo" dziennie (ze schnięciem)
         dni_pracy = m2_scian / 50
         st.warning(f"⏳ Przewidywany czas realizacji: ok. **{round(dni_pracy + 0.5)} dni** roboczych.")
-        
-        c_s1, c_s2 = st.columns(2)
-        with c_s1:
-            st.metric("Powierzchnia szpachlowania", f"{round(m2_scian)} m2")
-            st.metric("Potrzebna gładź (łącznie)", f"{round(kg_razem)} kg")
-        
-        with c_s2:
-            st.metric("Liczba opakowań", f"{round(szt_opk + 0.4)} szt.")
-            st.metric("Robocizna szacowana", f"{round(m2_scian * cena_rob_szp)} zł")
 
-        with st.expander("📦 Co musisz kupić?"):
-            st.write(f"• **Gładź {typ_gladzi}:** {round(szt_opk + 0.4)} opk. po {waga_opk}kg")
+        with st.expander("📦 Szczegółowa lista zakupów"):
+            st.write(f"• **Gładź {marka}:** {int(szt_opk + 0.99)} szt.")
             st.write(f"• **Grunt głęboki:** {round(m2_scian * 0.15)} L")
-            st.write(f"• **Narożniki aluminiowe:** ok. {round(m2_podl * 0.8 / 2.5)} szt. (2.5mb)")
-            st.write(f"• **Papier ścierny (rolka/opk):** {round(m2_scian / 40 + 0.4)} szt.")
+            st.write(f"• **Narożniki aluminiowe:** ok. {round(m2_podl * 0.8 / 2.5)} szt.")
+            st.write(f"• **Papier ścierny/Siatki:** {round(m2_scian / 40 + 0.4)} szt.")
 
     with tab_s2:
-        st.info("Tutaj możesz połączyć dane z modułu malarskiego, aby precyzyjnie wyliczyć gładź na każdą ścianę z osobna.")
-        # Tutaj w przyszłości dodamy listę konkretnych ścian
-
+        st.info("Sekcja PRO: Precyzyjne odliczanie otworów okiennych.")
 
 
 # --- SEKCJA: PODŁOGI ---
