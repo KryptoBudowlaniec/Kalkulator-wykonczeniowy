@@ -21,7 +21,7 @@ if branza == "🎨 Malowanie":
     st.subheader("Kalkulator Malarski")
     tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
 
-    # --- BAZA WIEDZY (Ceny rynkowe) ---
+    # --- BAZA WIEDZY ---
     baza_biale = {
         "Śnieżka Eko (Akryl)": 14, "Dekoral Polinak": 19, "Tikkurila Anti-Reflex 2": 38,
         "Bondex Super White": 28, "Magnat Ultra Matt": 34, "Greinplast Comfort": 24
@@ -41,11 +41,11 @@ if branza == "🎨 Malowanie":
     
     with tab_fast:
         st.header("⚡ Szybki szacunek materiałów i robocizny")
-    
-        col_f1, col_f2 = st.columns([1, 2])
+        col_f1, col_f2 = st.columns([1, 1.2])
 
-            m2_mieszkania = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="m_fast")
-            stan_m = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="s_fast")
+        with col_f1:
+            m_uzytkowy = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="fast_m")
+            stan_f = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="fast_s")
             
             st.subheader("Wybór Produktów")
             f_biala = st.selectbox("Farba BIAŁA (Sufity):", list(baza_biale.keys()))
@@ -53,62 +53,42 @@ if branza == "🎨 Malowanie":
             f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()))
             f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()))
             
-        st.markdown("---")
-    
-    with col_f1:
-        m_uzytkowy = st.number_input("Metraż mieszkania (m2):", min_value=0.0, value=50.0, key="fast_m")
-        stan_f = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="fast_s")
-        std_f = st.selectbox("Standard materiałów:", ["Ekonomiczny", "Premium"], key="fast_std")
+            stawka = st.slider("Twoja stawka za m2 robocizny:", 20, 70, 35)
 
-    # --- LOGIKA SZYBKIEJ WYCENY ---
-    m2_sufit = m_uzytkowy * 1.0
-    m2_sciany = m_uzytkowy * 2.5
-    m2_razem = m2_sufit + m2_sciany
-    mnoznik = 1.0 if stan_f == "Deweloperski" else 1.3
+        # --- LOGIKA OBLICZEŃ ---
+        m2_sufit = m_uzytkowy * 1.0
+        m2_sciany = m_uzytkowy * 2.5
+        m2_razem = m2_sufit + m2_sciany
+        mnoznik = 1.0 if stan_f == "Deweloperski" else 1.3
 
-    l_biala = (m2_sufit / 10) * 2
-    l_kolor = (m2_sciany / 10) * 2
-    l_grunt = m2_razem * 0.15
-    szt_tasma = (m2_mieszkania / 15) * mnoznik
-        
-    k_mat = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
-                (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 100 # +100 na folie/wałek
-    k_rob = m2_razem * stawka
-    
-    # Ceny jednostkowe dla szybkiej wyceny
-    ceny_f = {
-        "Ekonomiczny": {"sufit": 15, "sciany": 24, "grunt": 5, "tasma": 12, "robocizna": 18},
-        "Premium": {"sufit": 35, "sciany": 58, "grunt": 14, "tasma": 28, "robocizna": 20}
-    }
-    cf = ceny_f[std_f]
+        l_biala = (m2_sufit / 10) * 2
+        l_kolor = (m2_sciany / 10) * 2
+        l_grunt = m2_razem * 0.15
+        szt_tasma = (m_uzytkowy / 15) * mnoznik
+        opk_folia = (m_uzytkowy / 20) * mnoznik
+            
+        k_mat = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
+                (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 100
+        k_rob = m2_razem * stawka
 
-    # Obliczenia ilości
-    l_biala = (m2_sufit / 10) * 2
-    l_kolor = (m2_sciany / 10) * 2
-    l_grunt = m2_razem * 0.1
-    szt_tasma = (m_uzytkowy / 15) * mnoznik
-    opk_folia = (m_uzytkowy / 20) * mnoznik
-
-    # Obliczenia kosztów
-    koszt_mat = (l_biala * cf["sufit"]) + (l_kolor * cf["sciany"]) + (l_grunt * cf["grunt"]) + (szt_tasma * cf["tasma"]) + 100
-    koszt_rob = m2_razem * cf["robocizna"]
-
-    with col_f2:
-            st.subheader("💰 Podsumowanie 95% pewności")
+        with col_f2:
+            st.subheader("💰 Podsumowanie")
             st.metric("RAZEM (Materiały + Praca)", f"{round(k_mat + k_rob)} zł")
             
             c1, c2 = st.columns(2)
             c1.metric("Twoja Robocizna", f"{round(k_rob)} zł")
             c2.metric("Koszt Materiałów", f"{round(k_mat)} zł")
         
-        with st.expander("📦 Lista zakupów (Szacunkowa)"):
-            st.write(f"• **Farba BIAŁA (sufity):** {round(l_biala)} L")
-            st.write(f"• **Farba KOLOR (ściany):** {round(l_kolor)} L")
-            st.write(f"• **Grunt:** {round(l_grunt)} L")
-            st.write(f"• **Taśma malarska:** {round(szt_tasma + 0.4)} szt.")
-            st.write(f"• **Folia ochronna:** {round(opk_folia + 0.4)} szt.")
-            st.caption(f"Wyliczenia dla {round(m2_razem)} m2 powierzchni malowania.")
-        st.write("Szybki szacunek malowania...")
+            with st.expander("📦 Lista zakupów (Szacunkowa)"):
+                st.write(f"• **Farba BIAŁA:** {round(l_biala)} L")
+                st.write(f"• **Farba KOLOR:** {round(l_kolor)} L")
+                st.write(f"• **Grunt:** {round(l_grunt)} L")
+                st.write(f"• **Taśma:** {round(szt_tasma + 0.4)} szt.")
+                st.write(f"• **Folia:** {round(opk_folia + 0.4)} szt.")
+                st.caption(f"Wyliczenia dla {round(m2_razem)} m2 malowania.")
+
+    with tab_pro:
+        st.write("Tu wkleisz swoją logikę PRO z dodawaniem pojedynczych ścian.")
      # --- 2. ZAKŁADKA: KOSZTORYS PRO ---   
     with tab_pro:
         st.subheader("Precyzyjne planowanie ścian i kolorów")
