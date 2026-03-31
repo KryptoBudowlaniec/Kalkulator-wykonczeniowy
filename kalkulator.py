@@ -475,280 +475,116 @@ elif branza == "🏗️ Tynkowanie":
                     st.write(f"• **Zbrojenie:** {typ_tasmy}")
                     st.caption("Pamiętaj: Sufity w tym systemie liczymy w zakładce 'Sucha Zabudowa'.")
                     
-# --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "⚒️ Sucha Zabudowa":
     st.header("⚒️ Kompleksowe Systemy G-K")
     tab_gk1, tab_gk2 = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
 
-    # --- BAZA CENOWA MATERIAŁÓW G-K ---
+    # --- BAZA CENOWA ---
     baza_mat_gk = {
-        "Plyta GK 12.5mm (szt)": 35.0,
-        "Profil CD60 (3mb)": 24.0,
-        "Profil UD27 (3mb)": 15.0,
-        "Profil CW50 (3mb)": 15.0,
-        "Profil UW50 (3mb)": 12.0,
-        "Profil UA50 (3mb)": 65.0,
-        "Profil CW75 (3mb)": 18.0,
-        "Profil UW75 (3mb)": 17.0,
-        "Profil UA75 (3mb)": 75.0,
-        "Profil CW100 (3mb)": 20.0,
-        "Profil UW100 (3mb)": 18.0,
-        "Profil UA100 (3mb)": 95.0,
-        "Wieszak ES / Obrotowy (szt)": 2.5,
-        "Wkrety TN25 (1000szt)": 45.0,
-        "Wkrety TN35 (1000szt)": 55.0,
-        "Kolki 8x60 (100szt)": 32.0,
-        "Welna (m2)": 18.0
+        "Plyta GK 12.5mm (szt)": 35.0, "Profil CD60 (3mb)": 24.0, "Profil UD27 (3mb)": 15.0,
+        "Profil CW50 (3mb)": 15.0, "Profil UW50 (3mb)": 12.0, "Profil UA50 (3mb)": 65.0,
+        "Wieszak ES / Obrotowy (szt)": 2.5, "Wkrety TN25 (1000szt)": 45.0,
+        "Wkrety TN35 (1000szt)": 55.0, "Kolki 8x60 (100szt)": 32.0, "Welna (m2)": 18.0
     }
-
-    baza_masy_gk = {
-        "Knauf Uniflot": 115,
-        "Knauf Vario": 95,
-        "Dolina Nidy Start": 45,
-        "Franspol": 55
-    }
+    baza_masy_gk = {"Knauf Uniflot": 115, "Knauf Vario": 95, "Dolina Nidy Start": 45, "Franspol": 55}
 
     with tab_gk1:
-
         col_g1, col_g2 = st.columns([1, 1.2])
 
-        # --- LEWA KOLUMNA (DANE WEJŚCIOWE) ---
         with col_g1:
-
-            n_drzwi = 0
-            szer_profilu = "Standard"
-
             rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"], key="gk_type")
-
-            if rodzaj_gk == "Ściana Działowa":
-                c_szer, c_wys = st.columns(2)
-                szer_sciany = c_szer.number_input("Długość ścianki (m):", min_value=0.1, value=4.0, step=0.1)
-                wys_sciany = c_wys.number_input("Wysokość ścianki (m):", min_value=0.1, value=2.6, step=0.1)
-                m2_gk = szer_sciany * wys_sciany
-                st.info(f"📐 Powierzchnia ścianki: **{round(m2_gk, 2)} m²**")
-            else:
-                m2_gk = st.number_input("Metraż sufitu (m2):", min_value=1.0, value=20.0, step=0.5)
-
-            st.markdown("---")
-            st.subheader("Konfiguracja Systemu")
-
-            if rodzaj_gk == "Sufit Podwieszany":
+            dl_profilu_cd = 3.0
             
-                    # --- WARSTWA 1: CD NOŚNE ---
-            if typ_stelaza == "Pojedynczy":
-                rozstaw_cd1 = 0.40
-            else:
-                rozstaw_cd1 = 1.10   # 110 cm jako wartość pośrednia
-
+            if rodzaj_gk == "Sufit Podwieszany":
+                c1, c2 = st.columns(2)
+                dl_sufitu = c1.number_input("Długość sufitu (m):", min_value=0.1, value=5.0)
+                sz_sufitu = c2.number_input("Szerokość sufitu (m):", min_value=0.1, value=4.0)
+                m2_gk = dl_sufitu * sz_sufitu
+                typ_stelaza = st.radio("Rodzaj stelaża:", ["Pojedynczy", "Krzyżowy"])
+                
+                # --- OBLICZENIA SUFIT ---
+                rozstaw_cd1 = 0.40 if typ_stelaza == "Pojedynczy" else 1.10
                 liczba_cd1 = int(sz_sufitu / rozstaw_cd1) + 1
-
-                dl_cd1 = dl_sufitu
-
-                odcinki_cd1 = int(dl_cd1 / dl_profilu_cd)
-                reszta_cd1 = dl_cd1 % dl_profilu_cd
-
+                odcinki_cd1 = int(dl_sufitu / dl_profilu_cd)
+                reszta_cd1 = dl_sufitu % dl_profilu_cd
+                szt_cd1 = liczba_cd1 * (odcinki_cd1 + (1 if reszta_cd1 > 0 else 0))
                 laczniki_cd1 = odcinki_cd1 * liczba_cd1
 
-                szt_cd1 = liczba_cd1 * (odcinki_cd1 + (1 if reszta_cd1 > 0 else 0))
-
-        # --- WARSTWA 2: CD KRZYŻOWE ---
-            if typ_stelaza == "Krzyżowy":
-
-                rozstaw_cd2 = 0.40
-                liczba_cd2 = int(dl_sufitu / rozstaw_cd2) + 1
-
-                dl_cd2 = sz_sufitu
-
-                odcinki_cd2 = int(dl_cd2 / dl_profilu_cd)
-                reszta_cd2 = dl_cd2 % dl_profilu_cd
-
-                szt_cd2 = liczba_cd2 * (odcinki_cd2 + (1 if reszta_cd2 > 0 else 0))
-
-            # łączniki liniowe dla CD2
-                laczniki_cd2 = odcinki_cd2 * liczba_cd2
-
-            # łączniki krzyżowe = każde przecięcie CD1 × CD2
-                laczniki_krzyzowe = liczba_cd1 * liczba_cd2
-
-            else:
-                szt_cd2 = 0
-                laczniki_cd2 = 0
-                laczniki_krzyzowe = 0
-
-        # --- UD po obwodzie ---
-                obwod = (dl_sufitu + sz_sufitu) * 2
-                szt_ud = int(obwod / 3 + 1)
-
-        # --- Wieszaków ---
-                szt_wieszaki = int(m2_gk / 0.9 + 1)
-
-        # --- SUMA PROFILI CD ---
+                if typ_stelaza == "Krzyżowy":
+                    rozstaw_cd2 = 0.40
+                    liczba_cd2 = int(dl_sufitu / rozstaw_cd2) + 1
+                    odcinki_cd2 = int(sz_sufitu / dl_profilu_cd)
+                    reszta_cd2 = sz_sufitu % dl_profilu_cd
+                    szt_cd2 = liczba_cd2 * (odcinki_cd2 + (1 if reszta_cd2 > 0 else 0))
+                    laczniki_cd2 = odcinki_cd2 * liczba_cd2
+                    laczniki_krzyzowe = liczba_cd1 * liczba_cd2
+                else:
+                    szt_cd2 = laczniki_cd2 = laczniki_krzyzowe = 0
+                
                 szt_cd = szt_cd1 + szt_cd2
-
-        # ściana nie używa CW/UW
+                szt_ud = int(((dl_sufitu + sz_sufitu) * 2 * 1.1) / 3) + 1
+                szt_wieszaki = int(m2_gk / 0.7) + 1 # Gęściej dla bezpieczeństwa
                 szt_cw = szt_uw = szt_ua = 0
-            else:
+
+            else: # ŚCIANA DZIAŁOWA
+                c1, c2 = st.columns(2)
+                szer_sciany = c1.number_input("Długość ścianki (m):", min_value=0.1, value=4.0)
+                wys_sciany = c2.number_input("Wysokość ścianki (m):", min_value=0.1, value=2.6)
+                m2_gk = szer_sciany * wys_sciany
                 szer_profilu = st.selectbox("Profil CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
-                plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
-                n_drzwi = st.number_input("Otwory drzwiowe (Profile UA):", min_value=0, value=0)
+                plytowanie = st.radio("Płytowanie:", ["1xGK (Jednostronnie)", "2xGK (Dwustronnie)"])
+                n_drzwi = st.number_input("Otwory drzwiowe (UA):", min_value=0, value=0)
+                
+                szt_uw = int((szer_sciany * 2 * 1.1) / 3) + 1
+                szt_cw = int((szer_sciany / 0.6) * (wys_sciany / 3) + 1)
+                szt_ua = n_drzwi * 2
+                szt_cd = szt_ud = szt_wieszaki = laczniki_cd1 = laczniki_krzyzowe = 0
 
             izolacja_gk = st.checkbox("Wypełnienie wełną?")
-
-            if izolacja_gk:
-                grubosc_welny = st.selectbox(
-                    "Grubość wełny:",
-                    [50, 75, 100, 150],
-                    format_func=lambda x: f"{x} mm"
-                )
-
-                # Zużycie wełny = powierzchnia m2 (ściana lub sufit)
-                m2_welny = m2_gk
-
-                # Paczki mają średnio 5.5 m2
-                paczki_welny = int(m2_welny / 5.5 + 0.99)
-
-                # Cena wełny = cena za m2 * 5.5 m2 * liczba paczek
-                koszt_welny = paczki_welny * baza_mat_gk["Welna (m2)"] * 5.5
-
-            else:
-                grubosc_welny = None
-                m2_welny = 0
-                paczki_welny = 0
-                koszt_welny = 0
-
-            st.markdown("---")
-            st.subheader("Spoinowanie łączeń")
-
-            typ_tasmy = st.radio("Zbrojenie:", ["Tuff-Tape (Całość)", "Flizelina (Standard)"])
             wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()))
+            stawka_gk = st.slider("Stawka za robociznę (zł/m2):", 60, 250, 110)
 
-            stawka_gk = st.slider("Twoja stawka za robociznę (zł/m2):", 60, 250, 110)
+        # --- LOGIKA MATERIAŁOWA ---
+        naddatek = 1.10 # 10% zapasu na wszystko
+        szt_plyt = int((m2_gk * naddatek) / 2.88) + 1
+        wkret_25 = int(m2_gk * 20)
+        
+        koszt_plyt = szt_plyt * baza_mat_gk["Plyta GK 12.5mm (szt)"]
+        koszt_profile = (szt_cd * baza_mat_gk["Profil CD60 (3mb)"]) + (szt_ud * baza_mat_gk["Profil UD27 (3mb)"]) + \
+                        (szt_cw * baza_mat_gk.get(f"Profil CW{szer_profilu} (3mb)", 0)) + \
+                        (szt_uw * baza_mat_gk.get(f"Profil UW{szer_profilu} (3mb)", 0)) + \
+                        (szt_ua * baza_mat_gk.get(f"Profil UA{szer_profilu} (3mb)", 0))
+        
+        koszt_akcesoria = (szt_wieszaki * baza_mat_gk["Wieszak ES / Obrotowy (szt)"]) + \
+                          (int(wkret_25/1000+1) * baza_mat_gk["Wkrety TN25 (1000szt)"])
+        
+        koszt_welny = (m2_gk * baza_mat_gk["Welna (m2)"]) if izolacja_gk else 0
+        koszt_masy = (int(m2_gk * 0.5 / 25) + 1) * baza_masy_gk[wybrana_masa]
+        # Pchełki do skręcania stelaża (średnio 10 szt / m2)
+        szt_pchelki = int(m2_gk * 10 / 1000 + 1) 
+        koszt_pchelki = szt_pchelki * 40.0 # ok 40 zł za paczkę 1000szt
 
-        # --- OBLICZENIA PROFILI ---
-        if rodzaj_gk == "Sufit Podwieszany":
-            # CD co 40 cm
-            liczba_cd = int(sz_sufitu / 0.4) + 1
+        # Łączniki wzdłużne (tylko jeśli profil CD jest łączony)
+        koszt_laczniki = (laczniki_cd1 + laczniki_cd2) * 1.50 # ok 1.50 zł/szt
+        
+        total_material = koszt_plyt + koszt_profile + koszt_akcesoria + koszt_welny + koszt_masy + koszt_pchelki + koszt_laczniki
 
-            # długość jednego CD
-            dl_cd = dl_sufitu
 
-            # ile odcinków profilu potrzeba
-            odcinki_cd = int(dl_cd / dl_profilu_cd)
-            reszta_cd = dl_cd % dl_profilu_cd
-
-            # łączniki = liczba miejsc łączenia
-            laczniki_cd = odcinki_cd * liczba_cd
-
-            # sztuki profili CD
-            szt_cd = liczba_cd * (odcinki_cd + (1 if reszta_cd > 0 else 0))
-
-            # UD po obwodzie
-            obwod = (dl_sufitu + sz_sufitu) * 2
-            szt_ud = int(obwod / 3 + 1)
-
-            # wieszaki
-            szt_wieszaki = int(m2_gk / 0.9 + 1)
-
-            szt_cw = szt_uw = szt_ua = 0
-
-            # --- OBLICZENIA WKRĘTÓW ---
-        if rodzaj_gk == "Sufit Podwieszany":
-            wkret_25 = int(m2_gk * 22)
-            wkret_35 = 0
-        else:
-            if plytowanie == "Pojedyncze (1xGK)":
-                wkret_25 = int(m2_gk * 20)
-                wkret_35 = 0
-            else:
-                wkret_25 = int(m2_gk * 20)
-
-# --- LOGIKA OBLICZEŃ MATERIAŁOWYCH ---
-        mnoznik_plyt = 1.15 if rodzaj_gk == "Sufit Podwieszany" else (2.3 if plytowanie == "Pojedyncze (1xGK)" else 4.6)
-        szt_plyt = (m2_gk * mnoznik_plyt) / 3.12
-
-        szt_kolki = m2_gk * 4 if rodzaj_gk == "Sufit Podwieszany" else (m2_gk * 2)
-
-        # --- SPOINOWANIE ---
-        if typ_tasmy == "Tuff-Tape (Całość)":
-            mb_tuff_tape = m2_gk * 1.5
-            mb_flizelina = 0
-            koszt_tasm = (mb_tuff_tape / 30) * 120
-        else:
-            mb_tuff_tape = (m2_gk ** 0.5 * 4)
-            mb_flizelina = m2_gk * 1.2
-            koszt_tasm = (mb_tuff_tape / 30 * 120) + (mb_flizelina / 25 * 15)
-
-        zuzycie_masy = 0.8 if rodzaj_gk == "Ściana Działowa" and plytowanie == "Podwójne (2xGK)" else 0.5
-        worki_masy = int((m2_gk * zuzycie_masy) / 25 + 0.99)
-
-        koszt_plyt = int(szt_plyt + 0.99) * baza_mat_gk["Plyta GK 12.5mm (szt)"]
-        koszt_wkrety = (int(wkret_25 / 1000 + 1) * baza_mat_gk["Wkrety TN25 (1000szt)"]) + \
-                       (int(wkret_35 / 1000 + 1) * baza_mat_gk["Wkrety TN35 (1000szt)"] if wkret_35 > 0 else 0)
-        koszt_kolki = int(szt_kolki / 100 + 1) * baza_mat_gk["Kolki 8x60 (100szt)"]
-        koszt_masy = worki_masy * baza_masy_gk[wybrana_masa]
-
-        total_material = koszt_plyt + koszt_wkrety + koszt_kolki + koszt_masy + koszt_tasm + koszt_welny
-
-        if izolacja_gk:
-            total_material += m2_gk * baza_mat_gk["Welna (m2)"]
-
-        # --- PRAWA KOLUMNA (PODSUMOWANIE) ---
         with col_g2:
-            st.subheader("💰 Podsumowanie Systemu G-K")
-            st.success(f"### RAZEM: **{round(total_material + (m2_gk * stawka_gk))} zł**")
-
-            c1, c2 = st.columns(2)
-            c1.metric("Robocizna", f"{round(m2_gk * stawka_gk)} zł")
-            c2.metric("Materiały", f"{round(total_material)} zł")
-
-            with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
-
-                st.write("### 📏 PROFILE")
+            st.subheader("💰 Podsumowanie")
+            st.success(f"### RAZEM: **{round(total_material + robocizna)} zł**")
+            
+            with st.expander("📦 LISTA MATERIAŁÓW", expanded=True):
                 if rodzaj_gk == "Sufit Podwieszany":
-                    st.write(f"• Profil CD60: {szt_cd} szt.")
-                    st.write(f"• Profil UD27: {szt_ud} szt.")
+                    st.write(f"• Profile CD60: {szt_cd} szt.")
+                    st.write(f"• Profile UD27: {szt_ud} szt.")
                     st.write(f"• Wieszaki: {szt_wieszaki} szt.")
-                    st.write(f"• Łączniki do CD: {laczniki_cd} szt.")
                 else:
-                    st.write(f"• Profil UW{szer_profilu}: {szt_uw} szt.")
-                    st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
-                if szt_ua > 0:
-                    st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
-
-                    st.write(f"• Profil CD60 (warstwa 1): {szt_cd1} szt.")
-                if szt_cd2 > 0:
-                    st.write(f"• Profil CD60 (warstwa 2): {szt_cd2} szt.")
-
-                    st.write(f"• Łączniki liniowe CD: {laczniki_cd1 + laczniki_cd2} szt.")
-
-                if typ_stelaza == "Krzyżowy":
-                    st.write(f"• Łączniki krzyżowe (kraby): {laczniki_krzyzowe} szt.")
-
-                    st.write(f"• Łączniki do CD: {laczniki_cd} szt.")
-
-                    st.write("### 🔩 WKRĘTY")
-                    st.write(f"• Wkręty TN25: {wkret_25} szt.")
-                if wkret_35 > 0:
-                    st.write(f"• Wkręty TN35: {wkret_35} szt.")
-
-                st.write("### 🧪 SPOINOWANIE")
-                st.write(f"• Masa {wybrana_masa}: {worki_masy} szt. (25kg)")
-                if mb_flizelina > 0:
-                    st.write(f"• Taśma Tuff-Tape (Naroża): {round(mb_tuff_tape)} mb")
-                    st.write(f"• Flizelina (Łączenia): {round(mb_flizelina)} mb")
-                else:
-                    st.write(f"• Taśma Tuff-Tape (Całość): {round(mb_tuff_tape)} mb")
-
-                st.write(f"• Koszt zbrojenia i mas: ok. {round(koszt_masy + koszt_tasm)} zł")
-                st.write("### 🧱 WEŁNA")
-
-                if izolacja_gk:
-                    st.write(f"• Grubość: {grubosc_welny} mm")
-                    st.write(f"• Ilość: {round(m2_welny, 2)} m²")
-                    st.write(f"• Paczki: {paczki_welny} szt.")
-                    st.write(f"• Koszt: {round(koszt_welny)} zł")
-                else:
-                    st.write("• Brak (nie wybrano izolacji)")
+                    st.write(f"• Profile CW{szer_profilu}: {szt_cw} szt.")
+                    st.write(f"• Profile UW{szer_profilu}: {szt_uw} szt.")
+                st.write(f"• Płyty GK (120x240): {szt_plyt} szt.")
+                st.write(f"• Masa ({wybrana_masa}): {int(m2_gk*0.5)} kg")
+                st.write(f"• Łączniki krzyżowe: {laczniki_krzyzowe} szt.")
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
