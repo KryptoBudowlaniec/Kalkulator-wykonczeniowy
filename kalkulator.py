@@ -203,12 +203,36 @@ if branza == "🎨 Malowanie":
 # --- SEKCJA: SZPACHLOWANIE ---
 elif branza == "🧱 Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
+
+    # --- TUTAJ WKLEJASZ BAZĘ WIEDZY ---
+    baza_sypkie = {
+        "Cekol C-45 (20kg)": {"cena": 58, "waga": 20},
+        "Atlas Gipsar Uni (20kg)": {"cena": 52, "waga": 20}
+    }
+    
+    baza_gotowe = {
+        "Śmig A-2 (Wiadro 17kg)": {"cena": 63, "waga": 17},
+        "Knauf Goldband Finish (18kg)": {"cena": 50, "waga": 18},
+        "Knauf Goldband Finish (28kg)": {"cena": 72, "waga": 28},
+        "Knauf Fill & Finish (20kg)": {"cena": 115, "waga": 20},
+        "Sheetrock Blue (28kg)": {"cena": 145, "waga": 28},
+        "Atlas GTA (20kg)": {"cena": 94, "waga": 20}
+    }
+
     tab_s1, tab_s2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
 
     with tab_s1:
         m2_podl = st.number_input("Metraż podłogi (m2):", min_value=0.0, value=50.0, key="szp_m")
-        warstwy = st.slider("Liczba warstw gładzi:", 1, 3, 2)
-        typ_gladzi = st.selectbox("Rodzaj gładzi:", ["Sypka (do rozrobienia)", "Gotowa (w wiadrze)"])
+        typ_g = st.radio("Rodzaj gładzi:", ["Sypka (Worek)", "Gotowa (Wiadro)"])
+
+        if typ_g == "Sypka (Worek)":
+            marka = st.selectbox("Wybierz produkt:", list(baza_sypkie.keys()))
+            dane = baza_sypkie[marka]
+            norma = 1.2
+        else:
+            marka = st.selectbox("Wybierz produkt:", list(baza_gotowe.keys()))
+            dane = baza_gotowe[marka]
+            norma = 2.0
 
 
         
