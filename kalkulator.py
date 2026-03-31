@@ -247,7 +247,7 @@ elif branza == "🧱 Szpachlowanie":
                 norma = 2.0
             
             marka_gruntu = st.selectbox("Wybierz Grunt:", list(baza_grunty_szp.keys()))
-            stawka_szp = st.slider("Twoja stawka za m2 (robocizna):", 35, 85, 50)
+            stawka_szp = st.slider("Twoja stawka za m2 (robocizna):", 1, 150, 50)
 
         # --- LOGIKA OBLICZEŃ ---
         m2_scian = m2_podl * 3.5
