@@ -64,6 +64,8 @@ if branza == "🎨 Malowanie":
         l_biala = (m2_sufit / 10) * 2
         l_kolor = (m2_sciany / 10) * 2
         l_grunt = m2_razem * 0.15
+        szt_akryl = m_uzytkowy / 12
+        koszt_akrylu = (szt_akryl + 0.4) * 15 # przyjmijmy średnio 15 zł za tubkę
         szt_tasma = (m_uzytkowy / 15) * mnoznik
         opk_folia = (m_uzytkowy / 20) * mnoznik
             
@@ -122,6 +124,7 @@ if branza == "🎨 Malowanie":
             st.write(f"### 🛠️ AKCESORIA")
             st.write(f"- Grunt **{f_grunt}**: {round(l_grunt)} L (ok. {int(l_grunt/5 + 0.99)} bańki 5L) — **{round(l_grunt * baza_grunty[f_grunt])} zł**")
             st.write(f"- Taśma **{f_tasma}**: {round(szt_tasma + 0.4)} szt. — **{round((szt_tasma + 0.4) * baza_tasmy[f_tasma])} zł**")
+            st.write(f"- **Akryl szpachlowy (300ml):** {round(szt_akryl + 0.4)} szt. — **{round((szt_akryl + 0.4) * 15)} zł**")
             
             st.info("💡 Podpowiedzi opakowań są orientacyjne. Wybieraj największe dostępne puszki, aby zaoszczędzić.")
     with tab_pro:
