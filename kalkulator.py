@@ -53,7 +53,7 @@ if branza == "🎨 Malowanie":
             f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()))
             f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()))
             
-            stawka = st.slider("Twoja stawka za m2 robocizny:", 20, 70, 35)
+            stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 70, 35)
 
         # --- LOGIKA OBLICZEŃ (Najpierw liczymy...) ---
         m2_sufit = m_uzytkowy * 1.0
