@@ -477,15 +477,71 @@ elif branza == "🏗️ Tynkowanie":
                     
 # --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "⚒️ Sucha Zabudowa":
-    st.header("⚒️ Systemy Suchej Zabudowy (G-K)")
-    typ_gk = st.selectbox("Co budujemy?", ["Ściana działowa (dwustronna)", "Sufit podwieszany", "Zabudowa poddasza"])
-    m2_gk = st.number_input("Metraż zabudowy (m2):", min_value=1.0, value=20.0)
-    
-    # Logika: Średnio 2.1 m2 płyty na 1 m2 ściany (odpady + 2 strony)
-    m2_plyt = m2_gk * (2.1 if "Ściana" in typ_gk else 1.1)
-    
-    st.metric("Potrzebne płyty G-K", f"{round(m2_plyt, 1)} m2", f"ok. {int(m2_plyt/3 + 0.99)} szt. (1.2x2.5m)")
-    st.info("Logika PRO doliczy tu profile (CD/UD/CW/UW), wkręty i wełnę.")
+    st.header("⚒️ Systemy Suchej Zabudowy (Systemy G-K)")
+    tab_gk1, tab_gk2 = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
+
+    with tab_gk1:
+        col_g1, col_g2 = st.columns([1, 1.2])
+        
+        with col_g1:
+            rodzaj_gk = st.selectbox("Rodzaj konstrukcji:", ["Sufit Podwieszany", "Ściana Działowa"])
+            m2_gk = st.number_input(f"Metraż {rodzaj_gk} (m2):", min_value=1.0, value=20.0, step=0.5)
+            
+            if rodzaj_gk == "Sufit Podwieszany":
+                typ_stelaza = st.radio("Typ stelaża:", ["Pojedynczy (1-poziomowy)", "Krzyżowy (2-poziomowy)"])
+                typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy ze sprężyną"])
+            else:
+                plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
+                izolacja = st.checkbox("Izolacja wełną wewnątrz?")
+
+            st.markdown("---")
+            stawka_gk = st.slider("Twoja stawka za robociznę (zł/m2):", 60, 180, 100)
+
+        # --- LOGIKA MATERIAŁOWA (Normy zużycia na m2) ---
+        # 1. Płyty
+        mnoznik_plyt = 1.15 # zapas 15%
+        if rodzaj_gk == "Ściana Działowa":
+            mnoznik_plyt = 2.3 if plytowanie == "Pojedyncze (1xGK)" else 4.6 # 2 strony!
+        
+        szt_plyt = (m2_gk * mnoznik_plyt) / 3.0 # płyta 1.2x2.5m = 3m2
+        
+        # 2. Profile i Wieszaki
+        if rodzaj_gk == "Sufit Podwieszany":
+            profil_glowny = "CD 60"
+            mb_cd60 = m2_gk * (3.2 if "Krzyżowy" in typ_stelaza else 2.1)
+            mb_ud27 = (m2_gk**0.5 * 4) * 1.1 # obwód
+            szt_wieszak = m2_gk * (4 if "Krzyżowy" in typ_stelaza else 3)
+            wkret_metal = m2_gk * 20
+        else:
+            profil_glowny = "CW 50/75/100"
+            mb_cd60 = m2_gk * 2.0 # profile pionowe
+            mb_ud27 = (m2_gk**0.5 * 4) # profile poziome UW
+            szt_wieszak = 0 # w ścianach nie ma wieszaków
+            wkret_metal = m2_gk * 30 if "Podwójne" in plytowanie else 15
+
+        # 3. Finanse
+        koszt_mat_gk = m2_gk * (60 if rodzaj_gk == "Sufit Podwieszany" else 80) # szacunek bazy
+        if "Podwójne" in locals() and plytowanie == "Podwójne (2xGK)": koszt_mat_gk += 30
+        
+        koszt_rob_gk = m2_gk * stawka_gk
+
+        with col_g2:
+            st.subheader("💰 Wycena Systemu")
+            st.success(f"### RAZEM: **{round(koszt_mat_gk + koszt_rob_gk)} zł**")
+            st.metric("Twoja Robocizna", f"{round(koszt_rob_gk)} zł")
+            
+            with st.expander("📦 Lista zakupów (Ilości przybliżone)"):
+                st.write(f"• **Płyty GK (1.2x2.5):** {int(szt_plyt + 0.99)} szt.")
+                st.write(f"• **Profile {profil_glowny}:** {int(mb_cd60/3 + 0.99)} szt. (3mb)")
+                st.write(f"• **Profile UD27 / UW:** {int(mb_ud27/3 + 0.99)} szt. (3mb)")
+                if szt_wieszak > 0:
+                    st.write(f"• **Wieszaki {typ_wieszaka}:** {int(szt_wieszak + 0.99)} szt.")
+                st.write(f"• **Wkręty do metalu (pchełki):** 1 opk. (250 szt.)")
+                st.write(f"• **Wkręty do płyt (3.5x25/35):** {1 if m2_gk < 30 else 2} opk. (1000 szt.)")
+                if "izolacja" in locals() and izolacja:
+                    st.write(f"• **Wełna mineralna:** {int(m2_gk/5 + 0.99)} rolki/opk.")
+
+            st.warning(f"⏳ Czas realizacji: ok. **{round(m2_gk/10 + 1)} dni** (1 fachowiec)")
 
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
