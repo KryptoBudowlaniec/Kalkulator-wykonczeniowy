@@ -387,7 +387,7 @@ elif branza == "📐 Podłogi (Panele/Deska)":
 
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "🏗️ Tynkowanie":
-    st.header("🏗️ Kalkulator Tynków Maszynowych i Ręcznych")
+    st.header("🏗️ Kalkulator Tynków i Suchego Tynku (Płyty na klej)")
     
     # --- BAZA WIEDZY: TYNKI I GRUNTY ---
     baza_tynkow = {
@@ -409,85 +409,61 @@ elif branza == "🏗️ Tynkowanie":
         col_t1, col_t2 = st.columns([1, 1.2])
         
         with col_t1:
-            m2_podl_t = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="tyn_m_fast")
-            wybrany_tynk = st.selectbox("Wybierz rodzaj tynku:", list(baza_tynkow.keys()))
-            wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
+            m2_podl_t = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="tyn_m_fast")
+            wybrany_tynk = st.selectbox("Wybierz system:", list(baza_tynkow.keys()))
+            
+            # Grubość i Grunt tylko dla tynków mokrych
+            if baza_tynkow[wybrany_tynk]["typ"] == "mokry":
+                wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
+                grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
+            else:
+                st.info("System GK: Liczymy płyty 120x260cm i klej Perlfix.")
             
             st.markdown("---")
-            grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
             stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 1, 100, 45)
 
         # --- LOGIKA OBLICZEŃ (Twoje m2 ścian) ---
         m2_scian_t = m2_podl_t * 3.5
         dane_t = baza_tynkow[wybrany_tynk]
         
-        # Zużycie tynku
-        kg_na_m2_t = dane_t["norma"] * grubosc_t
-        kg_razem_t = m2_scian_t * kg_na_m2_t
-        worki_t = kg_razem_t / dane_t["waga"]
-        
-        # Zużycie gruntu (ok. 0.3kg / m2)
-        kg_gruntu_t = m2_scian_t * 0.3
-        wiadra_gruntu = kg_gruntu_t / 15 # wiadra 15kg
-        
-        # Finanse
-        koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_scian_t * 5) # +5zł na narożniki
+        if dane_t["typ"] == "mokry":
+            # Logika dla tynków mokrych
+            kg_na_m2_t = dane_t["norma"] * grubosc_t
+            kg_razem_t = m2_scian_t * kg_na_m2_t
+            worki_t = kg_razem_t / dane_t["waga"]
+            
+            kg_gruntu_t = m2_scian_t * 0.3
+            wiadra_gruntu = kg_gruntu_t / 15
+            
+            koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_scian_t * 5)
+        else:
+            # --- TWOJA LOGIKA: WYKLEJANIE GK ---
+            liczba_plyt = (m2_scian_t * 1.1) / 3.12 # format 1.2x2.6
+            # NORMA: 1 worek na 2.5 płyty
+            worki_kleju = liczba_plyt / 2.5
+            
+            koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + (m2_scian_t * 2) # +grunt zwykły
+            
         koszt_rob_t = m2_scian_t * stawka_rob_t
 
         with col_t2:
-            st.subheader("📊 Wyniki Tynkowania")
-            # Widełki 10% na materiał
-            st.success(f"### RAZEM: **{round((koszt_mat_t * 0.9) + koszt_rob_t)} - {round((koszt_mat_t * 1.1) + koszt_rob_t)} zł**")
+            st.subheader("📊 Wyniki Kosztorysu")
+            st.success(f"### RAZEM: **{round(koszt_mat_t + koszt_rob_t)} zł**")
             
             c1, c2 = st.columns(2)
             c1.metric("Twoja Robocizna", f"{round(koszt_rob_t)} zł")
-            c2.metric("Waga materiału", f"{round(kg_razem_t/1000, 1)} Tony")
-
-            with st.expander("📦 Lista zakupów (Szczegółowa)"):
-                st.write(f"### 🧱 TYNK: {wybrany_tynk}")
-                st.write(f"- Kup: **{int(worki_t + 0.99)} worków** (opakowanie {dane_t['waga']}kg)")
-                st.write(f"- Szacowany koszt tynku: **{round(worki_t * dane_t['cena'])} zł**")
-                
-                st.markdown("---")
-                st.write(f"### 🧪 GRUNT: {wybrany_grunt_t}")
-                st.write(f"- Kup: **{int(wiadra_gruntu + 0.99)} wiader** (opakowanie 15kg)")
-                
-                st.markdown("---")
-                st.write(f"• Narożniki tynkarskie: ok. {round(m2_podl_t * 0.5)} szt.")
-                st.caption(f"Przyjęto grubość {grubosc_t} mm na {round(m2_scian_t)} m² ścian.")
-
-    with tab_t2:
-        st.info("💎 Wersja PRO: Tutaj odliczymy otwory okienne, co przy tynkach maszynowych jest kluczowe dla precyzyjnej wyceny.")
-
-if "Wyklejanie" in wybrany_tynk:
-        m2_scian_t = m2_podl_t * 3.5
-        
-        # 1. OBLICZANIE PŁYT (Format 1.2 x 2.6m = 3.12 m2 lub 1.2 x 2.0 = 2.4 m2)
-        # Przyjmijmy standard rynkowy 1.2x2.6m (ok. 3 m2 / szt)
-        liczba_plyt = (m2_scian_t * 1.1) / 3.12 
-        
-        # 2. TWOJA NORMA: 1 worek (25kg) na 2.5 płyty
-        worki_kleju = liczba_plyt / 2.5
-        
-        # Ceny (możesz je edytować)
-        cena_plyty = 35  # za sztukę (zwykła biała 12.5mm)
-        cena_perlfiks = 38 # za worek 25kg
-        
-        koszt_mat_t = (liczba_plyt * cena_plyty) + (worki_kleju * cena_perlfiks)
-        koszt_rob_t = m2_scian_t * stawka_rob_t
-
-        with col_t2:
-            st.info("💎 SYSTEM: Suchy tynk (Płyty GK na klej)")
-            st.metric("Liczba płyt GK (120x260)", f"{int(liczba_plyt + 0.99)} szt.")
-            st.metric("Klej gipsowy (Perlfix 25kg)", f"{int(worki_kleju + 0.99)} worków")
             
-            st.success(f"### KOSZT CAŁKOWITY: **{round(koszt_mat_t + koszt_rob_t)} zł**")
-            
-            with st.expander("📦 Detale zamówienia:"):
-                st.write(f"• Przyjęto normę: 1 worek kleju na 2.5 płyty")
+            if dane_t["typ"] == "drywall":
+                c2.metric("Płyty GK (1.2x2.6)", f"{int(liczba_plyt + 0.99)} szt.")
+                st.metric("Klej Gipsowy (25kg)", f"{int(worki_kleju + 0.99)} worków")
+                st.caption("Norma: 1 worek kleju na 2.5 płyty GK.")
+            else:
+                c2.metric("Waga materiału", f"{round(kg_razem_t/1000, 1)} Tony")
+                st.write(f"• Potrzebne worki: {int(worki_t + 0.99)} szt.")
+
+            with st.expander("📦 Szczegóły materiałowe"):
+                st.write(f"• Powierzchnia ścian: {round(m2_scian_t)} m2")
                 st.write(f"• Szacowany materiał: {round(koszt_mat_t)} zł")
-                st.write(f"• Twoja robocizna: {round(koszt_rob_t)} zł")
-                st.caption("Pamiętaj o doliczeniu taśm i gładzi do spoinowania w module Szpachlowanie.")
 
 # --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "⚒️ Sucha Zabudowa":
