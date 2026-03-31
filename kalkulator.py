@@ -389,17 +389,18 @@ elif branza == "📐 Podłogi (Panele/Deska)":
 elif branza == "🏗️ Tynkowanie":
     st.header("🏗️ Kalkulator Tynków i Suchego Tynku (Płyty na klej)")
     
-    # --- BAZA WIEDZY: TYNKI I GRUNTY ---
+    # --- BAZA WIEDZY: TYNKI I GRUNTY (Uzupełniona o "typ") ---
     baza_tynkow = {
-        "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 25, "waga": 30, "norma": 0.8}, # 0.8kg na 1mm/m2
-        "Knauf Goldband (Ręczny Gipsowy)": {"cena": 38, "waga": 30, "norma": 0.85},
-        "Baumit MPI25 Cem-Wap ": {"cena": 27, "waga": 30, "norma": 1.4},
-        "Kreisel 561L Cem-Wap": {"cena": 28, "waga": 25, "norma": 1.6}
+        "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 25, "waga": 30, "norma": 0.8, "typ": "mokry"},
+        "Knauf Goldband (Ręczny Gipsowy)": {"cena": 38, "waga": 30, "norma": 0.85, "typ": "mokry"},
+        "Baumit MPI25 Cem-Wap ": {"cena": 27, "waga": 30, "norma": 1.4, "typ": "mokry"},
+        "Kreisel 561L Cem-Wap": {"cena": 28, "waga": 25, "norma": 1.6, "typ": "mokry"},
+        "Wyklejanie Płytami GK (Suchy Tynk)": {"cena_plyta": 35, "cena_klej": 38, "typ": "drywall"}
     }
     
     baza_grunt_kwarc = {
-        "Dolina Nidy Inter-Grunt": 140, # cena za wiadro 20kg
-        "Knauf Betokontakt": 200, # cena za wiadro 20kg
+        "Dolina Nidy Inter-Grunt": 140, 
+        "Knauf Betokontakt": 200, 
         "Atlas Grunto-Plast": 110
     }
 
@@ -412,8 +413,11 @@ elif branza == "🏗️ Tynkowanie":
             m2_podl_t = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="tyn_m_fast")
             wybrany_tynk = st.selectbox("Wybierz system:", list(baza_tynkow.keys()))
             
+            # Pobieramy dane wybranego systemu, żeby wiedzieć co wyświetlić
+            dane_t = baza_tynkow[wybrany_tynk]
+            
             # Grubość i Grunt tylko dla tynków mokrych
-            if baza_tynkow[wybrany_tynk]["typ"] == "mokry":
+            if dane_t["typ"] == "mokry":
                 wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
                 grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
             else:
@@ -422,27 +426,25 @@ elif branza == "🏗️ Tynkowanie":
             st.markdown("---")
             stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 1, 100, 45)
 
-        # --- LOGIKA OBLICZEŃ (Twoje m2 ścian) ---
+        # --- LOGIKA OBLICZEŃ ---
         m2_scian_t = m2_podl_t * 3.5
-        dane_t = baza_tynkow[wybrany_tynk]
         
         if dane_t["typ"] == "mokry":
-            # Logika dla tynków mokrych
             kg_na_m2_t = dane_t["norma"] * grubosc_t
             kg_razem_t = m2_scian_t * kg_na_m2_t
             worki_t = kg_razem_t / dane_t["waga"]
             
+            # Zakładamy wiadro 20kg (zgodnie z Twoim opisem baz)
             kg_gruntu_t = m2_scian_t * 0.3
-            wiadra_gruntu = kg_gruntu_t / 15
+            wiadra_gruntu = kg_gruntu_t / 20 
             
             koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_scian_t * 5)
         else:
             # --- TWOJA LOGIKA: WYKLEJANIE GK ---
-            liczba_plyt = (m2_scian_t * 1.1) / 3.12 # format 1.2x2.6
-            # NORMA: 1 worek na 2.5 płyty
+            liczba_plyt = (m2_scian_t * 1.1) / 3.12 
             worki_kleju = liczba_plyt / 2.5
-            
-            koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + (m2_scian_t * 2) # +grunt zwykły
+            # Dodajemy koszt płyt + klej + grunt uniwersalny (ok. 2zł/m2)
+            koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + (m2_scian_t * 2)
             
         koszt_rob_t = m2_scian_t * stawka_rob_t
 
@@ -464,7 +466,6 @@ elif branza == "🏗️ Tynkowanie":
             with st.expander("📦 Szczegóły materiałowe"):
                 st.write(f"• Powierzchnia ścian: {round(m2_scian_t)} m2")
                 st.write(f"• Szacowany materiał: {round(koszt_mat_t)} zł")
-
 # --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "⚒️ Sucha Zabudowa":
     st.header("⚒️ Systemy Suchej Zabudowy (G-K)")
