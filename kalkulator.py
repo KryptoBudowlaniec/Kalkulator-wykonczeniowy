@@ -569,24 +569,58 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
     if do_drzwi: koszty["Drzwi"] = (m2_total // 12 + 1) * 1200 * mnoznik # średnio 1 para na 12m2
     if do_malowanie: koszty["Malowanie"] = (m2_total * 3.5) * 45 * mnoznik
 
-    # --- 3. WYNIKI ---
+    # --- 3. WYNIKI I LOGISTYKA ---
     with col_inv2:
         st.subheader(f"📊 Budżet Remontowy: {standard}")
         total_sum = sum(koszty.values())
         
         st.success(f"### SZACOWANY KOSZT CAŁOŚCI: **{round(total_sum)} zł**")
-        st.caption(f"Średni koszt za m2: {round(total_sum/m2_total)} zł")
         
-        # Wykres/Tabela kosztów
-        for etap, kwota in koszty.items():
-            st.write(f"• {etap}: **{round(kwota)} zł**")
-        
-        st.markdown("---")
-        with st.expander("💼 Raport Opłacalności (Dla Flipperów)"):
-            cena_zakupu = st.number_input("Cena zakupu mieszkania:", value=400000)
-            cena_sprzedazy = st.number_input("Przewidywana cena sprzedaży:", value=550000)
-            podatek = (cena_sprzedazy - cena_zakupu) * 0.19 # uproszczony podatek
-            zysk_netto = cena_sprzedazy - cena_zakupu - total_sum - podatek
+        # ZBIORCZA LISTA ZAKUPÓW (Zsumowana z wybranych etapów)
+        with st.expander("📦 ZBIORCZA LISTA MATERIAŁÓW (Całe mieszkanie)", expanded=True):
+            col_z1, col_z2 = st.columns(2)
             
-            st.metric("Przewidywany ZYSK NETTO", f"{round(zysk_netto)} zł", delta=f"{round((zysk_netto/cena_zakupu)*100)}% ROI")
-            st.warning("⚠️ Uwzględniono podatek 19% od dochodu i uśrednione koszty remontu.")
+            with col_z1:
+                if do_tynki:
+                    st.write("🏗️ **Tynki:**")
+                    st.write(f"- Tynk maszynowy: {int((m2_total*3.5*15/30)+1)} worków")
+                    st.write(f"- Grunt kwarcowy: {int((m2_total*3.5*0.3/20)+1)} wiadra")
+                
+                if do_gladzie:
+                    st.write("🧱 **Gładzie:**")
+                    st.write(f"- Masa gotowa: {int((m2_total*3.5*2/20)+1)} wiader 20kg")
+                    st.write(f"- Narożniki: {round(m2_total*0.8)} szt.")
+
+                if do_podlogi:
+                    st.write("📐 **Podłogi:**")
+                    st.write(f"- Panele (+7%): {int((m2_total*1.07/2.22)+1)} paczek")
+                    st.write(f"- Listwy (2.5m): {int((m2_total*0.8/2.5)+1)} szt.")
+
+            with col_z2:
+                if do_malowanie:
+                    st.write("🎨 **Malowanie:**")
+                    st.write(f"- Farba biała: {int((m2_total*1.0/10*2)/10+1)} wiadra 10L")
+                    st.write(f"- Farba kolor: {int((m2_total*2.5/10*2)/5+1)} puszek 5L")
+                
+                if do_drzwi:
+                    st.write("🚪 **Stolarka:**")
+                    st.write(f"- Komplety drzwiowe: {int(m2_total//12 + 1)} szt.")
+                    st.write(f"- Pianka montażowa: {int((m2_total//12 + 1)/2 + 1)} szt.")
+
+                if do_lazienka:
+                    st.write("🚿 **Łazienka:**")
+                    st.write("- Płytki (podłoga+ściany): ok. 25 m2")
+                    st.write("- Zestaw hydroizolacji: 1 kpl.")
+
+        st.markdown("---")
+        # --- RAPORT OPŁACALNOŚCI (Twoja propozycja ROI) ---
+        st.subheader("💼 Kalkulator ROI (Zwrot z Inwestycji)")
+        c_inv_a, c_inv_b = st.columns(2)
+        cena_zakupu = c_inv_a.number_input("Cena zakupu nieruchomości:", value=350000, step=5000)
+        cena_sprzedazy = c_inv_b.number_input("Przewidywana cena sprzedaży:", value=520000, step=5000)
+        
+        podatek = (cena_sprzedazy - cena_zakupu - total_sum) * 0.19
+        zysk_netto = cena_sprzedazy - cena_zakupu - total_sum - (podatek if podatek > 0 else 0)
+        
+        st.metric("ZYSK NETTO (po remoncie i podatku)", f"{round(zysk_netto)} zł", 
+                  delta=f"{round((zysk_netto/cena_zakupu)*100, 1)}% ROI")
