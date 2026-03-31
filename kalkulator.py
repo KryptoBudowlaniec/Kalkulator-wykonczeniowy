@@ -391,10 +391,10 @@ elif branza == "🏗️ Tynkowanie":
     
     # --- BAZA WIEDZY: TYNKI I GRUNTY ---
     baza_tynkow = {
-        "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 42, "waga": 30, "norma": 0.8}, # 0.8kg na 1mm/m2
-        "Knauf Goldband (Ręczny Gipsowy)": {"cena": 48, "waga": 30, "norma": 0.85},
-        "Tynk Maszynowy Cem-Wap (Lekki)": {"cena": 35, "waga": 30, "norma": 1.4},
-        "Tynk Ręczny Cem-Wap (Standard)": {"cena": 28, "waga": 25, "norma": 1.6}
+        "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 25, "waga": 30, "norma": 0.8}, # 0.8kg na 1mm/m2
+        "Knauf Goldband (Ręczny Gipsowy)": {"cena": 38, "waga": 30, "norma": 0.85},
+        "Baumit MPI25 Cem-Wap ": {"cena": 27, "waga": 30, "norma": 1.4},
+        "Kreisel 561L Cem-Wap": {"cena": 28, "waga": 25, "norma": 1.6}
     }
     
     baza_grunt_kwarc = {
