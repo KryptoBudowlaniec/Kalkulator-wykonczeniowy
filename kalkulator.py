@@ -610,7 +610,7 @@ elif branza == "⚒️ Sucha Zabudowa":
         c_sp1, c_sp2 = st.columns(2)
         
         typ_tasmy = c_sp1.radio("Zbrojenie:", ["Tuff-Tape (Całość)", "Flizelina + Tuff-Tape (Narożniki)"])
-        wybrana_masa = c_sp2.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()))
+        wybrana_masa = c_sp2.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()), key="masa_wybor")
 
         # --- 2. OBLICZENIA ILOŚCI I KOSZTÓW ---
         naddatek = 1.10 
