@@ -534,40 +534,59 @@ elif branza == "⚒️ Sucha Zabudowa":
 
             if rodzaj_gk == "Sufit Podwieszany":
             
-                typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy", "Krzyżowy"])
-                typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy"])
-                dl_profilu_cd = st.selectbox("Długość profili CD:", [3, 4], format_func=lambda x: f"{x} m")
+                    # --- WARSTWA 1: CD NOŚNE ---
+            if typ_stelaza == "Pojedynczy":
+            rozstaw_cd1 = 0.40
+            else:
+            rozstaw_cd1 = 1.10   # 110 cm jako wartość pośrednia
 
-                c_suf1, c_suf2 = st.columns(2)
-                dl_sufitu = c_suf1.number_input("Długość sufitu (m):", min_value=1.0, value=5.0, step=0.1)
-                sz_sufitu = c_suf2.number_input("Szerokość sufitu (m):", min_value=1.0, value=4.0, step=0.1)
+            liczba_cd1 = int(sz_sufitu / rozstaw_cd1) + 1
 
-                m2_gk = dl_sufitu * sz_sufitu
-                st.info(f"📐 Powierzchnia sufitu: **{round(m2_gk, 2)} m²**")
-                # CD co 40 cm
-                liczba_cd = int(sz_sufitu / 0.4) + 1
+            dl_cd1 = dl_sufitu
 
-                # długość jednego CD
-                dl_cd = dl_sufitu
+            odcinki_cd1 = int(dl_cd1 / dl_profilu_cd)
+            reszta_cd1 = dl_cd1 % dl_profilu_cd
 
-                # ile odcinków profilu potrzeba
-                odcinki_cd = int(dl_cd / dl_profilu_cd)
-                reszta_cd = dl_cd % dl_profilu_cd
+            laczniki_cd1 = odcinki_cd1 * liczba_cd1
 
-                # łączniki = liczba miejsc łączenia
-                laczniki_cd = odcinki_cd * liczba_cd
+            szt_cd1 = liczba_cd1 * (odcinki_cd1 + (1 if reszta_cd1 > 0 else 0))
 
-                # sztuki profili CD
-                szt_cd = liczba_cd * (odcinki_cd + (1 if reszta_cd > 0 else 0))
+        # --- WARSTWA 2: CD KRZYŻOWE ---
+            if typ_stelaza == "Krzyżowy":
 
-                # UD po obwodzie
-                obwod = (dl_sufitu + sz_sufitu) * 2
-                szt_ud = int(obwod / 3 + 1)
+            rozstaw_cd2 = 0.40
+            liczba_cd2 = int(dl_sufitu / rozstaw_cd2) + 1
 
-                # wieszaki
-                szt_wieszaki = int(m2_gk / 0.9 + 1)
+            dl_cd2 = sz_sufitu
 
-                szt_cw = szt_uw = szt_ua = 0
+            odcinki_cd2 = int(dl_cd2 / dl_profilu_cd)
+            reszta_cd2 = dl_cd2 % dl_profilu_cd
+
+            szt_cd2 = liczba_cd2 * (odcinki_cd2 + (1 if reszta_cd2 > 0 else 0))
+
+            # łączniki liniowe dla CD2
+            laczniki_cd2 = odcinki_cd2 * liczba_cd2
+
+            # łączniki krzyżowe = każde przecięcie CD1 × CD2
+            laczniki_krzyzowe = liczba_cd1 * liczba_cd2
+
+            else:
+            szt_cd2 = 0
+            laczniki_cd2 = 0
+            laczniki_krzyzowe = 0
+
+        # --- UD po obwodzie ---
+            obwod = (dl_sufitu + sz_sufitu) * 2
+            szt_ud = int(obwod / 3 + 1)
+
+        # --- Wieszaków ---
+            szt_wieszaki = int(m2_gk / 0.9 + 1)
+
+        # --- SUMA PROFILI CD ---
+            szt_cd = szt_cd1 + szt_cd2
+
+        # ściana nie używa CW/UW
+            szt_cw = szt_uw = szt_ua = 0
             else:
                 szer_profilu = st.selectbox("Profil CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
                 plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
@@ -693,13 +712,22 @@ elif branza == "⚒️ Sucha Zabudowa":
                 else:
                     st.write(f"• Profil UW{szer_profilu}: {szt_uw} szt.")
                     st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
-                    if szt_ua > 0:
-                        st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
+                if szt_ua > 0:
+                    st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
 
-                st.write(f"• Łączniki do CD: {laczniki_cd} szt.")
+                    st.write(f"• Profil CD60 (warstwa 1): {szt_cd1} szt.")
+                if szt_cd2 > 0:
+                    st.write(f"• Profil CD60 (warstwa 2): {szt_cd2} szt.")
 
-                st.write("### 🔩 WKRĘTY")
-                st.write(f"• Wkręty TN25: {wkret_25} szt.")
+                    st.write(f"• Łączniki liniowe CD: {laczniki_cd1 + laczniki_cd2} szt.")
+
+                if typ_stelaza == "Krzyżowy":
+                    st.write(f"• Łączniki krzyżowe (kraby): {laczniki_krzyzowe} szt.")
+
+                    st.write(f"• Łączniki do CD: {laczniki_cd} szt.")
+
+                    st.write("### 🔩 WKRĘTY")
+                    st.write(f"• Wkręty TN25: {wkret_25} szt.")
                 if wkret_35 > 0:
                     st.write(f"• Wkręty TN35: {wkret_35} szt.")
 
