@@ -55,6 +55,30 @@ if branza == "🎨 Malowanie":
             
             stawka = st.slider("Twoja stawka za m2 robocizny:", 20, 70, 35)
 
+        # --- LOGIKA WIDEŁEK CENOWYCH ---
+        margines = 0.10  # Przyjmujemy 10% w górę i w dół
+
+# Obliczamy koszt bazowy (średni)
+        k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
+               (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 150
+
+# Tworzymy widełki
+        k_mat_min = k_mat_sredni * (1 - margines)
+        k_mat_max = k_mat_sredni * (1 + margines)
+
+with col_f2:
+    st.subheader("💰 Przewidywany budżet")
+    
+    # Wyświetlamy widełki zamiast jednej sztywnej kwoty
+    st.info(f"### Szacowany koszt materiałów: **{round(k_mat_min)} - {round(k_mat_max)} zł**")
+    st.caption("Widełki uwzględniają aktualne wahania cen w marketach (+/- 10%).")
+    
+    st.metric("Twoja Robocizna (Stała)", f"{round(k_rob)} zł")
+    
+    total_min = k_mat_min + k_rob
+    total_max = k_mat_max + k_rob
+    st.success(f"### RAZEM (Praca + Materiał): **{round(total_min)} - {round(total_max)} zł**")
+
         # --- LOGIKA OBLICZEŃ ---
         m2_sufit = m_uzytkowy * 1.0
         m2_sciany = m_uzytkowy * 2.5
