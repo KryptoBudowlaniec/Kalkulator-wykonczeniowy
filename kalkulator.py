@@ -400,7 +400,7 @@ elif branza == "🏗️ Tynkowanie":
     baza_tynkow = {
         "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 25, "waga": 30, "norma": 0.8, "typ": "mokry"},
         "Baumit MPI25 Cem-Wap ": {"cena": 27, "waga": 30, "norma": 1.4, "typ": "mokry"},
-        "Wyklejanie Płytami GK (Suchy Tynk)": {"cena_plyta": 35, "cena_klej": 38, "typ": "drywall"}
+        "Wyklejanie Płytami GK (Suchy Tynk)": {"cena_plyta": 35, "cena_klej": 24, "typ": "drywall"}
     }
     
     baza_grunt_kwarc = {
@@ -432,7 +432,7 @@ elif branza == "🏗️ Tynkowanie":
                 wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
                 grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
             
-            stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 30, 120, 45)
+            stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 1, 120, 45)
 
         # --- 2. LOGIKA OBLICZEŃ ---
         if dane_t["typ"] == "mokry":
@@ -485,9 +485,15 @@ elif branza == "⚒️ Sucha Zabudowa":
         "Plyta GK 12.5mm (szt)": 35.0,
         "Profil CD60 (3mb)": 24.0,
         "Profil UD27 (3mb)": 15.0,
-        "Profil CW50 (3mb)": 22.0,
-        "Profil UW50 (3mb)": 18.0,
-        "Profil UA50 (3mb)": 65.0, # Ościeżnicowy
+        "Profil CW50 (3mb)": 15.0,
+        "Profil UW50 (3mb)": 12.0,
+        "Profil UA50 (3mb)": 65.0,
+        "Profil CW75 (3mb)": 18.0,
+        "Profil UW75 (3mb)": 17.0,
+        "Profil UA75 (3mb)": 75.0,
+        "Profil CW100 (3mb)": 20.0,
+        "Profil UW100 (3mb)": 18.0,
+        "Profil UA100 (3mb)": 95.0,# Ościeżnicowy
         "Wieszak ES / Obrotowy (szt)": 2.5,
         "Wkrety TN25 (1000szt)": 45.0,
         "Wkrety TN35 (1000szt)": 55.0,
