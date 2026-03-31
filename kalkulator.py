@@ -86,17 +86,44 @@ if branza == "🎨 Malowanie":
             st.info(f"**Materiały (widełki):** {round(k_mat_min)} - {round(k_mat_max)} zł")
         
             with st.expander("📦 Twoja lista zakupów"):
-                # Wyświetlamy konkretne nazwy wybrane przez użytkownika
-                st.write(f"• **Farba BIAŁA ({f_biala}):** {round(l_biala)} L")
-                st.write(f"• **Farba KOLOR ({f_kolor}):** {round(l_kolor)} L")
-                st.write(f"• **Grunt ({f_grunt}):** {round(l_grunt)} L")
-                st.write(f"• **Taśma ({f_tasma}):** {round(szt_tasma + 0.4)} szt.")
-                st.write(f"• **Folia malarska:** {round(opk_folia + 0.4)} szt.")
-                
-                st.markdown("---")
-                st.caption(f"Wyliczenia dla {round(m2_razem)} m² powierzchni malowania.")
-                st.info("💡 Pamiętaj, aby kupować farby w opakowaniach zbiorczych (5L/10L) – wyjdzie taniej!")
+                # --- LOGIKA PAKOWANIA BIAŁEJ (Wiadra 10L / 5L / 2.5L) ---
+            ile_biala = round(l_biala, 1)
+            w10 = int(ile_biala // 10)
+            reszta_b = ile_biala % 10
+            w5 = 1 if 0 < reszta_b <= 5 else 0
+            w25 = 1 if reszta_b > 5 else 0 # jeśli zostanie >5L, weź 10L lub 5+2.5
+            # Uproszczona logika dla przejrzystości:
+            koszt_b = ile_biala * baza_biale[f_biala]
+            
+            st.write(f"### ⚪ FARBA BIAŁA: {f_biala}")
+            if w10 > 0: st.write(f"- Kup: **{w10} x wiadro 10L**")
+            if reszta_b > 0: 
+                pucha = "5L" if reszta_b > 2.5 else "2.5L"
+                st.write(f"- Kup dodatkowo: **1 x puszka {pucha}**")
+            st.write(f"Szacowany koszt bieli: **{round(koszt_b)} zł**")
 
+            st.markdown("---")
+
+            # --- LOGIKA PAKOWANIA KOLORU (Puszki 5L / 2.5L) ---
+            ile_kolor = round(l_kolor, 1)
+            p5 = int(ile_kolor // 5)
+            reszta_k = ile_kolor % 5
+            p25 = 1 if reszta_k > 0 else 0
+            koszt_k = ile_kolor * baza_kolory[f_kolor]
+
+            st.write(f"### 🎨 FARBA KOLOR: {f_kolor}")
+            if p5 > 0: st.write(f"- Kup: **{p5} x puszka 5L**")
+            if p25 > 0: st.write(f"- Kup dodatkowo: **{p25} x puszka 2.5L**")
+            st.write(f"Szacowany koszt koloru: **{round(koszt_k)} zł**")
+
+            st.markdown("---")
+
+            # --- GRUNT I TAŚMY ---
+            st.write(f"### 🛠️ AKCESORIA")
+            st.write(f"- Grunt **{f_grunt}**: {round(l_grunt)} L (ok. {int(l_grunt/5 + 0.99)} bańki 5L) — **{round(l_grunt * baza_grunty[f_grunt])} zł**")
+            st.write(f"- Taśma **{f_tasma}**: {round(szt_tasma + 0.4)} szt. — **{round((szt_tasma + 0.4) * baza_tasmy[f_tasma])} zł**")
+            
+            st.info("💡 Podpowiedzi opakowań są orientacyjne. Wybieraj największe dostępne puszki, aby zaoszczędzić.")
     with tab_pro:
         st.write("Tu wkleisz swoją logikę PRO z dodawaniem pojedynczych ścian.")
      # --- 2. ZAKŁADKA: KOSZTORYS PRO ---   
