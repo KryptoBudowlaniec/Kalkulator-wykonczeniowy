@@ -503,6 +503,9 @@ elif branza == "⚒️ Sucha Zabudowa":
         col_g1, col_g2 = st.columns([1, 1.2])
         
         with col_g1:
+            # BEZPIECZNIKI (żeby kod nie wybuchł)
+            n_drzwi = 0 
+            szer_profilu = "Standard"
             rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"], key="gk_type")
             
             if rodzaj_gk == "Ściana Działowa":
