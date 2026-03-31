@@ -45,15 +45,15 @@ if branza == "🎨 Malowanie":
     col_f1, col_f2 = st.columns([1, 2])
 
     m2_mieszkania = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="m_fast")
-            stan_m = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="s_fast")
+        stan_m = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="s_fast")
             
-            st.subheader("Wybór Produktów")
-            f_biala = st.selectbox("Farba BIAŁA (Sufity):", list(baza_biale.keys()))
-            f_kolor = st.selectbox("Farba KOLOR (Ściany):", list(baza_kolory.keys()))
-            f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()))
-            f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()))
+        st.subheader("Wybór Produktów")
+        f_biala = st.selectbox("Farba BIAŁA (Sufity):", list(baza_biale.keys()))
+        f_kolor = st.selectbox("Farba KOLOR (Ściany):", list(baza_kolory.keys()))
+        f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()))
+        f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()))
             
-            st.markdown("---")
+        st.markdown("---")
     
     with col_f1:
         m_uzytkowy = st.number_input("Metraż mieszkania (m2):", min_value=0.0, value=50.0, key="fast_m")
