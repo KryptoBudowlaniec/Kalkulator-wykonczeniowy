@@ -579,19 +579,18 @@ elif branza == "⚒️ Sucha Zabudowa":
             c2.metric("Materiały", f"{round(total_material)} zł")
 
             with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
-                st.write(f"• **Płyty GK (1.2x2.6):** {int(szt_plyt + 0.99)} szt. — **{round(koszt_plyt)} zł**")
-                st.write(f"• **Kołki 8x60:** {int(szt_kolki/100 + 1)} opk. (100szt) — **{round(koszt_kolki)} zł**")
-                st.write(f"• **Wkręty TN25/35:** łącznie ok. **{round(koszt_wkrety)} zł**")
-                st.write(f"• **Masa {wybrana_masa}:** {worki_masy} szt. — **{round(koszt_masy)} zł**")
-                st.write(f"• **Zbrojenie ({typ_tasmy}):** ok. **{cena_tasmy} zł**")
+                # ... (płyty, profile, kołki) ...
                 
-                if n_drzwi > 0:
-                    st.write(f"• **Profile UA {szer_profilu}:** {n_drzwi * 2} szt. — **{round(n_drzwi * 2 * 65)} zł**")
+                st.write(f"### 🧪 SPOINOWANIE ({typ_tasmy})")
+                st.write(f"• **Masa {wybrana_masa}:** {worki_masy} szt. (25kg)")
                 
-                if izolacja_gk:
-                    st.write(f"• **Wełna mineralna:** {round(m2_gk, 1)} m² — **{round(m2_gk * 18)} zł**")
-
-            st.warning(f"⏳ Czas realizacji: ok. **{round(m2_gk/8 + 1)} dni**")
+                if mb_flizelina > 0:
+                    st.write(f"• **Taśma Tuff-Tape (Naroża):** {round(mb_tuff_tape)} mb (ok. {int(mb_tuff_tape/30 + 1)} rolka)")
+                    st.write(f"• **Flizelina (Łączenia):** {round(mb_flizelina)} mb (ok. {int(mb_flizelina/25 + 1)} rolka)")
+                else:
+                    st.write(f"• **Taśma Tuff-Tape (Całość):** {round(mb_tuff_tape)} mb (ok. {int(mb_tuff_tape/30 + 1)} rolka)")
+                
+                st.write(f"• **Koszt zbrojenia i mas:** ok. **{round(koszt_masy + koszt_tasm)} zł**")
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
