@@ -295,45 +295,69 @@ elif branza == "🧱 Szpachlowanie":
 
 # --- SEKCJA: PODŁOGI ---
 elif branza == "📐 Podłogi (Panele/Deska)":
-    st.header("Kalkulator Układania Podłóg")
-    
-    col_p1, col_p2 = st.columns(2)
-    
-    with col_p1:
-        m2_p = st.number_input("Metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1)
-        typ_ukladania = st.selectbox("Sposób układania:", ["Zwykły panel (7% zapasu)", "Jodełka (20% zapasu)"])
-        m2_w_paczce = st.number_input("M2 w paczce paneli:", min_value=0.1, value=2.22, step=0.01)
-        
-        st.markdown("---")
-        typ_podkladu = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)"])
-        
-        st.markdown("---")
-        typ_listwy = st.selectbox("Rodzaj listew:", ["MDF (Cięcie 45°)", "PCV (Z akcesoriami)"])
-        n_naroznikow = st.number_input("Liczba narożników/łączników (tylko dla PCV):", min_value=0, value=4)
+    st.header("📐 Kalkulator Podłóg: Pływające vs Klejone")
+    tab_p1, tab_p2 = st.tabs(["⚡ Szybka Wycena", "💎 Szczegóły Montażu"])
 
-    # --- LOGIKA PODŁOGI ---
-    zapas = 0.07 if "Zwykły" in typ_ukladania else 0.20
-    pow_z_zapasem = m2_p * (1 + zapas)
-    paczki_szt = pow_z_zapasem / m2_w_paczce
-    
-    wyd_podkladu = 8 if "Premium" in typ_podkladu else 7
-    podklad_szt = m2_p / wyd_podkladu
-    
-    # Obliczanie listew (obwód + zapas 10%)
-    mb_listew = (4 * (m2_p**0.5)) * 1.1 
-    szt_listew_25m = mb_listew / 2.5 # Listwy mają zazwyczaj 2.5m
-
-    with col_p2:
-        st.subheader("📦 Lista zakupów")
-        st.write(f"• **Panele:** {int(paczki_szt + 0.99)} paczek ({round(pow_z_zapasem, 1)} m2)")
-        st.write(f"• **Podkład ({typ_podkladu}):** {int(podklad_szt + 0.99)} szt.")
-        st.write(f"• **Listwy (2.5m):** {int(szt_listew_25m + 0.99)} szt. ({round(mb_listew, 1)} mb)")
+    with tab_p1:
+        col_p1, col_p2 = st.columns([1, 1.2])
         
-        if typ_listwy == "PCV (Z akcesoriami)":
-            st.info(f"Pamiętaj o zakupie {n_naroznikow} szt. akcesoriów (narożniki/łączniki).")
+        with col_p1:
+            m2_p = st.number_input("Metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m")
+            
+            # NOWOŚĆ: SYSTEM MONTAŻU
+            system_montazu = st.radio("System montażu:", ["Pływający (Na podkładzie)", "Klejony (Na gruncie i kleju)"])
+            
+            typ_ukladania = st.selectbox("Sposób układania:", ["Zwykły panel (7% zapasu)", "Jodełka (20% zapasu)"])
+            m2_paczka = st.number_input("M2 w paczce paneli/desek:", min_value=0.1, value=2.22, step=0.01)
+            
+            st.markdown("---")
+            if system_montazu == "Pływający (Na podkładzie)":
+                wybrany_mat = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)", "Standard (Pianka 10m2)"])
+            else:
+                wybrany_mat = st.selectbox("Marka chemii (Klej + Grunt):", ["Mapei (Profesjonalna)", "Wakol (Premium)", "Bona (Standard)"])
+            
+            st.markdown("---")
+            stawka_podl = st.slider("Twoja stawka za m2 montażu (zł):", 35, 160, 45 if "Zwykły" in typ_ukladania else 120)
+
+        # --- LOGIKA OBLICZEŃ ---
+        zapas = 0.07 if "Zwykły" in typ_ukladania else 0.20
+        m2_z_zapasem = m2_p * (1 + zapas)
+        paczki_szt = int(m2_z_zapasem / m2_paczka + 0.99)
+        
+        # Koszty chemii / podkładu
+        if system_montazu == "Pływający (Na podkładzie)":
+            wydajnosci = {"Premium (Rolka 8m2)": 8, "Ecopor (Paczka 7m2)": 7, "Standard (Pianka 10m2)": 10}
+            ceny_p = {"Premium (Rolka 8m2)": 160, "Ecopor (Paczka 7m2)": 45, "Standard (Pianka 10m2)": 30}
+            szt_podkladu = int(m2_p / wydajnosci[wybrany_mat] + 0.99)
+            koszt_akc = szt_podkladu * ceny_p[wybrany_mat]
+            info_zakup = f"{szt_podkladu} szt. podkładu {wybrany_mat}"
         else:
-            st.warning("Wybrano MDF: Pamiętaj o kleju montażowym i akrylu do wykończenia.")
+            # System klejony: Grunt (0.15kg/m2) + Klej (1.2kg/m2)
+            kg_kleju = m2_p * 1.2
+            l_gruntu = m2_p * 0.15
+            # Średnie ceny chemii klejonej (zestaw na m2 ok. 45-60 zł)
+            koszt_akc = m2_p * 55 
+            info_zakup = f"{int(kg_kleju/15 + 0.99)} wiader kleju (15kg) + {int(l_gruntu/5 + 0.99)} bańki gruntu (5L)"
 
-        # --- WYCENA ROBOCIZNY ---
-        cena_m = 25 if "Zwykły" in typ_ukladania else 65 # Jodełka droższa
-        st.metric("Szacowana robocizna", f"{round(m2_p * cena_m + mb_listew * 15)} zł")
+        # Finanse
+        k_robocizna = m2_p * stawka_podl
+        total_mat = (paczki_szt * m2_paczka * 100) + koszt_akc # przyjąłem średnią cenę deski 100zł/m2
+
+        with col_p2:
+            st.subheader("💰 Kosztorys Podłogi")
+            st.success(f"### RAZEM: **{round((total_mat + k_robocizna) * 0.95)} - {round((total_mat + k_robocizna) * 1.05)} zł**")
+            
+            c1, c2 = st.columns(2)
+            c1.metric("Twoja Robocizna", f"{round(k_robocizna)} zł")
+            c2.metric("Chemia / Podkład", f"{round(koszt_akc)} zł")
+
+            with st.expander("📦 Twoja lista zakupów"):
+                st.write(f"• **Panele/Deska:** {paczki_szt} paczek")
+                st.write(f"• **System:** {info_zakup}")
+                if system_montazu == "Klejony (Na gruncie i kleju)":
+                    st.warning("⚠️ System klejony: Pamiętaj o odpowiednim czasie schnięcia gruntu przed klejeniem!")
+                st.caption(f"Przyjęto zapas materiału: {int(zapas*100)}%")
+
+            # Czas pracy (klejenie trwa dłużej)
+            tempo = 25 if system_montazu == "Pływający (Na podkładzie)" else 12
+            st.warning(f"⏳ Czas realizacji: ok. **{round(m2_p/tempo + 1)} dni**")
