@@ -56,10 +56,10 @@ if branza == "🎨 Malowanie":
             
             stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 70, 35)
 
-        st.markdown("---")
-            st.subheader("⚜️ Sztukateria (Listwy ścienne/sufitowe)")
-            mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0)
-            typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"])
+            st.markdown("---")
+                st.subheader("⚜️ Sztukateria (Listwy ścienne/sufitowe)")
+                mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0)
+                typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"])
 
         # --- LOGIKA OBLICZEŃ (Najpierw liczymy...) ---
         m2_sufit = m_uzytkowy * 1.0
