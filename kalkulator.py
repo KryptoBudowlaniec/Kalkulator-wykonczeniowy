@@ -533,8 +533,41 @@ elif branza == "⚒️ Sucha Zabudowa":
             st.subheader("Konfiguracja Systemu")
 
             if rodzaj_gk == "Sufit Podwieszany":
+            
+                c_suf1, c_suf2 = st.columns(2)
+                dl_sufitu = c_suf1.number_input("Długość sufitu (m):", min_value=1.0, value=5.0, step=0.1)
+                sz_sufitu = c_suf2.number_input("Szerokość sufitu (m):", min_value=1.0, value=4.0, step=0.1)
+
+                m2_gk = dl_sufitu * sz_sufitu
+                st.info(f"📐 Powierzchnia sufitu: **{round(m2_gk, 2)} m²**")
+
                 typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy", "Krzyżowy"])
                 typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy"])
+
+                # CD co 40 cm
+                liczba_cd = int(sz_sufitu / 0.4) + 1
+
+                # długość jednego CD
+                dl_cd = dl_sufitu
+
+                # ile odcinków profilu potrzeba
+                odcinki_cd = int(dl_cd / dl_profilu_cd)
+                reszta_cd = dl_cd % dl_profilu_cd
+
+                # łączniki = liczba miejsc łączenia
+                laczniki_cd = odcinki_cd * liczba_cd
+
+                # sztuki profili CD
+                szt_cd = liczba_cd * (odcinki_cd + (1 if reszta_cd > 0 else 0))
+
+                # UD po obwodzie
+                obwod = (dl_sufitu + sz_sufitu) * 2
+                szt_ud = int(obwod / 3 + 1)
+
+                # wieszaki
+                szt_wieszaki = int(m2_gk / 0.9 + 1)
+
+                szt_cw = szt_uw = szt_ua = 0
             else:
                 szer_profilu = st.selectbox("Profil CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
                 plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
@@ -658,6 +691,8 @@ elif branza == "⚒️ Sucha Zabudowa":
                     st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
                     if szt_ua > 0:
                         st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
+
+                st.write(f"• Łączniki do CD: {laczniki_cd} szt.")
 
                 st.write("### 🔩 WKRĘTY")
                 st.write(f"• Wkręty TN25: {wkret_25} szt.")
