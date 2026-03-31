@@ -317,7 +317,7 @@ elif branza == "📐 Podłogi (Panele/Deska)":
                 wybrany_mat = st.selectbox("Marka chemii (Klej + Grunt):", ["Mapei (Profesjonalna)", "Wakol (Premium)", "Bona (Standard)"])
             
             st.markdown("---")
-            stawka_podl = st.slider("Twoja stawka za m2 montażu (zł):", 35, 160, 45 if "Zwykły" in typ_ukladania else 120)
+            stawka_podl = st.slider("Twoja stawka za m2 montażu (zł):", 1, 160, 45 if "Zwykły" in typ_ukladania else 120)
 
         # --- LOGIKA OBLICZEŃ ---
         zapas = 0.07 if "Zwykły" in typ_ukladania else 0.20
