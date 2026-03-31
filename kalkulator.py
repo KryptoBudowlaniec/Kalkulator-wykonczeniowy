@@ -55,21 +55,7 @@ if branza == "🎨 Malowanie":
             
             stawka = st.slider("Twoja stawka za m2 robocizny:", 20, 70, 35)
 
-
-with col_f2:
-    st.subheader("💰 Przewidywany budżet")
-    
-    # Wyświetlamy widełki zamiast jednej sztywnej kwoty
-    st.info(f"### Szacowany koszt materiałów: **{round(k_mat_min)} - {round(k_mat_max)} zł**")
-    st.caption("Widełki uwzględniają aktualne wahania cen w marketach (+/- 10%).")
-    
-    st.metric("Twoja Robocizna (Stała)", f"{round(k_rob)} zł")
-    
-    total_min = k_mat_min + k_rob
-    total_max = k_mat_max + k_rob
-    st.success(f"### RAZEM (Praca + Materiał): **{round(total_min)} - {round(total_max)} zł**")
-
-        # --- LOGIKA OBLICZEŃ ---
+        # --- LOGIKA OBLICZEŃ (Najpierw liczymy...) ---
         m2_sufit = m_uzytkowy * 1.0
         m2_sciany = m_uzytkowy * 2.5
         m2_razem = m2_sufit + m2_sciany
@@ -81,34 +67,23 @@ with col_f2:
         szt_tasma = (m_uzytkowy / 15) * mnoznik
         opk_folia = (m_uzytkowy / 20) * mnoznik
             
-        k_mat = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
-                (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 100
-        k_rob = m2_razem * stawka
-
-        # --- 2. LOGIKA WIDEŁEK (Potem koszty!) ---
-        margines = 0.10 # 10% błędu
-        
-        # Koszt średni materiałów
+        margines = 0.10 # 10% widełek
         k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
                        (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 150
         
         k_mat_min = k_mat_sredni * (1 - margines)
         k_mat_max = k_mat_sredni * (1 + margines)
-        
         k_rob = m2_razem * stawka
 
-        # --- 3. WYŚWIETLANIE (Na końcu wynik!) ---
+        # --- WYŚWIETLANIE WYNIKÓW (Potem pokazujemy!) ---
         with col_f2:
             st.subheader("💰 Przewidywany budżet")
-            
             total_min = k_mat_min + k_rob
             total_max = k_mat_max + k_rob
             
             st.success(f"### RAZEM: **{round(total_min)} - {round(total_max)} zł**")
-            st.caption(f"W tym Twoja robocizna (stała): {round(k_rob)} zł")
-            
+            st.metric("Twoja Robocizna (Stała)", f"{round(k_rob)} zł")
             st.info(f"**Materiały (widełki):** {round(k_mat_min)} - {round(k_mat_max)} zł")
-            st.caption("Widełki uwzględniają wahania cen w marketach (+/- 10%).")
         
             with st.expander("📦 Twoja lista zakupów"):
                 st.write(f"• **Farba BIAŁA:** {round(l_biala)} L")
@@ -116,7 +91,6 @@ with col_f2:
                 st.write(f"• **Grunt:** {round(l_grunt)} L")
                 st.write(f"• **Taśma:** {round(szt_tasma + 0.4)} szt.")
                 st.write(f"• **Folia:** {round(opk_folia + 0.4)} szt.")
-                st.caption(f"Wyliczenia dla {round(m2_razem)} m2 malowania.")
 
     with tab_pro:
         st.write("Tu wkleisz swoją logikę PRO z dodawaniem pojedynczych ścian.")
