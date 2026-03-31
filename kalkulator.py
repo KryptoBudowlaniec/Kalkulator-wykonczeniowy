@@ -44,7 +44,7 @@ if branza == "🎨 Malowanie":
     
     col_f1, col_f2 = st.columns([1, 2])
 
-    m2_mieszkania = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="m_fast")
+        m2_mieszkania = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="m_fast")
         stan_m = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="s_fast")
             
         st.subheader("Wybór Produktów")
