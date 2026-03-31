@@ -542,39 +542,75 @@ elif branza == "⚒️ Sucha Zabudowa":
 
             stawka_gk = st.slider("Twoja stawka za robociznę (zł/m2):", 60, 250, 110)
 
+        # --- OBLICZENIA PROFILI ---
+
+        stawka_gk = st.slider("Twoja stawka za robociznę (zł/m2):", 60, 250, 110)
+
+        # --- OBLICZENIA PROFILI ---
+        if rodzaj_gk == "Sufit Podwieszany":
+            cd_na_m2 = 1 / 0.4
+            szt_cd = int((m2_gk * cd_na_m2) / 3 + 1)
+
+            obwod = (m2_gk ** 0.5) * 4
+            szt_ud = int(obwod / 3 + 1)
+
+            szt_wieszaki = int(m2_gk / 0.9 + 1)
+
+            szt_cw = 0
+            szt_uw = 0
+            szt_ua = 0
+
+        else:
+            szt_uw = int(szer_sciany / 3 + 1)
+
+            cw_na_m = 1 / 0.6
+            szt_cw = int(szer_sciany * cw_na_m + 1)
+
+            szt_ua = n_drzwi * 2
+
+            szt_cd = 0
+            szt_ud = 0
+            szt_wieszaki = 0
+
+        # --- OBLICZENIA WKRĘTÓW ---
+        if rodzaj_gk == "Sufit Podwieszany":
+            wkret_25 = int(m2_gk * 22)
+            wkret_35 = 0
+        else:
+            if plytowanie == "Pojedyncze (1xGK)":
+                wkret_25 = int(m2_gk * 20)
+                wkret_35 = 0
+            else:
+                wkret_25 = int(m2_gk * 20)
+                wkret_35 = int(m2_gk * 20)
+
         # --- LOGIKA OBLICZEŃ MATERIAŁOWYCH ---
         mnoznik_plyt = 1.15 if rodzaj_gk == "Sufit Podwieszany" else (2.3 if plytowanie == "Pojedyncze (1xGK)" else 4.6)
         szt_plyt = (m2_gk * mnoznik_plyt) / 3.12
         
-        # Kołki 8x60 (Średnio 4 szt/m2 sufitu lub co 50cm na profilach UW ścian)
         szt_kolki = m2_gk * 4 if rodzaj_gk == "Sufit Podwieszany" else (m2_gk * 2)
 
-        # Wkręty
-        wkret_25 = m2_gk * 20 if "Pojedyncze" in locals() or rodzaj_gk == "Sufit Podwieszany" else m2_gk * 40
-        wkret_35 = m2_gk * 20 if rodzaj_gk == "Ściana Działowa" and "Podwójne" in plytowanie else 0
-        
-        # --- PRECYZYJNA LOGIKA SPOINOWANIA ---
+        # --- SPOINOWANIE ---
         if typ_tasmy == "Tuff-Tape (Całość)":
-            mb_tuff_tape = m2_gk * 1.5  # całe zbrojenie na pancernej taśmie
+            mb_tuff_tape = m2_gk * 1.5
             mb_flizelina = 0
-            koszt_tasm = (mb_tuff_tape / 30) * 120  # Rolka 30m ok. 120 zł
+            koszt_tasm = (mb_tuff_tape / 30) * 120
         else:
-            # TWOJE ROZWIĄZANIE: Tuff-Tape w naroża (obwód), reszta flizelina
-            mb_tuff_tape = (m2_gk**0.5 * 4)  # obwód ścianki/sufitu (naroża wewnętrzne)
-            mb_flizelina = m2_gk * 1.2       # pozostałe łączenia płyt
-            koszt_tasm = (mb_tuff_tape / 30 * 120) + (mb_flizelina / 25 * 15) # Flizelina ok. 15 zł/rolka
+            mb_tuff_tape = (m2_gk**0.5 * 4)
+            mb_flizelina = m2_gk * 1.2
+            koszt_tasm = (mb_tuff_tape / 30 * 120) + (mb_flizelina / 25 * 15)
 
-        # Masa do spoinowania (Norma: 0.5kg/m2 na łączenia + 0.3kg/m2 na wkręty)
-        zuzycie_masy = 0.8 if "Podwójne" in locals() and plytowanie == "Podwójne (2xGK)" else 0.5
+        zuzycie_masy = 0.8 if plytowanie == "Podwójne (2xGK)" else 0.5
         worki_masy = int((m2_gk * zuzycie_masy) / 25 + 0.99)
-        # --- FINANSE ---
+
         koszt_plyt = int(szt_plyt + 0.99) * baza_mat_gk["Plyta GK 12.5mm (szt)"]
         koszt_wkrety = (int(wkret_25/1000 + 1) * baza_mat_gk["Wkrety TN25 (1000szt)"]) + (int(wkret_35/1000 + 1) * baza_mat_gk["Wkrety TN35 (1000szt)"] if wkret_35 > 0 else 0)
         koszt_kolki = int(szt_kolki/100 + 1) * baza_mat_gk["Kolki 8x60 (100szt)"]
         koszt_masy = worki_masy * baza_masy_gk[wybrana_masa]
         
         total_material = koszt_plyt + koszt_wkrety + koszt_kolki + koszt_masy + koszt_tasm
-        if izolacja_gk: total_material += (m2_gk * baza_mat_gk["Welna (m2)"])
+        if izolacja_gk:
+            total_material += (m2_gk * baza_mat_gk["Welna (m2)"])
 
         with col_g2:
             st.subheader("💰 Podsumowanie Systemu G-K")
@@ -585,18 +621,33 @@ elif branza == "⚒️ Sucha Zabudowa":
             c2.metric("Materiały", f"{round(total_material)} zł")
 
             with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
-                # ... (płyty, profile, kołki) ...
-                
-                st.write(f"### 🧪 SPOINOWANIE ({typ_tasmy})")
-                st.write(f"• **Masa {wybrana_masa}:** {worki_masy} szt. (25kg)")
-                
-                if mb_flizelina > 0:
-                    st.write(f"• **Taśma Tuff-Tape (Naroża):** {round(mb_tuff_tape)} mb (ok. {int(mb_tuff_tape/30 + 1)} rolka)")
-                    st.write(f"• **Flizelina (Łączenia):** {round(mb_flizelina)} mb (ok. {int(mb_flizelina/25 + 1)} rolka)")
+
+                st.write("### 📏 PROFILE")
+                if rodzaj_gk == "Sufit Podwieszany":
+                    st.write(f"• Profil CD60: {szt_cd} szt.")
+                    st.write(f"• Profil UD27: {szt_ud} szt.")
+                    st.write(f"• Wieszaki: {szt_wieszaki} szt.")
                 else:
-                    st.write(f"• **Taśma Tuff-Tape (Całość):** {round(mb_tuff_tape)} mb (ok. {int(mb_tuff_tape/30 + 1)} rolka)")
-                
-                st.write(f"• **Koszt zbrojenia i mas:** ok. **{round(koszt_masy + koszt_tasm)} zł**")
+                    st.write(f"• Profil UW{szer_profilu}: {szt_uw} szt.")
+                    st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
+                    if szt_ua > 0:
+                        st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
+
+                st.write("### 🔩 WKRĘTY")
+                st.write(f"• Wkręty TN25: {wkret_25} szt.")
+                if wkret_35 > 0:
+                    st.write(f"• Wkręty TN35: {wkret_35} szt.")
+
+                st.write(f"### 🧪 SPOINOWANIE ({typ_tasmy})")
+                st.write(f"• Masa {wybrana_masa}: {worki_masy} szt. (25kg)")
+                if mb_flizelina > 0:
+                    st.write(f"• Taśma Tuff-Tape (Naroża): {round(mb_tuff_tape)} mb")
+                    st.write(f"• Flizelina (Łączenia): {round(mb_flizelina)} mb")
+                else:
+                    st.write(f"• Taśma Tuff-Tape (Całość): {round(mb_tuff_tape)} mb")
+
+                st.write(f"• Koszt zbrojenia i mas: ok. {round(koszt_masy + koszt_tasm)} zł")
+
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
