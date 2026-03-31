@@ -542,6 +542,28 @@ elif branza == "⚒️ Sucha Zabudowa":
 
             izolacja_gk = st.checkbox("Wypełnienie wełną?")
 
+            if izolacja_gk:
+                grubosc_welny = st.selectbox(
+                    "Grubość wełny:",
+                    [50, 75, 100, 150],
+                    format_func=lambda x: f"{x} mm"
+                )
+
+                # Zużycie wełny = powierzchnia m2 (ściana lub sufit)
+                m2_welny = m2_gk
+
+                # Paczki mają średnio 5.5 m2
+                paczki_welny = int(m2_welny / 5.5 + 0.99)
+
+                # Cena wełny = cena za m2 * 5.5 m2 * liczba paczek
+                koszt_welny = paczki_welny * baza_mat_gk["Welna (m2)"] * 5.5
+
+            else:
+                grubosc_welny = None
+                m2_welny = 0
+                paczki_welny = 0
+                koszt_welny = 0
+
             st.markdown("---")
             st.subheader("Spoinowanie łączeń")
 
@@ -610,7 +632,8 @@ elif branza == "⚒️ Sucha Zabudowa":
         koszt_kolki = int(szt_kolki / 100 + 1) * baza_mat_gk["Kolki 8x60 (100szt)"]
         koszt_masy = worki_masy * baza_masy_gk[wybrana_masa]
 
-        total_material = koszt_plyt + koszt_wkrety + koszt_kolki + koszt_masy + koszt_tasm
+        total_material = koszt_plyt + koszt_wkrety + koszt_kolki + koszt_masy + koszt_tasm + koszt_welny
+
         if izolacja_gk:
             total_material += m2_gk * baza_mat_gk["Welna (m2)"]
 
@@ -650,7 +673,15 @@ elif branza == "⚒️ Sucha Zabudowa":
                     st.write(f"• Taśma Tuff-Tape (Całość): {round(mb_tuff_tape)} mb")
 
                 st.write(f"• Koszt zbrojenia i mas: ok. {round(koszt_masy + koszt_tasm)} zł")
+                st.write("### 🧱 WEŁNA")
 
+                if izolacja_gk:
+                    st.write(f"• Grubość: {grubosc_welny} mm")
+                    st.write(f"• Ilość: {round(m2_welny, 2)} m²")
+                    st.write(f"• Paczki: {paczki_welny} szt.")
+                    st.write(f"• Koszt: {round(koszt_welny)} zł")
+                else:
+                    st.write("• Brak (nie wybrano izolacji)")
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
