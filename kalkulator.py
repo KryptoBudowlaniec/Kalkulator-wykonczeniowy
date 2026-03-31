@@ -55,16 +55,6 @@ if branza == "🎨 Malowanie":
             
             stawka = st.slider("Twoja stawka za m2 robocizny:", 20, 70, 35)
 
-        # --- LOGIKA WIDEŁEK CENOWYCH ---
-        margines = 0.10  # Przyjmujemy 10% w górę i w dół
-
-# Obliczamy koszt bazowy (średni)
-        k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
-               (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 150
-
-# Tworzymy widełki
-        k_mat_min = k_mat_sredni * (1 - margines)
-        k_mat_max = k_mat_sredni * (1 + margines)
 
 with col_f2:
     st.subheader("💰 Przewidywany budżet")
@@ -95,15 +85,32 @@ with col_f2:
                 (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 100
         k_rob = m2_razem * stawka
 
-        with col_f2:
-            st.subheader("💰 Podsumowanie")
-            st.metric("RAZEM (Materiały + Praca)", f"{round(k_mat + k_rob)} zł")
-            
-            c1, c2 = st.columns(2)
-            c1.metric("Twoja Robocizna", f"{round(k_rob)} zł")
-            c2.metric("Koszt Materiałów", f"{round(k_mat)} zł")
+        # --- 2. LOGIKA WIDEŁEK (Potem koszty!) ---
+        margines = 0.10 # 10% błędu
         
-            with st.expander("📦 Lista zakupów (Szacunkowa)"):
+        # Koszt średni materiałów
+        k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
+                       (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + 150
+        
+        k_mat_min = k_mat_sredni * (1 - margines)
+        k_mat_max = k_mat_sredni * (1 + margines)
+        
+        k_rob = m2_razem * stawka
+
+        # --- 3. WYŚWIETLANIE (Na końcu wynik!) ---
+        with col_f2:
+            st.subheader("💰 Przewidywany budżet")
+            
+            total_min = k_mat_min + k_rob
+            total_max = k_mat_max + k_rob
+            
+            st.success(f"### RAZEM: **{round(total_min)} - {round(total_max)} zł**")
+            st.caption(f"W tym Twoja robocizna (stała): {round(k_rob)} zł")
+            
+            st.info(f"**Materiały (widełki):** {round(k_mat_min)} - {round(k_mat_max)} zł")
+            st.caption("Widełki uwzględniają wahania cen w marketach (+/- 10%).")
+        
+            with st.expander("📦 Twoja lista zakupów"):
                 st.write(f"• **Farba BIAŁA:** {round(l_biala)} L")
                 st.write(f"• **Farba KOLOR:** {round(l_kolor)} L")
                 st.write(f"• **Grunt:** {round(l_grunt)} L")
