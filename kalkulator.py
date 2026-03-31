@@ -492,6 +492,10 @@ elif branza == "⚒️ Sucha Zabudowa":
         col_g1, col_g2 = st.columns([1, 1.2])
 
         with col_g1:
+            # --- DODAJ TĘ LINIĘ TUTAJ (WARTOŚĆ DOMYŚLNA) ---
+            szer_profilu = 60 
+            
+            rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"], key="gk_type")
             rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"], key="gk_type")
             dl_profilu_cd = 3.0
             
