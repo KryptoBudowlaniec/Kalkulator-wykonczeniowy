@@ -496,7 +496,6 @@ elif branza == "⚒️ Sucha Zabudowa":
             szer_profilu = 60 
             
             rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"], key="gk_type")
-            rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"], key="gk_type")
             dl_profilu_cd = 3.0
             
             if rodzaj_gk == "Sufit Podwieszany":
