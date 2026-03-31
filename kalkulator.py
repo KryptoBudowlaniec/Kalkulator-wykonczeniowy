@@ -604,24 +604,67 @@ elif branza == "⚒️ Sucha Zabudowa":
         
         total_material = koszt_plyt + koszt_profile + koszt_akcesoria + koszt_welny + koszt_masy + koszt_pchelki + koszt_laczniki
 
+        # --- 1. LOGIKA SPOINOWANIA (TAŚMY I MASY) ---
+        st.markdown("---")
+        st.subheader("Wykończenie spoin")
+        c_sp1, c_sp2 = st.columns(2)
+        
+        typ_tasmy = c_sp1.radio("Zbrojenie:", ["Tuff-Tape (Całość)", "Flizelina + Tuff-Tape (Narożniki)"])
+        wybrana_masa = c_sp2.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()))
 
+        # --- 2. OBLICZENIA ILOŚCI I KOSZTÓW ---
+        naddatek = 1.10 
+        szt_plyt = int((m2_gk * naddatek) / 2.88) + 1
+        
+        # Wkręty: TN25 (20 szt/m2) + Pchełki LN (10 szt/m2 sufitu)
+        wkret_25 = int(m2_gk * 20 * naddatek)
+        szt_pchelki = int(m2_gk * 12) if rodzaj_gk == "Sufit Podwieszany" else int(m2_gk * 5)
+
+        # Taśmy i masy
+        if typ_tasmy == "Tuff-Tape (Całość)":
+            mb_tuff = m2_gk * 1.5
+            mb_fliz = 0
+        else:
+            mb_tuff = m2_gk * 0.4 # Tylko narożniki
+            mb_fliz = m2_gk * 1.1 # Połączenia płaskie
+        
+        koszt_tasm = (int(mb_tuff/30)+1)*120 + (int(mb_fliz/25)+1)*15
+        worki_masy = int((m2_gk * 0.5) / 25 + 0.99)
+        
+        # Sumowanie kosztów
+        koszt_plyt = szt_plyt * baza_mat_gk["Plyta GK 12.5mm (szt)"]
+        koszt_pchelki = (int(szt_pchelki/1000)+1) * 45.0
+        koszt_wkrety = (int(wkret_25/1000)+1) * baza_mat_gk["Wkrety TN25 (1000szt)"]
+        koszt_masy = worki_masy * baza_masy_gk[wybrana_masa]
+        
+        total_material = koszt_plyt + koszt_profile + koszt_akcesoria + koszt_welny + koszt_masy + koszt_pchelki + koszt_wkrety + koszt_tasm
+        robocizna = m2_gk * stawka_gk
+
+        
+            # --- 3. WYŚWIETLANIE (PRAWA KOLUMNA) ---
         with col_g2:
             st.subheader("💰 Podsumowanie")
             st.success(f"### RAZEM: **{round(total_material + robocizna)} zł**")
             
-            with st.expander("📦 LISTA MATERIAŁÓW", expanded=True):
+            with st.expander("📦 LISTA ZAKUPÓW", expanded=True):
                 if rodzaj_gk == "Sufit Podwieszany":
                     st.write(f"• Profile CD60: {szt_cd} szt.")
                     st.write(f"• Profile UD27: {szt_ud} szt.")
                     st.write(f"• Wieszaki: {szt_wieszaki} szt.")
+                    if laczniki_krzyzowe > 0: st.write(f"• Łączniki krzyżowe: {laczniki_krzyzowe} szt.")
                 else:
                     st.write(f"• Profile CW{szer_profilu}: {szt_cw} szt.")
                     st.write(f"• Profile UW{szer_profilu}: {szt_uw} szt.")
-                st.write(f"• Płyty GK (1.2x2.6m): {szt_plyt} szt.")
-                if izolacja_gk:
-                    st.write(f"• Wełna mineralna: {round(m2_gk, 2)} m²")
-                st.write(f"• Masa ({wybrana_masa}): {int(m2_gk*0.5)} kg")
-                st.write(f"• Łączniki krzyżowe: {laczniki_krzyzowe} szt.")
+                
+                st.write(f"• Płyty GK (120x240): {szt_plyt} szt.")
+                st.write(f"• Wkręty TN25: {int(wkret_25/1000)+1} op. (1000szt)")
+                st.write(f"• Wkręty Pchełki LN: {int(szt_pchelki/1000)+1} op. (1000szt)")
+                
+                if mb_tuff > 0: st.write(f"• Taśma Tuff-Tape: {int(mb_tuff/30)+1} rolka (30mb)")
+                if mb_fliz > 0: st.write(f"• Flizelina: {int(mb_fliz/25)+1} rolka (25mb)")
+                
+                st.write(f"• Masa ({wybrana_masa}): {worki_masy} worki/wiadra")
+                if izolacja_gk: st.write(f"• Wełna ({grubosc_welny}mm): {round(m2_gk, 1)} m²")
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
