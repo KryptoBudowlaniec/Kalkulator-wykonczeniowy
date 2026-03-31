@@ -387,18 +387,77 @@ elif branza == "📐 Podłogi (Panele/Deska)":
 
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "🏗️ Tynkowanie":
-    st.header("🏗️ Kalkulator Tynków (Maszynowe/Ręczne)")
-    m2_t = st.number_input("Metraż ścian do tynkowania (m2):", min_value=1.0, value=150.0)
-    typ_t = st.radio("Rodzaj tynku:", ["Gipsowy (Lekki)", "Cementowo-Wapienny"])
+    st.header("🏗️ Kalkulator Tynków Maszynowych i Ręcznych")
     
-    # Logika: Gipsowy ok. 10kg/m2, Cem-Wap ok. 25kg/m2 (przy 1.5cm)
-    norma_t = 10 if "Gipsowy" in typ_t else 25
-    kg_t = m2_t * norma_t
-    worki_t = kg_t / 30 # worki 30kg
+    # --- BAZA WIEDZY: TYNKI I GRUNTY ---
+    baza_tynkow = {
+        "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 42, "waga": 30, "norma": 0.8}, # 0.8kg na 1mm/m2
+        "Knauf Goldband (Ręczny Gipsowy)": {"cena": 48, "waga": 30, "norma": 0.85},
+        "Tynk Maszynowy Cem-Wap (Lekki)": {"cena": 35, "waga": 30, "norma": 1.4},
+        "Tynk Ręczny Cem-Wap (Standard)": {"cena": 28, "waga": 25, "norma": 1.6}
+    }
     
-    col1, col2 = st.columns(2)
-    col1.metric("Potrzebny materiał", f"{round(kg_t)} kg", f"{int(worki_t + 0.99)} worków")
-    col2.metric("Szacowana robocizna", f"{round(m2_t * 35)} zł", "35 zł/m2")
+    baza_grunt_kwarc = {
+        "Dolina Nidy (Grunt Kwarcowy)": 95, # cena za wiadro 15kg
+        "Knauf Betokontakt": 165,
+        "Atlas Grunto-Plast": 110
+    }
+
+    tab_t1, tab_t2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
+
+    with tab_t1:
+        col_t1, col_t2 = st.columns([1, 1.2])
+        
+        with col_t1:
+            m2_podl_t = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="tyn_m_fast")
+            wybrany_tynk = st.selectbox("Wybierz rodzaj tynku:", list(baza_tynkow.keys()))
+            wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
+            
+            st.markdown("---")
+            grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
+            stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 40, 55, 45)
+
+        # --- LOGIKA OBLICZEŃ (Twoje m2 ścian) ---
+        m2_scian_t = m2_podl_t * 3.5
+        dane_t = baza_tynkow[wybrany_tynk]
+        
+        # Zużycie tynku
+        kg_na_m2_t = dane_t["norma"] * grubosc_t
+        kg_razem_t = m2_scian_t * kg_na_m2_t
+        worki_t = kg_razem_t / dane_t["waga"]
+        
+        # Zużycie gruntu (ok. 0.3kg / m2)
+        kg_gruntu_t = m2_scian_t * 0.3
+        wiadra_gruntu = kg_gruntu_t / 15 # wiadra 15kg
+        
+        # Finanse
+        koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_scian_t * 5) # +5zł na narożniki
+        koszt_rob_t = m2_scian_t * stawka_rob_t
+
+        with col_t2:
+            st.subheader("📊 Wyniki Tynkowania")
+            # Widełki 10% na materiał
+            st.success(f"### RAZEM: **{round((koszt_mat_t * 0.9) + koszt_rob_t)} - {round((koszt_mat_t * 1.1) + koszt_rob_t)} zł**")
+            
+            c1, c2 = st.columns(2)
+            c1.metric("Twoja Robocizna", f"{round(koszt_rob_t)} zł")
+            c2.metric("Waga materiału", f"{round(kg_razem_t/1000, 1)} Tony")
+
+            with st.expander("📦 Lista zakupów (Szczegółowa)"):
+                st.write(f"### 🧱 TYNK: {wybrany_tynk}")
+                st.write(f"- Kup: **{int(worki_t + 0.99)} worków** (opakowanie {dane_t['waga']}kg)")
+                st.write(f"- Szacowany koszt tynku: **{round(worki_t * dane_t['cena'])} zł**")
+                
+                st.markdown("---")
+                st.write(f"### 🧪 GRUNT: {wybrany_grunt_t}")
+                st.write(f"- Kup: **{int(wiadra_gruntu + 0.99)} wiader** (opakowanie 15kg)")
+                
+                st.markdown("---")
+                st.write(f"• Narożniki tynkarskie: ok. {round(m2_podl_t * 0.5)} szt.")
+                st.caption(f"Przyjęto grubość {grubosc_t} mm na {round(m2_scian_t)} m² ścian.")
+
+    with tab_t2:
+        st.info("💎 Wersja PRO: Tutaj odliczymy otwory okienne, co przy tynkach maszynowych jest kluczowe dla precyzyjnej wyceny.")
 
 # --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "⚒️ Sucha Zabudowa":
