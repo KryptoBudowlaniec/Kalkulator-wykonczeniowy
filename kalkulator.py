@@ -630,28 +630,37 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         import base64
 
         def create_pdf(koszty_dict, total, metraz, std):
+            # Funkcja usuwająca polskie znaki dla PDF (aby uniknąć błędów)
+            def pl_to_en(text):
+                pl = "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ"
+                en = "acelnoszzACELNOSZZ"
+                for p, e in zip(pl, en):
+                    text = text.replace(p, e)
+                return text
+
             pdf = FPDF()
             pdf.add_page()
             pdf.set_font("Arial", "B", 16)
-            pdf.cell(200, 10, "KOSZTORYS INWESTORSKI - RAPORT", ln=True, align='C')
+            
+            # Nagłówek (oczyszczony z PL znaków)
+            pdf.cell(200, 10, pl_to_en("KOSZTORYS INWESTORSKI - RAPORT"), ln=True, align='C')
             pdf.set_font("Arial", "", 12)
-            pdf.cell(200, 10, f"Metraz: {metraz} m2 | Standard: {std}", ln=True, align='C')
+            pdf.cell(200, 10, pl_to_en(f"Metraz: {metraz} m2 | Standard: {std}"), ln=True, align='C')
             pdf.ln(10)
             
+            # Tabela kosztów
             for k, v in koszty_dict.items():
-                pdf.cell(100, 10, f"{k}:", border=1)
+                pdf.cell(100, 10, pl_to_en(f"{k}:"), border=1)
                 pdf.cell(90, 10, f"{round(v)} zl", border=1, ln=True)
             
+            pdf.ln(5)
             pdf.set_font("Arial", "B", 12)
-            pdf.cell(100, 10, "SUMA CALKOWITA:", border=1)
+            pdf.cell(100, 10, pl_to_en("SUMA CALKOWITA:"), border=1)
             pdf.cell(90, 10, f"{round(total)} zl", border=1, ln=True)
             
+            # Footer
+            pdf.ln(20)
+            pdf.set_font("Arial", "I", 10)
+            pdf.cell(200, 10, pl_to_en("Wygenerowano automatycznie przez Kalkulator Wykonczeniowy."), ln=True, align='C')
+            
             return pdf.output(dest="S").encode("latin-1")
-
-        st.markdown("---")
-        if st.button("📄 Generuj Raport PDF"):
-            pdf_data = create_pdf(koszty, total_sum, m2_total, standard)
-            b64 = base64.b64encode(pdf_data).decode()
-            href = f'<a href="data:application/octet-stream;base64,{b64}" download="kosztorys_{m2_total}m2.pdf">📥 KLIKNIJ TUTAJ, ABY POBRAĆ PDF</a>'
-            st.markdown(href, unsafe_allow_html=True)
-            st.success("Raport gotowy do pobrania!")
