@@ -459,6 +459,36 @@ elif branza == "🏗️ Tynkowanie":
     with tab_t2:
         st.info("💎 Wersja PRO: Tutaj odliczymy otwory okienne, co przy tynkach maszynowych jest kluczowe dla precyzyjnej wyceny.")
 
+if "Wyklejanie" in wybrany_tynk:
+        m2_scian_t = m2_podl_t * 3.5
+        
+        # 1. OBLICZANIE PŁYT (Format 1.2 x 2.6m = 3.12 m2 lub 1.2 x 2.0 = 2.4 m2)
+        # Przyjmijmy standard rynkowy 1.2x2.6m (ok. 3 m2 / szt)
+        liczba_plyt = (m2_scian_t * 1.1) / 3.12 
+        
+        # 2. TWOJA NORMA: 1 worek (25kg) na 2.5 płyty
+        worki_kleju = liczba_plyt / 2.5
+        
+        # Ceny (możesz je edytować)
+        cena_plyty = 35  # za sztukę (zwykła biała 12.5mm)
+        cena_perlfiks = 38 # za worek 25kg
+        
+        koszt_mat_t = (liczba_plyt * cena_plyty) + (worki_kleju * cena_perlfiks)
+        koszt_rob_t = m2_scian_t * stawka_rob_t
+
+        with col_t2:
+            st.info("💎 SYSTEM: Suchy tynk (Płyty GK na klej)")
+            st.metric("Liczba płyt GK (120x260)", f"{int(liczba_plyt + 0.99)} szt.")
+            st.metric("Klej gipsowy (Perlfix 25kg)", f"{int(worki_kleju + 0.99)} worków")
+            
+            st.success(f"### KOSZT CAŁKOWITY: **{round(koszt_mat_t + koszt_rob_t)} zł**")
+            
+            with st.expander("📦 Detale zamówienia:"):
+                st.write(f"• Przyjęto normę: 1 worek kleju na 2.5 płyty")
+                st.write(f"• Szacowany materiał: {round(koszt_mat_t)} zł")
+                st.write(f"• Twoja robocizna: {round(koszt_rob_t)} zł")
+                st.caption("Pamiętaj o doliczeniu taśm i gładzi do spoinowania w module Szpachlowanie.")
+
 # --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "⚒️ Sucha Zabudowa":
     st.header("⚒️ Systemy Suchej Zabudowy (G-K)")
