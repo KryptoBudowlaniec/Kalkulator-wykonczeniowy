@@ -206,6 +206,8 @@ elif branza == "🧱 Szpachlowanie":
     # 1. TWOJA BAZA WIEDZY
     baza_sypkie = {
         "Cekol C-45 (20kg)": {"cena": 58, "waga": 20},
+        "FransPol GS-2 (20kg)": {"cena": 50, "waga": 20},
+        "Dolina Nidy Omega (20kg)": {"cena": 37, "waga": 20},
         "Atlas Gipsar Uni (20kg)": {"cena": 52, "waga": 20}
     }
     
