@@ -86,11 +86,16 @@ if branza == "🎨 Malowanie":
             st.info(f"**Materiały (widełki):** {round(k_mat_min)} - {round(k_mat_max)} zł")
         
             with st.expander("📦 Twoja lista zakupów"):
-                st.write(f"• **Farba BIAŁA:** {round(l_biala)} L")
-                st.write(f"• **Farba KOLOR:** {round(l_kolor)} L")
-                st.write(f"• **Grunt:** {round(l_grunt)} L")
-                st.write(f"• **Taśma:** {round(szt_tasma + 0.4)} szt.")
-                st.write(f"• **Folia:** {round(opk_folia + 0.4)} szt.")
+                # Wyświetlamy konkretne nazwy wybrane przez użytkownika
+                st.write(f"• **Farba BIAŁA ({f_biala}):** {round(l_biala)} L")
+                st.write(f"• **Farba KOLOR ({f_kolor}):** {round(l_kolor)} L")
+                st.write(f"• **Grunt ({f_grunt}):** {round(l_grunt)} L")
+                st.write(f"• **Taśma ({f_tasma}):** {round(szt_tasma + 0.4)} szt.")
+                st.write(f"• **Folia malarska:** {round(opk_folia + 0.4)} szt.")
+                
+                st.markdown("---")
+                st.caption(f"Wyliczenia dla {round(m2_razem)} m² powierzchni malowania.")
+                st.info("💡 Pamiętaj, aby kupować farby w opakowaniach zbiorczych (5L/10L) – wyjdzie taniej!")
 
     with tab_pro:
         st.write("Tu wkleisz swoją logikę PRO z dodawaniem pojedynczych ścian.")
