@@ -534,16 +534,16 @@ elif branza == "⚒️ Sucha Zabudowa":
 
             if rodzaj_gk == "Sufit Podwieszany":
             
+                typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy", "Krzyżowy"])
+                typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy"])
+                dl_profilu_cd = st.selectbox("Długość profili CD:", [3, 4], format_func=lambda x: f"{x} m")
+
                 c_suf1, c_suf2 = st.columns(2)
                 dl_sufitu = c_suf1.number_input("Długość sufitu (m):", min_value=1.0, value=5.0, step=0.1)
                 sz_sufitu = c_suf2.number_input("Szerokość sufitu (m):", min_value=1.0, value=4.0, step=0.1)
 
                 m2_gk = dl_sufitu * sz_sufitu
                 st.info(f"📐 Powierzchnia sufitu: **{round(m2_gk, 2)} m²**")
-
-                typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy", "Krzyżowy"])
-                typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy"])
-
                 # CD co 40 cm
                 liczba_cd = int(sz_sufitu / 0.4) + 1
 
@@ -607,29 +607,32 @@ elif branza == "⚒️ Sucha Zabudowa":
 
         # --- OBLICZENIA PROFILI ---
         if rodzaj_gk == "Sufit Podwieszany":
-            cd_na_m2 = 1 / 0.4
-            szt_cd = int((m2_gk * cd_na_m2) / 3 + 1)
+            # CD co 40 cm
+            liczba_cd = int(sz_sufitu / 0.4) + 1
 
-            obwod = (m2_gk ** 0.5) * 4
+            # długość jednego CD
+            dl_cd = dl_sufitu
+
+            # ile odcinków profilu potrzeba
+            odcinki_cd = int(dl_cd / dl_profilu_cd)
+            reszta_cd = dl_cd % dl_profilu_cd
+
+            # łączniki = liczba miejsc łączenia
+            laczniki_cd = odcinki_cd * liczba_cd
+
+            # sztuki profili CD
+            szt_cd = liczba_cd * (odcinki_cd + (1 if reszta_cd > 0 else 0))
+
+            # UD po obwodzie
+            obwod = (dl_sufitu + sz_sufitu) * 2
             szt_ud = int(obwod / 3 + 1)
 
+            # wieszaki
             szt_wieszaki = int(m2_gk / 0.9 + 1)
 
-            szt_cw = 0
-            szt_uw = 0
-            szt_ua = 0
+            szt_cw = szt_uw = szt_ua = 0
 
-        else:
-            szt_uw = int(szer_sciany / 3 + 1)
-            cw_na_m = 1 / 0.6
-            szt_cw = int(szer_sciany * cw_na_m + 1)
-            szt_ua = n_drzwi * 2
-
-            szt_cd = 0
-            szt_ud = 0
-            szt_wieszaki = 0
-
-        # --- OBLICZENIA WKRĘTÓW ---
+            # --- OBLICZENIA WKRĘTÓW ---
         if rodzaj_gk == "Sufit Podwieszany":
             wkret_25 = int(m2_gk * 22)
             wkret_35 = 0
@@ -686,6 +689,7 @@ elif branza == "⚒️ Sucha Zabudowa":
                     st.write(f"• Profil CD60: {szt_cd} szt.")
                     st.write(f"• Profil UD27: {szt_ud} szt.")
                     st.write(f"• Wieszaki: {szt_wieszaki} szt.")
+                    st.write(f"• Łączniki do CD: {laczniki_cd} szt.")
                 else:
                     st.write(f"• Profil UW{szer_profilu}: {szt_uw} szt.")
                     st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
