@@ -536,57 +536,57 @@ elif branza == "⚒️ Sucha Zabudowa":
             
                     # --- WARSTWA 1: CD NOŚNE ---
             if typ_stelaza == "Pojedynczy":
-            rozstaw_cd1 = 0.40
+                rozstaw_cd1 = 0.40
             else:
-            rozstaw_cd1 = 1.10   # 110 cm jako wartość pośrednia
+                rozstaw_cd1 = 1.10   # 110 cm jako wartość pośrednia
 
-            liczba_cd1 = int(sz_sufitu / rozstaw_cd1) + 1
+                liczba_cd1 = int(sz_sufitu / rozstaw_cd1) + 1
 
-            dl_cd1 = dl_sufitu
+                dl_cd1 = dl_sufitu
 
-            odcinki_cd1 = int(dl_cd1 / dl_profilu_cd)
-            reszta_cd1 = dl_cd1 % dl_profilu_cd
+                odcinki_cd1 = int(dl_cd1 / dl_profilu_cd)
+                reszta_cd1 = dl_cd1 % dl_profilu_cd
 
-            laczniki_cd1 = odcinki_cd1 * liczba_cd1
+                laczniki_cd1 = odcinki_cd1 * liczba_cd1
 
-            szt_cd1 = liczba_cd1 * (odcinki_cd1 + (1 if reszta_cd1 > 0 else 0))
+                szt_cd1 = liczba_cd1 * (odcinki_cd1 + (1 if reszta_cd1 > 0 else 0))
 
         # --- WARSTWA 2: CD KRZYŻOWE ---
             if typ_stelaza == "Krzyżowy":
 
-            rozstaw_cd2 = 0.40
-            liczba_cd2 = int(dl_sufitu / rozstaw_cd2) + 1
+                rozstaw_cd2 = 0.40
+                liczba_cd2 = int(dl_sufitu / rozstaw_cd2) + 1
 
-            dl_cd2 = sz_sufitu
+                dl_cd2 = sz_sufitu
 
-            odcinki_cd2 = int(dl_cd2 / dl_profilu_cd)
-            reszta_cd2 = dl_cd2 % dl_profilu_cd
+                odcinki_cd2 = int(dl_cd2 / dl_profilu_cd)
+                reszta_cd2 = dl_cd2 % dl_profilu_cd
 
-            szt_cd2 = liczba_cd2 * (odcinki_cd2 + (1 if reszta_cd2 > 0 else 0))
+                szt_cd2 = liczba_cd2 * (odcinki_cd2 + (1 if reszta_cd2 > 0 else 0))
 
             # łączniki liniowe dla CD2
-            laczniki_cd2 = odcinki_cd2 * liczba_cd2
+                laczniki_cd2 = odcinki_cd2 * liczba_cd2
 
             # łączniki krzyżowe = każde przecięcie CD1 × CD2
-            laczniki_krzyzowe = liczba_cd1 * liczba_cd2
+                laczniki_krzyzowe = liczba_cd1 * liczba_cd2
 
             else:
-            szt_cd2 = 0
-            laczniki_cd2 = 0
-            laczniki_krzyzowe = 0
+                szt_cd2 = 0
+                laczniki_cd2 = 0
+                laczniki_krzyzowe = 0
 
         # --- UD po obwodzie ---
-            obwod = (dl_sufitu + sz_sufitu) * 2
-            szt_ud = int(obwod / 3 + 1)
+                obwod = (dl_sufitu + sz_sufitu) * 2
+                szt_ud = int(obwod / 3 + 1)
 
         # --- Wieszaków ---
-            szt_wieszaki = int(m2_gk / 0.9 + 1)
+                szt_wieszaki = int(m2_gk / 0.9 + 1)
 
         # --- SUMA PROFILI CD ---
-            szt_cd = szt_cd1 + szt_cd2
+                szt_cd = szt_cd1 + szt_cd2
 
         # ściana nie używa CW/UW
-            szt_cw = szt_uw = szt_ua = 0
+                szt_cw = szt_uw = szt_ua = 0
             else:
                 szer_profilu = st.selectbox("Profil CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
                 plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
