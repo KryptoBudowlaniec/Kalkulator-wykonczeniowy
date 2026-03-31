@@ -493,58 +493,62 @@ elif branza == "⚒️ Sucha Zabudowa":
         "Profil UA75 (3mb)": 75.0,
         "Profil CW100 (3mb)": 20.0,
         "Profil UW100 (3mb)": 18.0,
-        "Profil UA100 (3mb)": 95.0,# Ościeżnicowy
+        "Profil UA100 (3mb)": 95.0,
         "Wieszak ES / Obrotowy (szt)": 2.5,
         "Wkrety TN25 (1000szt)": 45.0,
         "Wkrety TN35 (1000szt)": 55.0,
         "Kolki 8x60 (100szt)": 32.0,
         "Welna (m2)": 18.0
     }
-    # Baza mas (skopiowana z tynków dla spójności)
+
     baza_masy_gk = {
-        "Knauf Uniflot": 115, "Knauf Vario": 95, "Dolina Nidy Start": 45, "Franspol": 55
+        "Knauf Uniflot": 115,
+        "Knauf Vario": 95,
+        "Dolina Nidy Start": 45,
+        "Franspol": 55
     }
 
     with tab_gk1:
+
         col_g1, col_g2 = st.columns([1, 1.2])
-        
+
+        # --- LEWA KOLUMNA (DANE WEJŚCIOWE) ---
         with col_g1:
-            # BEZPIECZNIKI (żeby kod nie wybuchł)
-            n_drzwi = 0 
+
+            n_drzwi = 0
             szer_profilu = "Standard"
+
             rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"], key="gk_type")
-            
-        if rodzaj_gk == "Ściana Działowa":
-            c_szer, c_wys = st.columns(2)
-            szer_sciany = c_szer.number_input("Długość ścianki (m):", min_value=0.1, value=4.0, step=0.1)
-            wys_sciany = c_wys.number_input("Wysokość ścianki (m):", min_value=0.1, value=2.6, step=0.1)
-            m2_gk = szer_sciany * wys_sciany
-            st.info(f"📐 Powierzchnia ścianki: **{round(m2_gk, 2)} m²**")
-        else:
-            m2_gk = st.number_input("Metraż sufitu (m2):", min_value=1.0, value=20.0, step=0.5)
+
+            if rodzaj_gk == "Ściana Działowa":
+                c_szer, c_wys = st.columns(2)
+                szer_sciany = c_szer.number_input("Długość ścianki (m):", min_value=0.1, value=4.0, step=0.1)
+                wys_sciany = c_wys.number_input("Wysokość ścianki (m):", min_value=0.1, value=2.6, step=0.1)
+                m2_gk = szer_sciany * wys_sciany
+                st.info(f"📐 Powierzchnia ścianki: **{round(m2_gk, 2)} m²**")
+            else:
+                m2_gk = st.number_input("Metraż sufitu (m2):", min_value=1.0, value=20.0, step=0.5)
 
             st.markdown("---")
             st.subheader("Konfiguracja Systemu")
-        if rodzaj_gk == "Sufit Podwieszany":
-            typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy", "Krzyżowy"])
-            typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy"])
-        else:
-            szer_profilu = st.selectbox("Profil CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
-            plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
-            n_drzwi = st.number_input("Otwory drzwiowe (Profile UA):", min_value=0, value=0)
+
+            if rodzaj_gk == "Sufit Podwieszany":
+                typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy", "Krzyżowy"])
+                typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy"])
+            else:
+                szer_profilu = st.selectbox("Profil CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
+                plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
+                n_drzwi = st.number_input("Otwory drzwiowe (Profile UA):", min_value=0, value=0)
 
             izolacja_gk = st.checkbox("Wypełnienie wełną?")
-            
+
             st.markdown("---")
             st.subheader("Spoinowanie łączeń")
+
             typ_tasmy = st.radio("Zbrojenie:", ["Tuff-Tape (Całość)", "Flizelina (Standard)"])
             wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()))
 
             stawka_gk = st.slider("Twoja stawka za robociznę (zł/m2):", 60, 250, 110)
-
-        # --- OBLICZENIA PROFILI ---
-
-        stawka_gk = st.slider("Twoja stawka za robociznę (zł/m2):", 60, 250, 110)
 
         # --- OBLICZENIA PROFILI ---
         if rodzaj_gk == "Sufit Podwieszany":
@@ -562,10 +566,8 @@ elif branza == "⚒️ Sucha Zabudowa":
 
         else:
             szt_uw = int(szer_sciany / 3 + 1)
-
             cw_na_m = 1 / 0.6
             szt_cw = int(szer_sciany * cw_na_m + 1)
-
             szt_ua = n_drzwi * 2
 
             szt_cd = 0
@@ -582,71 +584,6 @@ elif branza == "⚒️ Sucha Zabudowa":
                 wkret_35 = 0
             else:
                 wkret_25 = int(m2_gk * 20)
-                wkret_35 = int(m2_gk * 20)
-
-        # --- LOGIKA OBLICZEŃ MATERIAŁOWYCH ---
-        mnoznik_plyt = 1.15 if rodzaj_gk == "Sufit Podwieszany" else (2.3 if plytowanie == "Pojedyncze (1xGK)" else 4.6)
-        szt_plyt = (m2_gk * mnoznik_plyt) / 3.12
-        
-        szt_kolki = m2_gk * 4 if rodzaj_gk == "Sufit Podwieszany" else (m2_gk * 2)
-
-        # --- SPOINOWANIE ---
-        if typ_tasmy == "Tuff-Tape (Całość)":
-            mb_tuff_tape = m2_gk * 1.5
-            mb_flizelina = 0
-            koszt_tasm = (mb_tuff_tape / 30) * 120
-        else:
-            mb_tuff_tape = (m2_gk**0.5 * 4)
-            mb_flizelina = m2_gk * 1.2
-            koszt_tasm = (mb_tuff_tape / 30 * 120) + (mb_flizelina / 25 * 15)
-
-        zuzycie_masy = 0.8 if plytowanie == "Podwójne (2xGK)" else 0.5
-        worki_masy = int((m2_gk * zuzycie_masy) / 25 + 0.99)
-
-        koszt_plyt = int(szt_plyt + 0.99) * baza_mat_gk["Plyta GK 12.5mm (szt)"]
-        koszt_wkrety = (int(wkret_25/1000 + 1) * baza_mat_gk["Wkrety TN25 (1000szt)"]) + (int(wkret_35/1000 + 1) * baza_mat_gk["Wkrety TN35 (1000szt)"] if wkret_35 > 0 else 0)
-        koszt_kolki = int(szt_kolki/100 + 1) * baza_mat_gk["Kolki 8x60 (100szt)"]
-        koszt_masy = worki_masy * baza_masy_gk[wybrana_masa]
-        
-        total_material = koszt_plyt + koszt_wkrety + koszt_kolki + koszt_masy + koszt_tasm
-        if izolacja_gk:
-            total_material += (m2_gk * baza_mat_gk["Welna (m2)"])
-
-        with col_g2:
-            st.subheader("💰 Podsumowanie Systemu G-K")
-            st.success(f"### RAZEM: **{round(total_material + (m2_gk * stawka_gk))} zł**")
-            
-            c1, c2 = st.columns(2)
-            c1.metric("Robocizna", f"{round(m2_gk * stawka_gk)} zł")
-            c2.metric("Materiały", f"{round(total_material)} zł")
-
-        with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
-
-            st.write("### 📏 PROFILE")
-            if rodzaj_gk == "Sufit Podwieszany":
-                st.write(f"• Profil CD60: {szt_cd} szt.")
-                st.write(f"• Profil UD27: {szt_ud} szt.")
-                st.write(f"• Wieszaki: {szt_wieszaki} szt.")
-            else:
-                st.write(f"• Profil UW{szer_profilu}: {szt_uw} szt.")
-                st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
-            if szt_ua > 0:
-                st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
-
-                st.write("### 🔩 WKRĘTY")
-                st.write(f"• Wkręty TN25: {wkret_25} szt.")
-            if wkret_35 > 0:
-                st.write(f"• Wkręty TN35: {wkret_35} szt.")
-
-                st.write(f"### 🧪 SPOINOWANIE ({typ_tasmy})")
-                st.write(f"• Masa {wybrana_masa}: {worki_masy} szt. (25kg)")
-            if mb_flizelina > 0:
-                st.write(f"• Taśma Tuff-Tape (Naroża): {round(mb_tuff_tape)} mb")
-                st.write(f"• Flizelina (Łączenia): {round(mb_flizelina)} mb")
-            else:
-                st.write(f"• Taśma Tuff-Tape (Całość): {round(mb_tuff_tape)} mb")
-
-                st.write(f"• Koszt zbrojenia i mas: ok. {round(koszt_masy + koszt_tasm)} zł")
 
             
 # --- SEKCJA: ELEKTRYKA ---
