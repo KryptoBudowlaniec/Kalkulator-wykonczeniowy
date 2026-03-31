@@ -398,8 +398,8 @@ elif branza == "🏗️ Tynkowanie":
     }
     
     baza_grunt_kwarc = {
-        "Dolina Nidy (Grunt Kwarcowy)": 95, # cena za wiadro 15kg
-        "Knauf Betokontakt": 165,
+        "Dolina Nidy Inter-Grunt": 140, # cena za wiadro 20kg
+        "Knauf Betokontakt": 200, # cena za wiadro 20kg
         "Atlas Grunto-Plast": 110
     }
 
