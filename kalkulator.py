@@ -567,7 +567,7 @@ elif branza == "⚒️ Sucha Zabudowa":
         koszt_kolki = int(szt_kolki/100 + 1) * baza_mat_gk["Kolki 8x60 (100szt)"]
         koszt_masy = worki_masy * baza_masy_gk[wybrana_masa]
         
-        total_material = koszt_plyt + koszt_wkrety + koszt_kolki + koszt_masy + cena_tasmy
+        total_material = koszt_plyt + koszt_wkrety + koszt_kolki + koszt_masy + koszt_tasmy
         if izolacja_gk: total_material += (m2_gk * baza_mat_gk["Welna (m2)"])
 
         with col_g2:
