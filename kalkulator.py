@@ -560,8 +560,24 @@ elif branza == "⚒️ Sucha Zabudowa":
                 szt_cd = szt_ud = szt_wieszaki = laczniki_cd1 = laczniki_krzyzowe = 0
 
             izolacja_gk = st.checkbox("Wypełnienie wełną?")
+            if izolacja_gk:
+                # Ustawiamy domyślny indeks wełny na podstawie wybranego profilu
+                opcje_welny = [50, 75, 100, 150]
+                try:
+                    domyslny_indeks = opcje_welny.index(szer_profilu)
+                except ValueError:
+                    domyslny_indeks = 0 # Jeśli profilu nie ma na liście (np. sufit), daj 50mm
+
+                grubosc_welny = st.selectbox(
+                    "Grubość wełny:",
+                    opcje_welny,
+                    index=domyslny_indeks,
+                    format_func=lambda x: f"{x} mm"
+                )
+            else:
+                grubosc_welny = None
             wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()))
-            stawka_gk = st.slider("Stawka za robociznę (zł/m2):", 60, 250, 110)
+            stawka_gk = st.slider("Stawka za robociznę (zł/m2):", 1, 250, 110)
 
         # --- LOGIKA MATERIAŁOWA ---
         naddatek = 1.10 # 10% zapasu na wszystko
