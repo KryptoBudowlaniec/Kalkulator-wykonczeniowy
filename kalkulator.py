@@ -484,65 +484,75 @@ elif branza == "⚒️ Sucha Zabudowa":
         col_g1, col_g2 = st.columns([1, 1.2])
         
         with col_g1:
-            rodzaj_gk = st.selectbox("Rodzaj konstrukcji:", ["Sufit Podwieszany", "Ściana Działowa"])
-            m2_gk = st.number_input(f"Metraż {rodzaj_gk} (m2):", min_value=1.0, value=20.0, step=0.5)
+            rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"])
+            m2_gk = st.number_input(f"Metraż {rodzaj_gk} (m2):", min_value=1.0, value=20.0, step=0.5, key="gk_m2")
             
+            # --- DYNAMICZNE POLA DLA SUFITU ---
             if rodzaj_gk == "Sufit Podwieszany":
-                typ_stelaza = st.radio("Typ stelaża:", ["Pojedynczy (1-poziomowy)", "Krzyżowy (2-poziomowy)"])
+                typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy (1-poziomowy)", "Krzyżowy (2-poziomowy)"])
                 typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy ze sprężyną"])
+                izolacja_sufit = st.checkbox("Izolacja wełną (ocieplenie/wyciszenie)?")
+            
+            # --- DYNAMICZNE POLA DLA ŚCIANY ---
             else:
-                plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
-                izolacja = st.checkbox("Izolacja wełną wewnątrz?")
+                szer_profilu = st.selectbox("Szerokość profilu CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
+                plytowanie = st.radio("Płytowanie (obie strony):", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
+                izolacja_sciana = st.checkbox("Wypełnienie wełną mineralną?")
+                n_drzwi = st.number_input("Liczba otworów drzwiowych:", min_value=0, value=0)
 
             st.markdown("---")
-            stawka_gk = st.slider("Twoja stawka za robociznę (zł/m2):", 60, 180, 100)
+            stawka_gk = st.slider("Twoja stawka za m2 (zł):", 60, 250, 110)
 
-        # --- LOGIKA MATERIAŁOWA (Normy zużycia na m2) ---
-        # 1. Płyty
-        mnoznik_plyt = 1.15 # zapas 15%
-        if rodzaj_gk == "Ściana Działowa":
-            mnoznik_plyt = 2.3 if plytowanie == "Pojedyncze (1xGK)" else 4.6 # 2 strony!
-        
-        szt_plyt = (m2_gk * mnoznik_plyt) / 3.0 # płyta 1.2x2.5m = 3m2
-        
-        # 2. Profile i Wieszaki
+        # --- LOGIKA MATERIAŁOWA ---
+        # 1. Płyty (Standard 1.2x2.6m = 3.12m2)
         if rodzaj_gk == "Sufit Podwieszany":
-            profil_glowny = "CD 60"
-            mb_cd60 = m2_gk * (3.2 if "Krzyżowy" in typ_stelaza else 2.1)
-            mb_ud27 = (m2_gk**0.5 * 4) * 1.1 # obwód
-            szt_wieszak = m2_gk * (4 if "Krzyżowy" in typ_stelaza else 3)
-            wkret_metal = m2_gk * 20
+            mnoznik_plyt = 1.15 # zapas 15%
         else:
-            profil_glowny = "CW 50/75/100"
-            mb_cd60 = m2_gk * 2.0 # profile pionowe
-            mb_ud27 = (m2_gk**0.5 * 4) # profile poziome UW
-            szt_wieszak = 0 # w ścianach nie ma wieszaków
-            wkret_metal = m2_gk * 30 if "Podwójne" in plytowanie else 15
-
-        # 3. Finanse
-        koszt_mat_gk = m2_gk * (60 if rodzaj_gk == "Sufit Podwieszany" else 80) # szacunek bazy
-        if "Podwójne" in locals() and plytowanie == "Podwójne (2xGK)": koszt_mat_gk += 30
+            # Ściana: 2 strony! 1xGK = 2m2 płyt na 1m2 ściany, 2xGK = 4m2
+            mnoznik_plyt = 2.3 if plytowanie == "Pojedyncze (1xGK)" else 4.6
         
-        koszt_rob_gk = m2_gk * stawka_gk
+        szt_plyt = (m2_gk * mnoznik_plyt) / 3.12
+        
+        # 2. Profile i Akcesoria
+        if rodzaj_gk == "Sufit Podwieszany":
+            mb_cd60 = m2_gk * (3.5 if "Krzyżowy" in typ_stelaza else 2.2)
+            mb_ud27 = (m2_gk**0.5 * 4) * 1.1 
+            szt_wieszak = m2_gk * (4 if "Krzyżowy" in typ_stelaza else 3)
+            info_welna = f"Wełna {100 if izolacja_sufit else 0}mm"
+        else:
+            # Ściana działowa
+            mb_cw = m2_gk * 2.1 # profile pionowe co 60cm + naddatek
+            mb_uw = (m2_gk**0.5 * 4) # profile poziome góra/dół
+            szt_ua = n_drzwi * 2 # 2 profile ościeżnicowe na każde drzwi
+            info_welna = f"Wełna {szer_profilu}mm (dopasowana do profilu)"
+
+        # 3. Finanse (Szacunkowe ceny bazowe)
+        k_rob_gk = m2_gk * stawka_gk
+        k_mat_base = m2_gk * (70 if rodzaj_gk == "Sufit Podwieszany" else 90)
+        if rodzaj_gk == "Ściana Działowa" and "Podwójne" in plytowanie: k_mat_base += 40
 
         with col_g2:
-            st.subheader("💰 Wycena Systemu")
-            st.success(f"### RAZEM: **{round(koszt_mat_gk + koszt_rob_gk)} zł**")
-            st.metric("Twoja Robocizna", f"{round(koszt_rob_gk)} zł")
+            st.subheader("📊 Zestawienie Systemu")
+            st.success(f"### RAZEM: **{round(k_mat_base + k_rob_gk)} zł**")
             
-            with st.expander("📦 Lista zakupów (Ilości przybliżone)"):
-                st.write(f"• **Płyty GK (1.2x2.5):** {int(szt_plyt + 0.99)} szt.")
-                st.write(f"• **Profile {profil_glowny}:** {int(mb_cd60/3 + 0.99)} szt. (3mb)")
-                st.write(f"• **Profile UD27 / UW:** {int(mb_ud27/3 + 0.99)} szt. (3mb)")
-                if szt_wieszak > 0:
+            with st.expander("📦 LISTA ZAKUPÓW (Szczegóły)", expanded=True):
+                st.write(f"• **Płyty GK (1.2x2.6):** {int(szt_plyt + 0.99)} szt.")
+                
+                if rodzaj_gk == "Sufit Podwieszany":
+                    st.write(f"• **Profil CD60 (3mb):** {int(mb_cd60/3 + 0.99)} szt.")
+                    st.write(f"• **Profil UD27 (3mb):** {int(mb_ud27/3 + 0.99)} szt.")
                     st.write(f"• **Wieszaki {typ_wieszaka}:** {int(szt_wieszak + 0.99)} szt.")
-                st.write(f"• **Wkręty do metalu (pchełki):** 1 opk. (250 szt.)")
-                st.write(f"• **Wkręty do płyt (3.5x25/35):** {1 if m2_gk < 30 else 2} opk. (1000 szt.)")
-                if "izolacja" in locals() and izolacja:
-                    st.write(f"• **Wełna mineralna:** {int(m2_gk/5 + 0.99)} rolki/opk.")
+                else:
+                    st.write(f"• **Profil CW {szer_profilu} (3mb):** {int(mb_cw/3 + 0.99)} szt.")
+                    st.write(f"• **Profil UW {szer_profilu} (3mb):** {int(mb_uw/3 + 0.99)} szt.")
+                    if szt_ua > 0:
+                        st.write(f"• **Profile ościeżnicowe UA {szer_profilu}:** {szt_ua} szt.")
+                
+                if (rodzaj_gk == "Sufit Podwieszany" and izolacja_sufit) or (rodzaj_gk == "Ściana Działowa" and izolacja_sciana):
+                    st.write(f"• **{info_welna}:** {m2_gk} m²")
 
-            st.warning(f"⏳ Czas realizacji: ok. **{round(m2_gk/10 + 1)} dni** (1 fachowiec)")
-
+            st.warning(f"⏳ Czas realizacji: ok. **{round(m2_gk/8 + 1)} dni**")
+            st.info("💡 Logika uwzględnia standardowy rozstaw profili co 60cm.")
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
     st.header("⚡ Kalkulator Instalacji Elektrycznej")
