@@ -514,24 +514,24 @@ elif branza == "⚒️ Sucha Zabudowa":
             szer_profilu = "Standard"
             rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Ściana Działowa"], key="gk_type")
             
-            if rodzaj_gk == "Ściana Działowa":
-                c_szer, c_wys = st.columns(2)
-                szer_sciany = c_szer.number_input("Długość ścianki (m):", min_value=0.1, value=4.0, step=0.1)
-                wys_sciany = c_wys.number_input("Wysokość ścianki (m):", min_value=0.1, value=2.6, step=0.1)
-                m2_gk = szer_sciany * wys_sciany
-                st.info(f"📐 Powierzchnia ścianki: **{round(m2_gk, 2)} m²**")
-            else:
-                m2_gk = st.number_input("Metraż sufitu (m2):", min_value=1.0, value=20.0, step=0.5)
+        if rodzaj_gk == "Ściana Działowa":
+            c_szer, c_wys = st.columns(2)
+            szer_sciany = c_szer.number_input("Długość ścianki (m):", min_value=0.1, value=4.0, step=0.1)
+            wys_sciany = c_wys.number_input("Wysokość ścianki (m):", min_value=0.1, value=2.6, step=0.1)
+            m2_gk = szer_sciany * wys_sciany
+            st.info(f"📐 Powierzchnia ścianki: **{round(m2_gk, 2)} m²**")
+        else:
+            m2_gk = st.number_input("Metraż sufitu (m2):", min_value=1.0, value=20.0, step=0.5)
 
             st.markdown("---")
             st.subheader("Konfiguracja Systemu")
-            if rodzaj_gk == "Sufit Podwieszany":
-                typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy", "Krzyżowy"])
-                typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy"])
-            else:
-                szer_profilu = st.selectbox("Profil CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
-                plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
-                n_drzwi = st.number_input("Otwory drzwiowe (Profile UA):", min_value=0, value=0)
+        if rodzaj_gk == "Sufit Podwieszany":
+            typ_stelaza = st.selectbox("Typ stelaża:", ["Pojedynczy", "Krzyżowy"])
+            typ_wieszaka = st.selectbox("Rodzaj wieszaka:", ["ES (Sztywny)", "Obrotowy"])
+        else:
+            szer_profilu = st.selectbox("Profil CW/UW:", [50, 75, 100], format_func=lambda x: f"{x} mm")
+            plytowanie = st.radio("Płytowanie:", ["Pojedyncze (1xGK)", "Podwójne (2xGK)"])
+            n_drzwi = st.number_input("Otwory drzwiowe (Profile UA):", min_value=0, value=0)
 
             izolacja_gk = st.checkbox("Wypełnienie wełną?")
             
@@ -620,31 +620,31 @@ elif branza == "⚒️ Sucha Zabudowa":
             c1.metric("Robocizna", f"{round(m2_gk * stawka_gk)} zł")
             c2.metric("Materiały", f"{round(total_material)} zł")
 
-            with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
+        with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
 
-                st.write("### 📏 PROFILE")
-                if rodzaj_gk == "Sufit Podwieszany":
-                    st.write(f"• Profil CD60: {szt_cd} szt.")
-                    st.write(f"• Profil UD27: {szt_ud} szt.")
-                    st.write(f"• Wieszaki: {szt_wieszaki} szt.")
-                else:
-                    st.write(f"• Profil UW{szer_profilu}: {szt_uw} szt.")
-                    st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
-                    if szt_ua > 0:
-                        st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
+            st.write("### 📏 PROFILE")
+            if rodzaj_gk == "Sufit Podwieszany":
+                st.write(f"• Profil CD60: {szt_cd} szt.")
+                st.write(f"• Profil UD27: {szt_ud} szt.")
+                st.write(f"• Wieszaki: {szt_wieszaki} szt.")
+            else:
+                st.write(f"• Profil UW{szer_profilu}: {szt_uw} szt.")
+                st.write(f"• Profil CW{szer_profilu}: {szt_cw} szt.")
+            if szt_ua > 0:
+                st.write(f"• Profil UA{szer_profilu}: {szt_ua} szt.")
 
                 st.write("### 🔩 WKRĘTY")
                 st.write(f"• Wkręty TN25: {wkret_25} szt.")
-                if wkret_35 > 0:
-                    st.write(f"• Wkręty TN35: {wkret_35} szt.")
+            if wkret_35 > 0:
+                st.write(f"• Wkręty TN35: {wkret_35} szt.")
 
                 st.write(f"### 🧪 SPOINOWANIE ({typ_tasmy})")
                 st.write(f"• Masa {wybrana_masa}: {worki_masy} szt. (25kg)")
-                if mb_flizelina > 0:
-                    st.write(f"• Taśma Tuff-Tape (Naroża): {round(mb_tuff_tape)} mb")
-                    st.write(f"• Flizelina (Łączenia): {round(mb_flizelina)} mb")
-                else:
-                    st.write(f"• Taśma Tuff-Tape (Całość): {round(mb_tuff_tape)} mb")
+            if mb_flizelina > 0:
+                st.write(f"• Taśma Tuff-Tape (Naroża): {round(mb_tuff_tape)} mb")
+                st.write(f"• Flizelina (Łączenia): {round(mb_flizelina)} mb")
+            else:
+                st.write(f"• Taśma Tuff-Tape (Całość): {round(mb_tuff_tape)} mb")
 
                 st.write(f"• Koszt zbrojenia i mas: ok. {round(koszt_masy + koszt_tasm)} zł")
 
