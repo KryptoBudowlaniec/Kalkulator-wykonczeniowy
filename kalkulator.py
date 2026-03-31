@@ -98,6 +98,8 @@ if branza == "🎨 Malowanie":
             st.success(f"### RAZEM: **{round(total_min)} - {round(total_max)} zł**")
             st.metric("Twoja Robocizna (Stała)", f"{round(k_rob)} zł")
             st.info(f"**Materiały (widełki):** {round(k_mat_min)} - {round(k_mat_max)} zł")
+            total_z_sztukateria = total_max + koszt_rob_sztukateria + koszt_mat_sztukateria
+            st.success(f"### RAZEM Z SZTUKATERIĄ: **{round(total_z_sztukateria)} zł**")
         
         with st.expander("📦 Twoja lista zakupów"):
                 # --- LOGIKA PAKOWANIA BIAŁEJ (Wiadra 10L / 5L / 2.5L) ---
@@ -115,6 +117,9 @@ if branza == "🎨 Malowanie":
                 pucha = "5L" if reszta_b > 2.5 else "2.5L"
                 st.write(f"- Kup dodatkowo: **1 x puszka {pucha}**")
             st.write(f"Szacowany koszt bieli: **{round(koszt_b)} zł**")
+            if mb_sztukaterii > 0:
+                    st.write(f"• **Klej do sztukaterii:** {int(szt_klej_sztukateria + 0.99)} szt. — **{round(koszt_mat_sztukateria)} zł**")
+                    st.write(f"• **Akryl do łączeń:** {int(mb_sztukaterii/15 + 1)} szt.")
 
             st.markdown("---")
 
