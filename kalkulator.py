@@ -219,69 +219,75 @@ elif branza == "🧱 Szpachlowanie":
         "Sheetrock Blue (28kg)": {"cena": 145, "waga": 28},
         "Atlas GTA (20kg)": {"cena": 94, "waga": 20}
     }
+    
+    baza_grunty_szp = {
+        "Atlas Unigrunt (Standard)": 7,
+        "Knauf Tiefengrund (Premium)": 18,
+        "Mapei Primer G": 15,
+        "Ceresit CT 17": 11
+    }
 
     tab_s1, tab_s2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
 
     with tab_s1:
-        m2_podl = st.number_input("Metraż podłogi (m2):", min_value=0.0, value=50.0, key="szp_m")
-        warstwy = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="szp_w")
-        typ_g = st.radio("Rodzaj gładzi:", ["Sypka (Worek)", "Gotowa (Wiadro)"])
-
-        # Wybór konkretnej marki z bazy
-        if typ_g == "Sypka (Worek)":
-            marka = st.selectbox("Wybierz produkt:", list(baza_sypkie.keys()))
-            dane_produktu = baza_sypkie[marka]
-            norma = 1.2
-        else:
-            marka = st.selectbox("Wybierz produkt:", list(baza_gotowe.keys()))
-            dane_produktu = baza_gotowe[marka]
-            norma = 2.0
+        col_s1, col_s2 = st.columns([1, 1.2])
         
+        with col_s1:
+            m2_podl = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="szp_m")
+            warstwy = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="szp_w")
+            typ_g = st.radio("Rodzaj gładzi:", ["Sypka (Worek)", "Gotowa (Wiadro)"])
+
+            if typ_g == "Sypka (Worek)":
+                marka = st.selectbox("Wybierz gładź:", list(baza_sypkie.keys()))
+                dane_g = baza_sypkie[marka]
+                norma = 1.2
+            else:
+                marka = st.selectbox("Wybierz gładź:", list(baza_gotowe.keys()))
+                dane_g = baza_gotowe[marka]
+                norma = 2.0
+            
+            marka_gruntu = st.selectbox("Wybierz Grunt:", list(baza_grunty_szp.keys()))
+            stawka_szp = st.slider("Twoja stawka za m2 (robocizna):", 35, 85, 50)
+
         # --- LOGIKA OBLICZEŃ ---
         m2_scian = m2_podl * 3.5
         kg_razem = m2_scian * norma * warstwy
+        szt_opk = kg_razem / dane_g["waga"]
         
-        # Liczymy opakowania na podstawie wagi z bazy
-        szt_opk = kg_razem / dane_produktu["waga"]
-        cena_opk = dane_produktu["cena"]
+        # Gruntowanie (przed i po - ok. 0.2L na m2)
+        l_gruntu = m2_scian * 0.2
+        koszt_gruntu = l_gruntu * baza_grunty_szp[marka_gruntu]
         
-        # Koszty dodatków
-        koszt_naroznikow = (m2_podl * 0.8 / 2.5) * 12
-        koszt_tasmy = (m2_podl * 1.0) * 3
-        koszt_gruntu = (m2_scian * 0.15) * 6
-        
-        suma_material_szp = (szt_opk * cena_opk) + koszt_naroznikow + koszt_tasmy + koszt_gruntu
-        koszt_rob_szp = m2_scian * 45
+        # Suma materiałów (gładź + grunt + narożniki/taśmy stałe 15zł/m2 podłogi)
+        k_mat_base = (szt_opk * dane_g["cena"]) + koszt_gruntu + (m2_podl * 15)
+        k_rob_szp = m2_scian * stawka_szp
 
-        # --- WYŚWIETLANIE FINANSÓW ---
-        st.markdown("---")
-        st.subheader("💰 Kosztorys Szpachlowania")
-        col_f1, col_f2 = st.columns(2)
-        
-        with col_f1:
-            st.metric("Materiały (Widełki)", f"{round(suma_material_szp * 0.9)} - {round(suma_material_szp * 1.1)} zł")
-            st.caption(f"Wybrany produkt: {marka}")
+        # --- LOGIKA CZASU PRACY ---
+        # Baza: 50m2 ścian dziennie + 1 dzień na każdą warstwę (schnięcie)
+        dni_robocze = (m2_scian / 50) + (warstwy * 1) 
+
+        with col_s2:
+            st.subheader("💰 Kosztorys Szpachlowania")
+            st.success(f"### RAZEM: **{round((k_mat_base * 0.9) + k_rob_szp)} - {round((k_mat_base * 1.1) + k_rob_szp)} zł**")
             
-        with col_f2:
-            st.metric("Robocizna (45 zł/m2)", f"{round(koszt_rob_szp)} zł")
-            
-        st.success(f"**ŁĄCZNY KOSZT ETAPU: ok. {round(suma_material_szp + koszt_rob_szp)} zł**")
+            c1, c2 = st.columns(2)
+            c1.metric("Twoja Robocizna", f"{round(k_rob_szp)} zł")
+            c2.metric("Materiały (ok.)", f"{round(k_mat_base)} zł")
 
-        # --- DODATKOWE INFORMACJE ---
-        with st.expander("🛠️ Zobacz co wchodzi w cenę robocizny:"):
-            st.write("1. Gruntowanie wstępne")
-            st.write(f"2. Szpachlowanie ({warstwy} warstwy)")
-            st.write("3. Szlifowanie mechaniczne i odpylanie")
-            st.write("4. Gruntowanie końcowe")
+            st.warning(f"⏳ Przewidywany czas: **ok. {round(dni_robocze + 0.5)} dni**")
+            st.caption("⚠️ Czas uzależniony od temperatury i wilgotności (schnięcie gładzi).")
 
-        dni_pracy = m2_scian / 50
-        st.warning(f"⏳ Przewidywany czas realizacji: ok. **{round(dni_pracy + 0.5)} dni** roboczych.")
+            with st.expander("📦 Twoja lista zakupów"):
+                st.write(f"• **Gładź ({marka}):** {int(szt_opk + 0.99)} szt.")
+                st.write(f"• **Grunt ({marka_gruntu}):** {int((l_gruntu/5)+0.99)} bańki (5L)")
+                st.write(f"• **Narożniki aluminiowe:** {round(m2_podl * 0.8 / 2.5)} szt.")
+                st.write(f"• **Taśma zbrojąca:** {round(m2_podl)} mb")
 
-        with st.expander("📦 Szczegółowa lista zakupów"):
-            st.write(f"• **Gładź {marka}:** {int(szt_opk + 0.99)} szt.")
-            st.write(f"• **Grunt głęboki:** {round(m2_scian * 0.15)} L")
-            st.write(f"• **Narożniki aluminiowe:** ok. {round(m2_podl * 0.8 / 2.5)} szt.")
-            st.write(f"• **Papier ścierny/Siatki:** {round(m2_scian / 40 + 0.4)} szt.")
+            with st.expander("🛠️ Zakres prac:"):
+                st.write(f"1. Gruntowanie ({marka_gruntu})")
+                st.write(f"2. Nałożenie {warstwy} warstw gładzi ({marka})")
+                st.write("3. Szlifowanie mechaniczne i odpylanie")
+                st.write("4. Gruntowanie końcowe pod malowanie")
 
     with tab_s2:
         st.info("Sekcja PRO: Precyzyjne odliczanie otworów okiennych.")
