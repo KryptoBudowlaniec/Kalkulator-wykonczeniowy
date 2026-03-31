@@ -387,9 +387,9 @@ elif branza == "📐 Podłogi (Panele/Deska)":
 
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "🏗️ Tynkowanie":
-    st.header("🏗️ Kalkulator Tynków i Suchego Tynku (Płyty na klej)")
+    st.header("🏗️ Kalkulator Tynków i Suchego Tynku")
     
-    # --- BAZA WIEDZY: TYNKI I GRUNTY (Uzupełniona o "typ") ---
+    # --- 1. BAZA WIEDZY (Musi mieć "typ"!) ---
     baza_tynkow = {
         "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 25, "waga": 30, "norma": 0.8, "typ": "mokry"},
         "Knauf Goldband (Ręczny Gipsowy)": {"cena": 38, "waga": 30, "norma": 0.85, "typ": "mokry"},
@@ -399,9 +399,9 @@ elif branza == "🏗️ Tynkowanie":
     }
     
     baza_grunt_kwarc = {
-        "Dolina Nidy Inter-Grunt": 140, 
-        "Knauf Betokontakt": 200, 
-        "Atlas Grunto-Plast": 110
+        "Dolina Nidy Inter-Grunt (20kg)": 140, 
+        "Knauf Betokontakt (20kg)": 200, 
+        "Atlas Grunto-Plast (20kg)": 110
     }
 
     tab_t1, tab_t2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
@@ -410,62 +410,62 @@ elif branza == "🏗️ Tynkowanie":
         col_t1, col_t2 = st.columns([1, 1.2])
         
         with col_t1:
-            m2_podl_t = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="tyn_m_fast")
-            wybrany_tynk = st.selectbox("Wybierz system:", list(baza_tynkow.keys()))
+            # --- TWOJA POPRAWKA: Powierzchnia pod wpisywaniem ---
+            m2_podl_t = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="tyn_m_fast")
+            m2_scian_t = m2_podl_t * 3.5
+            st.info(f"📐 Powierzchnia ścian/sufitów: **{round(m2_scian_t)} m²**")
             
-            # Pobieramy dane wybranego systemu, żeby wiedzieć co wyświetlić
+            st.markdown("---")
+            wybrany_tynk = st.selectbox("Wybierz system:", list(baza_tynkow.keys()))
             dane_t = baza_tynkow[wybrany_tynk]
             
-            # Grubość i Grunt tylko dla tynków mokrych
+            # Formularz zmienia się zależnie od typu
             if dane_t["typ"] == "mokry":
                 wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
                 grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
             else:
-                st.info("System GK: Liczymy płyty 120x260cm i klej Perlfix.")
+                st.success("Wybrano system wyklejania płytami GK.")
+                st.caption("Liczymy płyty 120x260cm i klej gipsowy Perlfix.")
             
-            st.markdown("---")
             stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 1, 100, 45)
 
-        # --- LOGIKA OBLICZEŃ ---
-        m2_scian_t = m2_podl_t * 3.5
-        
+        # --- 2. LOGIKA OBLICZEŃ ---
         if dane_t["typ"] == "mokry":
             kg_na_m2_t = dane_t["norma"] * grubosc_t
             kg_razem_t = m2_scian_t * kg_na_m2_t
-            worki_t = kg_razem_t / dane_t["waga"]
-            
-            # Zakładamy wiadro 20kg (zgodnie z Twoim opisem baz)
-            kg_gruntu_t = m2_scian_t * 0.3
-            wiadra_gruntu = kg_gruntu_t / 20 
+            worki_t = int(kg_razem_t / dane_t["waga"] + 0.99)
+            wiadra_gruntu = int((m2_scian_t * 0.3) / 20 + 0.99)
             
             koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_scian_t * 5)
         else:
-            # --- TWOJA LOGIKA: WYKLEJANIE GK ---
-            liczba_plyt = (m2_scian_t * 1.1) / 3.12 
-            worki_kleju = liczba_plyt / 2.5
-            # Dodajemy koszt płyt + klej + grunt uniwersalny (ok. 2zł/m2)
+            # LOGIKA DLA SUCHEGO TYNKU (Płyty GK)
+            liczba_plyt = int((m2_scian_t * 1.1) / 3.12 + 0.99)
+            worki_kleju = int(liczba_plyt / 2.5 + 0.99)
+            # Koszt: płyty + klej + grunt uniwersalny (ok. 2zł/m2)
             koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + (m2_scian_t * 2)
             
         koszt_rob_t = m2_scian_t * stawka_rob_t
 
         with col_t2:
-            st.subheader("📊 Wyniki Kosztorysu")
+            st.subheader("💰 Podsumowanie Etapu")
             st.success(f"### RAZEM: **{round(koszt_mat_t + koszt_rob_t)} zł**")
             
             c1, c2 = st.columns(2)
             c1.metric("Twoja Robocizna", f"{round(koszt_rob_t)} zł")
-            
-            if dane_t["typ"] == "drywall":
-                c2.metric("Płyty GK (1.2x2.6)", f"{int(liczba_plyt + 0.99)} szt.")
-                st.metric("Klej Gipsowy (25kg)", f"{int(worki_kleju + 0.99)} worków")
-                st.caption("Norma: 1 worek kleju na 2.5 płyty GK.")
-            else:
-                c2.metric("Waga materiału", f"{round(kg_razem_t/1000, 1)} Tony")
-                st.write(f"• Potrzebne worki: {int(worki_t + 0.99)} szt.")
+            c2.metric("Materiały (ok.)", f"{round(koszt_mat_t)} zł")
 
-            with st.expander("📦 Szczegóły materiałowe"):
-                st.write(f"• Powierzchnia ścian: {round(m2_scian_t)} m2")
-                st.write(f"• Szacowany materiał: {round(koszt_mat_t)} zł")
+            # --- 3. TWOJA POPRAWKA: Szczegółowa lista zakupów ---
+            with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
+                if dane_t["typ"] == "mokry":
+                    st.write(f"• **Tynk ({wybrany_tynk}):** {worki_t} worków")
+                    st.write(f"• **Grunt ({wybrany_grunt_t}):** {wiadra_gruntu} wiader (20kg)")
+                    st.write(f"• **Narożniki tynkarskie:** ok. {round(m2_podl_t * 0.5)} szt.")
+                    st.caption(f"Łączna waga tynku: {round(kg_razem_t/1000, 1)} Tony")
+                else:
+                    st.write(f"• **Płyty GK (1.2x2.6m):** {liczba_plyt} szt.")
+                    st.write(f"• **Klej Perlfix (25kg):** {worki_kleju} worków")
+                    st.write(f"• **Grunt uniwersalny:** {int(m2_scian_t*0.2/5 + 0.99)} bańki (5L)")
+                    st.caption("Przyjęto normę: 1 worek kleju na 2.5 płyty GK.")
 # --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "⚒️ Sucha Zabudowa":
     st.header("⚒️ Systemy Suchej Zabudowy (G-K)")
