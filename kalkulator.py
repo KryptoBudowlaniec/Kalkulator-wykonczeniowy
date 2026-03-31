@@ -389,19 +389,22 @@ elif branza == "📐 Podłogi (Panele/Deska)":
 elif branza == "🏗️ Tynkowanie":
     st.header("🏗️ Kalkulator Tynków i Suchego Tynku")
     
-    # --- 1. BAZA WIEDZY (Musi mieć "typ"!) ---
+    # 1. BAZA WIEDZY: MASY DO SPOINOWANIA
+    baza_masy = {
+        "Knauf Uniflot (Premium)": 115, # wiadro/worek 25kg
+        "Knauf Vario (Bardzo elastyczna)": 95,
+        "Dolina Nidy Start (Ekonomiczna)": 45,
+        "Franspol (Standard)": 55
+    }
+
     baza_tynkow = {
         "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 25, "waga": 30, "norma": 0.8, "typ": "mokry"},
-        "Knauf Goldband (Ręczny Gipsowy)": {"cena": 38, "waga": 30, "norma": 0.85, "typ": "mokry"},
         "Baumit MPI25 Cem-Wap ": {"cena": 27, "waga": 30, "norma": 1.4, "typ": "mokry"},
-        "Kreisel 561L Cem-Wap": {"cena": 28, "waga": 25, "norma": 1.6, "typ": "mokry"},
         "Wyklejanie Płytami GK (Suchy Tynk)": {"cena_plyta": 35, "cena_klej": 38, "typ": "drywall"}
     }
     
     baza_grunt_kwarc = {
-        "Dolina Nidy Inter-Grunt (20kg)": 140, 
-        "Knauf Betokontakt (20kg)": 200, 
-        "Atlas Grunto-Plast (20kg)": 110
+        "Dolina Nidy Inter-Grunt (20kg)": 140, "Knauf Betokontakt (20kg)": 200, "Atlas Grunto-Plast (20kg)": 110
     }
 
     tab_t1, tab_t2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
@@ -410,41 +413,48 @@ elif branza == "🏗️ Tynkowanie":
         col_t1, col_t2 = st.columns([1, 1.2])
         
         with col_t1:
-            # --- TWOJA POPRAWKA: Powierzchnia pod wpisywaniem ---
             m2_podl_t = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="tyn_m_fast")
-            m2_scian_t = m2_podl_t * 3.5
-            st.info(f"📐 Powierzchnia ścian/sufitów: **{round(m2_scian_t)} m²**")
             
-            st.markdown("---")
+            # LOGIKA POWIERZCHNI: Mokry (Sufit+Ściany=3.5) vs GK (Same ściany=2.5)
             wybrany_tynk = st.selectbox("Wybierz system:", list(baza_tynkow.keys()))
             dane_t = baza_tynkow[wybrany_tynk]
             
-            # Formularz zmienia się zależnie od typu
-            if dane_t["typ"] == "mokry":
+            mnoznik = 3.5 if dane_t["typ"] == "mokry" else 2.5
+            m2_robocizny = m2_podl_t * mnoznik
+            st.info(f"📐 Powierzchnia prac: **{round(m2_robocizny)} m²**")
+
+            if dane_t["typ"] == "drywall":
+                st.markdown("---")
+                st.subheader("Opcje spoinowania GK")
+                typ_tasmy = st.radio("Rodzaj zbrojenia łączy:", ["Wszystko Tuff-Tape (Pancerne)", "Tuff-Tape (Naroża) + Flizelina (Reszta)"])
+                wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy.keys()))
+            else:
                 wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
                 grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
-            else:
-                st.success("Wybrano system wyklejania płytami GK.")
-                st.caption("Liczymy płyty 120x260cm i klej gipsowy Perlfix.")
             
-            stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 1, 100, 45)
+            stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 30, 120, 45)
 
         # --- 2. LOGIKA OBLICZEŃ ---
         if dane_t["typ"] == "mokry":
             kg_na_m2_t = dane_t["norma"] * grubosc_t
-            kg_razem_t = m2_scian_t * kg_na_m2_t
+            kg_razem_t = m2_robocizny * kg_na_m2_t
             worki_t = int(kg_razem_t / dane_t["waga"] + 0.99)
-            wiadra_gruntu = int((m2_scian_t * 0.3) / 20 + 0.99)
-            
-            koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_scian_t * 5)
+            wiadra_gruntu = int((m2_robocizny * 0.3) / 20 + 0.99)
+            koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_robocizny * 5)
         else:
-            # LOGIKA DLA SUCHEGO TYNKU (Płyty GK)
-            liczba_plyt = int((m2_scian_t * 1.1) / 3.12 + 0.99)
+            # --- LOGIKA GK (WYKLEJANIE) ---
+            liczba_plyt = int((m2_robocizny * 1.1) / 3.12 + 0.99)
             worki_kleju = int(liczba_plyt / 2.5 + 0.99)
-            # Koszt: płyty + klej + grunt uniwersalny (ok. 2zł/m2)
-            koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + (m2_scian_t * 2)
             
-        koszt_rob_t = m2_scian_t * stawka_rob_t
+            # Materiały do spoinowania
+            # Norma masy: ok. 0.5kg/m2 płyty (na gotowo)
+            worki_masy = int((m2_robocizny * 0.5) / 25 + 0.99)
+            cena_tasmy = 120 if "Tuff-Tape" in typ_tasmy else 60 # koszt orientacyjny na całość
+            
+            koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + \
+                          (worki_masy * baza_masy[wybrana_masa]) + cena_tasmy + (m2_robocizny * 2)
+            
+        koszt_rob_t = m2_robocizny * stawka_rob_t
 
         with col_t2:
             st.subheader("💰 Podsumowanie Etapu")
@@ -454,18 +464,17 @@ elif branza == "🏗️ Tynkowanie":
             c1.metric("Twoja Robocizna", f"{round(koszt_rob_t)} zł")
             c2.metric("Materiały (ok.)", f"{round(koszt_mat_t)} zł")
 
-            # --- 3. TWOJA POPRAWKA: Szczegółowa lista zakupów ---
             with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
                 if dane_t["typ"] == "mokry":
                     st.write(f"• **Tynk ({wybrany_tynk}):** {worki_t} worków")
                     st.write(f"• **Grunt ({wybrany_grunt_t}):** {wiadra_gruntu} wiader (20kg)")
-                    st.write(f"• **Narożniki tynkarskie:** ok. {round(m2_podl_t * 0.5)} szt.")
-                    st.caption(f"Łączna waga tynku: {round(kg_razem_t/1000, 1)} Tony")
                 else:
                     st.write(f"• **Płyty GK (1.2x2.6m):** {liczba_plyt} szt.")
-                    st.write(f"• **Klej Perlfix (25kg):** {worki_kleju} worków")
-                    st.write(f"• **Grunt uniwersalny:** {int(m2_scian_t*0.2/5 + 0.99)} bańki (5L)")
-                    st.caption("Przyjęto normę: 1 worek kleju na 2.5 płyty GK.")
+                    st.write(f"• **Klej Perlfix:** {worki_kleju} worków")
+                    st.write(f"• **Masa ({wybrana_masa}):** {worki_masy} szt.")
+                    st.write(f"• **Zbrojenie:** {typ_tasmy}")
+                    st.caption("Pamiętaj: Sufity w tym systemie liczymy w zakładce 'Sucha Zabudowa'.")
+                    
 # --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "⚒️ Sucha Zabudowa":
     st.header("⚒️ Systemy Suchej Zabudowy (G-K)")
