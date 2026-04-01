@@ -59,12 +59,34 @@ if 'pokoje' not in st.session_state:
     st.session_state.pokoje = []
 
 # Menu boczne do wyboru branży
-with st.sidebar:
-    st.title("🛠️ Menu Wykonawcy")
-    branza = st.sidebar.selectbox("Wybierz rodzaj prac:", 
-    ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi (Panele/Deska)", 
-     "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka", "🚪 Drzwi", "🚀 PANEL INWESTORA (PREMIUM)"])
-    st.info(f"Aktualnie edytujesz: {branza}")
+st.markdown("""
+<style>
+    /* Usunięcie domyślnego odstępu na górze */
+    .block-container { padding-top: 1rem; }
+    
+    /* Styl dla aktywnej sekcji (opcjonalnie) */
+    .stSelectbox:first-of-type { margin-bottom: 20px; }
+</style>
+""", unsafe_allow_html=True)
+
+# --- LOGO I TYTUŁ ---
+col_l, col_r = st.columns([1, 4])
+with col_l:
+    st.image("logo.png", width=150) # Twoje logo
+with col_r:
+    st.title("Ekspert Wykończeń PRO")
+    st.caption("Wybierz branżę, aby rozpocząć kosztorysowanie")
+
+# --- NOWOCZESNE MENU POZIOME (Pigułki) ---
+# To zastępuje Twój stary sidebar.selectbox
+branza = st.pills(
+    "Wybierz rodzaj prac:", 
+    ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka"],
+    selection_mode="single",
+    default="🎨 Malowanie"
+)
+
+st.markdown("---") # Linia oddzielająca menu od formularzy
 
 # --- SEKCJA: MALOWANIE ---
 if branza == "🎨 Malowanie":
