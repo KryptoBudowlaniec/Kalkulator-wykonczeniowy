@@ -4,18 +4,21 @@ import streamlit as st
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
 # Nagłówek z logo i tytułem
-col_l, col_r = st.columns([1, 3]) # Trochę szersza kolumna na logo
+col_space1, col_logo, col_space2 = st.columns([1, 2, 1]) 
 
-with col_l:
+with col_logo:
     try:
-        # Użycie container_width sprawi, że logo nie zepsuje układu na mniejszych ekranach
+        # Logo zajmie całą szerokość środkowej kolumny
         st.image("logo2.png", use_container_width=True)
     except:
-        st.error("Brak pliku logo.png")
+        st.error("Brak pliku logo2.png")
+
+# Tytuł pod logo, również wyśrodkowany
+st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>Ekspert Wykończeń PRO</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray;'>Profesjonalny system kosztorysowania remontów</p>", unsafe_allow_html=True)
 
 with col_r:
    
-    st.caption("Profesjonalny system kosztorysowania remontów")
 
 # --- STYLE CSS (Twoje poprawione style) ---
 st.markdown("""
