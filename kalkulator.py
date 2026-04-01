@@ -758,7 +758,17 @@ elif branza == "⚒️ Sucha Zabudowa":
 elif branza == "⚡ Elektryka":
     st.header("⚡ Instalacja Elektryczna (Mieszkanie)")
     
-with col_e1:
+    # Przeniesienie definicji kolumn do środka elif
+    col_e1, col_e2 = st.columns([1, 1.2])
+
+    # --- KONFIGURACJA MAREK OSPRZĘTU ---
+    opcje_osprzetu = {
+        "Ekonomiczny (np. Simon 10, Adelid)": 12,
+        "Standard (np. Simon 54, Legrand Niloe)": 38,
+        "Premium (np. Berker R.1, Jung, Gira)": 95
+    }
+
+    with col_e1:
         st.subheader("Parametry instalacji")
         m2_mieszkania = st.number_input("Metraż mieszkania (m²):", min_value=10, value=60)
         
@@ -785,16 +795,16 @@ with col_e1:
 
         stawka_punkt = st.slider("Stawka robocizny za punkt (zł):", 1, 150, 30)
 
-    # --- LOGIKA OBLICZEŃ ---
+    # --- LOGIKA OBLICZEŃ (Wyrównana do with col_e1) ---
     kabel_25 = 150 * mnoznik_m2
     kabel_15 = 100 * mnoznik_m2
     kabel_4x15 = 30 * mnoznik_m2
     kabel_tv = 30 * mnoznik_m2
     kabel_lan = 50 * mnoznik_m2
     
-    # Mocowania (uchwyty USMP) - średnio 3 szt. na 1 mb kabla
+    # Mocowania (uchwyty USMP)
     szt_mocowania = int((kabel_25 + kabel_15 + kabel_4x15) * 3)
-    paczki_mocowania = int(szt_mocowania / 100) + 1 # paczki po 100 szt.
+    paczki_mocowania = int(szt_mocowania / 100) + 1
     
     srednia_cena_szt = opcje_osprzetu[wybrany_standard]
 
@@ -806,23 +816,19 @@ with col_e1:
     mnoznik_trudnosci = 1.3 if typ_scian == "Żelbet (Wielka Płyta)" else 1.0
 
     # SUMY
-    # 1. Najpierw policz wszystkie składowe
     mat_kable = (kabel_25 * 4.50) + (kabel_15 * 3.20) + (kabel_4x15 * 5.50)
     mat_osprzet = n_punktow * srednia_cena_szt
     mat_mocowania = paczki_mocowania * 22.0
     mat_teletechnika = (kabel_tv * cena_mb_tv) + (kabel_lan * cena_mb_lan)
     
-    # 2. Zsumuj wszystko do JEDNEJ zmiennej (używamy "=" zamiast "+=")
     total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania + mat_teletechnika
     
-    # 3. Policz robociznę (najpierw podstawa, potem dodatki)
     total_robocizna_e = (n_punktow * stawka_punkt * mnoznik_trudnosci) + robocizna_rozdzielnica
     total_robocizna_e += (n_punkty_tele * stawka_punkt)
 
     with col_e2:
         st.subheader("💰 Kosztorys Elektryki")
         st.success(f"### RAZEM: **{round(total_material_e + total_robocizna_e)} zł**")
-        
         
         c1, c2 = st.columns(2)
         c1.metric("Materiały", f"{round(total_material_e)} zł")
