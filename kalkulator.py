@@ -914,6 +914,27 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
         standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
         stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
+        # --- DEFINICJA TECHNOLOGII ZALEŻNIE OD STANDARDU ---
+    if standard == "Ekonomiczny":
+        opis_std = "Gładź 2 warstwy (tania), brak sufitów G-K, farby marketowe."
+        mnoznik_mat = 0.8
+        technologia_gk = "Brak sufitów (tylko szpachlowanie)"
+        technologia_spoin = "Flizelina (najtaniej)"
+        marka_farby = "Śnieżka / Dekoral"
+    elif standard == "Standard":
+        opis_std = "Sufity podwieszane korytarz/łazienka, Tuff-Tape w narożnikach, farby lateksowe."
+        mnoznik_mat = 1.1
+        technologia_gk = "Sufity G-K w ciągach komunikacyjnych"
+        technologia_spoin = "Tuff-Tape (narożniki) + Flizelina"
+        marka_farby = "Beckers / Magnat"
+    else: # Premium
+        opis_std = "Pełne sufity podwieszane, Gładź polimerowa, Tuff-Tape wszędzie, farby ceramiczne."
+        mnoznik_mat = 1.6
+        technologia_gk = "Pełne sufity podwieszane w całym mieszkaniu"
+        technologia_spoin = "Tuff-Tape na całości (brak pęknięć)"
+        marka_farby = "Flugger / Benjamin Moore"
+
+    st.info(f"📋 **Wybrana technologia:** {opis_std}")
         
         st.markdown("---")
         st.subheader("🛠️ Zakres prac (Dodaj elementy):")
@@ -968,49 +989,40 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
             c_z1, c_z2 = st.columns(2)
             
             with c_z1:
-                if do_elektryka:
-                    st.write("⚡ **INSTALACJA ELEKTRYCZNA:**")
-                    st.write(f"- Kabel 3x2.5 (Gniazda): {round(m2_total * 2.5)} mb")
-                    st.write(f"- Kabel 3x1.5 (Światło): {round(m2_total * 1.6)} mb")
-                    st.write(f"- Rozdzielnica + 10 bezpieczników: 1 kpl.")
-                    st.write(f"- Osprzęt (gniazda/łączniki): {int(m2_total * 0.75)} szt.")
-
                 if do_szpachlowanie:
                     pow_scian = m2_total * 3.5
-                    st.write("🧱 **GŁADZIE I SZPACHLOWANIE:**")
-                    st.write(f"- Masa szpachlowa (20kg): {int(pow_scian * 1.5 / 20) + 1} wiadra")
-                    st.write(f"- Narożniki aluminiowe: {int(m2_total * 0.5)} szt.")
-                    st.write(f"- Grunt głębokopenetrujący: {int(pow_scian * 0.2 / 5) + 1} op. 5L")
+                    st.write(f"🧱 **GŁADZIE ({marka_farby} standard):**")
+                    st.write(f"- Masa: {int(pow_scian * 1.5 / 20) + 1} wiader")
+                    st.write(f"- Zbrojenie: {technologia_spoin}")
+                    if standard != "Ekonomiczny":
+                        st.write(f"- Taśma Tuff-Tape (rolki): {int(m2_total/15)+1} szt.")
 
                 if do_gk:
-                    st.write("⚒️ **SUCHA ZABUDOWA:**")
-                    st.write(f"- Płyty GK (1.2x2.6): {int(m2_total * 0.4) + 2} szt.")
-                    st.write(f"- Profile CD60 (3mb): {int(m2_total * 0.6) + 3} szt.")
+                    st.write(f"⚒️ **SUCHA ZABUDOWA ({technologia_gk}):**")
+                    # Rozszerzona lista G-K
+                    st.write(f"- Płyty GK: {int(m2_total * 0.5)+2} szt.")
+                    st.write(f"- Profil CD60 (3mb): {int(m2_total * 0.8)+4} szt.")
+                    st.write(f"- Profil UD27 (3mb): {int(m2_total * 0.4)+2} szt.")
+                    st.write(f"- Wieszaki ES/Obrotowe: {int(m2_total * 1.2)} szt.")
+                    st.write(f"- Wkręty pchełki (op.): 1 szt.")
 
             with c_z2:
-                if do_podlogi:
-                    st.write("📐 **PODŁOGI:**")
-                    st.write(f"- Panele/Winyle (+10%): {round(m2_total * 1.1, 1)} m²")
-                    st.write(f"- Podkład: {round(m2_total * 1.05, 1)} m²")
-                    st.write(f"- Listwy przypodłogowe (2.5m): {int(m2_total * 0.8 / 2.5) + 2} szt.")
-
                 if do_malowanie:
-                    pow_scian = m2_total * 3.5
-                    st.write("🎨 **MALOWANIE:**")
-                    st.write(f"- Farba biała (sufity): {int(m2_total / 10 * 2 / 10) + 1} wiadra 10L")
-                    st.write(f"- Farba kolor (ściany): {int(pow_scian / 12 * 2 / 5) + 1} puszek 5L")
+                    st.write(f"🎨 **MALOWANIE (Marka: {marka_farby}):**")
+                    st.write(f"- Farba biała: {int(m2_total / 8)+1} L")
+                    st.write(f"- Farba kolor: {int((m2_total * 2.5) / 10)+1} L")
+                    st.write("- Akcesoria: folie, taśmy malarskie BLUE, wałki")
 
-                if do_drzwi > 0:
-                    st.write("🚪 **STOLARKA:**")
-                    st.write(f"- Skrzydła + Ościeżnice: {do_drzwi} kpl.")
-                    st.write(f"- Pianka montażowa: {do_drzwi} szt.")
+                if do_elektryka:
+                    st.write("⚡ **ELEKTRYKA:**")
+                    st.write(f"- Rozdzielnica: {'Plastikowa' if standard == 'Ekonomiczny' else 'Eaton/Hager'}")
+                    st.write(f"- Osprzęt: {int(m2_total * 0.75)} szt. ({standard})")
 
                 if do_lazienka:
                     st.write("🚿 **ŁAZIENKA:**")
-                    st.write("- Zestaw podtynkowy (WC): 1 kpl.")
-                    st.write("- Hydroizolacja (płynna folia): 1 op. 5kg")
-                    st.write("- Klej do płytek (25kg): 6-8 worków")
-
+                    st.write("- Stelaż WC podtynkowy: 1 kpl.")
+                    st.write(f"- Płytki: {round(25 * mnoznik_mat / mnoznik_mat)} m²") # korekta m2
+                    
         st.markdown("---")
         st.subheader("💼 Kalkulator ROI")
         c_a, c_b = st.columns(2)
