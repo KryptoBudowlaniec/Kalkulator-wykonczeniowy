@@ -49,27 +49,7 @@ st.markdown("""
         padding: 25px;
         border: 1px solid #2D2F39;
     }
-</style>
-""", unsafe_allow_html=True)
 
-if 'pokoje_pro' not in st.session_state:
-    st.session_state.pokoje_pro = []
-
-if 'pokoje' not in st.session_state:
-    st.session_state.pokoje = []
-
-
-# --- NOWOCZESNE MENU POZIOME (Pigułki) ---
-# To zastępuje Twój stary sidebar.selectbox
-branza = st.pills(
-    "Wybierz rodzaj prac:", 
-    ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka","🚀 PANEL INWESTORA (PREMIUM)"],
-    selection_mode="single",
-    default="🎨 Malowanie"
-)
-
-st.markdown("""
-<style>
     /* Powiększenie tekstu we wszystkich pigułkach menu */
     button[data-testid="stBaseButton-secondary"] p {
         font-size: 20px !important;  /* Rozmiar czcionki */
@@ -91,6 +71,22 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+if 'pokoje_pro' not in st.session_state:
+    st.session_state.pokoje_pro = []
+
+if 'pokoje' not in st.session_state:
+    st.session_state.pokoje = []
+
+
+# --- NOWOCZESNE MENU POZIOME (Pigułki) ---
+# To zastępuje Twój stary sidebar.selectbox
+branza = st.pills(
+    "Wybierz rodzaj prac:", 
+    ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka","🚀 PANEL INWESTORA (PREMIUM)"],
+    selection_mode="single",
+    default="🎨 Malowanie"
+)
 
 st.markdown("---") # Linia oddzielająca menu od formularzy
 
