@@ -4,7 +4,7 @@ import streamlit as st
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
 # Nagłówek z logo i tytułem
-col_space1, col_logo, col_space2 = st.columns([2, 1, 2])
+col_space1, col_logo, col_space2 = st.columns([1.5, 1, 1.5])
 
 with col_logo:
     # TE LINIE MUSZĄ MIEĆ 4 SPACJE WCIĘCIA:
