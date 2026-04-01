@@ -907,34 +907,35 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         st.checkbox("Możliwość wydzielenia pokoi")
         st.info("Zaznacz punkty po inspekcji lokalu.")
 
-    col_inv1, col_inv2 = st.columns([1, 1.5])
+col_inv1, col_inv2 = st.columns([1, 1.5])
     
     with col_inv1:
         st.subheader("🏠 Parametry Nieruchomości")
         m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
         standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
         stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
-        # --- DEFINICJA TECHNOLOGII ZALEŻNIE OD STANDARDU ---
-    if standard == "Ekonomiczny":
-        opis_std = "Gładź 2 warstwy (tania), brak sufitów G-K, farby marketowe."
-        mnoznik_mat = 0.8
-        technologia_gk = "Brak sufitów (tylko szpachlowanie)"
-        technologia_spoin = "Flizelina (najtaniej)"
-        marka_farby = "Śnieżka / Dekoral"
-    elif standard == "Standard":
-        opis_std = "Sufity podwieszane korytarz/łazienka, Tuff-Tape w narożnikach, farby lateksowe."
-        mnoznik_mat = 1.1
-        technologia_gk = "Sufity G-K w ciągach komunikacyjnych"
-        technologia_spoin = "Tuff-Tape (narożniki) + Flizelina"
-        marka_farby = "Beckers / Magnat"
-    else: # Premium
-        opis_std = "Pełne sufity podwieszane, Gładź polimerowa, Tuff-Tape wszędzie, farby ceramiczne."
-        mnoznik_mat = 1.6
-        technologia_gk = "Pełne sufity podwieszane w całym mieszkaniu"
-        technologia_spoin = "Tuff-Tape na całości (brak pęknięć)"
-        marka_farby = "Flugger / Benjamin Moore"
+        
+        # --- DEFINICJA TECHNOLOGII (Teraz poprawnie wewnątrz 'with col_inv1') ---
+        if standard == "Ekonomiczny":
+            opis_std = "Gładź 2 warstwy (tania), brak sufitów G-K, farby marketowe."
+            mnoznik_mat = 0.8
+            technologia_gk = "Brak sufitów (tylko szpachlowanie)"
+            technologia_spoin = "Flizelina (najtaniej)"
+            marka_farby = "Śnieżka / Dekoral"
+        elif standard == "Standard":
+            opis_std = "Sufity podwieszane korytarz/łazienka, Tuff-Tape w narożnikach, farby lateksowe."
+            mnoznik_mat = 1.1
+            technologia_gk = "Sufity G-K w ciągach komunikacyjnych"
+            technologia_spoin = "Tuff-Tape (narożniki) + Flizelina"
+            marka_farby = "Beckers / Magnat"
+        else: # Premium
+            opis_std = "Pełne sufity podwieszane, Gładź polimerowa, Tuff-Tape wszędzie, farby ceramiczne."
+            mnoznik_mat = 1.6
+            technologia_gk = "Pełne sufity podwieszane w całym mieszkaniu"
+            technologia_spoin = "Tuff-Tape na całości (brak pęknięć)"
+            marka_farby = "Flugger / Benjamin Moore"
 
-    st.info(f"📋 **Wybrana technologia:** {opis_std}")
+        st.info(f"📋 **Wybrana technologia:** {opis_std}")
         
         st.markdown("---")
         st.subheader("🛠️ Zakres prac (Dodaj elementy):")
@@ -946,7 +947,7 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         do_drzwi = st.number_input("Liczba drzwi do wymiany (szt):", min_value=0, value=4)
         do_lazienka = st.checkbox("Remont Łazienki", value=True)
 
-    # --- 2. LOGIKA MATEMATYCZNA PRO ---
+    # --- 2. LOGIKA MATEMATYCZNA PRO (Wyrównana do poziomu col_inv1) ---
     mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
     wtórny = 1.25 if stan_lokalu == "Rynek Wtórny (Do remontu)" else 1.0
     
