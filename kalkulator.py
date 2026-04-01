@@ -1,5 +1,4 @@
 import streamlit as st
-
 import pandas as pd
 
 st.set_page_config(page_title="ProCalc", layout="wide", page_icon="🔨")
@@ -16,10 +15,10 @@ h1 { color: #00D395 !important; }
 """, unsafe_allow_html=True)
 
 # Session state (Twoje + freemium)
-if 'branza' not in st.session_state: st.session_state.branza = "Brak"
-if 'projects_count' not in st.session_state: st.session_state.projects_count = 0
-if 'total_material' not in st.session_state: st.session_state.total_material = 0
-if 'robocizna' not in st.session_state: st.session_state.robocizna = 0
+if 'branza' not in st.session_state:
+    st.session_state.branza = "Brak"
+if 'total_material' not in st.session_state:
+    st.session_state.total_material
 
 branza = st.session_state.branza
 total_material = st.session
