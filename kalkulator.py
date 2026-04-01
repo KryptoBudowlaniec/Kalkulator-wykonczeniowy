@@ -756,13 +756,73 @@ elif branza == "⚒️ Sucha Zabudowa":
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "⚡ Elektryka":
-    st.header("⚡ Kalkulator Instalacji Elektrycznej")
-    punkty = st.number_input("Liczba punktów elektrycznych (gniazdka, wypusty):", min_value=1, value=40)
-    typ_inst = st.selectbox("Standard instalacji:", ["Podstawowy (Mieszkanie)", "Rozbudowany (Smart Home)"])
+    st.header("⚡ Instalacja Elektryczna (Mieszkanie)")
     
-    stawka_pkt = 80 if "Podstawowy" in typ_inst else 150
-    st.metric("Szacowany koszt robocizny", f"{punkty * stawka_pkt} zł", f"{stawka_pkt} zł/pkt")
-    st.warning("⚠️ Cena nie zawiera osprzętu (gniazdek) i rozdzielni.")
+    col_e1, col_e2 = st.columns([1, 1.2])
+
+    with col_e1:
+        st.subheader("Parametry instalacji")
+        m2_mieszkania = st.number_input("Metraż mieszkania (m²):", min_value=10, value=60)
+        
+        # Proporcjonalne wyliczanie kabli na podstawie Twoich danych dla 60m2
+        mnoznik_m2 = m2_mieszkania / 60
+        
+        st.markdown("---")
+        n_punktow = st.slider("Łączna liczba punktów (gniazdka/włączniki):", 10, 100, 45)
+        typ_scian = st.radio("Materiał ścian (trudność bruzdowania):", ["Gazobeton/Cegła", "Żelbet (Wielka Płyta)"])
+        
+        standard_osprzetu = st.select_slider(
+            "Standard osprzętu (gniazdka/ramki):",
+            options=["Ekonomiczny", "Standard", "Premium"],
+            value="Standard"
+        )
+
+        stawka_punkt = st.slider("Twoja stawka za punkt (zł):", 20, 50, 30)
+
+    # --- LOGIKA OBLICZEŃ ---
+    # Kable (skalowane metrażem)
+    kabel_25 = 150 * mnoznik_m2
+    kabel_15 = 100 * mnoznik_m2
+    kabel_4x15 = 30 * mnoznik_m2
+    
+    # Ceny materiałów (uśrednione)
+    cena_mb_25 = 4.50
+    cena_mb_15 = 3.20
+    cena_mb_4x15 = 5.50
+    
+    # Osprzęt (średnia cena za gniazdko/włącznik z ramką)
+    ceny_osprzetu = {"Ekonomiczny": 15, "Standard": 35, "Premium": 85}
+    srednia_cena_szt = ceny_osprzetu[standard_osprzetu]
+    
+    # Rozdzielnica
+    koszt_rozdzielnicy_mat = 1200 # obudowa + 10x ES + RCD + szyny
+    robocizna_rozdzielnica = 800
+    
+    # Trudność prac
+    mnoznik_trudnosci = 1.3 if typ_scian == "Żelbet (Wielka Płyta)" else 1.0
+
+    # SUMY
+    mat_kable = (kabel_25 * cena_mb_25) + (kabel_15 * cena_mb_15) + (kabel_4x15 * cena_mb_4x15)
+    mat_osprzet = n_punktow * srednia_cena_szt
+    total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat
+    
+    total_robocizna_e = (n_punktow * stawka_punkt * mnoznik_trudnosci) + robocizna_rozdzielnica
+
+    with col_e2:
+        st.subheader("💰 Kosztorys Elektryki")
+        st.success(f"### RAZEM: **{round(total_material_e + total_robocizna_e)} zł**")
+        
+        c1, c2 = st.columns(2)
+        c1.metric("Materiały", f"{round(total_material_e)} zł")
+        c2.metric("Robocizna", f"{round(total_robocizna_e)} zł")
+
+        with st.expander("📦 WYKAZ MATERIAŁÓW (Szacunkowy)", expanded=True):
+            st.write(f"• Kabel 3x2.5 (Gniazda): **{round(kabel_25)} mb**")
+            st.write(f"• Kabel 3x1.5 (Światło): **{round(kabel_15)} mb**")
+            st.write(f"• Kabel 4x1.5 (Schodowe/Indukcja): **{round(kabel_4x15)} mb**")
+            st.write(f"• Rozdzielnica + 10 bezpieczników: **1 kpl**")
+            st.write(f"• Osprzęt ({standard_osprzetu}): **{n_punktow} szt.**")
+            st.info("Pamiętaj: Ilość kabla zależy od sposobu prowadzenia tras (sufit/podłoga).")
 
 elif branza == "🚪 Drzwi":
     st.header("🚪 Kalkulator Montażu Drzwi Wewnętrznych")
