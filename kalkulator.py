@@ -405,7 +405,7 @@ elif branza == "🧱 Szpachlowanie":
 
 
 # --- SEKCJA: PODŁOGI ---
-elif branza == "📐 Podłogi"
+elif branza == "📐 Podłogi":
     st.header("📐 Kalkulator Podłóg: Pływające vs Klejone")
     tab_p1, tab_p2 = st.tabs(["⚡ Szybka Wycena", "💎 Szczegóły Montażu"])
 
