@@ -432,6 +432,23 @@ elif branza == "🧱 Szpachlowanie":
 # --- SEKCJA: PODŁOGI ---
 elif branza == "📐 Podłogi (Panele/Deska)":
     st.header("📐 Kalkulator Podłóg: Pływające vs Klejone")
+
+    # Tworzymy układ: Lewa na zdjęcie, Prawa na formularz
+    col_img, col_form = st.columns([1, 1.5])
+    
+    with col_img:
+        # Możesz użyć zdjęcia z Unsplash (darmowe) lub wgrać własne na GitHub
+        st.image("jodelka.jpg", 
+                 caption="Wybierz swój styl podłogi", 
+                 use_container_width=True)
+        
+        # Opcjonalnie: Dodaj małą ramkę pod zdjęciem z info
+        st.info("Pamiętaj o dodaniu 10% zapasu na docięcia!")
+
+    with col_form:
+        # TUTAJ WSTAW SWOJE ISTNIEJĄCE POLA WYBORU:
+        rodzaj_podlogi = st.selectbox("Rodzaj materiału:", ["Panele Laminowane", "Panele Winylowe (SPC)", "Deska Barlinecka"])
+        metraz_podlogi = st.number_input("Metraż pomieszczenia (m2):", min_value=1.0, value=20.0)
     tab_p1, tab_p2 = st.tabs(["⚡ Szybka Wycena", "💎 Szczegóły Montażu"])
 
     with tab_p1:
