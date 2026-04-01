@@ -13,8 +13,7 @@ with col_logo:
 
 with col_tytul:
     st.markdown("<br>", unsafe_allow_html=True) # Delikatny odstęp, żeby wyrównać do środka logo
-    st.markdown("<h1 style='margin-bottom: 0;'>RemontCalc PRO</h1>", unsafe_allow_html=True)
-    st.caption("Profesjonalny Kalkulator Remontowy")
+
 
 if 'branza' not in st.session_state:
     st.session_state.branza = "Brak"
@@ -79,7 +78,6 @@ if 'pokoje' not in st.session_state:
     st.session_state.pokoje = []
 
 # --- NAGŁÓWEK ---
-st.title("⚒️ RemontCalc")
 st.markdown("<h3 style='text-align: center;'>Oblicz koszty swojego remontu szybko i precyzyjnie</h3>", unsafe_allow_html=True)
 
 # --- SLIDER POWIERZCHNI ---
