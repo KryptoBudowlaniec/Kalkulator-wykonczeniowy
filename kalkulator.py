@@ -58,16 +58,6 @@ if 'pokoje_pro' not in st.session_state:
 if 'pokoje' not in st.session_state:
     st.session_state.pokoje = []
 
-# Menu boczne do wyboru branży
-st.markdown("""
-<style>
-    /* Usunięcie domyślnego odstępu na górze */
-    .block-container { padding-top: 1rem; }
-    
-    /* Styl dla aktywnej sekcji (opcjonalnie) */
-    .stSelectbox:first-of-type { margin-bottom: 20px; }
-</style>
-""", unsafe_allow_html=True)
 
 # --- NOWOCZESNE MENU POZIOME (Pigułki) ---
 # To zastępuje Twój stary sidebar.selectbox
@@ -77,6 +67,30 @@ branza = st.pills(
     selection_mode="single",
     default="🎨 Malowanie"
 )
+
+st.markdown("""
+<style>
+    /* Powiększenie tekstu we wszystkich pigułkach menu */
+    button[data-testid="stBaseButton-secondary"] p {
+        font-size: 20px !important;  /* Rozmiar czcionki */
+        font-weight: 600 !important; /* Pogrubienie */
+    }
+
+    /* Powiększenie samych przycisków (odstępy w środku) */
+    button[data-testid="stBaseButton-secondary"] {
+        padding: 12px 24px !important;
+        border-radius: 12px !important;
+        margin: 5px !important;
+    }
+
+    /* Kolor dla wybranej pigułki (miętowy ze zdjęcia) */
+    button[aria-checked="true"] {
+        background-color: #00D395 !important;
+        color: black !important;
+        border: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 st.markdown("---") # Linia oddzielająca menu od formularzy
 
