@@ -3,6 +3,12 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
+if 'branza' not in st.session_state:
+    st.session_state.branza = "Brak"
+
+# Przypisujemy do zmiennej lokalnej, żeby reszta Twojego kodu (if branza == ...) działała
+branza = st.session_state.branza
+
 # --- INICJALIZACJA WARTOŚCI (Bezpiecznik przed NameError) ---
 if 'total_material' not in st.session_state:
     st.session_state.total_material = 0
@@ -72,11 +78,10 @@ with col_main:
     
     with c1:
         st.markdown('<div class="category-card">', unsafe_allow_html=True)
-        st.image("https://unsplash.com", use_column_width=True)
-        st.write("#### Podłogi")
-        st.caption("Panele LVT, winyl, gres, montaż")
-        if st.button("Konfiguruj", key="btn_podlogi"):
-             st.session_state.branza = "Podłogi" # Przykład nawigacji
+        # ... zdjęcie i opis ...
+        if st.button("Konfiguruj Podłogi"):
+            st.session_state.branza = "📐 Podłogi (Panele/Deska)"
+            st.rerun() # Odśwież, żeby pokazać formularz podłóg
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c2:
@@ -89,10 +94,10 @@ with col_main:
 
     with c3:
         st.markdown('<div class="category-card">', unsafe_allow_html=True)
-        st.image("https://unsplash.com", use_column_width=True)
-        st.write("#### Sucha Zabudowa")
-        st.caption("Ścianki, sufity podwieszane, tynki")
-        st.button("Zdefiniuj zakres", key="btn_gk")
+        # ... zdjęcie i opis ...
+        if st.button("Zdefiniuj zakres G-K"):
+            st.session_state.branza = "⚒️ Sucha Zabudowa"
+            st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 with col_summary:
