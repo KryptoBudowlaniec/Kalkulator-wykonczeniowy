@@ -13,9 +13,6 @@ with col_logo:
     except:
         st.error("Brak pliku logo2.png")
 
-# Te linie wracają do lewej krawędzi (0 spacji):
-st.markdown("<p style='text-align: center; color: gray;'>Profesjonalny system kosztorysowania remontów</p>", unsafe_allow_html=True)
-   
 
 # --- STYLE CSS (Twoje poprawione style) ---
 st.markdown("""
