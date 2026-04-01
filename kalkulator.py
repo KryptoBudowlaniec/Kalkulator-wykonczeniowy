@@ -760,52 +760,52 @@ elif branza == "⚡ Elektryka":
     
     col_e1, col_e2 = st.columns([1, 1.2])
 
+    # --- KONFIGURACJA MAREK OSPRZĘTU ---
+    opcje_osprzetu = {
+        "Ekonomiczny (np. Simon 10, Adelid)": 18,
+        "Standard (np. Simon 54, Legrand Niloe)": 38,
+        "Premium (np. Berker R.1, Jung, Gira)": 95
+    }
+
     with col_e1:
         st.subheader("Parametry instalacji")
         m2_mieszkania = st.number_input("Metraż mieszkania (m²):", min_value=10, value=60)
         
-        # Proporcjonalne wyliczanie kabli na podstawie Twoich danych dla 60m2
         mnoznik_m2 = m2_mieszkania / 60
         
         st.markdown("---")
-        n_punktow = st.slider("Łączna liczba punktów (gniazdka/włączniki):", 10, 100, 45)
+        n_punktow = st.slider("Łączna liczba punktów (gniazda/włączniki):", 10, 100, 45)
         typ_scian = st.radio("Materiał ścian (trudność bruzdowania):", ["Gazobeton/Cegła", "Żelbet (Wielka Płyta)"])
         
-        standard_osprzetu = st.select_slider(
-            "Standard osprzętu (gniazdka/ramki):",
-            options=["Ekonomiczny", "Standard", "Premium"],
-            value="Standard"
+        wybrany_standard = st.selectbox(
+            "Marka i standard osprzętu:",
+            options=list(opcje_osprzetu.keys()),
+            index=1
         )
 
-        stawka_punkt = st.slider("Twoja stawka za punkt (zł):", 20, 50, 30)
+        stawka_punkt = st.slider("Stawka robocizny za punkt (zł):", 20, 50, 30)
 
     # --- LOGIKA OBLICZEŃ ---
-    # Kable (skalowane metrażem)
     kabel_25 = 150 * mnoznik_m2
     kabel_15 = 100 * mnoznik_m2
     kabel_4x15 = 30 * mnoznik_m2
     
-    # Ceny materiałów (uśrednione)
-    cena_mb_25 = 4.50
-    cena_mb_15 = 3.20
-    cena_mb_4x15 = 5.50
+    # Mocowania (uchwyty USMP) - średnio 3 szt. na 1 mb kabla
+    szt_mocowania = int((kabel_25 + kabel_15 + kabel_4x15) * 3)
+    paczki_mocowania = int(szt_mocowania / 100) + 1 # paczki po 100 szt.
     
-    # Osprzęt (średnia cena za gniazdko/włącznik z ramką)
-    ceny_osprzetu = {"Ekonomiczny": 15, "Standard": 35, "Premium": 85}
-    srednia_cena_szt = ceny_osprzetu[standard_osprzetu]
+    srednia_cena_szt = opcje_osprzetu[wybrany_standard]
     
-    # Rozdzielnica
-    koszt_rozdzielnicy_mat = 1200 # obudowa + 10x ES + RCD + szyny
+    koszt_rozdzielnicy_mat = 1200 
     robocizna_rozdzielnica = 800
-    
-    # Trudność prac
     mnoznik_trudnosci = 1.3 if typ_scian == "Żelbet (Wielka Płyta)" else 1.0
 
     # SUMY
-    mat_kable = (kabel_25 * cena_mb_25) + (kabel_15 * cena_mb_15) + (kabel_4x15 * cena_mb_4x15)
+    mat_kable = (kabel_25 * 4.50) + (kabel_15 * 3.20) + (kabel_4x15 * 5.50)
     mat_osprzet = n_punktow * srednia_cena_szt
-    total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat
+    mat_mocowania = paczki_mocowania * 22.0 # ok 22zł za paczkę
     
+    total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
     total_robocizna_e = (n_punktow * stawka_punkt * mnoznik_trudnosci) + robocizna_rozdzielnica
 
     with col_e2:
@@ -816,13 +816,16 @@ elif branza == "⚡ Elektryka":
         c1.metric("Materiały", f"{round(total_material_e)} zł")
         c2.metric("Robocizna", f"{round(total_robocizna_e)} zł")
 
-        with st.expander("📦 WYKAZ MATERIAŁÓW (Szacunkowy)", expanded=True):
+        with st.expander("📦 WYKAZ MATERIAŁÓW DO KUPNA", expanded=True):
             st.write(f"• Kabel 3x2.5 (Gniazda): **{round(kabel_25)} mb**")
             st.write(f"• Kabel 3x1.5 (Światło): **{round(kabel_15)} mb**")
-            st.write(f"• Kabel 4x1.5 (Schodowe/Indukcja): **{round(kabel_4x15)} mb**")
-            st.write(f"• Rozdzielnica + 10 bezpieczników: **1 kpl**")
-            st.write(f"• Osprzęt ({standard_osprzetu}): **{n_punktow} szt.**")
-            st.info("Pamiętaj: Ilość kabla zależy od sposobu prowadzenia tras (sufit/podłoga).")
+            st.write(f"• Kabel 4x1.5 (Schodowe/Siła): **{round(kabel_4x15)} mb**")
+            st.write(f"• Rozdzielnica + 10 bezpieczników (Eaton/Hager): **1 kpl**")
+            st.write(f"• Osprzęt: **{n_punktow} szt.** ({wybrany_standard})")
+            st.write(f"• Uchwyty mocujące (paczki 100 szt.): **{paczki_mocowania} op.**")
+            
+            st.warning("⚠️ **UWAGA:** Wycena nie uwzględnia zakupu lamp oraz ich montażu (oprawy oświetleniowe).")
+            st.info("Ilość kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podłogach.")
 
 elif branza == "🚪 Drzwi":
     st.header("🚪 Kalkulator Montażu Drzwi Wewnętrznych")
