@@ -758,23 +758,22 @@ elif branza == "⚒️ Sucha Zabudowa":
 elif branza == "⚡ Elektryka":
     st.header("⚡ Instalacja Elektryczna (Mieszkanie)")
     
-    col_e1, col_e2 = st.columns([1, 1.2])
-
-    # --- KONFIGURACJA MAREK OSPRZĘTU ---
-    opcje_osprzetu = {
-        "Ekonomiczny (np. Simon 10, Adelid)": 12,
-        "Standard (np. Simon 54, Legrand Niloe)": 38,
-        "Premium (np. Berker R.1, Jung, Gira)": 95
-    }
-
-    with col_e1:
+with col_e1:
         st.subheader("Parametry instalacji")
         m2_mieszkania = st.number_input("Metraż mieszkania (m²):", min_value=10, value=60)
         
         mnoznik_m2 = m2_mieszkania / 60
         
         st.markdown("---")
-        n_punktow = st.slider("Łączna liczba punktów (gniazda/włączniki):", 10, 100, 45)
+        sugerowane_punkty = int(m2_mieszkania * 0.75)
+        
+        n_punktow = st.slider(
+            "Łączna liczba punktów (gniazda/włączniki):", 
+            min_value=10, 
+            max_value=150, 
+            value=sugerowane_punkty
+        ) 
+        
         typ_scian = st.radio("Materiał ścian (trudność bruzdowania):", ["Gazobeton/Cegła", "Żelbet (Wielka Płyta)"])
         n_punkty_tele = 2
         
