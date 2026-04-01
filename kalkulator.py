@@ -14,7 +14,7 @@ with col_l:
         st.error("Brak pliku logo.png")
 
 with col_r:
-    st.title("Ekspert Wykończeń PRO")
+   
     st.caption("Profesjonalny system kosztorysowania remontów")
 
 # --- STYLE CSS (Twoje poprawione style) ---
