@@ -796,35 +796,35 @@ elif branza == "⚡ Elektryka":
         stawka_punkt = st.slider("Stawka robocizny za punkt (zł):", 1, 150, 30)
 
     # --- LOGIKA OBLICZEŃ (Wyrównana do with col_e1) ---
-    kabel_25 = 150 * mnoznik_m2
+     kabel_25 = 150 * mnoznik_m2
     kabel_15 = 100 * mnoznik_m2
     kabel_4x15 = 30 * mnoznik_m2
     kabel_tv = 30 * mnoznik_m2
     kabel_lan = 50 * mnoznik_m2
     
-    # Mocowania (uchwyty USMP)
-    szt_mocowania = int((kabel_25 + kabel_15 + kabel_4x15) * 3)
+    szt_mocowania = int((kabel_25 + kabel_15 + kabel_4x15 + kabel_tv + kabel_lan) * 3)
     paczki_mocowania = int(szt_mocowania / 100) + 1
     
     srednia_cena_szt = opcje_osprzetu[wybrany_standard]
+    koszt_rozdzielnicy_mat = 1500 # Obudowa + 10x ES + RCD + szyny (lekka korekta ceny)
 
-    cena_mb_tv = 2.80
-    cena_mb_lan = 3.50
-    
-    koszt_rozdzielnicy_mat = 1200 
-    robocizna_rozdzielnica = 800
-    mnoznik_trudnosci = 1.3 if typ_scian == "Żelbet (Wielka Płyta)" else 1.0
-
-    # SUMY
-    mat_kable = (kabel_25 * 4.50) + (kabel_15 * 3.20) + (kabel_4x15 * 5.50)
+    mat_kable = (kabel_25 * 4.50) + (kabel_15 * 3.20) + (kabel_4x15 * 5.50) + (kabel_tv * 2.80) + (kabel_lan * 3.50)
     mat_osprzet = n_punktow * srednia_cena_szt
     mat_mocowania = paczki_mocowania * 22.0
-    mat_teletechnika = (kabel_tv * cena_mb_tv) + (kabel_lan * cena_mb_lan)
     
-    total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania + mat_teletechnika
+    total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
+
+    # 2. ROBOCIZNA (TUTAJ JEST TA ZMIANA NA 8-10 TYS)
+    mnoznik_trudnosci = 1.4 if typ_scian == "Żelbet (Wielka Płyta)" else 1.0
     
-    total_robocizna_e = (n_punktow * stawka_punkt * mnoznik_trudnosci) + robocizna_rozdzielnica
-    total_robocizna_e += (n_punkty_tele * stawka_punkt)
+    # Baza za m2 (bruzdowanie i kable) - 90 zł/m2
+    robocizna_baza = (m2_mieszkania * 90) 
+    # Biały montaż (gniazdka)
+    robocizna_osprzet = (n_punktow + n_punkty_tele) * stawka_punkt
+    # Uzbrojenie rozdzielni
+    robocizna_rozdzielnica = 1200
+    
+    total_robocizna_e = (robocizna_baza + robocizna_osprzet + robocizna_rozdzielnica) * mnoznik_trudnosci
 
     with col_e2:
         st.subheader("💰 Kosztorys Elektryki")
