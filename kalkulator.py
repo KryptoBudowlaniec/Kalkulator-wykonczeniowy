@@ -907,15 +907,15 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         st.checkbox("Możliwość wydzielenia pokoi")
         st.info("Zaznacz punkty po inspekcji lokalu.")
 
-col_inv1, col_inv2 = st.columns([1, 1.5])
+    col_inv1, col_inv2 = st.columns([1, 1.5])
     
-        with col_inv1:
-            st.subheader("🏠 Parametry Nieruchomości")
-            m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
-            standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
-            stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
+    with col_inv1:
+        st.subheader("🏠 Parametry Nieruchomości")
+        m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
+        standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
+        stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
         
-        # --- DEFINICJA TECHNOLOGII (Teraz poprawnie wewnątrz 'with col_inv1') ---
+        # --- DEFINICJA TECHNOLOGII (Wszystko przesunięte w prawo pod 'with') ---
         if standard == "Ekonomiczny":
             opis_std = "Gładź 2 warstwy (tania), brak sufitów G-K, farby marketowe."
             mnoznik_mat = 0.8
