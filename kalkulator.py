@@ -7,7 +7,7 @@ col_l, col_r = st.columns([1, 4]) # Logo mniejsze, tytuł większy
 
 with col_l:
     try:
-        st.image("logo.png", width=150)
+        st.image("logo.png", width=300)
     except:
         st.error("Brak pliku logo.png")
 
