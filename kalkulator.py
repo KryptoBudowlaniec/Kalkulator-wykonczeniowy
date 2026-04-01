@@ -72,6 +72,45 @@ branza = st.pills(
     default="🎨 Malowanie"
 )
 
+# --- STYLE CSS (Twoje poprawione style) ---
+st.markdown("""
+<style>
+    <style>
+    /* 1. POWIĘKSZENIE TEKSTU DLA WSZYSTKICH PRZYCISKÓW PILLS */
+    [data-testid="stPills"] button p {
+        font-size: 26px !important; 
+        font-weight: 800 !important;
+        color: white !important;
+        margin: 0 !important;
+    }
+
+    /* 2. POWIĘKSZENIE SAMEGO KONTENERA PRZYCISKU */
+    [data-testid="stPills"] button {
+        padding: 20px 40px !important;
+        height: auto !important;
+        min-height: 70px !important;
+        background-color: #1A1C23 !important;
+        border: 2px solid #2D2F39 !important;
+        border-radius: 15px !important;
+    }
+
+    /* 3. STYL DLA AKTYWNEJ PIGUŁKI (WYMUSZENIE KOLORU) */
+    [data-testid="stPills"] button[aria-checked="true"] {
+        background-color: #00D395 !important;
+        border-color: #00D395 !important;
+    }
+    
+    /* 4. KOLOR TEKSTU DLA AKTYWNEJ PIGUŁKI (ŻEBY BYŁ CZARNY) */
+    [data-testid="stPills"] button[aria-checked="true"] p {
+        color: black !important;
+    }
+
+    /* 5. EFEKT HOVER */
+    [data-testid="stPills"] button:hover {
+        border-color: #00D395 !important;
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("---")
 
 # --- SEKCJA: MALOWANIE ---
