@@ -776,6 +776,7 @@ elif branza == "⚡ Elektryka":
         st.markdown("---")
         n_punktow = st.slider("Łączna liczba punktów (gniazda/włączniki):", 10, 100, 45)
         typ_scian = st.radio("Materiał ścian (trudność bruzdowania):", ["Gazobeton/Cegła", "Żelbet (Wielka Płyta)"])
+        n_punkty_tele = 2
         
         wybrany_standard = st.selectbox(
             "Marka i standard osprzętu:",
@@ -789,12 +790,17 @@ elif branza == "⚡ Elektryka":
     kabel_25 = 150 * mnoznik_m2
     kabel_15 = 100 * mnoznik_m2
     kabel_4x15 = 30 * mnoznik_m2
+    kabel_tv = 30 * mnoznik_m2
+    kabel_lan = 50 * mnoznik_m2
     
     # Mocowania (uchwyty USMP) - średnio 3 szt. na 1 mb kabla
     szt_mocowania = int((kabel_25 + kabel_15 + kabel_4x15) * 3)
     paczki_mocowania = int(szt_mocowania / 100) + 1 # paczki po 100 szt.
     
     srednia_cena_szt = opcje_osprzetu[wybrany_standard]
+
+    cena_mb_tv = 2.80
+    cena_mb_lan = 3.50
     
     koszt_rozdzielnicy_mat = 1200 
     robocizna_rozdzielnica = 800
@@ -804,13 +810,17 @@ elif branza == "⚡ Elektryka":
     mat_kable = (kabel_25 * 4.50) + (kabel_15 * 3.20) + (kabel_4x15 * 5.50)
     mat_osprzet = n_punktow * srednia_cena_szt
     mat_mocowania = paczki_mocowania * 22.0 # ok 22zł za paczkę
+    mat_teletechnika = (kabel_tv * cena_mb_tv) + (kabel_lan * cena_mb_lan)
+    total_material_e += mat_teletechnika
     
     total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
     total_robocizna_e = (n_punktow * stawka_punkt * mnoznik_trudnosci) + robocizna_rozdzielnica
+    total_robocizna_e += (n_punkty_tele * stawka_punkt)
 
     with col_e2:
         st.subheader("💰 Kosztorys Elektryki")
         st.success(f"### RAZEM: **{round(total_material_e + total_robocizna_e)} zł**")
+        
         
         c1, c2 = st.columns(2)
         c1.metric("Materiały", f"{round(total_material_e)} zł")
@@ -823,6 +833,9 @@ elif branza == "⚡ Elektryka":
             st.write(f"• Rozdzielnica + 10 bezpieczników (Eaton/Hager): **1 kpl**")
             st.write(f"• Osprzęt: **{n_punktow} szt.** ({wybrany_standard})")
             st.write(f"• Uchwyty mocujące (paczki 100 szt.): **{paczki_mocowania} op.**")
+            st.write(f"• Kabel antenowy RG6 (TV): **{round(kabel_tv)} mb**")
+            st.write(f"• Kabel LAN kat. 6 (Internet): **{round(kabel_lan)} mb**")
+            st.write(f"• Dodatkowe puszki/gniazda LAN/RTV: **{n_punkty_tele} szt.**")
             
             st.warning("⚠️ **UWAGA:** Wycena nie uwzględnia zakupu lamp (oprawy oświetleniowe).")
             st.info("Ilość kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podłogach.")
