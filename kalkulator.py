@@ -762,7 +762,7 @@ elif branza == "⚡ Elektryka":
 
     # --- KONFIGURACJA MAREK OSPRZĘTU ---
     opcje_osprzetu = {
-        "Ekonomiczny (np. Simon 10, Adelid)": 18,
+        "Ekonomiczny (np. Simon 10, Adelid)": 12,
         "Standard (np. Simon 54, Legrand Niloe)": 38,
         "Premium (np. Berker R.1, Jung, Gira)": 95
     }
@@ -783,7 +783,7 @@ elif branza == "⚡ Elektryka":
             index=1
         )
 
-        stawka_punkt = st.slider("Stawka robocizny za punkt (zł):", 20, 50, 30)
+        stawka_punkt = st.slider("Stawka robocizny za punkt (zł):", 1, 150, 30)
 
     # --- LOGIKA OBLICZEŃ ---
     kabel_25 = 150 * mnoznik_m2
@@ -824,7 +824,7 @@ elif branza == "⚡ Elektryka":
             st.write(f"• Osprzęt: **{n_punktow} szt.** ({wybrany_standard})")
             st.write(f"• Uchwyty mocujące (paczki 100 szt.): **{paczki_mocowania} op.**")
             
-            st.warning("⚠️ **UWAGA:** Wycena nie uwzględnia zakupu lamp oraz ich montażu (oprawy oświetleniowe).")
+            st.warning("⚠️ **UWAGA:** Wycena nie uwzględnia zakupu lamp (oprawy oświetleniowe).")
             st.info("Ilość kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podłogach.")
 
 elif branza == "🚪 Drzwi":
