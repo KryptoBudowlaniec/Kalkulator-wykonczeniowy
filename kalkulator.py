@@ -771,32 +771,17 @@ elif branza == "⚡ Elektryka":
     with col_e1:
         st.subheader("Parametry instalacji")
         m2_mieszkania = st.number_input("Metraż mieszkania (m²):", min_value=10, value=60)
-        
         mnoznik_m2 = m2_mieszkania / 60
-        
         st.markdown("---")
         sugerowane_punkty = int(m2_mieszkania * 0.75)
-        
-        n_punktow = st.slider(
-            "Łączna liczba punktów (gniazda/włączniki):", 
-            min_value=10, 
-            max_value=150, 
-            value=sugerowane_punkty
-        ) 
-        
-        typ_scian = st.radio("Materiał ścian (trudność bruzdowania):", ["Gazobeton/Cegła", "Żelbet (Wielka Płyta)"])
+        n_punktow = st.slider("Liczba punktów (gniazda/włączniki):", 10, 150, sugerowane_punkty) 
+        typ_scian = st.radio("Materiał ścian:", ["Gazobeton/Cegła", "Żelbet (Wielka Płyta)"])
         n_punkty_tele = 2
-        
-        wybrany_standard = st.selectbox(
-            "Marka i standard osprzętu:",
-            options=list(opcje_osprzetu.keys()),
-            index=1
-        )
+        wybrany_standard = st.selectbox("Marka osprzętu:", list(opcje_osprzetu.keys()), index=1)
+        stawka_punkt = st.slider("Stawka montażu osprzętu (zł/szt):", 20, 60, 35)
 
-        stawka_punkt = st.slider("Stawka robocizny za punkt (zł):", 1, 150, 30)
-
-    # --- LOGIKA OBLICZEŃ (Wyrównana do with col_e1) ---
-     kabel_25 = 150 * mnoznik_m2
+    # --- OBLICZENIA (Te linie MUSZĄ być idealnie pod 'with') ---
+    kabel_25 = 150 * mnoznik_m2
     kabel_15 = 100 * mnoznik_m2
     kabel_4x15 = 30 * mnoznik_m2
     kabel_tv = 30 * mnoznik_m2
@@ -806,7 +791,7 @@ elif branza == "⚡ Elektryka":
     paczki_mocowania = int(szt_mocowania / 100) + 1
     
     srednia_cena_szt = opcje_osprzetu[wybrany_standard]
-    koszt_rozdzielnicy_mat = 1500 # Obudowa + 10x ES + RCD + szyny (lekka korekta ceny)
+    koszt_rozdzielnicy_mat = 1500 
 
     mat_kable = (kabel_25 * 4.50) + (kabel_15 * 3.20) + (kabel_4x15 * 5.50) + (kabel_tv * 2.80) + (kabel_lan * 3.50)
     mat_osprzet = n_punktow * srednia_cena_szt
@@ -814,21 +799,18 @@ elif branza == "⚡ Elektryka":
     
     total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
 
-    # 2. ROBOCIZNA (TUTAJ JEST TA ZMIANA NA 8-10 TYS)
+    # ROBOCIZNA (zgodnie z wytycznymi elektryka na 7-10 tys.)
     mnoznik_trudnosci = 1.4 if typ_scian == "Żelbet (Wielka Płyta)" else 1.0
-    
-    # Baza za m2 (bruzdowanie i kable) - 90 zł/m2
-    robocizna_baza = (m2_mieszkania * 90) 
-    # Biały montaż (gniazdka)
+    robocizna_baza = (m2_mieszkania * 90) # Podstawa za mb i bruzdy
     robocizna_osprzet = (n_punktow + n_punkty_tele) * stawka_punkt
-    # Uzbrojenie rozdzielni
     robocizna_rozdzielnica = 1200
     
     total_robocizna_e = (robocizna_baza + robocizna_osprzet + robocizna_rozdzielnica) * mnoznik_trudnosci
 
     with col_e2:
         st.subheader("💰 Kosztorys Elektryki")
-        st.success(f"### RAZEM: **{round(total_material_e + total_robocizna_e)} zł**")
+        total_e = total_material_e + total_robocizna_e
+        st.success(f"### RAZEM: **{round(total_e)} zł**")
         
         c1, c2 = st.columns(2)
         c1.metric("Materiały", f"{round(total_material_e)} zł")
