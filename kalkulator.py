@@ -892,10 +892,12 @@ elif branza == "🚪 Drzwi":
             st.write(f"• Koszt montażu za sztukę: **{robocizna_jednostkowa} zł**")
             
             st.info("Cena zakupu drzwi jest orientacyjna (średnia rynkowa z klamką i rozetą).")
+
+
 elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
     st.title("🚀 Panel Inwestora - Kompleksowy Kosztorys Flipu")
     
-    # --- 1. CHECKLISTA KONTROLNA (BONUS) ---
+    # --- 1. CHECKLISTA KONTROLNA ---
     with st.sidebar:
         st.subheader("✅ Checklista przed zakupem")
         st.checkbox("Piony wod-kan (stan żeliwa/plastiku)")
@@ -905,7 +907,6 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         st.checkbox("Możliwość wydzielenia pokoi")
         st.info("Zaznacz punkty po inspekcji lokalu.")
 
-    # --- 2. DANE WEJŚCIOWE INWESTYCJI ---
     col_inv1, col_inv2 = st.columns([1, 1.5])
     
     with col_inv1:
@@ -915,53 +916,57 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
         
         st.markdown("---")
-        st.subheader("🛠️ Zakres prac:")
-        # Zbieramy dane bardziej szczegółowe
+        st.subheader("🛠️ Zakres prac (Dodaj elementy):")
         do_elektryka = st.checkbox("Nowa Elektryka (kompletna)", value=True)
-        do_hydraulika = st.checkbox("Nowa Hydraulika", value=True)
+        do_szpachlowanie = st.checkbox("Szpachlowanie / Gładzie", value=True)
+        do_malowanie = st.checkbox("Malowanie (2x biała/kolor)", value=True)
+        do_gk = st.checkbox("Suche Zabudowy (Sufity/Ścianki)", value=False)
         do_podlogi = st.checkbox("Podłogi (panele + listwy)", value=True)
         do_drzwi = st.number_input("Liczba drzwi do wymiany (szt):", min_value=0, value=4)
         do_lazienka = st.checkbox("Remont Łazienki", value=True)
-        
-    # --- 3. LOGIKA MATEMATYCZNA PRO ---
+
+    # --- 2. LOGIKA MATEMATYCZNA PRO ---
     mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
     wtórny = 1.25 if stan_lokalu == "Rynek Wtórny (Do remontu)" else 1.0
     
     koszty = {}
     
-    # Precyzyjna Elektryka (z Twojego poprzedniego modelu)
     if do_elektryka:
         n_pkt = int(m2_total * 0.75)
-        # Baza 90zł/m2 + montaż 35zł/pkt + rozdzielnia 2000zł (mat+rob)
         koszty["Elektryka"] = ((m2_total * 90) + (n_pkt * 35) + 2000) * wtórny * mnoznik_std
 
+    if do_szpachlowanie:
+        # Szpachlowanie liczone po powierzchni ścian (m2_total * 3.5)
+        koszty["Szpachlowanie"] = (m2_total * 3.5) * 55 * mnoznik_std
+
+    if do_malowanie:
+        # Malowanie liczone po powierzchni ścian
+        koszty["Malowanie"] = (m2_total * 3.5) * 40 * mnoznik_std
+
+    if do_gk:
+        # Szacunkowy koszt G-K dla flipera (zabudowy rur, sufity w łazience/korytarzu)
+        koszty["Sucha Zabudowa"] = (m2_total * 120) * mnoznik_std
+
     if do_podlogi:
-        # Panele 80-150zł + robocizna 40-70zł
         koszty["Podłogi"] = m2_total * (110 * mnoznik_std)
 
     if do_lazienka:
-        # Średni koszt łazienki (robocizna + materiał budowlany)
-        koszty["Łazienka"] = 14000 * wtórny * mnoznik_std
+        koszty["Łazienka"] = 15000 * wtórny * mnoznik_std
 
     if do_drzwi > 0:
-        # Twoja logika: 1200-2300zł za sztukę + 250 montaż
         cena_drzwi = 1400 if standard == "Ekonomiczny" else 2100
         koszty["Stolarka"] = do_drzwi * (cena_drzwi + 250 + 40)
 
-    # Koszty stałe (Malowanie/Gładzie/Sprzątanie)
-    koszty["Prace wykończeniowe"] = (m2_total * 180) * mnoznik_std
-
-    # --- 4. WYNIKI I ROI ---
+    # --- 3. WYNIKI I ROI ---
     with col_inv2:
         total_remont = sum(koszty.values())
-        bufor = total_remont * 0.12 # 12% na nieprzewidziane wydatki
+        bufor = total_remont * 0.12 
         
         st.success(f"### SZACOWANY KOSZT REMONTU: **{round(total_remont + bufor)} zł**")
-        st.caption(f"W tym bufor bezpieczeństwa: {round(bufor)} zł")
+        st.caption(f"W tym bufor bezpieczeństwa (12%): {round(bufor)} zł")
 
-        # --- KALKULATOR RENTOWNOŚCI ---
         st.markdown("---")
-        st.subheader("💼 Kalkulator ROI (Flipping)")
+        st.subheader("💼 Kalkulator ROI")
         c_a, c_b = st.columns(2)
         cena_zakupu = c_a.number_input("Cena zakupu mieszkania:", value=350000, step=5000)
         prowizje_notariusz = c_b.number_input("Koszty transakcyjne (PCC/Notariusz):", value=18000)
@@ -971,23 +976,16 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         wszystkie_koszty = cena_zakupu + prowizje_notariusz + total_remont + bufor
         zysk_brutto = cena_sprzedazy - wszystkie_koszty
         
-        # Obliczanie podatku (uproszczone 19% od zysku)
         podatek = max(0, zysk_brutto * 0.19)
         zysk_netto = zysk_brutto - podatek
         roi = (zysk_netto / wszystkie_koszty) * 100 if wszystkie_koszty > 0 else 0
 
-        # WIZUALIZACJA ROI
         res1, res2 = st.columns(2)
-        res1.metric("ZYSK NETTO (na rękę)", f"{round(zysk_netto)} zł")
-        res2.metric("ROI (Rentowność)", f"{round(roi, 1)} %")
+        res1.metric("ZYSK NETTO (po podatku)", f"{round(zysk_netto)} zł")
+        res2.metric("ROI", f"{round(roi, 1)} %")
 
+        # USUNIĘTO ST.BALLOONS() - Teraz jest czysty komunikat
         if zysk_netto < 30000:
-            st.warning("⚠️ Niski zysk! Rozważ negocjację ceny zakupu lub obniżenie standardu.")
+            st.warning("⚠️ Niski zysk! Rozważ negocjację ceny lub optymalizację kosztów.")
         else:
-            st.balloons()
-            st.success("🚀 Inwestycja wygląda obiecująco!")
-
-    # --- 5. EKSPORT PDF (Twoja funkcja PDF podpięta pod nowe dane) ---
-    if st.button("📄 Generuj Raport Inwestorski PDF"):
-        # Tutaj wstawiasz wywołanie funkcji create_pdf z Twoimi zmiennymi
-        st.info("Raport wygenerowany pomyślnie. Pobierz plik poniżej.")
+            st.success("💰 Inwestycja wygląda obiecująco!")
