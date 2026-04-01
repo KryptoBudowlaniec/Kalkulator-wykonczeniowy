@@ -3,39 +3,8 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
-# --- NAGŁÓWEK Z LOGO ---
-col_logo, col_tytul = st.columns([1, 4]) # 1 część na logo, 4 części na resztę
-
-with col_logo:
-    # Jeśli masz plik lokalnie: st.image("logo.png", width=180)
-    # Poniżej placeholder - podmień URL na swój lub ścieżkę do pliku
-    st.image("logo.png", use_column_width=True)
-
-with col_tytul:
-    st.markdown("<br>", unsafe_allow_html=True) # Delikatny odstęp, żeby wyrównać do środka logo
-
-
-if 'branza' not in st.session_state:
-    st.session_state.branza = "Brak"
-
-# Przypisujemy do zmiennej lokalnej, żeby reszta Twojego kodu (if branza == ...) działała
-branza = st.session_state.branza
-
-# --- INICJALIZACJA WARTOŚCI (Bezpiecznik przed NameError) ---
-if 'total_material' not in st.session_state:
-    st.session_state.total_material = 0
-if 'robocizna' not in st.session_state:
-    st.session_state.robocizna = 0
-
-# Przypisanie do lokalnych zmiennych, żeby reszta kodu działała
-total_material = st.session_state.total_material
-robocizna = st.session_state.robocizna
-
 st.markdown("""
 <style>
-    [data-testid="stHorizontalBlock"] {
-        align-items: center;
-    }
     /* Tło całej aplikacji */
     .stApp {
         background-color: #0E1117;
@@ -77,56 +46,13 @@ if 'pokoje_pro' not in st.session_state:
 if 'pokoje' not in st.session_state:
     st.session_state.pokoje = []
 
-# --- NAGŁÓWEK ---
-st.markdown("<h3 style='text-align: center;'>Oblicz koszty swojego remontu szybko i precyzyjnie</h3>", unsafe_allow_html=True)
-
-# --- SLIDER POWIERZCHNI ---
-powierzchnia = st.slider("Powierzchnia Mieszkania (m²)", 1, 600, 60)
-
-# --- GŁÓWNY UKŁAD: Lewa strona (Kafelki) | Prawa strona (Podsumowanie) ---
-col_main, col_summary = st.columns([2, 1], gap="large")
-
-with col_main:
-    st.write("### Wybierz zakres prac")
-    c1, c2, c3 = st.columns(3)
-    
-    with c1:
-        st.markdown('<div class="category-card">', unsafe_allow_html=True)
-        # ... zdjęcie i opis ...
-        if st.button("Konfiguruj Podłogi"):
-            st.session_state.branza = "📐 Podłogi (Panele/Deska)"
-            st.rerun() # Odśwież, żeby pokazać formularz podłóg
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with c2:
-        st.markdown('<div class="category-card">', unsafe_allow_html=True)
-        st.image("https://unsplash.com", use_column_width=True)
-        st.write("#### Płytki & Łazienki")
-        st.caption("Ceramika, armatura, gres (Geberit)")
-        st.button("Wybierz wariant", key="btn_plytki")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with c3:
-        st.markdown('<div class="category-card">', unsafe_allow_html=True)
-        # ... zdjęcie i opis ...
-        if st.button("Zdefiniuj zakres G-K"):
-            st.session_state.branza = "⚒️ Sucha Zabudowa"
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-with col_summary:
-    st.markdown(f"<h2 style='color: #00D395; text-align: center;'>Suma: {round(total_material + robocizna)} PLN</h2>", unsafe_allow_html=True)
-    st.write("#### Wyniki Kosztorysu (Podgląd)")
-    
-    # Przykładowa tabela (użyj swoich zmiennych)
-    st.table({
-        "Materiał/Usługa": ["Panele LVT", "Płytki gresowe", "System G-K"],
-        "Ilość": [f"{powierzchnia} m²", "150 szt", "1 kpl"],
-        "Cena": ["-", "-", "-"]
-    })
-    
-    st.markdown(f"<h2 style='color: #00D395; text-align: center;'>Suma: {round(total_material + robocizna)} PLN</h2>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+# Menu boczne do wyboru branży
+with st.sidebar:
+    st.title("🛠️ Menu Wykonawcy")
+    branza = st.sidebar.selectbox("Wybierz rodzaj prac:", 
+    ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi (Panele/Deska)", 
+     "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka", "🚪 Drzwi", "🚀 PANEL INWESTORA (PREMIUM)"])
+    st.info(f"Aktualnie edytujesz: {branza}")
 
 # --- SEKCJA: MALOWANIE ---
 if branza == "🎨 Malowanie":
@@ -430,21 +356,6 @@ elif branza == "🧱 Szpachlowanie":
 # --- SEKCJA: PODŁOGI ---
 elif branza == "📐 Podłogi (Panele/Deska)":
     st.header("📐 Kalkulator Podłóg: Pływające vs Klejone")
-
-    # Tworzymy układ: Lewa na zdjęcie, Prawa na formularz
-    col_img, col_form = st.columns([1, 1.5])
-    
-    with col_img:
-        # Możesz użyć zdjęcia z Unsplash (darmowe) lub wgrać własne na GitHub
-        st.image("jodelka.jpg", caption="Wybierz swój styl podłogi", use_container_width=True)
-        
-        # Opcjonalnie: Dodaj małą ramkę pod zdjęciem z info
-        st.info("Pamiętaj o dodaniu 10% zapasu na docięcia!")
-
-    with col_form:
-        # TUTAJ WSTAW SWOJE ISTNIEJĄCE POLA WYBORU:
-        rodzaj_podlogi = st.selectbox("Rodzaj materiału:", ["Panele Laminowane", "Panele Winylowe (SPC)", "Deska Barlinecka"])
-        metraz_podlogi = st.number_input("Metraż pomieszczenia (m2):", min_value=1.0, value=20.0)
     tab_p1, tab_p2 = st.tabs(["⚡ Szybka Wycena", "💎 Szczegóły Montażu"])
 
     with tab_p1:
