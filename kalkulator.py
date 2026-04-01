@@ -3,67 +3,35 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
-col_l, col_r = st.columns([1, 4]) # Logo mniejsze, tytuł większy
+# Nagłówek z logo i tytułem
+col_l, col_r = st.columns([1, 3]) # Trochę szersza kolumna na logo
 
 with col_l:
     try:
-        st.image("logo.png", width=300)
+        # Użycie container_width sprawi, że logo nie zepsuje układu na mniejszych ekranach
+        st.image("logo.png", use_container_width=True)
     except:
         st.error("Brak pliku logo.png")
 
 with col_r:
-    st.title("Ekspert Wykończeń")
-    st.caption("Twój osobisty asystent kosztorysowania")
+    st.title("Ekspert Wykończeń PRO")
+    st.caption("Profesjonalny system kosztorysowania remontów")
 
+# --- STYLE CSS (Twoje poprawione style) ---
 st.markdown("""
 <style>
-    /* Tło całej aplikacji */
-    .stApp {
-        background-color: #0E1117;
-    }
+    .stApp { background-color: #0E1117; }
     
-    /* Styl dla kafelków branż */
-    .category-card {
-        background-color: #1A1C23;
-        border-radius: 15px;
-        padding: 20px;
-        border: 1px solid #2D2F39;
-        text-align: center;
-        transition: 0.3s;
-    }
-    
-    /* Miętowe przyciski */
-    .stButton>button {
-        background-color: #00D395 !important;
-        color: black !important;
-        border-radius: 10px !important;
-        border: none !important;
-        width: 100%;
-        font-weight: bold;
-    }
-    
-    /* Styl dla tabeli podsumowania po prawej */
-    .summary-box {
-        background-color: #1A1C23;
-        border-radius: 15px;
-        padding: 25px;
-        border: 1px solid #2D2F39;
-    }
-
-    /* Powiększenie tekstu we wszystkich pigułkach menu */
+    /* Pigułki menu */
     button[data-testid="stBaseButton-secondary"] p {
-        font-size: 20px !important;  /* Rozmiar czcionki */
-        font-weight: 600 !important; /* Pogrubienie */
+        font-size: 18px !important; 
+        font-weight: 600 !important;
     }
-
-    /* Powiększenie samych przycisków (odstępy w środku) */
     button[data-testid="stBaseButton-secondary"] {
-        padding: 12px 24px !important;
+        padding: 10px 20px !important;
         border-radius: 12px !important;
-        margin: 5px !important;
     }
-
-    /* Kolor dla wybranej pigułki (miętowy ze zdjęcia) */
+    /* Miętowy aktywny kolor */
     button[aria-checked="true"] {
         background-color: #00D395 !important;
         color: black !important;
@@ -72,23 +40,23 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if 'pokoje_pro' not in st.session_state:
-    st.session_state.pokoje_pro = []
+# --- STAN APLIKACJI ---
+if 'pokoje_pro' not in st.session_state: st.session_state.pokoje_pro = []
+if 'pokoje' not in st.session_state: st.session_state.pokoje = []
 
-if 'pokoje' not in st.session_state:
-    st.session_state.pokoje = []
-
-
-# --- NOWOCZESNE MENU POZIOME (Pigułki) ---
-# To zastępuje Twój stary sidebar.selectbox
+# --- NOWOCZESNE MENU POZIOME ---
 branza = st.pills(
     "Wybierz rodzaj prac:", 
-    ["🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", "🚿 Łazienka","🚀 PANEL INWESTORA (PREMIUM)"],
+    [
+        "🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", 
+        "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", 
+        "🚿 Łazienka", "🚪 Drzwi", "🚀 PANEL INWESTORA (PREMIUM)"
+    ],
     selection_mode="single",
     default="🎨 Malowanie"
 )
 
-st.markdown("---") # Linia oddzielająca menu od formularzy
+st.markdown("---")
 
 # --- SEKCJA: MALOWANIE ---
 if branza == "🎨 Malowanie":
