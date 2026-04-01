@@ -3,6 +3,18 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
+col_l, col_r = st.columns([1, 4]) # Logo mniejsze, tytuł większy
+
+with col_l:
+    try:
+        st.image("logo.png", width=150)
+    except:
+        st.error("Brak pliku logo.png")
+
+with col_r:
+    st.title("Ekspert Wykończeń")
+    st.caption("Twój osobisty asystent kosztorysowania")
+
 st.markdown("""
 <style>
     /* Tło całej aplikacji */
