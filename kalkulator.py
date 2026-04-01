@@ -9,7 +9,7 @@ col_logo, col_tytul = st.columns([1, 4]) # 1 część na logo, 4 części na res
 with col_logo:
     # Jeśli masz plik lokalnie: st.image("logo.png", width=180)
     # Poniżej placeholder - podmień URL na swój lub ścieżkę do pliku
-    st.image("https://twoj-link-do-logo.pl", width=200)
+    st.image(C:\Users\pawel\Downloads\procalc logo.png, width=200)
 
 with col_tytul:
     st.markdown("<br>", unsafe_allow_html=True) # Delikatny odstęp, żeby wyrównać do środka logo
