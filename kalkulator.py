@@ -20,22 +20,35 @@ with col_r:
 # --- STYLE CSS (Twoje poprawione style) ---
 st.markdown("""
 <style>
-    .stApp { background-color: #0E1117; }
-    
-    /* Pigułki menu */
-    button[data-testid="stBaseButton-secondary"] p {
-        font-size: 18px !important; 
-        font-weight: 600 !important;
+    /* 1. CELOWANIE W TEKST WEWNĄTRZ PIGUŁEK - WYMUSZENIE ROZMIARU */
+    div[data-testid="stPills"] button p {
+        font-size: 24px !important;  /* Tutaj sterujesz wielkością (zwiększyłem do 24px) */
+        font-weight: 700 !important;  /* Bardziej tłusta czcionka */
+        line-height: 1.5 !important;
     }
-    button[data-testid="stBaseButton-secondary"] {
-        padding: 10px 20px !important;
-        border-radius: 12px !important;
+
+    /* 2. POWIĘKSZENIE CAŁEGO PRZYCISKU PIGUŁKI */
+    div[data-testid="stPills"] button {
+        padding: 15px 30px !important; /* Większe marginesy wewnętrzne */
+        height: auto !important;       /* Pozwala przyciskowi urosnąć */
+        min-height: 60px !important;   /* Minimalna wysokość przycisku */
+        background-color: #1A1C23 !important;
+        border: 1px solid #2D2F39 !important;
     }
-    /* Miętowy aktywny kolor */
-    button[aria-checked="true"] {
-        background-color: #00D395 !important;
+
+    /* 3. STYL DLA AKTYWNEJ (KLIKNIĘTEJ) PIGUŁKI */
+    div[data-testid="stPills"] button[aria-checked="true"] {
+        background-color: #00D395 !important; /* Twój miętowy kolor */
         color: black !important;
         border: none !important;
+        transform: scale(1.05); /* Lekkie powiększenie aktywnej pigułki */
+        transition: 0.2s;
+    }
+
+    /* 4. EFEKT PO NAJECHANIU MYSZKĄ */
+    div[data-testid="stPills"] button:hover {
+        border-color: #00D395 !important;
+        background-color: #262931 !important;
     }
 </style>
 """, unsafe_allow_html=True)
