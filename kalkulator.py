@@ -436,7 +436,7 @@ elif branza == "📐 Podłogi (Panele/Deska)":
     
     with col_img:
         # Możesz użyć zdjęcia z Unsplash (darmowe) lub wgrać własne na GitHub
-        st.image("https://files.fm/u/qazpkf5w64",caption="jodelka.jpg", use_column_width=True)
+        st.image("jodelka.jpg", caption="Wybierz swój styl podłogi", use_container_width=True)
         
         # Opcjonalnie: Dodaj małą ramkę pod zdjęciem z info
         st.info("Pamiętaj o dodaniu 10% zapasu na docięcia!")
