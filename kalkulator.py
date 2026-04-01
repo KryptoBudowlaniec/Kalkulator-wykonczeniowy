@@ -7,17 +7,15 @@ st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 col_space1, col_logo, col_space2 = st.columns([1, 2, 1]) 
 
 with col_logo:
+    # TE LINIE MUSZĄ MIEĆ 4 SPACJE WCIĘCIA:
     try:
-        # Logo zajmie całą szerokość środkowej kolumny
         st.image("logo2.png", use_container_width=True)
     except:
         st.error("Brak pliku logo2.png")
 
-# Tytuł pod logo, również wyśrodkowany
+# Te linie wracają do lewej krawędzi (0 spacji):
 st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>Ekspert Wykończeń PRO</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: gray;'>Profesjonalny system kosztorysowania remontów</p>", unsafe_allow_html=True)
-
-with col_r:
    
 
 # --- STYLE CSS (Twoje poprawione style) ---
