@@ -20,36 +20,39 @@ with col_r:
 # --- STYLE CSS (Twoje poprawione style) ---
 st.markdown("""
 <style>
-    /* 1. CELOWANIE W TEKST WEWNĄTRZ PIGUŁEK - WYMUSZENIE ROZMIARU */
-    div[data-testid="stPills"] button p {
-        font-size: 24px !important;  /* Tutaj sterujesz wielkością (zwiększyłem do 24px) */
-        font-weight: 700 !important;  /* Bardziej tłusta czcionka */
-        line-height: 1.5 !important;
+    <style>
+    /* 1. POWIĘKSZENIE TEKSTU DLA WSZYSTKICH PRZYCISKÓW PILLS */
+    [data-testid="stPills"] button p {
+        font-size: 26px !important; 
+        font-weight: 800 !important;
+        color: white !important;
+        margin: 0 !important;
     }
 
-    /* 2. POWIĘKSZENIE CAŁEGO PRZYCISKU PIGUŁKI */
-    div[data-testid="stPills"] button {
-        padding: 15px 30px !important; /* Większe marginesy wewnętrzne */
-        height: auto !important;       /* Pozwala przyciskowi urosnąć */
-        min-height: 60px !important;   /* Minimalna wysokość przycisku */
+    /* 2. POWIĘKSZENIE SAMEGO KONTENERA PRZYCISKU */
+    [data-testid="stPills"] button {
+        padding: 20px 40px !important;
+        height: auto !important;
+        min-height: 70px !important;
         background-color: #1A1C23 !important;
-        border: 1px solid #2D2F39 !important;
+        border: 2px solid #2D2F39 !important;
+        border-radius: 15px !important;
     }
 
-    /* 3. STYL DLA AKTYWNEJ (KLIKNIĘTEJ) PIGUŁKI */
-    div[data-testid="stPills"] button[aria-checked="true"] {
-        background-color: #00D395 !important; /* Twój miętowy kolor */
-        color: black !important;
-        border: none !important;
-        transform: scale(1.05); /* Lekkie powiększenie aktywnej pigułki */
-        transition: 0.2s;
-    }
-
-    /* 4. EFEKT PO NAJECHANIU MYSZKĄ */
-    div[data-testid="stPills"] button:hover {
+    /* 3. STYL DLA AKTYWNEJ PIGUŁKI (WYMUSZENIE KOLORU) */
+    [data-testid="stPills"] button[aria-checked="true"] {
+        background-color: #00D395 !important;
         border-color: #00D395 !important;
-        background-color: #262931 !important;
     }
+    
+    /* 4. KOLOR TEKSTU DLA AKTYWNEJ PIGUŁKI (ŻEBY BYŁ CZARNY) */
+    [data-testid="stPills"] button[aria-checked="true"] p {
+        color: black !important;
+    }
+
+    /* 5. EFEKT HOVER */
+    [data-testid="stPills"] button:hover {
+        border-color: #00D395 !important;
 </style>
 """, unsafe_allow_html=True)
 
