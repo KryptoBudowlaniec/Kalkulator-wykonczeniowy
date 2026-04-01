@@ -9,7 +9,7 @@ col_l, col_r = st.columns([1, 3]) # Trochę szersza kolumna na logo
 with col_l:
     try:
         # Użycie container_width sprawi, że logo nie zepsuje układu na mniejszych ekranach
-        st.image("logo.png", use_container_width=True)
+        st.image("logo2.png", use_container_width=True)
     except:
         st.error("Brak pliku logo.png")
 
