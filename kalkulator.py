@@ -9,7 +9,7 @@ col_logo, col_tytul = st.columns([1, 4]) # 1 część na logo, 4 części na res
 with col_logo:
     # Jeśli masz plik lokalnie: st.image("logo.png", width=180)
     # Poniżej placeholder - podmień URL na swój lub ścieżkę do pliku
-    st.image("logo.png", width=300)
+    st.image("logo.png", use_column_width=True)
 
 with col_tytul:
     st.markdown("<br>", unsafe_allow_html=True) # Delikatny odstęp, żeby wyrównać do środka logo
@@ -83,7 +83,7 @@ st.title("⚒️ RemontCalc")
 st.markdown("<h3 style='text-align: center;'>Oblicz koszty swojego remontu szybko i precyzyjnie</h3>", unsafe_allow_html=True)
 
 # --- SLIDER POWIERZCHNI ---
-powierzchnia = st.slider("Powierzchnia Mieszkania (m²)", 20, 200, 60)
+powierzchnia = st.slider("Powierzchnia Mieszkania (m²)", 1, 600, 60)
 
 # --- GŁÓWNY UKŁAD: Lewa strona (Kafelki) | Prawa strona (Podsumowanie) ---
 col_main, col_summary = st.columns([2, 1], gap="large")
