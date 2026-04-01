@@ -1,27 +1,198 @@
 import streamlit as st
-import pandas as pd
+import streamlit as st
 
-st.set_page_config(page_title="ProCalc", layout="wide", page_icon="🔨")
+# --- KONFIGURACJA ---
+st.set_page_config(page_title="System Ekspert Wykończeń", layout="wide")
 
-# CSS z Twojego + ulepszenia pod mockup
+# Inicjalizacja pamięci (sesji)
+if 'pokoje_pro' not in st.session_state:
+    st.session_state.pokoje_pro = []
+
+st.title("🏗️ System Kosztorysowania Wykończeń")
+
+# --- GŁÓWNE ZAKŁADKI ---
+tab_fast, tab_pro = st.tabs(["⚡ SZYBKA WYCENA (Standard)", "💎 KOSZTORYS PRO (Szczegółowy)"])
+
+# --- 1. ZAKŁADKA: SZYBKA WYCENA ---
+with tab_fast:
+    st.header("⚡ Szybki szacunek materiałów i robocizny")
+    
+    col_f1, col_f2 = st.columns([1, 2])
+    
+    with col_f1:
+        m_uzytkowy = st.number_input("Metraż mieszkania (m2):", min_value=0.0, value=50.0, key="fast_m")
+        stan_f = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="fast_s")
+        std_f = st.selectbox("Standard materiałów:", ["Ekonomiczny", "Premium"], key="fast_std")
+
+    # --- LOGIKA SZYBKIEJ WYCENY ---
+    m2_sufit = m_uzytkowy * 1.0
+    m2_sciany = m_uzytkowy * 2.5
+    m2_razem = m2_sufit + m2_sciany
+    mnoznik = 1.0 if stan_f == "Deweloperski" else 1.3
+    
+    # Ceny jednostkowe dla szybkiej wyceny
+    ceny_f = {
+        "Ekonomiczny": {"sufit": 15, "sciany": 24, "grunt": 5, "tasma": 12, "robocizna": 18},
+        "Premium": {"sufit": 35, "sciany": 58, "grunt": 14, "tasma": 28, "robocizna": 20}
+    }
+    cf = ceny_f[std_f]
+
+    # Obliczenia ilości
+    l_biala = (m2_sufit / 10) * 2
+    l_kolor = (m2_sciany / 10) * 2
+    l_grunt = m2_razem * 0.1
+    szt_tasma = (m_uzytkowy / 15) * mnoznik
+    opk_folia = (m_uzytkowy / 20) * mnoznik
+
+    # Obliczenia kosztów
+    koszt_mat = (l_biala * cf["sufit"]) + (l_kolor * cf["sciany"]) + (l_grunt * cf["grunt"]) + (szt_tasma * cf["tasma"]) + 100
+    koszt_rob = m2_razem * cf["robocizna"]
+
+    with col_f2:
+        st.subheader("💰 Podsumowanie finansowe")
+        c1, c2 = st.columns(2)
+        c1.metric("Materiały", f"{round(koszt_mat)} zł")
+        c2.metric("Robocizna", f"{round(koszt_rob)} zł")
+        st.metric("RAZEM DO ZAPŁATY", f"{round(koszt_mat + koszt_rob)} zł")
+        
+        with st.expander("📦 Lista zakupów (Szacunkowa)"):
+            st.write(f"• **Farba BIAŁA (sufity):** {round(l_biala)} L")
+            st.write(f"• **Farba KOLOR (ściany):** {round(l_kolor)} L")
+            st.write(f"• **Grunt:** {round(l_grunt)} L")
+            st.write(f"• **Taśma malarska:** {round(szt_tasma + 0.4)} szt.")
+            st.write(f"• **Folia ochronna:** {round(opk_folia + 0.4)} szt.")
+            st.caption(f"Wyliczenia dla {round(m2_razem)} m2 powierzchni malowania.")
+# --- 2. ZAKŁADKA: KOSZTORYS PRO ---
+with tab_pro:
+    import streamlit as st
+
+# 1. KONFIGURACJA GŁÓWNA
+st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
+
+# --- NAGŁÓWEK Z LOGO ---
+col_logo, col_tytul = st.columns([1, 4]) # 1 część na logo, 4 części na resztę
+
+with col_logo:
+    # Jeśli masz plik lokalnie: st.image("logo.png", width=180)
+    # Poniżej placeholder - podmień URL na swój lub ścieżkę do pliku
+    st.image("logo.png", use_column_width=True)
+
+with col_tytul:
+    st.markdown("<br>", unsafe_allow_html=True) # Delikatny odstęp, żeby wyrównać do środka logo
+
+
+if 'branza' not in st.session_state:
+    st.session_state.branza = "Brak"
+
+# Przypisujemy do zmiennej lokalnej, żeby reszta Twojego kodu (if branza == ...) działała
+branza = st.session_state.branza
+
+# --- INICJALIZACJA WARTOŚCI (Bezpiecznik przed NameError) ---
+if 'total_material' not in st.session_state:
+    st.session_state.total_material = 0
+if 'robocizna' not in st.session_state:
+    st.session_state.robocizna = 0
+
+# Przypisanie do lokalnych zmiennych, żeby reszta kodu działała
+total_material = st.session_state.total_material
+robocizna = st.session_state.robocizna
+
 st.markdown("""
 <style>
-.stApp { background-color: #0E1117; color: white; }
-.category-card { background: #1A1C23; border-radius: 15px; padding: 20px; border: 1px solid #2D2F39; text-align: center; }
-.stButton > button { background: linear-gradient(90deg, #00D395, #007acc) !important; color: white !important; border-radius: 10px; font-weight: bold; width: 100%; }
-.summary-box { background: #1A1C23; border-radius: 15px; padding: 25px; border: 1px solid #2D2F39; }
-h1 { color: #00D395 !important; }
+    [data-testid="stHorizontalBlock"] {
+        align-items: center;
+    }
+    /* Tło całej aplikacji */
+    .stApp {
+        background-color: #0E1117;
+    }
+    
+    /* Styl dla kafelków branż */
+    .category-card {
+        background-color: #1A1C23;
+        border-radius: 15px;
+        padding: 20px;
+        border: 1px solid #2D2F39;
+        text-align: center;
+        transition: 0.3s;
+    }
+    
+    /* Miętowe przyciski */
+    .stButton>button {
+        background-color: #00D395 !important;
+        color: black !important;
+        border-radius: 10px !important;
+        border: none !important;
+        width: 100%;
+        font-weight: bold;
+    }
+    
+    /* Styl dla tabeli podsumowania po prawej */
+    .summary-box {
+        background-color: #1A1C23;
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px solid #2D2F39;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Session state (Twoje + freemium)
-if 'branza' not in st.session_state:
-    st.session_state.branza = "Brak"
-if 'total_material' not in st.session_state:
-    st.session_state.total_material
+if 'pokoje_pro' not in st.session_state:
+    st.session_state.pokoje_pro = []
 
-branza = st.session_state.branza
-total_material = st.session
+if 'pokoje' not in st.session_state:
+    st.session_state.pokoje = []
+
+# --- NAGŁÓWEK ---
+st.markdown("<h3 style='text-align: center;'>Oblicz koszty swojego remontu szybko i precyzyjnie</h3>", unsafe_allow_html=True)
+
+# --- SLIDER POWIERZCHNI ---
+powierzchnia = st.slider("Powierzchnia Mieszkania (m²)", 1, 600, 60)
+
+# --- GŁÓWNY UKŁAD: Lewa strona (Kafelki) | Prawa strona (Podsumowanie) ---
+col_main, col_summary = st.columns([2, 1], gap="large")
+
+with col_main:
+    st.write("### Wybierz zakres prac")
+    c1, c2, c3 = st.columns(3)
+    
+    with c1:
+        st.markdown('<div class="category-card">', unsafe_allow_html=True)
+        # ... zdjęcie i opis ...
+        if st.button("Konfiguruj Podłogi"):
+            st.session_state.branza = "📐 Podłogi (Panele/Deska)"
+            st.rerun() # Odśwież, żeby pokazać formularz podłóg
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c2:
+        st.markdown('<div class="category-card">', unsafe_allow_html=True)
+        st.image("https://unsplash.com", use_column_width=True)
+        st.write("#### Płytki & Łazienki")
+        st.caption("Ceramika, armatura, gres (Geberit)")
+        st.button("Wybierz wariant", key="btn_plytki")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c3:
+        st.markdown('<div class="category-card">', unsafe_allow_html=True)
+        # ... zdjęcie i opis ...
+        if st.button("Zdefiniuj zakres G-K"):
+            st.session_state.branza = "⚒️ Sucha Zabudowa"
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+with col_summary:
+    st.markdown(f"<h2 style='color: #00D395; text-align: center;'>Suma: {round(total_material + robocizna)} PLN</h2>", unsafe_allow_html=True)
+    st.write("#### Wyniki Kosztorysu (Podgląd)")
+    
+    # Przykładowa tabela (użyj swoich zmiennych)
+    st.table({
+        "Materiał/Usługa": ["Panele LVT", "Płytki gresowe", "System G-K"],
+        "Ilość": [f"{powierzchnia} m²", "150 szt", "1 kpl"],
+        "Cena": ["-", "-", "-"]
+    })
+    
+    st.markdown(f"<h2 style='color: #00D395; text-align: center;'>Suma: {round(total_material + robocizna)} PLN</h2>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- SEKCJA: MALOWANIE ---
 if branza == "🎨 Malowanie":
