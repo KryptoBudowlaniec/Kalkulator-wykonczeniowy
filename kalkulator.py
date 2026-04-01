@@ -807,13 +807,16 @@ elif branza == "⚡ Elektryka":
     mnoznik_trudnosci = 1.3 if typ_scian == "Żelbet (Wielka Płyta)" else 1.0
 
     # SUMY
+    # 1. Najpierw policz wszystkie składowe
     mat_kable = (kabel_25 * 4.50) + (kabel_15 * 3.20) + (kabel_4x15 * 5.50)
     mat_osprzet = n_punktow * srednia_cena_szt
-    mat_mocowania = paczki_mocowania * 22.0 # ok 22zł za paczkę
+    mat_mocowania = paczki_mocowania * 22.0
     mat_teletechnika = (kabel_tv * cena_mb_tv) + (kabel_lan * cena_mb_lan)
-    total_material_e += mat_teletechnika
     
-    total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
+    # 2. Zsumuj wszystko do JEDNEJ zmiennej (używamy "=" zamiast "+=")
+    total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania + mat_teletechnika
+    
+    # 3. Policz robociznę (najpierw podstawa, potem dodatki)
     total_robocizna_e = (n_punktow * stawka_punkt * mnoznik_trudnosci) + robocizna_rozdzielnica
     total_robocizna_e += (n_punkty_tele * stawka_punkt)
 
