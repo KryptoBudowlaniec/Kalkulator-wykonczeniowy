@@ -14,7 +14,6 @@ with col_logo:
         st.error("Brak pliku logo2.png")
 
 # Te linie wracają do lewej krawędzi (0 spacji):
-st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>Ekspert Wykończeń PRO</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: gray;'>Profesjonalny system kosztorysowania remontów</p>", unsafe_allow_html=True)
    
 
