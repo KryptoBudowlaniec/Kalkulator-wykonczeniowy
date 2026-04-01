@@ -3,6 +3,19 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
+# --- NAGŁÓWEK Z LOGO ---
+col_logo, col_tytul = st.columns([1, 4]) # 1 część na logo, 4 części na resztę
+
+with col_logo:
+    # Jeśli masz plik lokalnie: st.image("logo.png", width=180)
+    # Poniżej placeholder - podmień URL na swój lub ścieżkę do pliku
+    st.image("https://twoj-link-do-logo.pl", width=200)
+
+with col_tytul:
+    st.markdown("<br>", unsafe_allow_html=True) # Delikatny odstęp, żeby wyrównać do środka logo
+    st.markdown("<h1 style='margin-bottom: 0;'>RemontCalc PRO</h1>", unsafe_allow_html=True)
+    st.caption("Profesjonalny Kalkulator Remontowy")
+
 if 'branza' not in st.session_state:
     st.session_state.branza = "Brak"
 
@@ -21,6 +34,9 @@ robocizna = st.session_state.robocizna
 
 st.markdown("""
 <style>
+    [data-testid="stHorizontalBlock"] {
+        align-items: center;
+    }
     /* Tło całej aplikacji */
     .stApp {
         background-color: #0E1117;
