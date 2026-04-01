@@ -63,38 +63,30 @@ if 'pokoje' not in st.session_state: st.session_state.pokoje = []
 # --- 1. STYLE CSS (NAJPIERW STYL) ---
 st.markdown("""
 <style>
-    /* POWIĘKSZENIE TEKSTU DLA WSZYSTKICH PRZYCISKÓW PILLS */
-    [data-testid="stPills"] button p {
-        font-size: 24px !important; 
-        font-weight: 800 !important;
-        color: white !important;
-        margin: 0 !important;
-    }
-
-    /* POWIĘKSZENIE SAMEGO KONTENERA PRZYCISKU */
-    [data-testid="stPills"] button {
+    /* AGRESYWNE POWIĘKSZENIE WSZYSTKICH PRZYCISKÓW W MENU PILLS */
+    div[data-selection-mode="single"] button {
         padding: 15px 30px !important;
-        height: auto !important;
-        min-height: 65px !important;
+        min-height: 60px !important;
+        border-radius: 12px !important;
         background-color: #1A1C23 !important;
         border: 2px solid #2D2F39 !important;
-        border-radius: 15px !important;
-        margin: 5px !important;
     }
 
-    /* STYL DLA AKTYWNEJ PIGUŁKI */
-    [data-testid="stPills"] button[aria-checked="true"] {
+    /* POWIĘKSZENIE TEKSTU */
+    div[data-selection-mode="single"] button p {
+        font-size: 22px !important;
+        font-weight: bold !important;
+        color: white !important;
+    }
+
+    /* KOLOR AKTYWNEGO ELEMENTU */
+    div[data-selection-mode="single"] button[aria-checked="true"] {
         background-color: #00D395 !important;
         border-color: #00D395 !important;
     }
-    
-    [data-testid="stPills"] button[aria-checked="true"] p {
-        color: black !important;
-    }
 
-    /* EFEKT HOVER (NAJECHANIE) */
-    [data-testid="stPills"] button:hover {
-        border-color: #00D395 !important;
+    div[data-selection-mode="single"] button[aria-checked="true"] p {
+        color: black !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -413,7 +405,7 @@ elif branza == "🧱 Szpachlowanie":
 
 
 # --- SEKCJA: PODŁOGI ---
-elif branza == "📐 Podłogi (Panele/Deska)":
+elif branza == "📐 Podłogi"
     st.header("📐 Kalkulator Podłóg: Pływające vs Klejone")
     tab_p1, tab_p2 = st.tabs(["⚡ Szybka Wycena", "💎 Szczegóły Montażu"])
 
