@@ -3,6 +3,16 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
+# --- INICJALIZACJA WARTOŚCI (Bezpiecznik przed NameError) ---
+if 'total_material' not in st.session_state:
+    st.session_state.total_material = 0
+if 'robocizna' not in st.session_state:
+    st.session_state.robocizna = 0
+
+# Przypisanie do lokalnych zmiennych, żeby reszta kodu działała
+total_material = st.session_state.total_material
+robocizna = st.session_state.robocizna
+
 st.markdown("""
 <style>
     /* Tło całej aplikacji */
@@ -86,7 +96,7 @@ with col_main:
         st.markdown('</div>', unsafe_allow_html=True)
 
 with col_summary:
-    st.markdown('<div class="summary-box">', unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color: #00D395; text-align: center;'>Suma: {round(total_material + robocizna)} PLN</h2>", unsafe_allow_html=True)
     st.write("#### Wyniki Kosztorysu (Podgląd)")
     
     # Przykładowa tabela (użyj swoich zmiennych)
