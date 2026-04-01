@@ -830,39 +830,68 @@ elif branza == "⚡ Elektryka":
 elif branza == "🚪 Drzwi":
     st.header("🚪 Kalkulator Montażu Drzwi Wewnętrznych")
     
-    col_d1, col_p2 = st.columns(2)
+    col_d1, col_d2 = st.columns([1, 1.2])
     
+    # --- CENNIK ZAKUPU ---
+    ceny_zakupu = {
+        "Standard (np. Porta, DRE - przylgowe)": 1200,
+        "Bezprzylgowe (ukryte zawiasy)": 1900,
+        "Rewersyjne (otwierane do wewnątrz)": 2300,
+        "Ukryte (do pomalowania / Discret)": 1600
+    }
+
     with col_d1:
+        st.subheader("Parametry zamówienia")
         szt_drzwi = st.number_input("Liczba kompletów (skrzydło + ościeżnica):", min_value=1, value=5)
-        typ_drzwi = st.selectbox("Rodzaj drzwi:", ["Przylgowe (Standard)", "Bezprzylgowe (Ukryte zawiasy)", "Przesuwne"])
-        szerokosc_opaski = st.radio("Szerokość muru (zakres):", ["80-100mm", "100-140mm", "140mm+ (Dopłata)"])
+        
+        wybrany_model = st.selectbox(
+            "Model i standard drzwi:", 
+            options=list(ceny_zakupu.keys())
+        )
+        
+        szerokosc_muru = st.radio("Szerokość muru (zakres):", ["Standard (do 140mm)", "Szeroki (140mm+ dopłata)"])
         
         st.markdown("---")
-        podciecie = st.checkbox("Podcięcie wentylacyjne (łazienkowe)?")
+        st.subheader("Dodatki")
+        podciecie = st.checkbox("Podcięcie wentylacyjne / tuleje?")
         demontaz = st.checkbox("Demontaż starych drzwi/ościeżnic?")
-
-    # --- LOGIKA DRZWI ---
-    stawka_base = 250 if "Standard" in typ_drzwi else 350
-    if "Ukryte" in typ_drzwi: stawka_base = 450
-    
-    dodatki = 0
-    if podciecie: dodatki += (szt_drzwi * 30)
-    if demontaz: dodatki += (szt_drzwi * 100)
-    
-    robocizna_drzwi = (szt_drzwi * stawka_base) + dodatki
-    
-    with col_p2:
-        st.subheader("💰 Wycena Montażu")
-        st.metric("Łączna robocizna", f"{round(robocizna_drzwi)} zł")
-        st.write(f"• Stawka za sztukę: {stawka_base} zł")
         
-        with st.expander("📦 Co musisz kupić (Materiały):"):
-            st.write(f"• **Pianka montażowa (niskoprężna):** {int(szt_drzwi/2 + 0.99)} szt. (wydajna)")
-            st.write(f"• **Klej do listew/opasek:** 1-2 tubki")
-            st.write(f"• **Kliny montażowe:** zestaw 1 opk.")
-        
-        st.warning(f"⏳ Czas montażu: ok. **{int(szt_drzwi/2 + 1)} dni** (średnio 2-3 pary dziennie)")
+        # Koszt montażu na sztywno
+        stawka_montazu = 250 
 
+    # --- LOGIKA OBLICZEŃ ---
+    cena_jednostkowa = ceny_zakupu[wybrany_model]
+    
+    # Koszt materiałów (drzwi + pianka 40zł/szt)
+    koszt_pianki = szt_drzwi * 40
+    total_zakup = (szt_drzwi * cena_jednostkowa) + koszt_pianki
+    
+    # Koszt robocizny
+    doplata_szeroki = 50 if szerokosc_muru == "Szeroki (140mm+ dopłata)" else 0
+    doplata_podciecie = 30 if podciecie else 0
+    doplata_demontaz = 100 if demontaz else 0
+    
+    robocizna_jednostkowa = stawka_montazu + doplata_szeroki + doplata_podciecie + doplata_demontaz
+    total_robocizna_d = szt_drzwi * robocizna_jednostkowa
+
+    with col_d2:
+        st.subheader("💰 Kosztorys Stolarki")
+        suma_d = total_zakup + total_robocizna_d
+        st.success(f"### RAZEM: **{round(suma_d)} zł**")
+        
+        c1, c2 = st.columns(2)
+        c1.metric("Zakup + Materiały", f"{round(total_zakup)} zł")
+        c2.metric("Montaż (Suma)", f"{round(total_robocizna_d)} zł")
+
+        with st.expander("📦 SZCZEGÓŁY ZAMÓWIENIA", expanded=True):
+            st.write(f"• Wybrany model: **{wybrany_model}**")
+            st.write(f"• Liczba skrzydeł i ościeżnic: **{szt_drzwi} kpl.**")
+            st.write(f"• Pianka montażowa (1 puszka/szt): **{szt_drzwi} szt.**")
+            if demontaz:
+                st.write(f"• Usługa demontażu starych drzwi: **TAK**")
+            st.write(f"• Koszt montażu za sztukę: **{robocizna_jednostkowa} zł**")
+            
+            st.info("Cena zakupu drzwi jest orientacyjna (średnia rynkowa z klamką i rozetą).")
 elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
     st.title("🚀 Szybki Kosztorys Inwestorski (All-in-One)")
     st.info("Opcja dla firm i flipperów: Pełna wycena całego remontu na jednym ekranie.")
