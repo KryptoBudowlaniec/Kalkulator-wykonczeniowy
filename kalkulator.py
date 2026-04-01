@@ -958,7 +958,7 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
         koszty["Stolarka"] = do_drzwi * (cena_drzwi + 250 + 40)
 
     # --- 3. WYNIKI I ROI ---
-    total_remont = sum(koszty.values())
+        total_remont = sum(koszty.values())
         bufor = total_remont * 0.12 
         
         st.success(f"### SZACOWANY KOSZT REMONTU: **{round(total_remont + bufor)} zł**")
