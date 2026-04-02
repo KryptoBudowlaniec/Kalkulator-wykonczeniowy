@@ -16,127 +16,96 @@ with col_logo:
 
 st.markdown("""
 <style>
-    /* 1. CZCIONKI I TŁO */
+    /* Import czcionki Inter */
     @import url('https://googleapis.com');
 
+    /* Globalne ustawienia bieli i czcionki */
     html, body, [class*="st-"] {
         font-family: 'Inter', sans-serif !important;
     }
-
     .stApp { 
         background-color: #FFFFFF !important; 
         color: #1E1E1E !important;
     }
-
     .main .block-container {
-        background-color: #FFFFFF !important;
-        max-width: 1200px;
-        padding-top: 4rem;
+        max-width: 1100px;
+        padding-top: 5rem !important;
     }
 
-    /* 2. PRZYCISK MENU (HAMBURGER) - ATOMOWE CZYSZCZENIE */
+    /* NAPRAWA MENU (HAMBURGERA) - USUNIĘCIE NAPISU ARROW */
     button[data-testid="stSidebarCollapseIcon"] * {
         display: none !important;
-        visibility: hidden !important;
     }
-
     button[data-testid="stSidebarCollapseIcon"] {
-        display: flex !important;
-        visibility: visible !important;
         background-color: #00D395 !important;
         border-radius: 50% !important;
         width: 50px !important;
         height: 50px !important;
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         box-shadow: 0px 4px 15px rgba(0, 211, 149, 0.4) !important;
         position: fixed !important;
-        top: 20px !important;
-        left: 20px !important;
-        z-index: 999999 !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 9999;
         border: none !important;
     }
-
     button[data-testid="stSidebarCollapseIcon"]::after {
         content: "☰" !important;
-        visibility: visible !important;
         color: white !important;
         font-size: 26px !important;
+        visibility: visible !important;
     }
 
-    /* 3. SIDEBAR I NAWIGACJA */
+    /* SIDEBAR I PIGUŁKI */
     section[data-testid="stSidebar"] > div {
         background-color: #FBFBFB !important;
-        border-right: 1px solid #F0F0F0;
     }
-
     div[data-testid="stPills"] button {
         width: 100% !important;
         min-height: 55px !important;
         background-color: #F5F5F7 !important;
-        border: 1px solid #E5E5E7 !important;
         border-radius: 12px !important;
         margin-bottom: 8px !important;
+        border: 1px solid #E5E5E7 !important;
     }
-
-    div[data-testid="stPills"] button[aria-checked="true"] {
+    button[aria-checked="true"] {
         background-color: #00D395 !important;
         border: none !important;
     }
+    button[aria-checked="true"] p { color: white !important; }
 
-    div[data-testid="stPills"] button p {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-    }
-
-    /* 4. KAFELKI I SEKCJE STARTOWE */
-    .feature-card, .trust-card {
+    /* KAFELKI I PRZYCISKI */
+    .feature-card {
         background-color: #FBFBFB;
         border: 1px solid #F0F0F0;
         border-radius: 20px;
-        padding: 35px;
-        transition: 0.4s ease;
+        padding: 30px;
+        height: 420px;
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
         margin-bottom: 20px;
     }
-
-    .feature-card:hover {
-        background-color: #FFFFFF;
-        border-color: #00D395;
-        transform: translateY(-5px);
-        box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.06);
-    }
-
-    .feature-title, .trust-title {
-        color: #00D395;
-        font-weight: 800;
-    }
-
-    /* 5. PRZYCISKI GŁÓWNE (CTA) */
+    .feature-title { color: #00D395; font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+    
     div.stButton > button {
-        display: block !important;
-        margin: 0 auto !important;
-        max-width: 550px !important;
         background-color: #00D395 !important;
         color: white !important;
         font-weight: 800 !important;
-        height: 65px !important;
         border-radius: 15px !important;
-        border: none !important;
-    }
-
-    /* 6. FAQ (ZAMKNIĘCIE I CENTROWANIE) */
-    .faq-container {
-        max-width: 600px;
+        height: 60px !important;
+        width: 100% !important;
+        max-width: 500px !important;
+        display: block !important;
         margin: 0 auto !important;
     }
 
-    .stExpander {
-        border: 1px solid #F0F0F0 !important;
-        border-radius: 15px !important;
-        background-color: #FFFFFF !important;
-        margin-bottom: 12px !important;
-    }
+    /* FAQ CONTENER */
+    .faq-container { max-width: 600px; margin: 0 auto !important; }
 </style>
 """, unsafe_allow_html=True)
 
