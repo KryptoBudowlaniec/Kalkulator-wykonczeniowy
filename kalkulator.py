@@ -445,11 +445,11 @@ if branza == "Start":
         st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
  # --- SEKCJA FAQ ---
-        # --- SEKCJA FAQ (NAPRAWIONA) ---
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>Często Zadawane Pytania (FAQ)</h2>", unsafe_allow_html=True)
+        # --- SEKCJA FAQ (ZWĘŻONA I WYŚRODKOWANA) ---
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; margin-bottom: 30px;'>Często Zadawane Pytania</h2>", unsafe_allow_html=True)
     
-    # Otwieramy centrujący div w HTML
+    # Otwieramy zwężony kontener
     st.markdown('<div class="faq-container">', unsafe_allow_html=True)
     
     with st.expander("Czy wyceny materiałów są aktualne?", expanded=False):
@@ -462,12 +462,10 @@ if branza == "Start":
         st.write("Algorytmy uwzględniają normy zużycia oraz standardowy naddatek 10% na odpady.")
         
     with st.expander("Czy ProCalc uwzględnia koszty robocizny?", expanded=False):
-        st.write("Tak, w każdej sekcji możesz wpisać własną stawkę za jednostkę lub skorzystać z sugerowanych.")
+        st.write("Tak, w każdej sekcji możesz wpisać własną stawkę lub skorzystać z sugerowanych.")
 
-    # Zamykamy div
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True) # Zamykamy kontener
+    st.markdown("<br><br>", unsafe_allow_html=True)
 
 
 
