@@ -14,102 +14,51 @@ with col_logo:
         st.error("Brak pliku logo2.png")
 
 
-# --- STYLE CSS (Twoje poprawione style) ---
+# --- 1. ZINTEGROWANE STYLE CSS ---
 st.markdown("""
 <style>
-    /* Stylizacja przycisku menu (trzy kreski) */
-    .st-emotion-cache-198z7it {
-        visibility: visible !important; /* Pokazuje przycisk sidebaru */
-    }
+    /* Globalne tło */
+    .stApp { background-color: #0E1117; }
 
-    /* Ukrywamy standardowy nagłówek sidebaru, żeby było czyściej */
+    /* Sidebar i Menu boczne */
     section[data-testid="stSidebar"] > div {
         padding-top: 2rem;
-        background-color: #1A1C23; /* Ciemne tło panelu */
+        background-color: #1A1C23;
     }
 
-    /* Powiększenie pigułek w menu pionowym w sidebarze */
-    [data-testid="stSidebar"] [data-testid="stPills"] button {
-        width: 100% !important; /* Przyciski na całą szerokość panelu */
-        margin-bottom: 10px !important;
-        justify-content: flex-start !important;
-        font-size: 20px !important;
-    }
-    <style>
-    /* 1. POWIĘKSZENIE TEKSTU DLA WSZYSTKICH PRZYCISKÓW PILLS */
-    [data-testid="stPills"] button p {
-        font-size: 26px !important; 
-        font-weight: 800 !important;
-        color: white !important;
-        margin: 0 !important;
-    }
-
-    /* 2. POWIĘKSZENIE SAMEGO KONTENERA PRZYCISKU */
-    [data-testid="stPills"] button {
-        padding: 20px 40px !important;
-        height: auto !important;
-        min-height: 70px !important;
-        background-color: #1A1C23 !important;
-        border: 2px solid #2D2F39 !important;
-        border-radius: 15px !important;
-    }
-
-    /* 3. STYL DLA AKTYWNEJ PIGUŁKI (WYMUSZENIE KOLORU) */
-    [data-testid="stPills"] button[aria-checked="true"] {
-        background-color: #00D395 !important;
-        border-color: #00D395 !important;
-    }
-    
-    /* 4. KOLOR TEKSTU DLA AKTYWNEJ PIGUŁKI (ŻEBY BYŁ CZARNY) */
-    [data-testid="stPills"] button[aria-checked="true"] p {
-        color: black !important;
-    }
-
-    /* 5. EFEKT HOVER */
-    [data-testid="stPills"] button:hover {
-        border-color: #00D395 !important;
-</style>
-""", unsafe_allow_html=True)
-
-# --- STAN APLIKACJI ---
-if 'pokoje_pro' not in st.session_state: st.session_state.pokoje_pro = []
-if 'pokoje' not in st.session_state: st.session_state.pokoje = []
-
-# --- 1. STYLE CSS (NAJPIERW STYL) ---
-st.markdown("""
-<style>
-    /* AGRESYWNE POWIĘKSZENIE WSZYSTKICH PRZYCISKÓW W MENU PILLS */
-    div[data-selection-mode="single"] button {
-        padding: 15px 30px !important;
+    /* Powiększenie pigułek (pionowe i poziome) */
+    div[data-testid="stPills"] button, [data-testid="stSidebar"] [data-testid="stPills"] button {
+        width: 100% !important;
+        padding: 15px 25px !important;
         min-height: 60px !important;
         border-radius: 12px !important;
         background-color: #1A1C23 !important;
         border: 2px solid #2D2F39 !important;
+        margin-bottom: 5px !important;
     }
 
-    /* POWIĘKSZENIE TEKSTU */
-    div[data-selection-mode="single"] button p {
-        font-size: 22px !important;
+    div[data-testid="stPills"] button p, [data-testid="stSidebar"] [data-testid="stPills"] button p {
+        font-size: 20px !important;
         font-weight: bold !important;
         color: white !important;
     }
 
-    /* KOLOR AKTYWNEGO ELEMENTU */
-    div[data-selection-mode="single"] button[aria-checked="true"] {
+    /* Aktywna pigułka */
+    button[aria-checked="true"] {
         background-color: #00D395 !important;
         border-color: #00D395 !important;
     }
-
-    div[data-selection-mode="single"] button[aria-checked="true"] p {
+    button[aria-checked="true"] p {
         color: black !important;
     }
-    /* Styl dla nowoczesnych kart produktów */
+
+    /* Kafelki na stronie Start */
     .feature-card {
         background-color: #1A1C23;
         border: 1px solid #2D2F39;
         border-radius: 15px;
         padding: 25px;
-        height: 100%;
+        height: 400px; /* Stała wysokość dla równego układu */
         transition: 0.3s;
         margin-bottom: 20px;
     }
@@ -124,183 +73,81 @@ st.markdown("""
         margin-bottom: 10px;
     }
     .feature-list {
-        font-size: 16px;
+        font-size: 15px;
         color: #B0B3B8;
-        line-height: 1.6;
+        line-height: 1.5;
         list-style-type: '✔ ';
-        padding-left: 20px;
+        padding-left: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- KONFIGURACJA SIDEBARU (UKRYTE MENU) ---
+# --- STAN APLIKACJI ---
+if 'pokoje_pro' not in st.session_state: st.session_state.pokoje_pro = []
+if 'pokoje' not in st.session_state: st.session_state.pokoje = []
+
+# --- MENU BOCZNE ---
 with st.sidebar:
     st.markdown("<h2 style='color: #00D395;'>Menu ProCalc</h2>", unsafe_allow_html=True)
-    
-    # Przenosimy pigułki do sidebaru
     branza = st.pills(
         "Nawigacja:", 
-        [
-            "🏠 Start", 
-            "🎨 Malowanie", 
-            "🧱 Szpachlowanie", 
-            "🏗️ Tynkowanie", 
-            "⚒️ Sucha Zabudowa", 
-            "⚡ Elektryka", 
-            "🚿 Łazienka", 
-            "📐 Podłogi",
-            "🚪 Drzwi", 
-            "🚀 PANEL INWESTORA (PREMIUM)",
-            "📞 Kontakt"
-        ],
+        ["🏠 Start", "🎨 Malowanie", "🧱 Szpachlowanie", "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", 
+         "⚡ Elektryka", "🚿 Łazienka", "📐 Podłogi", "🚪 Drzwi", "🚀 PANEL INWESTORA (PREMIUM)", "📞 Kontakt"],
         selection_mode="single",
         default="🏠 Start"
     )
-    
     st.markdown("---")
     st.caption("Wersja 2.0 ProCalc")
 
-# --- STRONA KONTAKT (NOWOŚĆ) ---
-if branza == "📞 Kontakt":
-    st.header("📞 Skontaktuj się z nami")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("""
-        <div style='font-size: 20px;'>
-            <p>Masz pytania dotyczące kosztorysu?</p>
-            <p>📧 <b>biuro@procalc.pl</b></p>
-            <p>📞 <b>+48 123 456 789</b></p>
-        </div>
-        """, unsafe_allow_html=True)
-    with c2:
-        st.info("Pracujemy od poniedziałku do piątku w godzinach 8:00 - 16:00")
-st.markdown("---")
-
-# --- LOGIKA WYŚWIETLANIA STRON ---
-
+# --- LOGIKA STRON ---
 if branza == "🏠 Start":
-    # Nagłówek główny (bardzo duży)
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; font-size: 28px;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
     
-    st.markdown("<br>", unsafe_allow_html=True) # Odstęp
-
     col_s1, col_s2 = st.columns([1.2, 1])
-    
     with col_s1:
-        # Tekst z powiększoną czcionką przez HTML
         st.markdown("""
         <div style='font-size: 22px; line-height: 1.6;'>
             <h3 style='color: #00D395;'>🚀 Dlaczego ProCalc?</h3>
-            Zapomnij o liczeniu na kartce i błędach w zamówieniach. 
-            <b>ProCalc</b> to narzędzie stworzone przez profesjonalistów dla:
+            Zapomnij o liczeniu na kartce. <b>ProCalc</b> to:
             <ul>
-                <li><b>Inwestorów i Fliperów</b> (Szybka analiza ROI i zysku)</li>
-                <li><b>Ekip remontowych</b> (Precyzyjne listy zakupów)</li>
-                <li><b>Klientów indywidualnych</b> (Realna kontrola nad budżetem)</li>
+                <li><b>Inwestorzy:</b> Szybka analiza ROI</li>
+                <li><b>Ekipy:</b> Precyzyjne listy zakupów</li>
+                <li><b>Klienci:</b> Kontrola budżetu</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
-        
-        st.info("💡 **WYBIERZ BRANŻĘ Z MENU POWYŻEJ**, ABY WYGENEROWAĆ SWÓJ PIERWSZY KOSZTORYS.")
+        st.info("💡 WYBIERZ BRANŻĘ Z MENU BOCZNEGO, ABY ZACZĄĆ.")
 
     with col_s2:
-        st.image("logo2.png", use_container_width=True)
+        try:
+            st.image("logo2.png", use_container_width=True)
+        except:
+            st.warning("Dodaj logo2.png do folderu.")
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
     
-    # Sekcja "Możliwości" z większymi opisami
-   st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
-    
-    # Rząd 1: Malowanie, Elektryka, G-K
+    # Rząd 1
     c1, c2, c3 = st.columns(3)
-    
     with c1:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">🎨 Malowanie & Gładzie</div>
-            <p>Kompleksowe przygotowanie ścian i sufitów do finalnego wykończenia.</p>
-            <ul class="feature-list">
-                <li>Obliczanie powierzchni ścian i sufitów</li>
-                <li>Dobór ilości gruntów i mas szpachlowych</li>
-                <li>Wydajność farb (biała vs kolor)</li>
-                <li>Wycena robocizny i materiałów</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="feature-card"><div class="feature-title">🎨 Malowanie</div><p>Ściany i sufity.</p><ul class="feature-list"><li>Powierzchnie</li><li>Ilość farb</li><li>Wycena robocizny</li></ul></div>""", unsafe_allow_html=True)
     with c2:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">⚡ Instalacje Elektryczne</div>
-            <p>Pełna instalacja prądowa i teletechniczna od rozdzielni po gniazdka.</p>
-            <ul class="feature-list">
-                <li>Dobór mb przewodów (3x2.5, 3x1.5, TV, LAN)</li>
-                <li>Wycena osprzętu (Simon, Legrand, Berker)</li>
-                <li>Kompletacja rozdzielnicy (bezpieczniki ES)</li>
-                <li>Uwzględnienie trudności (żelbet vs cegła)</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="feature-card"><div class="feature-title">⚡ Elektryka</div><p>Pełna instalacja.</p><ul class="feature-list"><li>mb przewodów</li><li>Osprzęt i rozdzielnia</li><li>Trudność prac</li></ul></div>""", unsafe_allow_html=True)
     with c3:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">⚒️ Sucha Zabudowa</div>
-            <p>Konstrukcje lekkie, sufity podwieszane i zabudowy systemowe.</p>
-            <ul class="feature-list">
-                <li>Systemy pojedyncze i krzyżowe</li>
-                <li>Wyliczenie profili (CD60, UD27), płyt i wieszaków</li>
-                <li>Zbrojenie spoin (Tuff-Tape, Flizelina)</li>
-                <li>Zabudowy rur i wnęk oświetleniowych</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">⚒️ G-K</div><p>Zabudowy i sufity.</p><ul class="feature-list"><li>Profile i płyty</li><li>Systemy krzyżowe</li><li>Zbrojenie spoin</li></ul></div>""", unsafe_allow_html=True)
 
-    # Rząd 2: Podłogi, Drzwi, Inwestor Premium
+    # Rząd 2
     c4, c5, c6 = st.columns(3)
-
     with c4:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">📐 Podłogi & Winyle</div>
-            <p>Wszystko, co musisz wiedzieć przed ułożeniem wymarzonej podłogi.</p>
-            <ul class="feature-list">
-                <li>Obliczanie m2 paneli z naddatkiem na odpady</li>
-                <li>Dobór podkładów (SPC, Laminat, Drewno)</li>
-                <li>Ilość listew przypodłogowych i progów</li>
-                <li>Systemy klejone vs pływające</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="feature-card"><div class="feature-title">📐 Podłogi</div><p>Panele i winyle.</p><ul class="feature-list"><li>Metraż + naddatek</li><li>Podkłady i listwy</li><li>Progi</li></ul></div>""", unsafe_allow_html=True)
     with c5:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">🚪 Stolarka Drzwiowa</div>
-            <p>Montaż skrzydeł drzwiowych, ościeżnic i niezbędnych akcesoriów.</p>
-            <ul class="feature-list">
-                <li>Drzwi przylgowe, bezprzylgowe i rewersyjne</li>
-                <li>Dobór ościeżnic regulowanych i stałych</li>
-                <li>Akcesoria (klamki, rozety, pianki montażowe)</li>
-                <li>Usługi demontażu i podcięć wentylacyjnych</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="feature-card"><div class="feature-title">🚪 Drzwi</div><p>Montaż stolarki.</p><ul class="feature-list"><li>Rewersyjne i ukryte</li><li>Akcesoria</li><li>Pianki montażowe</li></ul></div>""", unsafe_allow_html=True)
     with c6:
-        st.markdown("""
-        <div class="feature-card" style="border: 1px solid #00D395;">
-            <div class="feature-title">🚀 Panel Inwestora PRO</div>
-            <p>Ekskluzywne narzędzie dla firm i flipperów (All-in-One).</p>
-            <ul class="feature-list">
-                <li>Agregacja wszystkich etapów na jednym ekranie</li>
-                <li>Kalkulator ROI (Rentowność inwestycji)</li>
-                <li>Inteligentne standardy (Eko, Standard, Premium)</li>
-                <li>Raport kosztorysowy do PDF dla banku</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card" style="border: 1px solid #00D395;"><div class="feature-title">🚀 Premium PRO</div><p>Dla fliperów.</p><ul class="feature-list"><li>Agregacja etapów</li><li>Kalkulator ROI</li><li>Raport PDF</li></ul></div>""", unsafe_allow_html=True)
+
+elif branza == "📞 Kontakt":
+    st.header("📞 Kontakt")
+    st.write("📧 biuro@procalc.pl | 📞 +48 123 456 789")
 # --- SEKCJA: MALOWANIE ---
 if branza == "🎨 Malowanie":
     st.subheader("Kalkulator Malarski")
