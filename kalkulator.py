@@ -147,7 +147,7 @@ if branza == "🏠 Start":
     with c6:
         st.markdown("""<div class="feature-card"><div class="feature-title">🚿 Łazienka</div><p>Kompleksowy remont sanitarny.</p><ul class="feature-list"><li>Płytki i hydroizolacja</li><li>Biały montaż (WC/Prysznic)</li><li>Klej i fugi</li></ul></div>""", unsafe_allow_html=True)
 
-    # Rząd 3: Podłogi, Drzwi, Inwestor PRO
+   # Rząd 3: Podłogi, Drzwi, Inwestor PRO
     c7, c8, c9 = st.columns(3)
     with c7:
         st.markdown("""<div class="feature-card"><div class="feature-title">📐 Podłogi</div><p>Panele, winyle i drewno.</p><ul class="feature-list"><li>Metraż + naddatek 10%</li><li>Podkłady i listwy mb</li><li>Progi i dylatacje</li></ul></div>""", unsafe_allow_html=True)
@@ -157,7 +157,7 @@ if branza == "🏠 Start":
         st.markdown("""<div class="feature-card" style="border: 2px solid #00D395;"><div class="feature-title">🚀 Premium PRO</div><p>Dla fliperów i deweloperów.</p><ul class="feature-list"><li>Zbiorczy raport materiałowy</li><li>Kalkulator ROI (Rentowność)</li><li>Generowanie PDF</li></ul></div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.success("👇 **Gotowy do wyceny? Wybierz sekcję z menu bocznego!**")i><li>Raport PDF</li></ul></div>""", unsafe_allow_html=True)
+    st.success("👇 **Gotowy do wyceny? Wybierz sekcję z menu bocznego!**")
 
 elif branza == "📞 Kontakt":
     st.header("📞 Kontakt")
