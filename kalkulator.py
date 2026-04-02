@@ -44,6 +44,31 @@ st.markdown("---") # Linia oddzielająca header od reszty strony
 # --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
 st.markdown("""
 <style>
+
+    /* Globalne tło bieli */
+    .stApp { background-color: #FFFFFF !important; }
+
+    /* Wyrównanie pigułek, aby były jasne i widoczne */
+    div[data-testid="stPills"] button {
+        background-color: #F1F3F5 !important;
+        border: 1px solid #DEE2E6 !important;
+        color: #495057 !important;
+        padding: 10px 20px !important;
+    }
+
+    /* Aktywna pigułka (Twój miętowy) */
+    div[data-testid="stPills"] button[aria-checked="true"] {
+        background-color: #00D395 !important;
+        border: none !important;
+    }
+    div[data-testid="stPills"] button[aria-checked="true"] p {
+        color: white !important;
+    }
+
+    /* Wycentrowanie pionowe logo i menu w headerze */
+    [data-testid="stHorizontalBlock"] {
+        align-items: center;
+    }
     /* Import czcionki Inter */
     @import url('https://googleapis.com');
 
