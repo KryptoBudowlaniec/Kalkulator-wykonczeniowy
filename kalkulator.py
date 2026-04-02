@@ -14,57 +14,50 @@ with col_logo:
         st.error("Brak pliku logo2.png")
 
 
-# --- 1. ZINTEGROWANE STYLE CSS (JASNY MOTYW) ---
+# --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
 st.markdown("""
 <style>
     /* Import czcionki Inter */
     @import url('https://googleapis.com');
 
-    /* 1. Globalne tło i czcionka */
+    /* 1. Globalne tło i czcionka - CZYSTA BIEL */
     html, body, [class*="st-"] {
         font-family: 'Inter', sans-serif !important;
     }
 
-    /* 1. Globalne tło z płynnym gradientem przez całą stronę */
     .stApp { 
-        background: linear-gradient(110deg, 
-            rgba(14,23,43,0.08) 0%,    /* Bardzo jasny granat/niebieski z lewej */
-            rgba(255,255,255,1) 35%,   /* Przejście w biel przed środkiem */
-            rgba(255,255,255,1) 65%,   /* Trzymanie bieli przez środek danych */
-            rgba(0,211,149,0.1) 100%   /* Miętowa zieleń z prawej */
-        ) !important;
-        color: #1E1E1E;
-    }
-
-    /* Wyczyszczenie tła głównego kontenera, aby gradient "prześwitywał" pod spodem */
-    .main .block-container {
-        background-color: transparent !important;
-        padding-top: 2rem;
-        max-width: 1200px; /* Trzyma treść w profesjonalnych ryzach */
-
-    /* 2. Nagłówki */
-    h1, h2, h3 {
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 800 !important;
-        letter-spacing: -0.5px !important;
+        background-color: #FFFFFF !important; 
         color: #1E1E1E !important;
     }
 
-    /* Sidebar - musi być lekko przezroczysty, żeby pasował do lewej strony gradientu */
-    section[data-testid="stSidebar"] > div {
-        background-color: rgba(255, 255, 255, 0.4) !important;
-        backdrop-filter: blur(10px); /* Efekt mrożonego szkła */
-        border-right: 1px solid rgba(0,0,0,0.05);
+    /* Wyczyszczenie wszelkich gradientów i cieni kontenera */
+    .main .block-container {
+        background-color: #FFFFFF !important;
+        max-width: 1200px;
+        padding-top: 2rem;
     }
 
-    /* 4. Menu Pigułki (Nawigacja) */
+    /* 2. Nagłówki - Głęboka czerń dla kontrastu */
+    h1, h2, h3 {
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 800 !important;
+        color: #000000 !important;
+        letter-spacing: -0.5px !important;
+    }
+
+    /* 3. Sidebar (Jasny, sterylny szary) */
+    section[data-testid="stSidebar"] > div {
+        background-color: #FBFBFB !important;
+        border-right: 1px solid #F0F0F0;
+    }
+
+    /* 4. Menu Pigułki (Nawigacja) - Apple Style */
     div[data-testid="stPills"] button, [data-testid="stSidebar"] [data-testid="stPills"] button {
         width: 100% !important;
-        padding: 12px 20px !important;
         min-height: 55px !important;
+        background-color: #F5F5F7 !important;
+        border: 1px solid #E5E5E7 !important;
         border-radius: 12px !important;
-        background-color: #FFFFFF !important; /* Białe przyciski */
-        border: 1px solid #DEE2E6 !important;
         margin-bottom: 8px !important;
         transition: 0.2s;
     }
@@ -72,28 +65,26 @@ st.markdown("""
     div[data-testid="stPills"] button p, [data-testid="stSidebar"] [data-testid="stPills"] button p {
         font-size: 18px !important;
         font-weight: 600 !important;
-        color: #495057 !important; /* Ciemnoszary tekst */
+        color: #1D1D1F !important;
     }
 
-    /* Aktywna pigułka (Miętowy ProCalc) */
+    /* Aktywna pigułka (Twój zielony akcent) */
     button[aria-checked="true"] {
         background-color: #00D395 !important;
-        border-color: #00D395 !important;
-        box-shadow: 0px 4px 10px rgba(0, 211, 149, 0.2);
+        border: none !important;
     }
     button[aria-checked="true"] p {
-        color: white !important;
+        color: #FFFFFF !important;
     }
 
-    /* 5. Kafelki na stronie Start (Light Mode) */
+    /* 5. Kafelki na stronie Start (Wersja Jasna) */
     .feature-card {
-        background-color: #F8F9FA; /* Bardzo jasny szary */
-        border: 1px solid #E9ECEF;
-        border-radius: 18px;
-        padding: 30px;
+        background-color: #FBFBFB;
+        border: 1px solid #F0F0F0;
+        border-radius: 20px;
+        padding: 35px;
         height: 440px;
-        transition: 0.3s;
-        margin-bottom: 20px;
+        transition: 0.4s ease;
         text-align: center; 
         display: flex;
         flex-direction: column;
@@ -104,8 +95,8 @@ st.markdown("""
     .feature-card:hover {
         background-color: #FFFFFF;
         border-color: #00D395;
-        transform: translateY(-8px);
-        box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.08);
+        transform: translateY(-5px);
+        box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.06);
     }
 
     .feature-title {
@@ -117,54 +108,29 @@ st.markdown("""
 
     .feature-card p {
         font-size: 18px !important;
-        color: #495057 !important;
-        margin-bottom: 20px;
-    }
-
-    .feature-list {
-        font-size: 16px;
-        color: #6C757D;
-        line-height: 1.6;
-        list-style-type: '✔ ';
-        padding-left: 0;
-        text-align: left; 
-        display: inline-block; 
+        color: #424245 !important;
     }
 
     /* 6. Sekcja korzyści (Benefit Box) */
     .benefit-box {
         border-left: 4px solid #00D395;
-        padding-left: 20px;
-        margin-bottom: 30px;
-        transition: 0.3s;
-        background-color: #F8F9FA;
-        padding-top: 15px;
-        padding-bottom: 15px;
-        border-radius: 0 10px 10px 0;
-    }
-    .benefit-box:hover {
-        background: linear-gradient(90deg, rgba(0,211,149,0.05) 0%, rgba(255,255,255,0) 100%);
+        padding: 20px;
+        margin-bottom: 25px;
+        background-color: #FBFBFB;
+        border-radius: 0 12px 12px 0;
     }
     .benefit-title {
         color: #00D395;
         font-size: 22px;
         font-weight: 800;
-        text-transform: uppercase;
     }
     .benefit-text {
         font-size: 17px;
-        color: #495057;
-        margin-top: 5px;
-    }
-
-    /* Wyświetlanie ikon */
-    .feature-icon {
-        font-size: 40px;
-        margin-bottom: 10px;
-        color: #00D395;
+        color: #424245;
     }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 # --- STAN APLIKACJI ---
