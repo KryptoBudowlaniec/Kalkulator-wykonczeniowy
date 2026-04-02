@@ -403,6 +403,7 @@ if branza == "Start":
         st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
  # --- SEKCJA FAQ ---
+        # --- SEKCJA FAQ (NAPRAWIONA) ---
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     
     # Kontener, który wymusza nową linię i separację
@@ -433,6 +434,7 @@ if branza == "Start":
                 st.write("Tak, w każdej sekcji możesz wpisać własną stawkę za jednostkę lub skorzystać z sugerowanych.")
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
+
 
 
 
