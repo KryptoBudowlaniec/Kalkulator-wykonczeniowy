@@ -3,16 +3,43 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
-# Nagłówek z logo i tytułem
-col_space1, col_logo, col_space2 = st.columns([1.5, 1, 1.5])
+
+# --- HEADER: LOGO LEWA | MENU PRAWA ---
+col_logo, col_nav = st.columns([1, 3])
 
 with col_logo:
-    # TE LINIE MUSZĄ MIEĆ 4 SPACJE WCIĘCIA:
     try:
-        st.image("logo2.png", use_container_width=True)
+        # Logo z lewej strony, dopasowane do wysokości menu
+        st.image("logo2.png", width=180)
     except:
-        st.error("Brak pliku logo2.png")
+        st.error("Brak logo2.png")
 
+with col_nav:
+    # Menu główne obok logo
+    nawigacja = st.pills(
+        "", # Bez tytułu, żeby nie zajmowało miejsca
+        ["Start", "Kalkulatory", "Inwestor Premium", "Kontakt"],
+        selection_mode="single",
+        default="Start",
+        key="main_nav"
+    )
+
+# --- PODMENU (Pojawia się pod headerem tylko gdy wybrano Kalkulatory) ---
+if nawigacja == "Kalkulatory":
+    st.markdown("<br>", unsafe_allow_html=True)
+    sub_nav_col = st.columns([1])[0]
+    with sub_nav_col:
+        branza = st.pills(
+            "Wybierz branżę:", 
+            ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", "Drzwi"],
+            selection_mode="single",
+            default="Malowanie",
+            key="sub_nav"
+        )
+else:
+    branza = nawigacja
+
+st.markdown("---") # Linia oddzielająca header od reszty strony
 
 # --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
 st.markdown("""
@@ -218,40 +245,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER: LOGO LEWA | MENU PRAWA ---
-col_logo, col_nav = st.columns([1, 3])
 
-with col_logo:
-    try:
-        # Logo z lewej strony, dopasowane do wysokości menu
-        st.image("logo2.png", width=180)
-    except:
-        st.error("Brak logo2.png")
-
-with col_nav:
-    # Menu główne obok logo
-    nawigacja = st.pills(
-        "", # Bez tytułu, żeby nie zajmowało miejsca
-        ["Start", "Kalkulatory", "Inwestor Premium", "Kontakt"],
-        selection_mode="single",
-        default="Start",
-        key="main_nav"
-    )
-
-# --- PODMENU (Pojawia się pod headerem tylko gdy wybrano Kalkulatory) ---
-if nawigacja == "Kalkulatory":
-    st.markdown("<br>", unsafe_allow_html=True)
-    sub_nav_col = st.columns([1])[0]
-    with sub_nav_col:
-        branza = st.pills(
-            "Wybierz branżę:", 
-            ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", "Drzwi"],
-            selection_mode="single",
-            default="Malowanie",
-            key="sub_nav"
-        )
-else:
-    branza = nawigacja
 
 st.markdown("---") # Linia oddzielająca header od reszty strony
 
