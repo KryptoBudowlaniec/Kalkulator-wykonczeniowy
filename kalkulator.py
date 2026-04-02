@@ -56,26 +56,46 @@ st.markdown("""
     .feature-card {
         background-color: #1A1C23;
         border: 1px solid #2D2F39;
-        border-radius: 15px;
-        padding: 25px;
-        height: 400px;
+        border-radius: 18px;
+        padding: 30px;
+        height: 440px; /* Nieco wyższe dla większej czcionki */
         transition: 0.3s;
         margin-bottom: 20px;
-        text-align: center; /* Centruje tytuł i opis */
+        text-align: center; 
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center; /* Centrowanie w pionie */
     }
     
+    .feature-card:hover {
+        border-color: #00D395;
+        transform: translateY(-8px);
+        box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.1);
+    }
+
+    .feature-title {
+        color: #00D395;
+        font-size: 28px; /* DUŻY TYTUŁ */
+        font-weight: 800;
+        margin-bottom: 15px;
+        line-height: 1.2;
+    }
+
+    .feature-card p {
+        font-size: 20px !important; /* WIĘKSZY OPIS */
+        color: #FFFFFF;
+        margin-bottom: 20px;
+    }
+
     .feature-list {
-        font-size: 15px;
+        font-size: 18px; /* WIĘKSZA LISTA */
         color: #B0B3B8;
-        line-height: 1.5;
+        line-height: 1.6;
         list-style-type: '✔ ';
         padding-left: 0;
-        text-align: left; /* Lista zostaje od lewej, ale wewnątrz wyśrodkowanego kontenera */
-        display: inline-block; /* Pozwala liście być wyśrodkowaną jako blok */
-        margin-top: 10px;
+        text-align: left; 
+        display: inline-block; 
     }
 </style>
 """, unsafe_allow_html=True)
