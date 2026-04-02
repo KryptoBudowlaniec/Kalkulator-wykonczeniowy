@@ -185,6 +185,10 @@ st.markdown("""
         transform: translateY(-2px) !important;
         box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.4) !important;
     }
+        margin: 0 auto;
+        display: block;
+        max-width: 500px; /* Ogranicza szerokość, żeby guzik nie był "jamnikiem" na cały ekran */
+    }
 
 </style>
 """, unsafe_allow_html=True)
