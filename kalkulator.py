@@ -25,9 +25,25 @@ st.markdown("""
         font-family: 'Inter', sans-serif !important;
     }
 
-    .stApp { 
-        background-color: #FFFFFF; 
+    /* 1. Globalne tło z gradientem bocznym */
+        .stApp { 
+            background: linear-gradient(90deg, 
+                rgba(14,17,23,0.05) 0%,   /* Delikatny granat z lewej */
+                rgba(255,255,255,1) 15%,  /* Przejście w czystą biel */
+                rgba(255,255,255,1) 85%,  /* Trzymanie bieli dla treści */
+                rgba(0,211,149,0.08) 100% /* Delikatna mięta z prawej */
+        );
         color: #1E1E1E;
+    }
+
+    /* Dodatkowe wygładzenie kontenera głównego */
+    .main .block-container {
+        background-color: white;      /* Środek musi być idealnie biały */
+        padding: 3rem;
+        border-radius: 20px;          /* Delikatne zaokrąglenie rogów strony */
+        box-shadow: 0px 0px 40px rgba(0,0,0,0.03); /* Lekki cień, by "odbić" od gradientu */
+        margin-top: 2rem;
+        margin-bottom: 2rem;
     }
 
     /* 2. Nagłówki */
