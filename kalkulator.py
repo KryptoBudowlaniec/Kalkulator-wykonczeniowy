@@ -127,23 +127,37 @@ if branza == "🏠 Start":
 
     st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
     
-    # Rząd 1
+    st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
+    
+    # Rząd 1: Malowanie, Szpachlowanie, Tynkowanie
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.markdown("""<div class="feature-card"><div class="feature-title">🎨 Malowanie</div><p>Ściany i sufity.</p><ul class="feature-list"><li>Powierzchnie</li><li>Ilość farb</li><li>Wycena robocizny</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">🎨 Malowanie</div><p>Finalne wykończenie kolorystyczne.</p><ul class="feature-list"><li>Obliczanie m2 ścian/sufitów</li><li>Wydajność farb i gruntów</li><li>Zestawienie narzędzi</li></ul></div>""", unsafe_allow_html=True)
     with c2:
-        st.markdown("""<div class="feature-card"><div class="feature-title">⚡ Elektryka</div><p>Pełna instalacja.</p><ul class="feature-list"><li>mb przewodów</li><li>Osprzęt i rozdzielnia</li><li>Trudność prac</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">🧱 Szpachlowanie</div><p>Przygotowanie idealnej gładzi.</p><ul class="feature-list"><li>Masy gotowe i sypkie</li><li>Zbrojenie narożników</li><li>Gruntowanie podkładowe</li></ul></div>""", unsafe_allow_html=True)
     with c3:
-        st.markdown("""<div class="feature-card"><div class="feature-title">⚒️ G-K</div><p>Zabudowy i sufity.</p><ul class="feature-list"><li>Profile i płyty</li><li>Systemy krzyżowe</li><li>Zbrojenie spoin</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">🏗️ Tynkowanie</div><p>Prace tynkarskie od podstaw.</p><ul class="feature-list"><li>Tynki gipsowe i cementowe</li><li>Listwy tynkarskie</li><li>Obliczanie m3 materiału</li></ul></div>""", unsafe_allow_html=True)
 
-    # Rząd 2
+    # Rząd 2: G-K, Elektryka, Łazienka
     c4, c5, c6 = st.columns(3)
     with c4:
-        st.markdown("""<div class="feature-card"><div class="feature-title">📐 Podłogi</div><p>Panele i winyle.</p><ul class="feature-list"><li>Metraż + naddatek</li><li>Podkłady i listwy</li><li>Progi</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">⚒️ Sucha Zabudowa</div><p>Konstrukcje i sufity podwieszane.</p><ul class="feature-list"><li>Profile CD60 i UD27</li><li>Płyty GK i wkręty</li><li>Zabudowy rur i wnęk</li></ul></div>""", unsafe_allow_html=True)
     with c5:
-        st.markdown("""<div class="feature-card"><div class="feature-title">🚪 Drzwi</div><p>Montaż stolarki.</p><ul class="feature-list"><li>Rewersyjne i ukryte</li><li>Akcesoria</li><li>Pianki montażowe</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">⚡ Elektryka</div><p>Pełna instalacja prądowa.</p><ul class="feature-list"><li>mb przewodów (Siła/TV/LAN)</li><li>Osprzęt i rozdzielnica</li><li>Trudność (żelbet/cegła)</li></ul></div>""", unsafe_allow_html=True)
     with c6:
-        st.markdown("""<div class="feature-card" style="border: 1px solid #00D395;"><div class="feature-title">🚀 Premium PRO</div><p>Dla fliperów.</p><ul class="feature-list"><li>Agregacja etapów</li><li>Kalkulator ROI</li><li>Raport PDF</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">🚿 Łazienka</div><p>Kompleksowy remont sanitarny.</p><ul class="feature-list"><li>Płytki i hydroizolacja</li><li>Biały montaż (WC/Prysznic)</li><li>Klej i fugi</li></ul></div>""", unsafe_allow_html=True)
+
+    # Rząd 3: Podłogi, Drzwi, Inwestor PRO
+    c7, c8, c9 = st.columns(3)
+    with c7:
+        st.markdown("""<div class="feature-card"><div class="feature-title">📐 Podłogi</div><p>Panele, winyle i drewno.</p><ul class="feature-list"><li>Metraż + naddatek 10%</li><li>Podkłady i listwy mb</li><li>Progi i dylatacje</li></ul></div>""", unsafe_allow_html=True)
+    with c8:
+        st.markdown("""<div class="feature-card"><div class="feature-title">🚪 Drzwi</div><p>Montaż stolarki wewnętrznej.</p><ul class="feature-list"><li>Rewersyjne i bezprzylgowe</li><li>Klamki i rozety</li><li>Ościeżnice regulowane</li></ul></div>""", unsafe_allow_html=True)
+    with c9:
+        st.markdown("""<div class="feature-card" style="border: 2px solid #00D395;"><div class="feature-title">🚀 Premium PRO</div><p>Dla fliperów i deweloperów.</p><ul class="feature-list"><li>Zbiorczy raport materiałowy</li><li>Kalkulator ROI (Rentowność)</li><li>Generowanie PDF</li></ul></div>""", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.success("👇 **Gotowy do wyceny? Wybierz sekcję z menu bocznego!**")i><li>Raport PDF</li></ul></div>""", unsafe_allow_html=True)
 
 elif branza == "📞 Kontakt":
     st.header("📞 Kontakt")
