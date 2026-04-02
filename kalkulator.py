@@ -29,6 +29,12 @@ st.markdown("""
         background-color: #FFFFFF !important; 
         color: #1E1E1E !important;
     }
+
+        margin: 0 auto;
+        display: block;
+        max-width: 500px; /* Ogranicza szerokość, żeby guzik nie był "jamnikiem" na cały ekran */
+    }
+    
     /* 1. UKRYCIE TEKSTU 'double_arrow_right' */
     button[data-testid="stSidebarCollapseIcon"] span {
         display: none !important;
@@ -184,10 +190,6 @@ st.markdown("""
         background-color: #00b37e !important;
         transform: translateY(-2px) !important;
         box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.4) !important;
-    }
-        margin: 0 auto;
-        display: block;
-        max-width: 500px; /* Ogranicza szerokość, żeby guzik nie był "jamnikiem" na cały ekran */
     }
 
 </style>
