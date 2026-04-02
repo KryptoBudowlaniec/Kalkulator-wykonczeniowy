@@ -17,6 +17,27 @@ with col_logo:
 # --- 1. ZINTEGROWANE STYLE CSS ---
 st.markdown("""
 <style>
+
+    @import url('https://googleapis.com');
+
+    /* Wymuszenie czcionki na całej stronie */
+    html, body, [class*="st-"] {
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    /* Specjalny styl dla nagłówków (grubsze i większe odstępy między literami) */
+    h1, h2, h3 {
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.5px !important;
+    }
+
+    /* Styl dla liczb (żeby były równe i techniczne) */
+    .stMetric value {
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+    }
+
     /* Globalne tło */
     .stApp { background-color: #0E1117; }
 
