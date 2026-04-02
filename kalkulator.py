@@ -298,8 +298,18 @@ if branza == "Start":
     with c9:
         st.markdown("""<div class="feature-card" style="border: 2px solid #00D395;"><div class="feature-title">Premium PRO</div><p>Dla fliperów i deweloperów.</p><ul class="feature-list"><li>Zbiorczy raport materiałowy</li><li>Kalkulator ROI (Rentowność)</li><li>Generowanie PDF</li></ul></div>""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.success("**Gotowy do wyceny? Wybierz sekcję z menu bocznego!**")
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div style='text-align: center; width: 100%; padding: 20px;'>
+            <p style='font-size: 26px; font-weight: 800; color: #1E1E1E; margin-bottom: 10px;'>
+                GOTOWY DO WYCENY?
+            </p>
+            <p style='font-size: 20px; color: #00D395; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>
+                Wybierz sekcję z menu bocznego i zacznij liczyć!
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
 
 elif branza == "📞 Kontakt":
     st.header("📞 Kontakt")
