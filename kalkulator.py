@@ -129,6 +129,33 @@ st.markdown("""
         align-items: center;
         justify-content: center;
     }
+    .trust-card {
+        background-color: #FBFBFB;
+        border: 2px solid #00D395; /* Miętowa ramka dla wyróżnienia */
+        border-radius: 20px;
+        padding: 40px;
+        margin-top: 60px;
+        margin-bottom: 60px;
+        text-align: center;
+        box-shadow: 0px 10px 30px rgba(0, 211, 149, 0.05);
+    }
+    .trust-title {
+        font-size: 32px;
+        font-weight: 800;
+        color: #000000;
+        margin-bottom: 20px;
+    }
+    .trust-text {
+        font-size: 20px;
+        color: #424245;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .trust-highlight {
+        color: #00D395;
+        font-weight: bold;
+    }
     
     .feature-card:hover {
         background-color: #FFFFFF;
@@ -310,6 +337,26 @@ if branza == "Start":
             </p>
         </div>
     """, unsafe_allow_html=True)
+
+ # --- SEKCJA ZAUFANIA ---
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    # Używamy kolumn, żeby wyśrodkować ten szeroki kafelek
+    c_t1, c_trust, c_t2 = st.columns([0.2, 2.5, 0.2])
+    
+    with c_trust:
+        st.markdown("""
+        <div class="trust-card">
+            <div class="trust-title">Dlaczego warto nam zaufać?</div>
+            <div class="trust-text">
+                Nasze algorytmy nie opierają się na zgadywaniu. Każdy wynik to efekt 
+                <span class="trust-highlight">tysięcy metrów kwadratowych</span> zrealizowanych inwestycji 
+                oraz konsultacji z <span class="trust-highlight">najlepszymi fachowcami</span> w branży. 
+                Aktualizujemy bazy cenowe co miesiąc, abyś Ty mógł spać spokojnie, 
+                wiedząc że Twój budżet jest pod pełną kontrolą.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 elif branza == "📞 Kontakt":
     st.header("📞 Kontakt")
