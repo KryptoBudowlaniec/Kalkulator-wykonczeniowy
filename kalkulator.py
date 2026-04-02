@@ -29,6 +29,27 @@ st.markdown("""
         background-color: #FFFFFF !important; 
         color: #1E1E1E !important;
     }
+        /* WYMUSZENIE WIDOCZNOŚCI PRZYCISKU MENU (HAMBURGERA) */
+    button[kind="headerNoPadding"] {
+        background-color: #00D395 !important; /* Miętowe tło przycisku */
+        color: white !important; /* Białe kreski */
+        border-radius: 50% !important;
+        padding: 5px !important;
+        box-shadow: 0px 4px 10px rgba(0, 211, 149, 0.3);
+    }
+
+    /* Alternatywny selektor dla samej ikonki, gdyby powyższy nie zadziałał */
+    [data-testid="stSidebarCollapseIcon"] {
+        color: #00D395 !important;
+        transform: scale(1.5); /* Powiększenie ikonki */
+    }
+
+    /* Usunięcie przezroczystości, która mogłaby ukrywać przycisk */
+    .st-emotion-cache-198z7it {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
 
     /* Wyczyszczenie wszelkich gradientów i cieni kontenera */
     .main .block-container {
