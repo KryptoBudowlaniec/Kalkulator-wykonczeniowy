@@ -248,12 +248,20 @@ if branza == "Start":
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Przycisk w stylu PRO
-        if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY"):
-            # Tutaj możesz otworzyć okno modalne (pop-up) lub przenieść do innej sekcji
+        # Kontener centrujący dla przycisku i napisu pod nim
+        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+        
+        # Sam przycisk (Streamlit automatycznie go wycentruje w tym divie dzięki CSS w sekcji style)
+        if st.button("🚀 ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
             st.session_state.branza = "Rejestracja"
             st.rerun()
 
-        st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Dołącz do 500+ inwestorów korzystających z ProCalc</p>", unsafe_allow_html=True)
+        st.markdown("""
+            <p style='margin-top: 15px; font-size: 15px; color: #6c757d; font-weight: 600;'>
+                ✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 
     # 3. Kafelki możliwości
