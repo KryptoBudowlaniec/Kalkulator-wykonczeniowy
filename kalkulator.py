@@ -116,16 +116,17 @@ with st.sidebar:
     st.markdown("<h2 style='color: #00D395;'>Menu ProCalc</h2>", unsafe_allow_html=True)
     branza = st.pills(
         "Nawigacja:", 
-        ["🏠 Start", "🎨 Malowanie", "🧱 Szpachlowanie", "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", 
-         "⚡ Elektryka", "🚿 Łazienka", "📐 Podłogi", "🚪 Drzwi", "🚀 PANEL INWESTORA (PREMIUM)", "📞 Kontakt"],
+        [
+            "Start", "Malowanie", "Szpachlowanie", "Tynkowanie", 
+            "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", 
+            "Drzwi", "PANEL INWESTORA (PREMIUM)", "Kontakt"
+        ],
         selection_mode="single",
-        default="🏠 Start"
+        default="Start"
     )
-    st.markdown("---")
-    st.caption("Wersja 2.0 ProCalc")
 
 # --- LOGIKA STRON ---
-if branza == "🏠 Start":
+if branza == "Start":
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; font-size: 28px;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
     
@@ -199,29 +200,29 @@ if branza == "🏠 Start":
     # Rząd 2: G-K, Elektryka, Łazienka
     c4, c5, c6 = st.columns(3)
     with c4:
-        st.markdown("""<div class="feature-card"><div class="feature-title">⚒️ Sucha Zabudowa</div><p>Konstrukcje i sufity podwieszane.</p><ul class="feature-list"><li>Profile CD60 i UD27</li><li>Płyty GK i wkręty</li><li>Zabudowy rur i wnęk</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">Sucha Zabudowa</div><p>Konstrukcje i sufity podwieszane.</p><ul class="feature-list"><li>Profile CD60 i UD27</li><li>Płyty GK i wkręty</li><li>Zabudowy rur i wnęk</li></ul></div>""", unsafe_allow_html=True)
     with c5:
-        st.markdown("""<div class="feature-card"><div class="feature-title">⚡ Elektryka</div><p>Pełna instalacja prądowa.</p><ul class="feature-list"><li>mb przewodów (Siła/TV/LAN)</li><li>Osprzęt i rozdzielnica</li><li>Trudność (żelbet/cegła)</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">Elektryka</div><p>Pełna instalacja prądowa.</p><ul class="feature-list"><li>mb przewodów (Siła/TV/LAN)</li><li>Osprzęt i rozdzielnica</li><li>Trudność (żelbet/cegła)</li></ul></div>""", unsafe_allow_html=True)
     with c6:
-        st.markdown("""<div class="feature-card"><div class="feature-title">🚿 Łazienka</div><p>Kompleksowy remont sanitarny.</p><ul class="feature-list"><li>Płytki i hydroizolacja</li><li>Biały montaż (WC/Prysznic)</li><li>Klej i fugi</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">Łazienka</div><p>Kompleksowy remont sanitarny.</p><ul class="feature-list"><li>Płytki i hydroizolacja</li><li>Biały montaż (WC/Prysznic)</li><li>Klej i fugi</li></ul></div>""", unsafe_allow_html=True)
 
    # Rząd 3: Podłogi, Drzwi, Inwestor PRO
     c7, c8, c9 = st.columns(3)
     with c7:
-        st.markdown("""<div class="feature-card"><div class="feature-title">📐 Podłogi</div><p>Panele, winyle i drewno.</p><ul class="feature-list"><li>Metraż + naddatek 10%</li><li>Podkłady i listwy mb</li><li>Progi i dylatacje</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">Podłogi</div><p>Panele, winyle i drewno.</p><ul class="feature-list"><li>Metraż + naddatek 10%</li><li>Podkłady i listwy mb</li><li>Progi i dylatacje</li></ul></div>""", unsafe_allow_html=True)
     with c8:
-        st.markdown("""<div class="feature-card"><div class="feature-title">🚪 Drzwi</div><p>Montaż stolarki wewnętrznej.</p><ul class="feature-list"><li>Rewersyjne i bezprzylgowe</li><li>Klamki i rozety</li><li>Ościeżnice regulowane</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">Drzwi</div><p>Montaż stolarki wewnętrznej.</p><ul class="feature-list"><li>Rewersyjne i bezprzylgowe</li><li>Klamki i rozety</li><li>Ościeżnice regulowane</li></ul></div>""", unsafe_allow_html=True)
     with c9:
-        st.markdown("""<div class="feature-card" style="border: 2px solid #00D395;"><div class="feature-title">🚀 Premium PRO</div><p>Dla fliperów i deweloperów.</p><ul class="feature-list"><li>Zbiorczy raport materiałowy</li><li>Kalkulator ROI (Rentowność)</li><li>Generowanie PDF</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card" style="border: 2px solid #00D395;"><div class="feature-title">Premium PRO</div><p>Dla fliperów i deweloperów.</p><ul class="feature-list"><li>Zbiorczy raport materiałowy</li><li>Kalkulator ROI (Rentowność)</li><li>Generowanie PDF</li></ul></div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.success("👇 **Gotowy do wyceny? Wybierz sekcję z menu bocznego!**")
+    st.success("**Gotowy do wyceny? Wybierz sekcję z menu bocznego!**")
 
 elif branza == "📞 Kontakt":
     st.header("📞 Kontakt")
     st.write("📧 biuro@procalc.pl | 📞 +48 123 456 789")
 # --- SEKCJA: MALOWANIE ---
-if branza == "🎨 Malowanie":
+if branza == "Malowanie":
     st.subheader("Kalkulator Malarski")
     tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
 
@@ -426,7 +427,7 @@ if branza == "🎨 Malowanie":
             st.session_state.pokoje_pro = []
             st.rerun()
 
-elif branza == "🧱 Szpachlowanie":
+elif branza == "Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
 
     # 1. TWOJA BAZA WIEDZY
@@ -589,8 +590,8 @@ elif branza == "📐 Podłogi":
             st.warning(f"⏳ Czas realizacji: ok. **{round(m2_p/tempo + 1)} dni**")
 
 # --- SEKCJA: TYNKOWANIE ---
-elif branza == "🏗️ Tynkowanie":
-    st.header("🏗️ Kalkulator Tynków i Suchego Tynku")
+elif branza == "Tynkowanie":
+    st.header("Kalkulator Tynków i Suchego Tynku")
     
     # 1. BAZA WIEDZY: MASY DO SPOINOWANIA
     baza_masy = {
@@ -870,8 +871,8 @@ elif branza == "⚒️ Sucha Zabudowa":
                 if izolacja_gk: st.write(f"• Wełna ({grubosc_welny}mm): {round(m2_gk, 1)} m²")
             
 # --- SEKCJA: ELEKTRYKA ---
-elif branza == "⚡ Elektryka":
-    st.header("⚡ Instalacja Elektryczna (Mieszkanie)")
+elif branza == "Elektryka":
+    st.header("Instalacja Elektryczna (Mieszkanie)")
     
     # Przeniesienie definicji kolumn do środka elif
     col_e1, col_e2 = st.columns([1, 1.2])
@@ -1012,10 +1013,10 @@ elif branza == "🚪 Drzwi":
             st.info("Cena zakupu drzwi jest orientacyjna (średnia rynkowa z klamką i rozetą).")
 
 
-elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
-    st.title("🚀 Panel Inwestora - Kompleksowy Kosztorys Flipu")
+elif branza == "PANEL INWESTORA (PREMIUM)":
+    st.title("Panel Inwestora - Kompleksowy Kosztorys Flipu")
     
-    with st.expander("📝 CHECKLISTA PRZEDZAKUPOWA (Inspekcja lokalu)", expanded=False):
+    with st.expander("CHECKLISTA PRZEDZAKUPOWA (Inspekcja lokalu)", expanded=False):
         st.write("Sprawdź te punkty przed finalną decyzją o zakupie:")
         c_ch1, c_ch2 = st.columns(2)
         with c_ch1:
@@ -1031,7 +1032,7 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
     col_inv1, col_inv2 = st.columns([1, 1.5])
     
     with col_inv1:
-        st.subheader("🏠 Parametry Nieruchomości")
+        st.subheader("Parametry Nieruchomości")
         m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
         standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
         stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
@@ -1113,14 +1114,14 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
             with c_z1:
                 if do_szpachlowanie:
                     pow_scian = m2_total * 3.5
-                    st.write(f"🧱 **GŁADZIE ({marka_farby} standard):**")
+                    st.write(f"**GŁADZIE ({marka_farby} standard):**")
                     st.write(f"- Masa: {int(pow_scian * 1.5 / 20) + 1} wiader")
                     st.write(f"- Zbrojenie: {technologia_spoin}")
                     if standard != "Ekonomiczny":
                         st.write(f"- Taśma Tuff-Tape (rolki): {int(m2_total/15)+1} szt.")
 
                 if do_gk:
-                    st.write(f"⚒️ **SUCHA ZABUDOWA ({technologia_gk}):**")
+                    st.write(f"**SUCHA ZABUDOWA ({technologia_gk}):**")
                     # Rozszerzona lista G-K
                     st.write(f"- Płyty GK: {int(m2_total * 0.5)+2} szt.")
                     st.write(f"- Profil CD60 (3mb): {int(m2_total * 0.8)+4} szt.")
@@ -1130,23 +1131,23 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
 
             with c_z2:
                 if do_malowanie:
-                    st.write(f"🎨 **MALOWANIE (Marka: {marka_farby}):**")
+                    st.write(f"**MALOWANIE (Marka: {marka_farby}):**")
                     st.write(f"- Farba biała: {int(m2_total / 8)+1} L")
                     st.write(f"- Farba kolor: {int((m2_total * 2.5) / 10)+1} L")
                     st.write("- Akcesoria: folie, taśmy malarskie BLUE, wałki")
 
                 if do_elektryka:
-                    st.write("⚡ **ELEKTRYKA:**")
+                    st.write("**ELEKTRYKA:**")
                     st.write(f"- Rozdzielnica: {'Plastikowa' if standard == 'Ekonomiczny' else 'Eaton/Hager'}")
                     st.write(f"- Osprzęt: {int(m2_total * 0.75)} szt. ({standard})")
 
                 if do_lazienka:
-                    st.write("🚿 **ŁAZIENKA:**")
+                    st.write("**ŁAZIENKA:**")
                     st.write("- Stelaż WC podtynkowy: 1 kpl.")
                     st.write(f"- Płytki: {round(25 * mnoznik_mat / mnoznik_mat)} m²") # korekta m2
                     
         st.markdown("---")
-        st.subheader("💼 Kalkulator ROI")
+        st.subheader("Kalkulator ROI")
         c_a, c_b = st.columns(2)
         cena_zakupu = c_a.number_input("Cena zakupu mieszkania:", value=350000, step=5000)
         prowizje_notariusz = c_b.number_input("Koszty transakcyjne (PCC/Notariusz):", value=18000)
