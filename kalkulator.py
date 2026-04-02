@@ -104,6 +104,28 @@ st.markdown("""
         text-align: left; 
         display: inline-block; 
     }
+    /* Styl dla sekcji korzyści na stronie Start */
+    .benefit-box {
+        border-left: 3px solid #00D395;
+        padding-left: 20px;
+        margin-bottom: 30px;
+        transition: 0.3s;
+    }
+    .benefit-box:hover {
+        background: linear-gradient(90deg, rgba(0,211,149,0.1) 0%, rgba(14,17,23,0) 100%);
+    }
+    .benefit-title {
+        color: #00D395;
+        font-size: 24px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .benefit-text {
+        font-size: 18px;
+        color: #FFFFFF;
+        margin-top: 5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -132,18 +154,33 @@ if branza == "Start":
     
     col_s1, col_s2 = st.columns([1.2, 1])
     with col_s1:
+        st.markdown("<h2 style='color: #00D395; margin-bottom: 30px;'>Dlaczego ProCalc?</h2>", unsafe_allow_html=True)
+        
+        # Punkt 1: Inwestorzy
         st.markdown("""
-        <div style='font-size: 22px; line-height: 1.6;'>
-            <h3 style='color: #00D395;'>🚀 Dlaczego ProCalc?</h3>
-            Zapomnij o liczeniu na kartce. <b>ProCalc</b> to:
-            <ul>
-                <li><b>Inwestorzy:</b> Szybka analiza ROI</li>
-                <li><b>Ekipy:</b> Precyzyjne listy zakupów</li>
-                <li><b>Klienci:</b> Kontrola budżetu</li>
-            </ul>
+        <div class="benefit-box">
+            <div class="benefit-title">Inwestorzy</div>
+            <div class="benefit-text">Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję.</div>
         </div>
         """, unsafe_allow_html=True)
-        st.info("💡 WYBIERZ BRANŻĘ Z MENU BOCZNEGO, ABY ZACZĄĆ.")
+
+        # Punkt 2: Ekipy
+        st.markdown("""
+        <div class="benefit-box">
+            <div class="benefit-title">Ekipy</div>
+            <div class="benefit-text">Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami i zbędnymi kursami do marketu.</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Punkt 3: Klienci
+        st.markdown("""
+        <div class="benefit-box">
+            <div class="benefit-title">Klienci</div>
+            <div class="benefit-text">Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał, a ile za robociznę.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.info("💡 WYBIERZ SEKCJĘ Z MENU BOCZNEGO, ABY ROZPOCZĄĆ.")
 
     with col_s2:
         try:
