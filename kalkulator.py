@@ -165,6 +165,27 @@ st.markdown("""
         font-size: 17px;
         color: #424245;
     }
+        /* Stylizacja przycisków typu Primary/CTA */
+    div.stButton > button {
+        background-color: #00D395 !important;
+        color: white !important;
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        padding: 15px 30px !important;
+        border-radius: 12px !important;
+        border: none !important;
+        transition: 0.3s !important;
+        width: 100% !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+    }
+
+    div.stButton > button:hover {
+        background-color: #00b37e !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.4) !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -224,7 +245,16 @@ if branza == "Start":
         </div>
         """, unsafe_allow_html=True)
         
-        st.info("💡 **WYBIERZ SEKCJĘ Z MENU BOCZNEGO, ABY ROZPOCZĄĆ.**")
+                st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Przycisk w stylu PRO
+        if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY"):
+            # Tutaj możesz otworzyć okno modalne (pop-up) lub przenieść do innej sekcji
+            st.session_state.branza = "Rejestracja"
+            st.rerun()
+
+        st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Dołącz do 500+ inwestorów korzystających z ProCalc</p>", unsafe_allow_html=True)
+
 
     # 3. Kafelki możliwości
     st.markdown("<br><br><h2 style='text-align: center;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
