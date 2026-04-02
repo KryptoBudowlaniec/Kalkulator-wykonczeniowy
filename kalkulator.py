@@ -259,10 +259,26 @@ st.markdown("""
     }
     /* Styl dla wyśrodkowanego kontenera FAQ */
     .faq-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
+        max-width: 600px; /* Zwężenie do 600px */
+        margin: 0 auto !important; /* Magiczne wyśrodkowanie */
+        padding: 10px;
     }
+
+    /* Styl dla samych kafelków pytań (Expanderów) */
+    .stExpander {
+        border: 1px solid #E5E5E7 !important;
+        border-radius: 15px !important;
+        background-color: #FFFFFF !important;
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.04) !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Powiększenie tekstu pytania w expanderze */
+    .stExpander p {
+        font-size: 18px !important;
+        font-weight: 600 !important;
+    }
+
 
     /* Odstępy między expanderami */
     .stExpander {
