@@ -188,7 +188,7 @@ if branza == "Start":
         except:
             st.warning("Dodaj logo2.png do folderu.")
 
-    st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
+    st.markdown("<br><h3>Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
     
     # Rząd 1: Malowanie, Szpachlowanie, Tynkowanie
    
