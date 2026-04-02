@@ -29,11 +29,6 @@ st.markdown("""
         background-color: #FFFFFF !important; 
         color: #1E1E1E !important;
     }
-
-        margin: 0 auto;
-        display: block;
-        max-width: 500px; /* Ogranicza szerokość, żeby guzik nie był "jamnikiem" na cały ekran */
-    }
     
     /* 1. UKRYCIE TEKSTU 'double_arrow_right' */
     button[data-testid="stSidebarCollapseIcon"] span {
@@ -172,26 +167,28 @@ st.markdown("""
         color: #424245;
     }
         /* Stylizacja przycisków typu Primary/CTA */
-    div.stButton > button {
+        div.stButton > button {
+        display: block !important;
+        margin: 0 auto !important; /* To centruje przycisk w kolumnie */
+        max-width: 550px !important; /* Zapobiega rozciągnięciu na całą szerokość */
         background-color: #00D395 !important;
         color: white !important;
         font-weight: 800 !important;
-        font-size: 18px !important;
-        padding: 15px 30px !important;
-        border-radius: 12px !important;
+        font-size: 20px !important;
+        height: 65px !important;
+        border-radius: 15px !important;
         border: none !important;
-        transition: 0.3s !important;
-        width: 100% !important;
+        box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.3) !important;
         text-transform: uppercase !important;
-        letter-spacing: 1px !important;
+        transition: 0.3s !important;
     }
 
     div.stButton > button:hover {
-        background-color: #00b37e !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.4) !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0px 12px 25px rgba(0, 211, 149, 0.4) !important;
+        background-color: #00bf86 !important;
     }
-
+    
 </style>
 """, unsafe_allow_html=True)
 
