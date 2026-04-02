@@ -153,43 +153,46 @@ with st.sidebar:
     st.caption("Wersja 2.0 ProCalc")
 
 # --- LOGIKA STRON ---
-if branza == "🏠 Start":
-    # Nagłówek główny
-    st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; font-size: 28px; margin-bottom: 50px;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
+if branza == "Start":
+    # 1. Nagłówki główne (wyśrodkowane)
+    st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; font-size: 28px; margin-bottom: 50px; color: #424245;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
     
-    # Sekcja "Dlaczego ProCalc" na środku (bez logo po prawej)
-    # Tworzymy 3 kolumny, żeby środek był idealnie wycentrowany i nie za szeroki
-    col_c1, col_center, col_c2 = st.columns([1, 2.5, 1])
+    # 2. Kontener centralny (Dlaczego ProCalc) - bez zdjęć po bokach
+    col_c1, col_center, col_c2 = st.columns([1, 3, 1])
     
     with col_center:
         st.markdown("<h2 style='text-align: center; color: #000000; margin-bottom: 40px;'>Dlaczego ProCalc?</h2>", unsafe_allow_html=True)
         
         # Punkt 1: Inwestorzy
         st.markdown("""
-        <div class="benefit-box" style="text-align: center; border-left: none; border-bottom: 3px solid #00D395; padding-bottom: 20px; margin-bottom: 50px;">
-            <div class="benefit-title">Inwestorzy</div>
-            <div class="benefit-text">Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję.</div>
+        <div style="text-align: center; border-bottom: 2px solid #00D395; padding-bottom: 30px; margin-bottom: 60px;">
+            <div style="color: #00D395; font-size: 26px; font-weight: 800; text-transform: uppercase;">Inwestorzy</div>
+            <div style="font-size: 19px; color: #424245; margin-top: 10px;">Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję.</div>
         </div>
         """, unsafe_allow_html=True)
 
         # Punkt 2: Ekipy
         st.markdown("""
-        <div class="benefit-box" style="text-align: center; border-left: none; border-bottom: 3px solid #00D395; padding-bottom: 20px; margin-bottom: 50px;">
-            <div class="benefit-title">Ekipy</div>
-            <div class="benefit-text">Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami i zbędnymi kursami do marketu.</div>
+        <div style="text-align: center; border-bottom: 2px solid #00D395; padding-bottom: 30px; margin-bottom: 60px;">
+            <div style="color: #00D395; font-size: 26px; font-weight: 800; text-transform: uppercase;">Ekipy</div>
+            <div style="font-size: 19px; color: #424245; margin-top: 10px;">Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami i zbędnymi kursami do marketu.</div>
         </div>
         """, unsafe_allow_html=True)
 
         # Punkt 3: Klienci
         st.markdown("""
-        <div class="benefit-box" style="text-align: center; border-left: none; border-bottom: 3px solid #00D395; padding-bottom: 20px; margin-bottom: 50px;">
-            <div class="benefit-title">Klienci</div>
-            <div class="benefit-text">Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał, a ile za robociznę.</div>
+        <div style="text-align: center; border-bottom: 2px solid #00D395; padding-bottom: 30px; margin-bottom: 60px;">
+            <div style="color: #00D395; font-size: 26px; font-weight: 800; text-transform: uppercase;">Klienci</div>
+            <div style="font-size: 19px; color: #424245; margin-top: 10px;">Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał, a ile za robociznę.</div>
         </div>
         """, unsafe_allow_html=True)
         
         st.info("💡 **WYBIERZ SEKCJĘ Z MENU BOCZNEGO, ABY ROZPOCZĄĆ.**")
+
+    # 3. Kafelki możliwości (opcjonalnie, jeśli chcesz je zostawić pod spodem)
+    st.markdown("<br><br><h3 style='text-align: center;'>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
+    # Tutaj możesz wkleić swój kod z c1, c2, c3 (9 kafelków), jeśli mają zostać na dole.
 
     with col_s2:
         try:
