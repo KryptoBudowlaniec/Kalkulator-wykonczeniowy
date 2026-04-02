@@ -255,7 +255,20 @@ st.markdown("""
         box-shadow: 0px 12px 25px rgba(0, 211, 149, 0.4) !important;
         background-color: #00bf86 !important;
     }
-    
+    /* Styl dla wyśrodkowanego kontenera FAQ */
+    .faq-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Odstępy między expanderami */
+    .stExpander {
+        margin-bottom: 15px !important;
+        border: 1px solid #F0F0F0 !important;
+        border-radius: 12px !important;
+        background-color: #FBFBFB !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -416,33 +429,25 @@ if branza == "Start":
  # --- SEKCJA FAQ ---
         # --- SEKCJA FAQ (NAPRAWIONA) ---
     st.markdown("<br><br><br>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>Często Zadawane Pytania (FAQ)</h2>", unsafe_allow_html=True)
     
-    # Kontener, który wymusza nową linię i separację
-    with st.container():
-        st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>Często Zadawane Pytania (FAQ)</h2>", unsafe_allow_html=True)
+    # Otwieramy centrujący div w HTML
+    st.markdown('<div class="faq-container">', unsafe_allow_html=True)
+    
+    with st.expander("⭐ Czy wyceny materiałów są aktualne?", expanded=False):
+        st.write("Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen rynkowych.")
         
-        # Używamy nieco szerszej kolumny centralnej dla czytelności na mobile
-        f_space1, f_content, f_space2 = st.columns([0.5, 3, 0.5])
+    with st.expander("⭐ Czy mogę zapisać swój kosztorys?", expanded=False):
+        st.write("Funkcja zapisywania projektów jest dostępna dla zalogowanych użytkowników w wersji Premium PRO.")
+
+    with st.expander("⭐ Jak dokładne są listy zakupowe?", expanded=False):
+        st.write("Algorytmy uwzględniają normy zużycia oraz standardowy naddatek 10% na odpady.")
         
-        with f_content:
-            # Każdy expander w osobnym kontenerze dla bezpieczeństwa wizualnego
-            with st.expander("⭐ Czy wyceny materiałów są aktualne?", expanded=False):
-                st.write("Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen rynkowych.")
-                
-            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-            
-            with st.expander("⭐ Czy mogę zapisać swój kosztorys?", expanded=False):
-                st.write("Funkcja zapisywania projektów jest dostępna dla zalogowanych użytkowników w wersji Premium PRO.")
-                
-            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+    with st.expander("⭐ Czy ProCalc uwzględnia koszty robocizny?", expanded=False):
+        st.write("Tak, w każdej sekcji możesz wpisać własną stawkę za jednostkę lub skorzystać z sugerowanych.")
 
-            with st.expander("⭐ Jak dokładne są listy zakupowe?", expanded=False):
-                st.write("Algorytmy uwzględniają normy zużycia oraz standardowy naddatek 10% na odpady.")
-                
-            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-
-            with st.expander("⭐ Czy ProCalc uwzględnia koszty robocizny?", expanded=False):
-                st.write("Tak, w każdej sekcji możesz wpisać własną stawkę za jednostkę lub skorzystać z sugerowanych.")
+    # Zamykamy div
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
 
