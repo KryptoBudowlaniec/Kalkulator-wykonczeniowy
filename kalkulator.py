@@ -25,6 +25,13 @@ st.markdown("""
         padding-top: 2rem;
         background-color: #1A1C23;
     }
+        .feature-icon {
+        font-size: 45px; /* Duży rozmiar */
+        margin-bottom: 15px;
+        color: #00D395;
+        filter: drop-shadow(0 0 10px rgba(0, 211, 149, 0.4));
+    }
+
 
     /* Powiększenie pigułek (pionowe i poziome) */
     div[data-testid="stPills"] button, [data-testid="stSidebar"] [data-testid="stPills"] button {
@@ -148,13 +155,46 @@ if branza == "🏠 Start":
     st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
     
     # Rząd 1: Malowanie, Szpachlowanie, Tynkowanie
+        # Rząd 1: Malowanie, Szpachlowanie, Tynkowanie
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.markdown("""<div class="feature-card"><div class="feature-title">🎨 Malowanie</div><p>Finalne wykończenie kolorystyczne.</p><ul class="feature-list"><li>Obliczanie m2 ścian/sufitów</li><li>Wydajność farb i gruntów</li><li>Zestawienie narzędzi</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">🖌️</div>
+            <div class="feature-title">Malowanie</div>
+            <p>Finalne wykończenie powierzchni.</p>
+            <ul class="feature-list">
+                <li>Wydajność farb i gruntów</li>
+                <li>Obliczanie m2 ścian</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
     with c2:
-        st.markdown("""<div class="feature-card"><div class="feature-title">🧱 Szpachlowanie</div><p>Przygotowanie idealnej gładzi.</p><ul class="feature-list"><li>Masy gotowe i sypkie</li><li>Zbrojenie narożników</li><li>Gruntowanie podkładowe</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-icon">📐</div>
+            <div class="feature-title">Szpachlowanie</div>
+            <p>Przygotowanie gładzi.</p>
+            <ul class="feature-list">
+                <li>Masy gotowe i sypkie</li>
+                <li>Zbrojenie narożników</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
     with c3:
-        st.markdown("""<div class="feature-card"><div class="feature-title">🏗️ Tynkowanie</div><p>Prace tynkarskie od podstaw.</p><ul class="feature-list"><li>Tynki gipsowe i cementowe</li><li>Listwy tynkarskie</li><li>Obliczanie m3 materiału</li></ul></div>""", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">🛠️</div>
+            <div class="feature-title">Tynkowanie</div>
+            <p>Prace tynkarskie.</p>
+            <ul class="feature-list">
+                <li>Tynki maszynowe</li>
+                <li>Listwy i narożniki</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
     # Rząd 2: G-K, Elektryka, Łazienka
     c4, c5, c6 = st.columns(3)
