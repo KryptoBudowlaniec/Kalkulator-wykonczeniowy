@@ -153,17 +153,21 @@ with st.sidebar:
     st.caption("Wersja 2.0 ProCalc")
 
 # --- LOGIKA STRON ---
-if branza == "Start":
+if branza == "🏠 Start":
+    # Nagłówek główny
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; font-size: 28px;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; font-size: 28px; margin-bottom: 50px;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
     
-    col_s1, col_s2 = st.columns([1.2, 1])
-    with col_s1:
-        st.markdown("<h2 style='color: #00D395; margin-bottom: 30px;'>Dlaczego ProCalc?</h2>", unsafe_allow_html=True)
+    # Sekcja "Dlaczego ProCalc" na środku (bez logo po prawej)
+    # Tworzymy 3 kolumny, żeby środek był idealnie wycentrowany i nie za szeroki
+    col_c1, col_center, col_c2 = st.columns([1, 2.5, 1])
+    
+    with col_center:
+        st.markdown("<h2 style='text-align: center; color: #000000; margin-bottom: 40px;'>Dlaczego ProCalc?</h2>", unsafe_allow_html=True)
         
         # Punkt 1: Inwestorzy
         st.markdown("""
-        <div class="benefit-box">
+        <div class="benefit-box" style="text-align: center; border-left: none; border-bottom: 3px solid #00D395; padding-bottom: 20px; margin-bottom: 50px;">
             <div class="benefit-title">Inwestorzy</div>
             <div class="benefit-text">Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję.</div>
         </div>
@@ -171,7 +175,7 @@ if branza == "Start":
 
         # Punkt 2: Ekipy
         st.markdown("""
-        <div class="benefit-box">
+        <div class="benefit-box" style="text-align: center; border-left: none; border-bottom: 3px solid #00D395; padding-bottom: 20px; margin-bottom: 50px;">
             <div class="benefit-title">Ekipy</div>
             <div class="benefit-text">Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami i zbędnymi kursami do marketu.</div>
         </div>
@@ -179,13 +183,13 @@ if branza == "Start":
 
         # Punkt 3: Klienci
         st.markdown("""
-        <div class="benefit-box">
+        <div class="benefit-box" style="text-align: center; border-left: none; border-bottom: 3px solid #00D395; padding-bottom: 20px; margin-bottom: 50px;">
             <div class="benefit-title">Klienci</div>
             <div class="benefit-text">Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał, a ile za robociznę.</div>
         </div>
         """, unsafe_allow_html=True)
         
-        st.info("💡 WYBIERZ SEKCJĘ Z MENU BOCZNEGO, ABY ROZPOCZĄĆ.")
+        st.info("💡 **WYBIERZ SEKCJĘ Z MENU BOCZNEGO, ABY ROZPOCZĄĆ.**")
 
     with col_s2:
         try:
