@@ -393,6 +393,45 @@ if branza == "Start":
             </div>
             """, unsafe_allow_html=True)
 
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Przycisk Demo wyśrodkowany
+        if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True):
+            st.session_state.branza = "Malowanie"
+            st.rerun()
+            
+        st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
+
+ # --- SEKCJA FAQ ---
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>Często Zadawane Pytania (FAQ)</h2>", unsafe_allow_html=True)
+    
+    col_f1, col_faq, col_f2 = st.columns([1, 2.5, 1])
+    
+    with col_faq:
+        with st.expander("Czy wyceny materiałów są aktualne?", expanded=False):
+            st.write("""
+            Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen w największych marketach budowlanych (Castorama, Leroy Merlin, Obi) oraz hurtowniach ogólnopolskich.
+            """)
+            
+        with st.expander("Czy mogę zapisać swój kosztorys?", expanded=False):
+            st.write("""
+            Funkcja zapisywania i edycji projektów jest dostępna dla zalogowanych użytkowników w wersji **Premium PRO**. Użytkownicy darmowi mogą wygenerować jednorazowy raport.
+            """)
+            
+        with st.expander("Jak dokładne są listy zakupowe?", expanded=False):
+            st.write("""
+            Nasze algorytmy uwzględniają standardowe normy zużycia (np. wydajność farby, zużycie kleju na m2) oraz dodają bezpieczny naddatek (zazwyczaj 10%) na odpady i docięcia.
+            """)
+            
+        with st.expander("Czy ProCalc uwzględnia koszty robocizny?", expanded=False):
+            st.write("""
+            Tak, w każdej sekcji możesz wpisać własną stawkę za jednostkę (m2/szt/pkt) lub skorzystać z naszych stawek sugerowanych, które odpowiadają średnim rynkowym.
+            """)
+
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
+
 
 elif branza == "📞 Kontakt":
     st.header("📞 Kontakt")
