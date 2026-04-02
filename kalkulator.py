@@ -25,26 +25,22 @@ st.markdown("""
         font-family: 'Inter', sans-serif !important;
     }
 
-    /* 1. Globalne tło z gradientem bocznym */
-        .stApp { 
-            background: linear-gradient(90deg, 
-                rgba(14,17,23,0.05) 0%,   /* Delikatny granat z lewej */
-                rgba(255,255,255,1) 15%,  /* Przejście w czystą biel */
-                rgba(255,255,255,1) 85%,  /* Trzymanie bieli dla treści */
-                rgba(0,211,149,0.08) 100% /* Delikatna mięta z prawej */
-        );
+    /* 1. Globalne tło z płynnym gradientem przez całą stronę */
+    .stApp { 
+        background: linear-gradient(110deg, 
+            rgba(14,23,43,0.08) 0%,    /* Bardzo jasny granat/niebieski z lewej */
+            rgba(255,255,255,1) 35%,   /* Przejście w biel przed środkiem */
+            rgba(255,255,255,1) 65%,   /* Trzymanie bieli przez środek danych */
+            rgba(0,211,149,0.1) 100%   /* Miętowa zieleń z prawej */
+        ) !important;
         color: #1E1E1E;
     }
 
-    /* Dodatkowe wygładzenie kontenera głównego */
+    /* Wyczyszczenie tła głównego kontenera, aby gradient "prześwitywał" pod spodem */
     .main .block-container {
-        background-color: white;      /* Środek musi być idealnie biały */
-        padding: 3rem;
-        border-radius: 20px;          /* Delikatne zaokrąglenie rogów strony */
-        box-shadow: 0px 0px 40px rgba(0,0,0,0.03); /* Lekki cień, by "odbić" od gradientu */
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-    }
+        background-color: transparent !important;
+        padding-top: 2rem;
+        max-width: 1200px; /* Trzyma treść w profesjonalnych ryzach */
 
     /* 2. Nagłówki */
     h1, h2, h3 {
@@ -54,11 +50,11 @@ st.markdown("""
         color: #1E1E1E !important;
     }
 
-    /* 3. Sidebar (Jasny szary) */
+    /* Sidebar - musi być lekko przezroczysty, żeby pasował do lewej strony gradientu */
     section[data-testid="stSidebar"] > div {
-        padding-top: 2rem;
-        background-color: #F8F9FA !important;
-        border-right: 1px solid #E9ECEF;
+        background-color: rgba(255, 255, 255, 0.4) !important;
+        backdrop-filter: blur(10px); /* Efekt mrożonego szkła */
+        border-right: 1px solid rgba(0,0,0,0.05);
     }
 
     /* 4. Menu Pigułki (Nawigacja) */
