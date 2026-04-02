@@ -250,7 +250,7 @@ with st.sidebar:
 if branza == "Start":
     # 1. Nagłówki główne (wyśrodkowane)
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; font-size: 28px; margin-bottom: 50px; color: #424245;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; font-size: 28px; margin-bottom: 50px; color: #00D395;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
     
     # 2. Kontener centralny (Dlaczego ProCalc) - wyśrodkowany
     col_c1, col_center, col_c2 = st.columns([1, 3, 1])
