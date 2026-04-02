@@ -49,6 +49,30 @@ st.markdown("""
         padding: 10px 25px !important;
         font-size: 20px !important;
     }
+    /* WYGLĄD PIGUŁEK W HEADERZE (JASNY STYL) */
+    div[data-testid="stPills"] button {
+        background-color: #F1F3F5 !important; /* Jasnoszare tło dla widoczności */
+        border: 1px solid #DEE2E6 !important;
+        color: #495057 !important; /* Ciemnoszary tekst */
+        padding: 8px 16px !important;
+        min-height: 45px !important;
+    }
+
+    /* Aktywna pigułka */
+    div[data-testid="stPills"] button[aria-checked="true"] {
+        background-color: #00D395 !important;
+        color: white !important;
+        border: none !important;
+    }
+
+    /* Tekst wewnątrz aktywnej pigułki */
+    div[data-testid="stPills"] button[aria-checked="true"] p {
+        color: white !important;
+    }
+    
+    /* Tekst wewnątrz nieaktywnej pigułki */
+    div[data-testid="stPills"] button[aria-checked="false"] p {
+        color: #495057 !important;
     }
 
     /* 3. NAGŁÓWKI */
@@ -193,6 +217,43 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# --- HEADER: LOGO LEWA | MENU PRAWA ---
+col_logo, col_nav = st.columns([1, 3])
+
+with col_logo:
+    try:
+        # Logo z lewej strony, dopasowane do wysokości menu
+        st.image("logo2.png", width=180)
+    except:
+        st.error("Brak logo2.png")
+
+with col_nav:
+    # Menu główne obok logo
+    nawigacja = st.pills(
+        "", # Bez tytułu, żeby nie zajmowało miejsca
+        ["Start", "Kalkulatory", "Inwestor Premium", "Kontakt"],
+        selection_mode="single",
+        default="Start",
+        key="main_nav"
+    )
+
+# --- PODMENU (Pojawia się pod headerem tylko gdy wybrano Kalkulatory) ---
+if nawigacja == "Kalkulatory":
+    st.markdown("<br>", unsafe_allow_html=True)
+    sub_nav_col = st.columns([1])[0]
+    with sub_nav_col:
+        branza = st.pills(
+            "Wybierz branżę:", 
+            ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", "Drzwi"],
+            selection_mode="single",
+            default="Malowanie",
+            key="sub_nav"
+        )
+else:
+    branza = nawigacja
+
+st.markdown("---") # Linia oddzielająca header od reszty strony
 
 # --- NOWOCZESNE MENU GŁÓWNE (POZIOME NA ŚRODKU) ---
 st.markdown("<br>", unsafe_allow_html=True)
