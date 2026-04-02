@@ -37,49 +37,18 @@ st.markdown("""
         padding-top: 4rem;
     }
 
-    /* 2. NAPRAWA PRZYCISKU MENU (HAMBURGERA) */
-    button[data-testid="stSidebarCollapseIcon"] * {
-        display: none !important;
-        visibility: hidden !important;
+/* Wyśrodkowanie pigułek w menu poziomym */
+    div[data-testid="stPills"] {
+        display: flex;
+        justify-content: center;
+        width: 100%;
     }
-
-    button[data-testid="stSidebarCollapseIcon"] {
-        display: flex !important;
-        visibility: visible !important;
-        background-color: #00D395 !important;
-        border-radius: 50% !important;
-        width: 50px !important;
-        height: 50px !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-shadow: 0px 4px 15px rgba(0, 211, 149, 0.4) !important;
-        position: fixed !important;
-        top: 20px !important;
-        left: 20px !important;
-        z-index: 999999 !important;
-        border: none !important;
+    
+    /* Powiększenie pigułek menu głównego */
+    div[data-testid="stPills"] button {
+        padding: 10px 25px !important;
+        font-size: 20px !important;
     }
-
-    button[data-testid="stSidebarCollapseIcon"]::after {
-        content: "☰" !important;
-        visibility: visible !important;
-        display: block !important;
-        color: white !important;
-        font-size: 26px !important;
-    }
-
-    /* Obsługa otwartego paska bocznego */
-    [data-testid="stSidebar"] button[data-testid="stSidebarCollapseIcon"] {
-        left: auto !important;
-        right: 15px !important;
-        top: 15px !important;
-        background-color: transparent !important;
-        box-shadow: none !important;
-    }
-
-    [data-testid="stSidebar"] button[data-testid="stSidebarCollapseIcon"]::after {
-        content: "✕" !important;
-        color: #424245 !important;
     }
 
     /* 3. NAGŁÓWKI */
@@ -90,10 +59,7 @@ st.markdown("""
         letter-spacing: -0.5px !important;
     }
 
-    /* 4. SIDEBAR I NAWIGACJA (PILLS) */
-    section[data-testid="stSidebar"] > div {
-        background-color: #FBFBFB !important;
-        border-right: 1px solid #F0F0F0;
+
     }
 
     div[data-testid="stPills"] button {
@@ -228,24 +194,38 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- NOWOCZESNE MENU GŁÓWNE (POZIOME NA ŚRODKU) ---
+st.markdown("<br>", unsafe_allow_html=True)
+col_m1, col_menu, col_m2 = st.columns([0.5, 5, 0.5])
+
+with col_menu:
+    # Główne nawigacyjne pigułki
+    nawigacja = st.pills(
+        "Menu:", 
+        ["Start", "Kalkulatory Branżowe", "Inwestor Premium", "Kontakt"],
+        selection_mode="single",
+        default="Start"
+    )
+
+# --- LOGIKA PODMENU DLA BRANŻ ---
+if nawigacja == "Kalkulatory Branżowe":
+    st.markdown("<div style='text-align: center; margin-top: -10px;'>", unsafe_allow_html=True)
+    branza = st.pills(
+        "Wybierz branżę:", 
+        ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", "Drzwi"],
+        selection_mode="single",
+        default="Malowanie"
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+else:
+    # Jeśli nie jesteśmy w kalkulatorach, 'branza' przyjmuje wartość główną (Start / Kontakt / Inwestor)
+    branza = nawigacja
+
 # --- STAN APLIKACJI ---
 if 'pokoje_pro' not in st.session_state: st.session_state.pokoje_pro = []
 if 'pokoje' not in st.session_state: st.session_state.pokoje = []
 
 # --- MENU BOCZNE ---
-with st.sidebar:
-    st.markdown("<h2 style='color: #00D395;'>Menu ProCalc</h2>", unsafe_allow_html=True)
-    
-    
-    branza = st.pills(
-        "Nawigacja:", 
-        ["Start", "Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", "Drzwi", "PANEL INWESTORA (PREMIUM)", "Kontakt"],
-        selection_mode="single",
-        default="Start"
-    )
-    
-    st.markdown("---")
-    st.caption("Wersja 2.0 ProCalc")
 
 if branza == "Start":
     # 1. Nagłówki główne (wyśrodkowane)
