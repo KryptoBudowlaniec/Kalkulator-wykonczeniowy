@@ -146,6 +146,17 @@ with st.sidebar:
         selection_mode="single",
         default="Start"
     )
+    st.markdown("""
+    <div class="feature-card" style="height: auto; margin-bottom: 15px;">
+        <div class="feature-title" style="font-size: 18px;">Malowanie</div>
+        <p style="font-size: 14px !important;">Wydajność farb i m2 ścian.</p>
+    </div>
+    
+    <div class="feature-card" style="height: auto; margin-bottom: 15px;">
+        <div class="feature-title" style="font-size: 18px;">Elektryka</div>
+        <p style="font-size: 14px !important;">Instalacje i osprzęt.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # --- LOGIKA STRON ---
 if branza == "Start":
