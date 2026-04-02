@@ -161,7 +161,6 @@ if branza == "Start":
     with c1:
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-icon">🖌️</div>
             <div class="feature-title">Malowanie</div>
             <p>Finalne wykończenie powierzchni.</p>
             <ul class="feature-list">
@@ -174,7 +173,6 @@ if branza == "Start":
     with c2:
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-icon">📐</div>
             <div class="feature-title">Szpachlowanie</div>
             <p>Przygotowanie gładzi.</p>
             <ul class="feature-list">
@@ -187,7 +185,6 @@ if branza == "Start":
     with c3:
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-title">🛠️</div>
             <div class="feature-title">Tynkowanie</div>
             <p>Prace tynkarskie.</p>
             <ul class="feature-list">
