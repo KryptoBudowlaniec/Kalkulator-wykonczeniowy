@@ -898,16 +898,16 @@ elif branza == "🚀 PANEL INWESTORA (PREMIUM)":
     st.title("🚀 Panel Inwestora - Kompleksowy Kosztorys Flipu")
     
     with st.expander("📝 CHECKLISTA PRZEDZAKUPOWA (Inspekcja lokalu)", expanded=False):
-            st.write("Sprawdź te punkty przed finalną decyzją o zakupie:")
-            c_ch1, c_ch2 = st.columns(2)
-            with c_ch1:
-                st.checkbox("Piony wod-kan (stan żeliwa/plastiku)", key="ch_piony")
-                st.checkbox("Okna (szczelność/wiek/pakiet szyb)", key="ch_okna")
-                st.checkbox("Stan instalacji elektrycznej (miedź vs aluminium)", key="ch_elek")
-            with c_ch2:
-                st.checkbox("Możliwość wydzielenia dodatkowego pokoju", key="ch_pokoje")
-                st.checkbox("KW bez wpisów w dziale III i IV", key="ch_kw")
-                st.checkbox("Przynależność piwnicy / komórki lokatorskiej", key="ch_piwnica")
+        st.write("Sprawdź te punkty przed finalną decyzją o zakupie:")
+        c_ch1, c_ch2 = st.columns(2)
+        with c_ch1:
+            st.checkbox("Piony wod-kan (stan żeliwa/plastiku)", key="ch_piony")
+            st.checkbox("Okna (szczelność/wiek/pakiet szyb)", key="ch_okna")
+            st.checkbox("Stan instalacji elektrycznej (miedź vs aluminium)", key="ch_elek")
+        with c_ch2:
+            st.checkbox("Możliwość wydzielenia dodatkowego pokoju", key="ch_pokoje")
+            st.checkbox("KW bez wpisów w dziale III i IV", key="ch_kw")
+            st.checkbox("Przynależność piwnicy / komórki lokatorskiej", key="ch_piwnica")
             st.info("💡 Wszystkie punkty odznaczone? Możesz przejść do kalkulacji kosztów.")
 
     col_inv1, col_inv2 = st.columns([1, 1.5])
