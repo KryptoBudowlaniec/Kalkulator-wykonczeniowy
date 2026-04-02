@@ -14,160 +14,146 @@ with col_logo:
         st.error("Brak pliku logo2.png")
 
 
-# --- 1. ZINTEGROWANE STYLE CSS ---
+# --- 1. ZINTEGROWANE STYLE CSS (JASNY MOTYW) ---
 st.markdown("""
 <style>
-
+    /* Import czcionki Inter */
     @import url('https://googleapis.com');
 
-    /* Wymuszenie czcionki na całej stronie */
+    /* 1. Globalne tło i czcionka */
     html, body, [class*="st-"] {
         font-family: 'Inter', sans-serif !important;
     }
 
-    /* Specjalny styl dla nagłówków (grubsze i większe odstępy między literami) */
+    .stApp { 
+        background-color: #FFFFFF; 
+        color: #1E1E1E;
+    }
+
+    /* 2. Nagłówki */
     h1, h2, h3 {
         font-family: 'Inter', sans-serif !important;
         font-weight: 800 !important;
         letter-spacing: -0.5px !important;
+        color: #1E1E1E !important;
     }
 
-    /* Styl dla liczb (żeby były równe i techniczne) */
-    .stMetric value {
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 600 !important;
-    }
-
-    /* Globalne tło */
-    .stApp { background-color: #0E1117; }
-
-    /* Sidebar i Menu boczne */
+    /* 3. Sidebar (Jasny szary) */
     section[data-testid="stSidebar"] > div {
         padding-top: 2rem;
-        background-color: #1A1C23;
-    }
-        .feature-icon {
-        font-size: 45px; /* Duży rozmiar */
-        margin-bottom: 15px;
-        color: #00D395;
-        filter: drop-shadow(0 0 10px rgba(0, 211, 149, 0.4));
+        background-color: #F8F9FA !important;
+        border-right: 1px solid #E9ECEF;
     }
 
-    /* POWIĘKSZENIE MENU W SIDEBARZE */
-    [data-testid="stSidebar"] [data-testid="stPills"] button {
-        height: 60px !important;
-        margin-bottom: 8px !important;
-    }
-
-    [data-testid="stSidebar"] [data-testid="stPills"] button p {
-        font-size: 22px !important; /* DUŻA CZCIONKA */
-        font-weight: 800 !important;
-        color: white !important;
-    }
-
-    /* Kolor aktywnej pigułki w sidebarze */
-    [data-testid="stSidebar"] button[aria-checked="true"] {
-        background-color: #00D395 !important;
-    }
-    [data-testid="stSidebar"] button[aria-checked="true"] p {
-        color: black !important;
-    }
-
-    /* Powiększenie pigułek (pionowe i poziome) */
+    /* 4. Menu Pigułki (Nawigacja) */
     div[data-testid="stPills"] button, [data-testid="stSidebar"] [data-testid="stPills"] button {
         width: 100% !important;
-        padding: 15px 25px !important;
-        min-height: 60px !important;
+        padding: 12px 20px !important;
+        min-height: 55px !important;
         border-radius: 12px !important;
-        background-color: #1A1C23 !important;
-        border: 2px solid #2D2F39 !important;
-        margin-bottom: 5px !important;
+        background-color: #FFFFFF !important; /* Białe przyciski */
+        border: 1px solid #DEE2E6 !important;
+        margin-bottom: 8px !important;
+        transition: 0.2s;
     }
 
     div[data-testid="stPills"] button p, [data-testid="stSidebar"] [data-testid="stPills"] button p {
-        font-size: 20px !important;
-        font-weight: bold !important;
-        color: white !important;
+        font-size: 18px !important;
+        font-weight: 600 !important;
+        color: #495057 !important; /* Ciemnoszary tekst */
     }
 
-    /* Aktywna pigułka */
+    /* Aktywna pigułka (Miętowy ProCalc) */
     button[aria-checked="true"] {
         background-color: #00D395 !important;
         border-color: #00D395 !important;
+        box-shadow: 0px 4px 10px rgba(0, 211, 149, 0.2);
     }
     button[aria-checked="true"] p {
-        color: black !important;
+        color: white !important;
     }
 
-    /* Kafelki na stronie Start */
+    /* 5. Kafelki na stronie Start (Light Mode) */
     .feature-card {
-        background-color: #1A1C23;
-        border: 1px solid #2D2F39;
+        background-color: #F8F9FA; /* Bardzo jasny szary */
+        border: 1px solid #E9ECEF;
         border-radius: 18px;
         padding: 30px;
-        height: 440px; /* Nieco wyższe dla większej czcionki */
+        height: 440px;
         transition: 0.3s;
         margin-bottom: 20px;
         text-align: center; 
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center; /* Centrowanie w pionie */
+        justify-content: center;
     }
     
     .feature-card:hover {
+        background-color: #FFFFFF;
         border-color: #00D395;
         transform: translateY(-8px);
-        box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.1);
+        box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.08);
     }
 
     .feature-title {
         color: #00D395;
-        font-size: 28px; /* DUŻY TYTUŁ */
+        font-size: 26px;
         font-weight: 800;
         margin-bottom: 15px;
-        line-height: 1.2;
     }
 
     .feature-card p {
-        font-size: 20px !important; /* WIĘKSZY OPIS */
-        color: #FFFFFF;
+        font-size: 18px !important;
+        color: #495057 !important;
         margin-bottom: 20px;
     }
 
     .feature-list {
-        font-size: 18px; /* WIĘKSZA LISTA */
-        color: #B0B3B8;
+        font-size: 16px;
+        color: #6C757D;
         line-height: 1.6;
         list-style-type: '✔ ';
         padding-left: 0;
         text-align: left; 
         display: inline-block; 
     }
-    /* Styl dla sekcji korzyści na stronie Start */
+
+    /* 6. Sekcja korzyści (Benefit Box) */
     .benefit-box {
-        border-left: 3px solid #00D395;
+        border-left: 4px solid #00D395;
         padding-left: 20px;
         margin-bottom: 30px;
         transition: 0.3s;
+        background-color: #F8F9FA;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        border-radius: 0 10px 10px 0;
     }
     .benefit-box:hover {
-        background: linear-gradient(90deg, rgba(0,211,149,0.1) 0%, rgba(14,17,23,0) 100%);
+        background: linear-gradient(90deg, rgba(0,211,149,0.05) 0%, rgba(255,255,255,0) 100%);
     }
     .benefit-title {
         color: #00D395;
-        font-size: 24px;
-        font-weight: bold;
+        font-size: 22px;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 1px;
     }
     .benefit-text {
-        font-size: 18px;
-        color: #FFFFFF;
+        font-size: 17px;
+        color: #495057;
         margin-top: 5px;
+    }
+
+    /* Wyświetlanie ikon */
+    .feature-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+        color: #00D395;
     }
 </style>
 """, unsafe_allow_html=True)
+
 
 # --- STAN APLIKACJI ---
 if 'pokoje_pro' not in st.session_state: st.session_state.pokoje_pro = []
