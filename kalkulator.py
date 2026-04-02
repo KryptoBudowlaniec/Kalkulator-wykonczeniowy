@@ -190,7 +190,7 @@ if branza == "Start":
         st.info("💡 **WYBIERZ SEKCJĘ Z MENU BOCZNEGO, ABY ROZPOCZĄĆ.**")
 
     # 3. Kafelki możliwości
-    st.markdown("<br><br><h2 style='text-align: center;'>🚀 Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
+    st.markdown("<br><br><h2 style='text-align: center;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
     
     # Rząd 1
     c1, c2, c3 = st.columns(3)
