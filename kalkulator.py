@@ -156,6 +156,35 @@ st.markdown("""
         color: #00D395;
         font-weight: bold;
     }
+    /* Styl dla listy zalet w sekcji Zaufanie */
+    .trust-item {
+        background-color: #FFFFFF;
+        border: 1px solid #F0F0F0;
+        border-radius: 12px;
+        padding: 20px 30px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        text-align: left;
+        transition: 0.2s;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.02);
+    }
+    .trust-item:hover {
+        border-color: #00D395;
+        background-color: #FBFBFB;
+        transform: scale(1.01);
+    }
+    .trust-check {
+        color: #00D395;
+        font-size: 24px;
+        font-weight: bold;
+        margin-right: 20px;
+    }
+    .trust-item-text {
+        font-size: 18px;
+        color: #1E1E1E;
+        font-weight: 500;
+    }
     
     .feature-card:hover {
         background-color: #FFFFFF;
@@ -338,25 +367,32 @@ if branza == "Start":
         </div>
     """, unsafe_allow_html=True)
 
- # --- SEKCJA ZAUFANIA ---
+     # --- SEKCJA ZAUFANIA (PUNKTY) ---
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Używamy kolumn, żeby wyśrodkować ten szeroki kafelek
-    c_t1, c_trust, c_t2 = st.columns([0.2, 2.5, 0.2])
+    col_t1, col_trust, col_t2 = st.columns([1, 2.5, 1])
     
-    with c_trust:
-        st.markdown("""
-        <div class="trust-card">
-            <div class="trust-title">Dlaczego warto nam zaufać?</div>
-            <div class="trust-text">
-                Nasze algorytmy nie opierają się na zgadywaniu. Każdy wynik to efekt 
-                <span class="trust-highlight">tysięcy metrów kwadratowych</span> zrealizowanych inwestycji 
-                oraz konsultacji z <span class="trust-highlight">najlepszymi fachowcami</span> w branży. 
-                Aktualizujemy bazy cenowe co miesiąc, abyś Ty mógł spać spokojnie, 
-                wiedząc że Twój budżet jest pod pełną kontrolą.
+    with col_trust:
+        st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
+        
+        # Lista zalet
+        zalety = [
+            "Algorytmy oparte na realnych normach zużycia materiałów",
+            "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem",
+            "Konsultacje merytoryczne z czynnymi zawodowo fachowcami",
+            "Ponad 10 000 m² przeliczonych i zrealizowanych inwestycji",
+            "Precyzja list zakupowych ograniczająca odpady do minimum",
+            "Niezależność – nie faworyzujemy żadnej marki materiałów"
+        ]
+        
+        for zaleta in zalety:
+            st.markdown(f"""
+            <div class="trust-item">
+                <div class="trust-check">✔</div>
+                <div class="trust-item-text">{zaleta}</div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+
 
 elif branza == "📞 Kontakt":
     st.header("📞 Kontakt")
