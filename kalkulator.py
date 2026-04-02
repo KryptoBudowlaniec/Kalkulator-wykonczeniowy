@@ -105,43 +105,51 @@ st.markdown("---")
 # --- LOGIKA WYŚWIETLANIA STRON ---
 
 if branza == "🏠 Start":
-    st.markdown("<h2 style='text-align: center; color: #00D395;'>Witaj w ProCalc – Twoim Cyfrowym Kosztorysancie</h2>", unsafe_allow_html=True)
+    # Nagłówek główny (bardzo duży)
+    st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; font-size: 28px;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
     
+    st.markdown("<br>", unsafe_allow_html=True) # Odstęp
+
     col_s1, col_s2 = st.columns([1.2, 1])
     
     with col_s1:
-        st.write("### 🚀 Dlaczego ProCalc?")
-        st.write("""
-        Zapomnij o liczeniu na kartce i błędach w zamówieniach. **ProCalc** to narzędzie stworzone przez profesjonalistów dla:
-        - **Inwestorów i Fliperów** (Szybka analiza ROI i zysku)
-        - **Ekip remontowych** (Precyzyjne listy zakupów)
-        - **Klientów indywidualnych** (Realna kontrola nad budżetem)
-        """)
+        # Tekst z powiększoną czcionką przez HTML
+        st.markdown("""
+        <div style='font-size: 22px; line-height: 1.6;'>
+            <h3 style='color: #00D395;'>🚀 Dlaczego ProCalc?</h3>
+            Zapomnij o liczeniu na kartce i błędach w zamówieniach. 
+            <b>ProCalc</b> to narzędzie stworzone przez profesjonalistów dla:
+            <ul>
+                <li><b>Inwestorów i Fliperów</b> (Szybka analiza ROI i zysku)</li>
+                <li><b>Ekip remontowych</b> (Precyzyjne listy zakupów)</li>
+                <li><b>Klientów indywidualnych</b> (Realna kontrola nad budżetem)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
         
-        st.info("💡 **Wybierz branżę z menu powyżej**, aby wygenerować swój pierwszy kosztorys.")
+        st.info("💡 **WYBIERZ BRANŻĘ Z MENU POWYŻEJ**, ABY WYGENEROWAĆ SWÓJ PIERWSZY KOSZTORYS.")
 
     with col_s2:
-        # Tutaj możesz wstawić zdjęcie realizacji lub logo
         st.image("logo2.png", use_container_width=True)
 
-    st.markdown("---")
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Sekcja "Możliwości" w kafelkach
+    # Sekcja "Możliwości" z większymi opisami
     st.write("### 🛠️ Co potrafi nasz system?")
     c1, c2, c3 = st.columns(3)
     
     with c1:
-        st.markdown("#### ⚡ Szybkość")
-        st.write("Kosztorys całego mieszkania w 5 minut dzięki gotowym standardom wykończenia.")
+        st.markdown("<p style='font-size: 20px; font-weight: bold; color: #00D395;'>⚡ Szybkość</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 18px;'>Kosztorys całego mieszkania w 5 minut dzięki gotowym standardom wykończenia.</p>", unsafe_allow_html=True)
     with c2:
-        st.markdown("#### 📦 Logistyka")
-        st.write("Automatyczne listy zakupów z dokładnością do worka gładzi i mb kabla.")
+        st.markdown("<p style='font-size: 20px; font-weight: bold; color: #00D395;'>📦 Logistyka</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 18px;'>Automatyczne listy zakupów z dokładnością do worka gładzi i mb kabla.</p>", unsafe_allow_html=True)
     with c3:
-        st.markdown("#### 📈 Biznes")
-        st.write("Dedykowany panel Premium dla fliperów z wyliczaniem rentowności inwestycji.")
+        st.markdown("<p style='font-size: 20px; font-weight: bold; color: #00D395;'>📈 Biznes</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 18px;'>Dedykowany panel Premium dla fliperów z wyliczaniem rentowności inwestycji.</p>", unsafe_allow_html=True)
 
-    st.success("👇 **Gotowy? Wybierz ikonkę powyżej i zacznij liczyć!**")
-
+    st.success("👇 **GOTOWY? WYBIERZ IKONKĘ POWYŻEJ I ZACZNIJ LICZYĆ!**")
 # --- SEKCJA: MALOWANIE ---
 if branza == "🎨 Malowanie":
     st.subheader("Kalkulator Malarski")
