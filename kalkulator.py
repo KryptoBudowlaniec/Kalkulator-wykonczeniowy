@@ -92,15 +92,55 @@ st.markdown("""
 branza = st.pills(
     "Wybierz rodzaj prac:", 
     [
-        "🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", 
+        "🏠 Start","🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", 
         "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", 
         "🚿 Łazienka", "🚪 Drzwi", "🚀 PANEL INWESTORA (PREMIUM)"
     ],
     selection_mode="single",
-    default="🎨 Malowanie"
+    default="🏠 Start"
 )
 
 st.markdown("---")
+
+# --- LOGIKA WYŚWIETLANIA STRON ---
+
+if branza == "🏠 Start":
+    st.markdown("<h2 style='text-align: center; color: #00D395;'>Witaj w ProCalc – Twoim Cyfrowym Kosztorysancie</h2>", unsafe_allow_html=True)
+    
+    col_s1, col_s2 = st.columns([1.2, 1])
+    
+    with col_s1:
+        st.write("### 🚀 Dlaczego ProCalc?")
+        st.write("""
+        Zapomnij o liczeniu na kartce i błędach w zamówieniach. **ProCalc** to narzędzie stworzone przez profesjonalistów dla:
+        - **Inwestorów i Fliperów** (Szybka analiza ROI i zysku)
+        - **Ekip remontowych** (Precyzyjne listy zakupów)
+        - **Klientów indywidualnych** (Realna kontrola nad budżetem)
+        """)
+        
+        st.info("💡 **Wybierz branżę z menu powyżej**, aby wygenerować swój pierwszy kosztorys.")
+
+    with col_s2:
+        # Tutaj możesz wstawić zdjęcie realizacji lub logo
+        st.image("logo2.png", use_container_width=True)
+
+    st.markdown("---")
+    
+    # Sekcja "Możliwości" w kafelkach
+    st.write("### 🛠️ Co potrafi nasz system?")
+    c1, c2, c3 = st.columns(3)
+    
+    with c1:
+        st.markdown("#### ⚡ Szybkość")
+        st.write("Kosztorys całego mieszkania w 5 minut dzięki gotowym standardom wykończenia.")
+    with c2:
+        st.markdown("#### 📦 Logistyka")
+        st.write("Automatyczne listy zakupów z dokładnością do worka gładzi i mb kabla.")
+    with c3:
+        st.markdown("#### 📈 Biznes")
+        st.write("Dedykowany panel Premium dla fliperów z wyliczaniem rentowności inwestycji.")
+
+    st.success("👇 **Gotowy? Wybierz ikonkę powyżej i zacznij liczyć!**")
 
 # --- SEKCJA: MALOWANIE ---
 if branza == "🎨 Malowanie":
