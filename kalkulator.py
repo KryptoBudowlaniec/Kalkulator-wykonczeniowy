@@ -14,13 +14,11 @@ with col_logo:
         st.error("Brak pliku logo2.png")
 
 
-# --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
 st.markdown("""
 <style>
-    /* Import czcionki Inter */
+    /* 1. CZCIONKI I TŁO */
     @import url('https://googleapis.com');
 
-    /* 1. Globalne tło i czcionka - CZYSTA BIEL */
     html, body, [class*="st-"] {
         font-family: 'Inter', sans-serif !important;
     }
@@ -29,16 +27,19 @@ st.markdown("""
         background-color: #FFFFFF !important; 
         color: #1E1E1E !important;
     }
-    
-    /* 1. CAŁKOWITE CZYSZCZENIE PRZYCISKU Z TEKSTU I IKON SYSTEMOWYCH */
+
+    .main .block-container {
+        background-color: #FFFFFF !important;
+        max-width: 1200px;
+        padding-top: 4rem;
+    }
+
+    /* 2. PRZYCISK MENU (HAMBURGER) - ATOMOWE CZYSZCZENIE */
     button[data-testid="stSidebarCollapseIcon"] * {
         display: none !important;
-        color: transparent !important;
-        font-size: 0 !important;
         visibility: hidden !important;
     }
 
-    /* 2. PRZYWRÓCENIE WIDOCZNOŚCI SAMEGO PRZYCISKU (KÓŁKO) */
     button[data-testid="stSidebarCollapseIcon"] {
         display: flex !important;
         visibility: visible !important;
@@ -56,149 +57,49 @@ st.markdown("""
         border: none !important;
     }
 
-    /* 3. WSTAWIENIE NASZEJ IKONY ☰ JAKO JEDYNEGO WIDOCZNEGO ELEMENTU */
     button[data-testid="stSidebarCollapseIcon"]::after {
         content: "☰" !important;
         visibility: visible !important;
-        display: block !important;
         color: white !important;
         font-size: 26px !important;
-        font-family: Arial, sans-serif !important;
     }
 
-    /* 4. OBSŁUGA OTWARTEGO SIDEBARU */
-    [data-testid="stSidebar"] button[data-testid="stSidebarCollapseIcon"] {
-        left: auto !important;
-        right: 15px !important;
-        top: 15px !important;
-        background-color: transparent !important;
-        box-shadow: none !important;
-    }
-
-    [data-testid="stSidebar"] button[data-testid="stSidebarCollapseIcon"]::after {
-        content: "✕" !important; /* Zmiana na X po otwarciu */
-        color: #424245 !important;
-    }
-
-
-    /* Wyczyszczenie wszelkich gradientów i cieni kontenera */
-    .main .block-container {
-        background-color: #FFFFFF !important;
-        max-width: 1200px;
-        padding-top: 2rem;
-    }
-
-    /* 2. Nagłówki - Głęboka czerń dla kontrastu */
-    h1, h2, h3 {
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 800 !important;
-        color: #000000 !important;
-        letter-spacing: -0.5px !important;
-    }
-
-    /* 3. Sidebar (Jasny, sterylny szary) */
+    /* 3. SIDEBAR I NAWIGACJA */
     section[data-testid="stSidebar"] > div {
         background-color: #FBFBFB !important;
         border-right: 1px solid #F0F0F0;
     }
 
-    /* 4. Menu Pigułki (Nawigacja) - Apple Style */
-    div[data-testid="stPills"] button, [data-testid="stSidebar"] [data-testid="stPills"] button {
+    div[data-testid="stPills"] button {
         width: 100% !important;
         min-height: 55px !important;
         background-color: #F5F5F7 !important;
         border: 1px solid #E5E5E7 !important;
         border-radius: 12px !important;
         margin-bottom: 8px !important;
-        transition: 0.2s;
     }
 
-    div[data-testid="stPills"] button p, [data-testid="stSidebar"] [data-testid="stPills"] button p {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-        color: #1D1D1F !important;
-    }
-
-    /* Aktywna pigułka (Twój zielony akcent) */
-    button[aria-checked="true"] {
+    div[data-testid="stPills"] button[aria-checked="true"] {
         background-color: #00D395 !important;
         border: none !important;
     }
-    button[aria-checked="true"] p {
-        color: #FFFFFF !important;
+
+    div[data-testid="stPills"] button p {
+        font-size: 18px !important;
+        font-weight: 600 !important;
     }
 
-    /* 5. Kafelki na stronie Start (Wersja Jasna) */
-    .feature-card {
+    /* 4. KAFELKI I SEKCJE STARTOWE */
+    .feature-card, .trust-card {
         background-color: #FBFBFB;
         border: 1px solid #F0F0F0;
         border-radius: 20px;
         padding: 35px;
-        height: 440px;
         transition: 0.4s ease;
-        text-align: center; 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .trust-card {
-        background-color: #FBFBFB;
-        border: 2px solid #00D395; /* Miętowa ramka dla wyróżnienia */
-        border-radius: 20px;
-        padding: 40px;
-        margin-top: 60px;
-        margin-bottom: 60px;
         text-align: center;
-        box-shadow: 0px 10px 30px rgba(0, 211, 149, 0.05);
-    }
-    .trust-title {
-        font-size: 32px;
-        font-weight: 800;
-        color: #000000;
         margin-bottom: 20px;
     }
-    .trust-text {
-        font-size: 20px;
-        color: #424245;
-        line-height: 1.6;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-    .trust-highlight {
-        color: #00D395;
-        font-weight: bold;
-    }
-    /* Styl dla listy zalet w sekcji Zaufanie */
-    .trust-item {
-        background-color: #FFFFFF;
-        border: 1px solid #F0F0F0;
-        border-radius: 12px;
-        padding: 20px 30px;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        text-align: left;
-        transition: 0.2s;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.02);
-    }
-    .trust-item:hover {
-        border-color: #00D395;
-        background-color: #FBFBFB;
-        transform: scale(1.01);
-    }
-    .trust-check {
-        color: #00D395;
-        font-size: 24px;
-        font-weight: bold;
-        margin-right: 20px;
-    }
-    .trust-item-text {
-        font-size: 18px;
-        color: #1E1E1E;
-        font-weight: 500;
-    }
-    
+
     .feature-card:hover {
         background-color: #FFFFFF;
         border-color: #00D395;
@@ -206,90 +107,38 @@ st.markdown("""
         box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.06);
     }
 
-    .feature-title {
+    .feature-title, .trust-title {
         color: #00D395;
-        font-size: 26px;
-        font-weight: 800;
-        margin-bottom: 15px;
-    }
-
-    .feature-card p {
-        font-size: 18px !important;
-        color: #424245 !important;
-    }
-
-    /* 6. Sekcja korzyści (Benefit Box) */
-    .benefit-box {
-        border-left: 4px solid #00D395;
-        padding: 20px;
-        margin-bottom: 25px;
-        background-color: #FBFBFB;
-        border-radius: 0 12px 12px 0;
-    }
-    .benefit-title {
-        color: #00D395;
-        font-size: 22px;
         font-weight: 800;
     }
-    .benefit-text {
-        font-size: 17px;
-        color: #424245;
-    }
-        /* Stylizacja przycisków typu Primary/CTA */
-        div.stButton > button {
+
+    /* 5. PRZYCISKI GŁÓWNE (CTA) */
+    div.stButton > button {
         display: block !important;
-        margin: 0 auto !important; /* To centruje przycisk w kolumnie */
-        max-width: 550px !important; /* Zapobiega rozciągnięciu na całą szerokość */
+        margin: 0 auto !important;
+        max-width: 550px !important;
         background-color: #00D395 !important;
         color: white !important;
         font-weight: 800 !important;
-        font-size: 20px !important;
         height: 65px !important;
         border-radius: 15px !important;
         border: none !important;
-        box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.3) !important;
-        text-transform: uppercase !important;
-        transition: 0.3s !important;
     }
 
-    div.stButton > button:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0px 12px 25px rgba(0, 211, 149, 0.4) !important;
-        background-color: #00bf86 !important;
-    }
-    /* Styl dla wyśrodkowanego kontenera FAQ */
+    /* 6. FAQ (ZAMKNIĘCIE I CENTROWANIE) */
     .faq-container {
-        max-width: 600px; /* Zwężenie do 600px */
-        margin: 0 auto !important; /* Magiczne wyśrodkowanie */
-        padding: 10px;
+        max-width: 600px;
+        margin: 0 auto !important;
     }
 
-    /* Styl dla samych kafelków pytań (Expanderów) */
     .stExpander {
-        border: 1px solid #E5E5E7 !important;
+        border: 1px solid #F0F0F0 !important;
         border-radius: 15px !important;
         background-color: #FFFFFF !important;
-        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.04) !important;
         margin-bottom: 12px !important;
-    }
-
-    /* Powiększenie tekstu pytania w expanderze */
-    .stExpander p {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-    }
-
-
-    /* Odstępy między expanderami */
-    .stExpander {
-        margin-bottom: 15px !important;
-        border: 1px solid #F0F0F0 !important;
-        border-radius: 12px !important;
-        background-color: #FBFBFB !important;
     }
 </style>
 """, unsafe_allow_html=True)
-
 
 
 # --- STAN APLIKACJI ---
