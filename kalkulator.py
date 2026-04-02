@@ -31,13 +31,15 @@ st.markdown("""
     }
     
     /* 1. UKRYCIE TEKSTU 'double_arrow_right' */
-    button[data-testid="stSidebarCollapseIcon"] span {
+        [data-testid="stSidebarCollapseIcon"] svg, 
+        [data-testid="stSidebarCollapseIcon"] span {
         display: none !important;
+        visibility: hidden !important;
     }
 
     /* 2. STYLIZACJA PRZYCISKU MENU (HAMBURGERA) */
     button[data-testid="stSidebarCollapseIcon"] {
-        background-color: #00D395 !important; /* Miętowe tło */
+        background-color: #00D395 !important;
         border-radius: 50% !important;
         width: 50px !important;
         height: 50px !important;
@@ -46,25 +48,34 @@ st.markdown("""
         justify-content: center !important;
         box-shadow: 0px 4px 15px rgba(0, 211, 149, 0.4) !important;
         position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
+        top: 20px !important;
+        left: 20px !important;
         z-index: 999999 !important;
+        border: none !important;
+        color: transparent !important; /* Ukrywa ewentualne resztki tekstu */
     }
 
     /* 3. WSTAWIANIE WŁASNEJ IKONY (TRZY KRESKI) ZAMIAST TEKSTU */
     button[data-testid="stSidebarCollapseIcon"]::after {
-        content: "☰" !important; /* Symbol hamburgera */
+        content: "☰" !important;
         color: white !important;
-        font-size: 28px !important;
-        font-weight: bold !important;
+        font-size: 26px !important;
+        font-family: Arial, sans-serif !important;
+        display: block !important;
     }
 
     /* 4. DOPASOWANIE SIDEBARU PO OTWARCIU */
-    section[data-testid="stSidebar"] button[data-testid="stSidebarCollapseIcon"] {
+    [data-testid="stSidebar"] button[data-testid="stSidebarCollapseIcon"] {
+        top: 15px !important;
+        left: auto !important;
+        right: 15px !important;
         background-color: transparent !important;
         box-shadow: none !important;
-        left: auto !important;
-        right: 10px !important;
+    }
+    
+    [data-testid="stSidebar"] button[data-testid="stSidebarCollapseIcon"]::after {
+        content: "✕" !important; /* Znak X po otwarciu */
+        color: #424245 !important;
     }
 
 
