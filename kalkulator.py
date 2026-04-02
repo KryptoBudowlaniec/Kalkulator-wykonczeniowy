@@ -189,19 +189,41 @@ st.markdown("""
         text-transform: uppercase !important;
     }
 
-    /* 8. FAQ I EXPANDERY */
-    .faq-container {
-        max-width: 600px;
-        margin: 0 auto !important;
-        padding: 10px;
+    /* Styl dla sekcji FAQ w kafelkach */
+    .faq-card-question {
+        background-color: #FFFFFF;
+        border: 2px solid #00D395;
+        border-radius: 15px 15px 0 0; /* Zaokrąglona tylko góra */
+        padding: 20px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 800;
+        color: #000000;
+        margin-top: 30px;
     }
 
-    .stExpander {
-        border: 1px solid #F0F0F0 !important;
-        border-radius: 15px !important;
-        background-color: #FFFFFF !important;
-        margin-bottom: 15px !important;
-        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.04) !important;
+    .faq-card-answer {
+        background-color: #00D395; /* Zielone tło odpowiedzi */
+        border: 2px solid #00D395;
+        border-radius: 0 0 15px 15px; /* Zaokrąglony tylko dół */
+        padding: 20px;
+        text-align: center;
+        font-size: 18px;
+        color: #FFFFFF;
+        margin-bottom: 20px;
+        box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.1);
+    }
+
+    /* Opcjonalnie wersja z ciemnym niebieskim dla odmiany co drugie pytanie */
+    .faq-card-answer-blue {
+        background-color: #0E172B; /* Ciemny niebieski */
+        border: 2px solid #0E172B;
+        color: #FFFFFF;
+        border-radius: 0 0 15px 15px;
+        padding: 20px;
+        text-align: center;
+        font-size: 18px;
+        margin-bottom: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
