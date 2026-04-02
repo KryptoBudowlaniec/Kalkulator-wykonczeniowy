@@ -255,15 +255,16 @@ if branza == "Start":
         st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
         
         # Sam przycisk (Streamlit automatycznie go wycentruje w tym divie dzięki CSS w sekcji style)
-        if st.button("🚀 ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
+        if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
             st.session_state.branza = "Rejestracja"
             st.rerun()
 
         st.markdown("""
-            <p style='margin-top: 15px; font-size: 15px; color: #6c757d; font-weight: 600;'>
-                ✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.
-            </p>
-        </div>
+            <div style='text-align: center; width: 100%; margin-top: 15px;'>
+                <p style='font-size: 15px; color: #6c757d; font-weight: 600;'>
+                    ✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.
+                </p>
+            </div>
         """, unsafe_allow_html=True)
 
 
