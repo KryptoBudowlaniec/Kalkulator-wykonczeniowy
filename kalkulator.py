@@ -103,6 +103,33 @@ st.markdown("""
     div[data-selection-mode="single"] button[aria-checked="true"] p {
         color: black !important;
     }
+    /* Styl dla nowoczesnych kart produktów */
+    .feature-card {
+        background-color: #1A1C23;
+        border: 1px solid #2D2F39;
+        border-radius: 15px;
+        padding: 25px;
+        height: 100%;
+        transition: 0.3s;
+        margin-bottom: 20px;
+    }
+    .feature-card:hover {
+        border-color: #00D395;
+        transform: translateY(-5px);
+    }
+    .feature-title {
+        color: #00D395;
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .feature-list {
+        font-size: 16px;
+        color: #B0B3B8;
+        line-height: 1.6;
+        list-style-type: '✔ ';
+        padding-left: 20px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -183,20 +210,97 @@ if branza == "🏠 Start":
     st.markdown("<br><br>", unsafe_allow_html=True)
     
     # Sekcja "Możliwości" z większymi opisami
-    st.write("### 🛠️ Co potrafi nasz system?")
+   st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
+    
+    # Rząd 1: Malowanie, Elektryka, G-K
     c1, c2, c3 = st.columns(3)
     
     with c1:
-        st.markdown("<p style='font-size: 20px; font-weight: bold; color: #00D395;'>⚡ Szybkość</p>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 18px;'>Kosztorys całego mieszkania w 5 minut dzięki gotowym standardom wykończenia.</p>", unsafe_allow_html=True)
-    with c2:
-        st.markdown("<p style='font-size: 20px; font-weight: bold; color: #00D395;'>📦 Logistyka</p>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 18px;'>Automatyczne listy zakupów z dokładnością do worka gładzi i mb kabla.</p>", unsafe_allow_html=True)
-    with c3:
-        st.markdown("<p style='font-size: 20px; font-weight: bold; color: #00D395;'>📈 Biznes</p>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 18px;'>Dedykowany panel Premium dla fliperów z wyliczaniem rentowności inwestycji.</p>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">🎨 Malowanie & Gładzie</div>
+            <p>Kompleksowe przygotowanie ścian i sufitów do finalnego wykończenia.</p>
+            <ul class="feature-list">
+                <li>Obliczanie powierzchni ścian i sufitów</li>
+                <li>Dobór ilości gruntów i mas szpachlowych</li>
+                <li>Wydajność farb (biała vs kolor)</li>
+                <li>Wycena robocizny i materiałów</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.success("👇 **GOTOWY? WYBIERZ IKONKĘ POWYŻEJ I ZACZNIJ LICZYĆ!**")
+    with c2:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">⚡ Instalacje Elektryczne</div>
+            <p>Pełna instalacja prądowa i teletechniczna od rozdzielni po gniazdka.</p>
+            <ul class="feature-list">
+                <li>Dobór mb przewodów (3x2.5, 3x1.5, TV, LAN)</li>
+                <li>Wycena osprzętu (Simon, Legrand, Berker)</li>
+                <li>Kompletacja rozdzielnicy (bezpieczniki ES)</li>
+                <li>Uwzględnienie trudności (żelbet vs cegła)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c3:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">⚒️ Sucha Zabudowa</div>
+            <p>Konstrukcje lekkie, sufity podwieszane i zabudowy systemowe.</p>
+            <ul class="feature-list">
+                <li>Systemy pojedyncze i krzyżowe</li>
+                <li>Wyliczenie profili (CD60, UD27), płyt i wieszaków</li>
+                <li>Zbrojenie spoin (Tuff-Tape, Flizelina)</li>
+                <li>Zabudowy rur i wnęk oświetleniowych</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Rząd 2: Podłogi, Drzwi, Inwestor Premium
+    c4, c5, c6 = st.columns(3)
+
+    with c4:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">📐 Podłogi & Winyle</div>
+            <p>Wszystko, co musisz wiedzieć przed ułożeniem wymarzonej podłogi.</p>
+            <ul class="feature-list">
+                <li>Obliczanie m2 paneli z naddatkiem na odpady</li>
+                <li>Dobór podkładów (SPC, Laminat, Drewno)</li>
+                <li>Ilość listew przypodłogowych i progów</li>
+                <li>Systemy klejone vs pływające</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c5:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">🚪 Stolarka Drzwiowa</div>
+            <p>Montaż skrzydeł drzwiowych, ościeżnic i niezbędnych akcesoriów.</p>
+            <ul class="feature-list">
+                <li>Drzwi przylgowe, bezprzylgowe i rewersyjne</li>
+                <li>Dobór ościeżnic regulowanych i stałych</li>
+                <li>Akcesoria (klamki, rozety, pianki montażowe)</li>
+                <li>Usługi demontażu i podcięć wentylacyjnych</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c6:
+        st.markdown("""
+        <div class="feature-card" style="border: 1px solid #00D395;">
+            <div class="feature-title">🚀 Panel Inwestora PRO</div>
+            <p>Ekskluzywne narzędzie dla firm i flipperów (All-in-One).</p>
+            <ul class="feature-list">
+                <li>Agregacja wszystkich etapów na jednym ekranie</li>
+                <li>Kalkulator ROI (Rentowność inwestycji)</li>
+                <li>Inteligentne standardy (Eko, Standard, Premium)</li>
+                <li>Raport kosztorysowy do PDF dla banku</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 # --- SEKCJA: MALOWANIE ---
 if branza == "🎨 Malowanie":
     st.subheader("Kalkulator Malarski")
