@@ -153,10 +153,8 @@ if branza == "Start":
 
     st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
     
-    st.markdown("<br><h3>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
-    
     # Rząd 1: Malowanie, Szpachlowanie, Tynkowanie
-        # Rząd 1: Malowanie, Szpachlowanie, Tynkowanie
+   
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown("""
