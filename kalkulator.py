@@ -404,7 +404,23 @@ if branza == "Start":
             <div class="faq-card-question">Jak dokładne są listy zakupowe?</div>
             <div class="faq-card-answer">Algorytmy uwzględniają oficjalne normy zużycia producentów oraz standardowy naddatek 10% na odpady i docięcia.</div>
         """, unsafe_allow_html=True)
+        # Pytanie 4: Eksport do PDF
+        st.markdown("""
+            <div class="faq-card-question">Czy otrzymam listę zakupów do sklepu?</div>
+            <div class="faq-card-answer">Tak. Po zakończeniu obliczeń możesz wygenerować gotowy raport z listą materiałów, którą wystarczy pokazać sprzedawcy w hurtowni.</div>
+        """, unsafe_allow_html=True)
 
+        # Pytanie 5: Ukryte koszty
+        st.markdown("""
+            <div class="faq-card-question">Czy kalkulator uwzględnia tzw. drobnicę?</div>
+            <div class="faq-card-answer">Tak. System dolicza szacunkowe koszty folii, taśm, kołków czy gruntów, o których inwestorzy często zapominają przy planowaniu budżetu.</div>
+        """, unsafe_allow_html=True)
+
+        # Pytanie 6: Formaty płytek (Ciemny niebieski)
+        st.markdown("""
+            <div class="faq-card-question">Czy format płytek wpływa na wycenę?</div>
+            <div class="faq-card-answer-blue">Oczywiście. W sekcji Łazienka możesz wybrać format (np. 120x60), a system automatycznie podniesie stawkę za robociznę i zużycie kleju.</div>
+        """, unsafe_allow_html=True)
 
 
 
