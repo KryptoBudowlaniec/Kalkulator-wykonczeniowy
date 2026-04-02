@@ -115,9 +115,14 @@ with st.sidebar:
         "Nawigacja:", 
         [
             "🏠 Start", 
-            "🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", 
-            "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", 
-            "🚿 Łazienka", "🚪 Drzwi", 
+            "🎨 Malowanie", 
+            "🧱 Szpachlowanie", 
+            "🏗️ Tynkowanie", 
+            "⚒️ Sucha Zabudowa", 
+            "⚡ Elektryka", 
+            "🚿 Łazienka", 
+            "📐 Podłogi",
+            "🚪 Drzwi", 
             "🚀 PANEL INWESTORA (PREMIUM)",
             "📞 Kontakt"
         ],
