@@ -17,6 +17,24 @@ with col_logo:
 # --- STYLE CSS (Twoje poprawione style) ---
 st.markdown("""
 <style>
+    /* Stylizacja przycisku menu (trzy kreski) */
+    .st-emotion-cache-198z7it {
+        visibility: visible !important; /* Pokazuje przycisk sidebaru */
+    }
+
+    /* Ukrywamy standardowy nagłówek sidebaru, żeby było czyściej */
+    section[data-testid="stSidebar"] > div {
+        padding-top: 2rem;
+        background-color: #1A1C23; /* Ciemne tło panelu */
+    }
+
+    /* Powiększenie pigułek w menu pionowym w sidebarze */
+    [data-testid="stSidebar"] [data-testid="stPills"] button {
+        width: 100% !important; /* Przyciski na całą szerokość panelu */
+        margin-bottom: 10px !important;
+        justify-content: flex-start !important;
+        font-size: 20px !important;
+    }
     <style>
     /* 1. POWIĘKSZENIE TEKSTU DLA WSZYSTKICH PRZYCISKÓW PILLS */
     [data-testid="stPills"] button p {
@@ -88,18 +106,42 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. NOWOCZESNE MENU POZIOME (POTEM MENU) ---
-branza = st.pills(
-    "Wybierz rodzaj prac:", 
-    [
-        "🏠 Start","🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", 
-        "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", 
-        "🚿 Łazienka", "🚪 Drzwi", "🚀 PANEL INWESTORA (PREMIUM)"
-    ],
-    selection_mode="single",
-    default="🏠 Start"
-)
+# --- KONFIGURACJA SIDEBARU (UKRYTE MENU) ---
+with st.sidebar:
+    st.markdown("<h2 style='color: #00D395;'>Menu ProCalc</h2>", unsafe_allow_html=True)
+    
+    # Przenosimy pigułki do sidebaru
+    branza = st.pills(
+        "Nawigacja:", 
+        [
+            "🏠 Start", 
+            "🎨 Malowanie", "🧱 Szpachlowanie", "📐 Podłogi", 
+            "🏗️ Tynkowanie", "⚒️ Sucha Zabudowa", "⚡ Elektryka", 
+            "🚿 Łazienka", "🚪 Drzwi", 
+            "🚀 PANEL INWESTORA (PREMIUM)",
+            "📞 Kontakt"
+        ],
+        selection_mode="single",
+        default="🏠 Start"
+    )
+    
+    st.markdown("---")
+    st.caption("Wersja 2.0 ProCalc")
 
+# --- STRONA KONTAKT (NOWOŚĆ) ---
+if branza == "📞 Kontakt":
+    st.header("📞 Skontaktuj się z nami")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("""
+        <div style='font-size: 20px;'>
+            <p>Masz pytania dotyczące kosztorysu?</p>
+            <p>📧 <b>biuro@procalc.pl</b></p>
+            <p>📞 <b>+48 123 456 789</b></p>
+        </div>
+        """, unsafe_allow_html=True)
+    with c2:
+        st.info("Pracujemy od poniedziałku do piątku w godzinach 8:00 - 16:00")
 st.markdown("---")
 
 # --- LOGIKA WYŚWIETLANIA STRON ---
