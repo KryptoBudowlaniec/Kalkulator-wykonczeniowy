@@ -10,7 +10,7 @@ col_logo, col_nav = st.columns([1, 3])
 with col_logo:
     try:
         # Logo z lewej strony, dopasowane do wysokości menu
-        st.image("logo2.png", width=180)
+        st.image("logo2.png", width=300)
     except:
         st.error("Brak logo2.png")
 
