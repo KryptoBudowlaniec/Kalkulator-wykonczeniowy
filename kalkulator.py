@@ -152,13 +152,12 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Wersja 2.0 ProCalc")
 
-# --- LOGIKA STRON ---
 if branza == "Start":
     # 1. Nagłówki główne (wyśrodkowane)
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; font-size: 28px; margin-bottom: 50px; color: #424245;'>Twój Cyfrowy Kosztorysant Remontowy</h3>", unsafe_allow_html=True)
     
-    # 2. Kontener centralny (Dlaczego ProCalc) - bez zdjęć po bokach
+    # 2. Kontener centralny (Dlaczego ProCalc) - wyśrodkowany
     col_c1, col_center, col_c2 = st.columns([1, 3, 1])
     
     with col_center:
@@ -190,58 +189,19 @@ if branza == "Start":
         
         st.info("💡 **WYBIERZ SEKCJĘ Z MENU BOCZNEGO, ABY ROZPOCZĄĆ.**")
 
-    # 3. Kafelki możliwości (opcjonalnie, jeśli chcesz je zostawić pod spodem)
-    st.markdown("<br><br><h3 style='text-align: center;'>🚀 Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
-    # Tutaj możesz wkleić swój kod z c1, c2, c3 (9 kafelków), jeśli mają zostać na dole.
-
-    with col_s2:
-        try:
-            st.image("logo2.png", use_container_width=True)
-        except:
-            st.warning("Dodaj logo2.png do folderu.")
-
-    st.markdown("<br><h3>Co oferują nasze kalkulatory?</h3>", unsafe_allow_html=True)
+    # 3. Kafelki możliwości
+    st.markdown("<br><br><h2 style='text-align: center;'>🚀 Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
     
-    # Rząd 1: Malowanie, Szpachlowanie, Tynkowanie
-   
+    # Rząd 1
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">Malowanie</div>
-            <p>Finalne wykończenie powierzchni.</p>
-            <ul class="feature-list">
-                <li>Wydajność farb i gruntów</li>
-                <li>Obliczanie m2 ścian</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="feature-card"><div class="feature-title">Malowanie</div><p>Finalne wykończenie powierzchni.</p><ul class="feature-list"><li>Wydajność farb i gruntów</li><li>Obliczanie m2 ścian</li></ul></div>""", unsafe_allow_html=True)
     with c2:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">Szpachlowanie</div>
-            <p>Przygotowanie gładzi.</p>
-            <ul class="feature-list">
-                <li>Masy gotowe i sypkie</li>
-                <li>Zbrojenie narożników</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="feature-card"><div class="feature-title">Szpachlowanie</div><p>Przygotowanie gładzi.</p><ul class="feature-list"><li>Masy gotowe i sypkie</li><li>Zbrojenie narożników</li></ul></div>""", unsafe_allow_html=True)
     with c3:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">Tynkowanie</div>
-            <p>Prace tynkarskie.</p>
-            <ul class="feature-list">
-                <li>Tynki maszynowe</li>
-                <li>Listwy i narożniki</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card"><div class="feature-title">Tynkowanie</div><p>Prace tynkarskie.</p><ul class="feature-list"><li>Tynki maszynowe</li><li>Listwy i narożniki</li></ul></div>""", unsafe_allow_html=True)
 
-    # Rząd 2: G-K, Elektryka, Łazienka
+    # Rząd 2
     c4, c5, c6 = st.columns(3)
     with c4:
         st.markdown("""<div class="feature-card"><div class="feature-title">Sucha Zabudowa</div><p>Konstrukcje i sufity podwieszane.</p><ul class="feature-list"><li>Profile CD60 i UD27</li><li>Płyty GK i wkręty</li><li>Zabudowy rur i wnęk</li></ul></div>""", unsafe_allow_html=True)
@@ -250,7 +210,7 @@ if branza == "Start":
     with c6:
         st.markdown("""<div class="feature-card"><div class="feature-title">Łazienka</div><p>Kompleksowy remont sanitarny.</p><ul class="feature-list"><li>Płytki i hydroizolacja</li><li>Biały montaż (WC/Prysznic)</li><li>Klej i fugi</li></ul></div>""", unsafe_allow_html=True)
 
-   # Rząd 3: Podłogi, Drzwi, Inwestor PRO
+    # Rząd 3
     c7, c8, c9 = st.columns(3)
     with c7:
         st.markdown("""<div class="feature-card"><div class="feature-title">Podłogi</div><p>Panele, winyle i drewno.</p><ul class="feature-list"><li>Metraż + naddatek 10%</li><li>Podkłady i listwy mb</li><li>Progi i dylatacje</li></ul></div>""", unsafe_allow_html=True)
