@@ -420,7 +420,7 @@ if branza == "Start":
         # Pytanie 6: Eksport do PDF
         st.markdown("""
             <div class="faq-card-question">Czy otrzymam listę zakupów do sklepu?</div>
-            <div class=".faq-card-answer-blue ">Tak. Po zakończeniu obliczeń możesz wygenerować gotowy raport z listą materiałów, którą wystarczy pokazać sprzedawcy w hurtowni.</div>
+            <div class="faq-card-answer-blue">Tak. Po zakończeniu obliczeń możesz wygenerować gotowy raport z listą materiałów, którą wystarczy pokazać sprzedawcy w hurtowni.</div>
         """, unsafe_allow_html=True)
         
 
