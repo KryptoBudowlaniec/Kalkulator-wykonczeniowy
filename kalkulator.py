@@ -32,6 +32,25 @@ st.markdown("""
         filter: drop-shadow(0 0 10px rgba(0, 211, 149, 0.4));
     }
 
+    /* POWIĘKSZENIE MENU W SIDEBARZE */
+    [data-testid="stSidebar"] [data-testid="stPills"] button {
+        height: 60px !important;
+        margin-bottom: 8px !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stPills"] button p {
+        font-size: 22px !important; /* DUŻA CZCIONKA */
+        font-weight: 800 !important;
+        color: white !important;
+    }
+
+    /* Kolor aktywnej pigułki w sidebarze */
+    [data-testid="stSidebar"] button[aria-checked="true"] {
+        background-color: #00D395 !important;
+    }
+    [data-testid="stSidebar"] button[aria-checked="true"] p {
+        color: black !important;
+    }
 
     /* Powiększenie pigułek (pionowe i poziome) */
     div[data-testid="stPills"] button, [data-testid="stSidebar"] [data-testid="stPills"] button {
@@ -136,27 +155,17 @@ if 'pokoje' not in st.session_state: st.session_state.pokoje = []
 # --- MENU BOCZNE ---
 with st.sidebar:
     st.markdown("<h2 style='color: #00D395;'>Menu ProCalc</h2>", unsafe_allow_html=True)
+    
+    
     branza = st.pills(
         "Nawigacja:", 
-        [
-            "Start", "Malowanie", "Szpachlowanie", "Tynkowanie", 
-            "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", 
-            "Drzwi", "PANEL INWESTORA (PREMIUM)", "Kontakt"
-        ],
+        ["Start", "Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", "Drzwi", "PANEL INWESTORA (PREMIUM)", "Kontakt"],
         selection_mode="single",
         default="Start"
     )
-    st.markdown("""
-    <div class="feature-card" style="height: auto; margin-bottom: 15px;">
-        <div class="feature-title" style="font-size: 18px;">Malowanie</div>
-        <p style="font-size: 14px !important;">Wydajność farb i m2 ścian.</p>
-    </div>
     
-    <div class="feature-card" style="height: auto; margin-bottom: 15px;">
-        <div class="feature-title" style="font-size: 18px;">Elektryka</div>
-        <p style="font-size: 14px !important;">Instalacje i osprzęt.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("---")
+    st.caption("Wersja 2.0 ProCalc")
 
 # --- LOGIKA STRON ---
 if branza == "Start":
