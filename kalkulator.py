@@ -404,32 +404,35 @@ if branza == "Start":
 
  # --- SEKCJA FAQ ---
     st.markdown("<br><br><br>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>Często Zadawane Pytania (FAQ)</h2>", unsafe_allow_html=True)
     
-    col_f1, col_faq, col_f2 = st.columns([1, 2.5, 1])
-    
-    with col_faq:
-        with st.expander("Czy wyceny materiałów są aktualne?", expanded=False):
-            st.write("""
-            Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen w największych marketach budowlanych (Castorama, Leroy Merlin, Obi) oraz hurtowniach ogólnopolskich.
-            """)
+    # Kontener, który wymusza nową linię i separację
+    with st.container():
+        st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>Często Zadawane Pytania (FAQ)</h2>", unsafe_allow_html=True)
+        
+        # Używamy nieco szerszej kolumny centralnej dla czytelności na mobile
+        f_space1, f_content, f_space2 = st.columns([0.5, 3, 0.5])
+        
+        with f_content:
+            # Każdy expander w osobnym kontenerze dla bezpieczeństwa wizualnego
+            with st.expander("⭐ Czy wyceny materiałów są aktualne?", expanded=False):
+                st.write("Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen rynkowych.")
+                
+            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
             
-        with st.expander("Czy mogę zapisać swój kosztorys?", expanded=False):
-            st.write("""
-            Funkcja zapisywania i edycji projektów jest dostępna dla zalogowanych użytkowników w wersji **Premium PRO**. Użytkownicy darmowi mogą wygenerować jednorazowy raport.
-            """)
-            
-        with st.expander("Jak dokładne są listy zakupowe?", expanded=False):
-            st.write("""
-            Nasze algorytmy uwzględniają standardowe normy zużycia (np. wydajność farby, zużycie kleju na m2) oraz dodają bezpieczny naddatek (zazwyczaj 10%) na odpady i docięcia.
-            """)
-            
-        with st.expander("Czy ProCalc uwzględnia koszty robocizny?", expanded=False):
-            st.write("""
-            Tak, w każdej sekcji możesz wpisać własną stawkę za jednostkę (m2/szt/pkt) lub skorzystać z naszych stawek sugerowanych, które odpowiadają średnim rynkowym.
-            """)
+            with st.expander("⭐ Czy mogę zapisać swój kosztorys?", expanded=False):
+                st.write("Funkcja zapisywania projektów jest dostępna dla zalogowanych użytkowników w wersji Premium PRO.")
+                
+            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
+            with st.expander("⭐ Jak dokładne są listy zakupowe?", expanded=False):
+                st.write("Algorytmy uwzględniają normy zużycia oraz standardowy naddatek 10% na odpady.")
+                
+            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+
+            with st.expander("⭐ Czy ProCalc uwzględnia koszty robocizny?", expanded=False):
+                st.write("Tak, w każdej sekcji możesz wpisać własną stawkę za jednostkę lub skorzystać z sugerowanych.")
+
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
 
 
 
