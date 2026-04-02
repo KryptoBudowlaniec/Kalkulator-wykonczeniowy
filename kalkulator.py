@@ -249,32 +249,6 @@ st.markdown("""
 
 st.markdown("---") # Linia oddzielająca header od reszty strony
 
-# --- NOWOCZESNE MENU GŁÓWNE (POZIOME NA ŚRODKU) ---
-st.markdown("<br>", unsafe_allow_html=True)
-col_m1, col_menu, col_m2 = st.columns([0.5, 5, 0.5])
-
-with col_menu:
-    # Główne nawigacyjne pigułki
-    nawigacja = st.pills(
-        "Menu:", 
-        ["Start", "Kalkulatory Branżowe", "Inwestor Premium", "Kontakt"],
-        selection_mode="single",
-        default="Start"
-    )
-
-# --- LOGIKA PODMENU DLA BRANŻ ---
-if nawigacja == "Kalkulatory Branżowe":
-    st.markdown("<div style='text-align: center; margin-top: -10px;'>", unsafe_allow_html=True)
-    branza = st.pills(
-        "Wybierz branżę:", 
-        ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", "Drzwi"],
-        selection_mode="single",
-        default="Malowanie"
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
-else:
-    # Jeśli nie jesteśmy w kalkulatorach, 'branza' przyjmuje wartość główną (Start / Kontakt / Inwestor)
-    branza = nawigacja
 
 # --- STAN APLIKACJI ---
 if 'pokoje_pro' not in st.session_state: st.session_state.pokoje_pro = []
