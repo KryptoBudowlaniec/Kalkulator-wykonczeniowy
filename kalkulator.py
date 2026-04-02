@@ -29,25 +29,41 @@ st.markdown("""
         background-color: #FFFFFF !important; 
         color: #1E1E1E !important;
     }
-        /* WYMUSZENIE WIDOCZNOŚCI PRZYCISKU MENU (HAMBURGERA) */
-    button[kind="headerNoPadding"] {
-        background-color: #00D395 !important; /* Miętowe tło przycisku */
-        color: white !important; /* Białe kreski */
+    /* 1. UKRYCIE TEKSTU 'double_arrow_right' */
+    button[data-testid="stSidebarCollapseIcon"] span {
+        display: none !important;
+    }
+
+    /* 2. STYLIZACJA PRZYCISKU MENU (HAMBURGERA) */
+    button[data-testid="stSidebarCollapseIcon"] {
+        background-color: #00D395 !important; /* Miętowe tło */
         border-radius: 50% !important;
-        padding: 5px !important;
-        box-shadow: 0px 4px 10px rgba(0, 211, 149, 0.3);
+        width: 50px !important;
+        height: 50px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0px 4px 15px rgba(0, 211, 149, 0.4) !important;
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 999999 !important;
     }
 
-    /* Alternatywny selektor dla samej ikonki, gdyby powyższy nie zadziałał */
-    [data-testid="stSidebarCollapseIcon"] {
-        color: #00D395 !important;
-        transform: scale(1.5); /* Powiększenie ikonki */
+    /* 3. WSTAWIANIE WŁASNEJ IKONY (TRZY KRESKI) ZAMIAST TEKSTU */
+    button[data-testid="stSidebarCollapseIcon"]::after {
+        content: "☰" !important; /* Symbol hamburgera */
+        color: white !important;
+        font-size: 28px !important;
+        font-weight: bold !important;
     }
 
-    /* Usunięcie przezroczystości, która mogłaby ukrywać przycisk */
-    .st-emotion-cache-198z7it {
-        opacity: 1 !important;
-        visibility: visible !important;
+    /* 4. DOPASOWANIE SIDEBARU PO OTWARCIU */
+    section[data-testid="stSidebar"] button[data-testid="stSidebarCollapseIcon"] {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        left: auto !important;
+        right: 10px !important;
     }
 
 
