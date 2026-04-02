@@ -58,26 +58,24 @@ st.markdown("""
         border: 1px solid #2D2F39;
         border-radius: 15px;
         padding: 25px;
-        height: 400px; /* Stała wysokość dla równego układu */
+        height: 400px;
         transition: 0.3s;
         margin-bottom: 20px;
+        text-align: center; /* Centruje tytuł i opis */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
-    .feature-card:hover {
-        border-color: #00D395;
-        transform: translateY(-5px);
-    }
-    .feature-title {
-        color: #00D395;
-        font-size: 22px;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
+    
     .feature-list {
         font-size: 15px;
         color: #B0B3B8;
         line-height: 1.5;
         list-style-type: '✔ ';
-        padding-left: 15px;
+        padding-left: 0;
+        text-align: left; /* Lista zostaje od lewej, ale wewnątrz wyśrodkowanego kontenera */
+        display: inline-block; /* Pozwala liście być wyśrodkowaną jako blok */
+        margin-top: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
