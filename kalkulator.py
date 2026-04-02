@@ -381,27 +381,29 @@ if branza == "Start":
         st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
  # --- SEKCJA FAQ ---
-        # --- SEKCJA FAQ (ZWĘŻONA I WYŚRODKOWANA) ---
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; margin-bottom: 30px;'>Często Zadawane Pytania</h2>", unsafe_allow_html=True)
+        # --- SEKCJA FAQ (KAFELKI STAŁE) ---
+    st.markdown("<br><br><h2 style='text-align: center;'>Często Zadawane Pytania</h2>", unsafe_allow_html=True)
     
-    # Otwieramy zwężony kontener
-    st.markdown('<div class="faq-container">', unsafe_allow_html=True)
+    col_f1, col_faq, col_f2 = st.columns([1, 2.5, 1])
     
-    with st.expander("Czy wyceny materiałów są aktualne?", expanded=False):
-        st.write("Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen rynkowych.")
-        
-    with st.expander("Czy mogę zapisać swój kosztorys?", expanded=False):
-        st.write("Funkcja zapisywania projektów jest dostępna dla zalogowanych użytkowników w wersji Premium PRO.")
+    with col_faq:
+        # Pytanie 1
+        st.markdown("""
+            <div class="faq-card-question">Czy wyceny materiałów są aktualne?</div>
+            <div class="faq-card-answer">Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen rynkowych z największych marketów i hurtowni.</div>
+        """, unsafe_allow_html=True)
 
-    with st.expander("Jak dokładne są listy zakupowe?", expanded=False):
-        st.write("Algorytmy uwzględniają normy zużycia oraz standardowy naddatek 10% na odpady.")
-        
-    with st.expander("Czy ProCalc uwzględnia koszty robocizny?", expanded=False):
-        st.write("Tak, w każdej sekcji możesz wpisać własną stawkę lub skorzystać z sugerowanych.")
+        # Pytanie 2
+        st.markdown("""
+            <div class="faq-card-question">Czy mogę zapisać swój kosztorys?</div>
+            <div class="faq-card-answer-blue">Funkcja zapisywania i edycji wielu projektów jest dostępna dla zalogowanych użytkowników w wersji <b>Premium PRO</b>.</div>
+        """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True) # Zamykamy kontener
-    st.markdown("<br><br>", unsafe_allow_html=True)
+        # Pytanie 3
+        st.markdown("""
+            <div class="faq-card-question">Jak dokładne są listy zakupowe?</div>
+            <div class="faq-card-answer">Algorytmy uwzględniają oficjalne normy zużycia producentów oraz standardowy naddatek 10% na odpady i docięcia.</div>
+        """, unsafe_allow_html=True)
 
 
 
