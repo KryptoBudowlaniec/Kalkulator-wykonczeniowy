@@ -433,78 +433,89 @@ if branza == "Malowanie":
             
             c4, c5 = st.columns(2)
             with c4:
-                f_marka = st.selectbox("Wybierz farbę dla tej ściany:", list(baza_kolory.keys()))
+                f_marka = st.selectbox("Wybierz farbę kolorową:", list(baza_kolory.keys()))
             with c5:
                 kolor_hex = st.color_picker("Wizualizacja koloru:", "#D3D3D3")
             
             if st.button("✅ Dodaj do kosztorysu", use_container_width=True):
                 st.session_state.pokoje_pro.append({
-                    "pokoj": nazwa_p, "szer": szer, "wys": wys, 
-                    "marka": f_marka, "kolor": kolor_hex, "cena_L": baza_kolory[f_marka]
+                    "pokoj": nazwa_p, 
+                    "szer": szer, 
+                    "wys": wys, 
+                    "marka": f_marka, 
+                    "kolor": kolor_hex, 
+                    "cena_L": baza_kolory[f_marka]
                 })
                 st.rerun()
 
         if not st.session_state.pokoje_pro:
             st.info("Twój szczegółowy kosztorys jest pusty. Dodaj pierwszą ścianę powyżej.")
         else:
-            # PODLICZENIE PRO
+            # --- GLOBALNE USTAWIENIA AKCESORIÓW DLA PRO ---
+            st.markdown("### 🛠️ Ustawienia techniczne projektu")
+            col_acc1, col_acc2 = st.columns(2)
+            with col_acc1:
+                f_grunt = st.selectbox("Wybierz Grunt:", list(baza_grunty.keys()), key="pro_grunt")
+                f_tasma = st.selectbox("Wybierz Taśmę:", list(baza_tasmy.keys()), key="pro_tasma")
+            with col_acc2:
+                czy_gruntowac = st.checkbox("Czy gruntować wszystkie ściany?", value=True)
+                czy_akryl = st.checkbox("Doliczyć akryl szpachlowy?", value=True)
+
+            # --- LOGIKA OBLICZEŃ PRO ---
             total_m2_pro = 0
             koszt_farb_pro = 0
-            zestawienie_farb = {} # Grupowanie według marek i kolorów
+            zestawienie_farb = {}
 
-            st.markdown("### 📋 Twoje zestawienie PRO")
-            
-            for i, s in enumerate(st.session_state.pokoje_pro):
+            for s in st.session_state.pokoje_pro:
                 pow_s = s['szer'] * s['wys']
                 total_m2_pro += pow_s
                 zuzycie = (pow_s / 10) * 2 # 2 warstwy
-                koszt_s = zuzycie * s['cena_L']
-                koszt_farb_pro += koszt_s
+                koszt_farb_pro += zuzycie * s['cena_L']
                 
-                # Klucz do grupowania: Marka + Kolor HEX
                 klucz = (s['marka'], s['kolor'])
                 zestawienie_farb[klucz] = zestawienie_farb.get(klucz, 0) + zuzycie
 
-                # Wyświetlanie wiersza ściany
-                st.markdown(f"""
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                    <span><b>{i+1}. {s['pokoj']}</b> ({s['szer']}m x {s['wys']}m)</span>
-                    <span style="color: {s['kolor']}; font-weight: bold;">{round(pow_s, 1)} m²</span>
-                </div>
-                """, unsafe_allow_html=True)
+            # Obliczenia akcesoriów na podstawie sumy m2
+            l_grunt_pro = (total_m2_pro * 0.15) if czy_gruntowac else 0
+            szt_tasma_pro = (total_m2_pro / 15) + 1
+            szt_akryl_pro = (total_m2_pro / 12) if czy_akryl else 0
+            opk_folia_pro = (total_m2_pro / 20) + 1
 
-            # PODSUMOWANIE ZAKUPÓW PRO
+            koszt_akcesoriów = (l_grunt_pro * baza_grunty[f_grunt]) + \
+                              (szt_tasma_pro * baza_tasmy[f_tasma]) + \
+                              (szt_akryl_pro * 15) + \
+                              (opk_folia_pro * 12) # Średnia cena folii
+
+            # --- WYŚWIETLANIE WYNIKÓW ---
             st.markdown("---")
-            col_res1, col_res2 = st.columns(2)
-            
-            with col_res1:
-                st.metric("Suma powierzchni PRO", f"{round(total_m2_pro, 1)} m²")
-            with col_res2:
-                st.metric("Koszt farb kolorowych", f"{round(koszt_farb_pro)} zł")
+            res_c1, res_c2, res_c3 = st.columns(3)
+            res_c1.metric("Powierzchnia Ścian", f"{round(total_m2_pro, 1)} m²")
+            res_c2.metric("Koszt Materiałów", f"{round(koszt_farb_pro + koszt_akcesoriów)} zł")
+            res_c3.metric("Potrzebny Grunt", f"{round(l_grunt_pro, 1)} L")
 
-            st.subheader("🛒 Lista zakupów farb kolorowych:")
-            for (marka, kolor), litry in zestawienie_farb.items():
-                p5 = int(litry // 5)
-                reszta = litry % 5
-                p25 = 1 if reszta > 0 else 0
+            # SZCZEGÓŁOWA LISTA ZAKUPÓW
+            with st.expander("🛒 PEŁNA LISTA ZAKUPÓW (SZCZEGÓŁY)", expanded=True):
+                st.write("### 🎨 Farby Kolorowe")
+                for (marka, kolor), litry in zestawienie_farb.items():
+                    st.markdown(f"- **{marka}** (Kolor: {kolor}): **{round(litry, 1)} L**")
                 
-                st.markdown(f"""
-                <div style="display: flex; align-items: center; margin-bottom: 15px; background: white; padding: 10px; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
-                    <div style="width: 30px; height: 30px; background-color: {kolor}; border-radius: 50%; margin-right: 15px; border: 2px solid #eee;"></div>
-                    <div>
-                        <b>{marka}</b><br>
-                        Potrzebujesz: {round(litry, 1)} L → Kup: {p5}x5L + {p25}x2.5L
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.write("### 🛠️ Grunt i Akcesoria")
+                st.write(f"- Grunt **{f_grunt}**: {round(l_grunt_pro, 1)} L (ok. {int(l_grunt_pro/5 + 0.99)} bańki 5L)")
+                st.write(f"- Taśma **{f_tasma}**: {int(szt_tasma_pro + 0.5)} rolek")
+                st.write(f"- Folia malarska: {int(opk_folia_pro + 0.5)} opakowań")
+                if czy_akryl:
+                    st.write(f"- Akryl szpachlowy: {int(szt_akryl_pro + 0.9)} szt.")
 
-            if st.button("🗑️ Wyczyść projekt PRO"):
-                st.session_state.pokoje_pro = []
-                st.rerun()
-
-            # PRZYCISK PDF (ZABLOKOWANY)
-            if st.button("📄 Pobierz zestawienie PRO (PDF)", use_container_width=True):
-                st.error("Funkcja dostępna tylko dla użytkowników PREMIUM.")
+            # PRZYCISKI AKCJI
+            st.write("##")
+            c_btn1, c_btn2 = st.columns(2)
+            with c_btn1:
+                if st.button("🗑️ Wyczyść projekt PRO", use_container_width=True):
+                    st.session_state.pokoje_pro = []
+                    st.rerun()
+            with c_btn2:
+                if st.button("📄 Generuj Raport PDF", use_container_width=True):
+                    st.warning("🔒 Funkcja PDF dostępna tylko dla zalogowanych użytkowników PRO.")
 
 elif branza == "Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
