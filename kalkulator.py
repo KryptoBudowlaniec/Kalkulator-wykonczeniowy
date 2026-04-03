@@ -42,14 +42,12 @@ else:
     branza = nawigacja
 
 
-# --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
-# --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO - FINAL FIX) ---
+# --- 1. ZINTEGROWANE STYLE CSS (FIX: FAQ COLORS & NO ARROWS) ---
 st.markdown("""
 <style>
-    /* Import czcionki Inter */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-    /* Globalne ustawienia bieli i czcionki */
+    /* 1. Globalne ustawienia */
     html, body, [class*="st-"] {
         font-family: 'Inter', sans-serif !important;
     }
@@ -59,27 +57,26 @@ st.markdown("""
         color: #1E1E1E !important; 
     }
 
-    /* FIX: Blokada napisu arrow/strzałek w elementach systemowych Streamlita */
-    [data-testid="stExpander"] li::before, 
-    [data-testid="stSidebar"] li::before,
-    .st-emotion-cache-16ids93 li::before {
-        content: "" !important;
+    /* --- BLOKADA STRZAŁEK (ARROW FIX) --- */
+    /* Najpierw wyłączamy strzałki dla KAŻDEGO elementu li na stronie */
+    li::before {
+        content: none !important;
         display: none !important;
     }
 
-    /* Nagłówek i wyrównanie kolumn */
-    [data-testid="stHorizontalBlock"] {
-        align-items: center !important;
+    /* Włączamy strzałkę TYLKO I WYŁĄCZNIE wewnątrz Twoich kafelków możliwości */
+    .feature-list li::before {
+        content: "›" !important;
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        color: #00D395 !important;
+        font-weight: bold !important;
+        font-size: 18px !important;
     }
 
-    /* Nawigacja (Pigułki) na prawo */
-    .nav-container {
-        display: flex;
-        justify-content: flex-end;
-        width: 100%;
-    }
-
-    div[data-testid="stPills"] {
+    /* 2. Nawigacja */
+    .nav-container, div[data-testid="stPills"] {
         display: flex;
         justify-content: flex-end !important;
         width: 100% !important;
@@ -90,14 +87,6 @@ st.markdown("""
         border: 1px solid #DEE2E6 !important;
         border-radius: 12px !important;
         padding: 10px 20px !important;
-        min-height: 45px !important;
-        transition: 0.2s;
-    }
-
-    div[data-testid="stPills"] button p {
-        color: #495057 !important;
-        font-size: 16px !important;
-        font-weight: 600 !important;
     }
 
     div[data-testid="stPills"] button[aria-checked="true"] {
@@ -109,7 +98,7 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* Kafelki Korzyści (Benefit Cards) */
+    /* 3. Kafelki (Benefits & Features) */
     .benefit-card {
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
@@ -117,31 +106,16 @@ st.markdown("""
         border-radius: 15px !important;
         padding: 30px !important;
         margin-bottom: 25px !important;
-        transition: 0.3s ease;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.03);
     }
 
-    .benefit-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.08);
-    }
-
-    /* Kafelki Możliwości (Feature Cards) */
     .feature-card {
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
         border-radius: 12px !important;
         padding: 25px !important;
-        margin-bottom: 20px !important;
         height: 300px !important; 
-        transition: 0.3s ease;
         display: flex;
         flex-direction: column;
-    }
-
-    .feature-card:hover {
-        border-color: #00D395 !important;
-        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.04);
     }
 
     .feature-title {
@@ -149,10 +123,8 @@ st.markdown("""
         font-size: 19px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
-        margin-bottom: 12px !important;
     }
 
-    /* LISTY TYLKO DLA TWOICH KAFELKÓW (zabezpieczenie przed "arrow") */
     .feature-list {
         list-style: none !important;
         padding: 0 !important;
@@ -163,34 +135,44 @@ st.markdown("""
 
     .feature-list li {
         font-size: 14px !important;
-        color: #343A40 !important;
         padding-left: 18px !important;
         position: relative !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
     }
 
-    /* Subtelny znacznik › TYLKO wewnątrz .feature-list */
-    .feature-list li::before {
-        content: "›" !important;
-        position: absolute !important;
-        left: 0 !important;
-        color: #00D395 !important;
-        font-weight: bold !important;
-        font-size: 18px !important;
+    /* 4. SEKCJA FAQ (FIX: PRZYWRÓCENIE KOLORÓW) */
+    .faq-card-question {
+        background-color: #FFFFFF !important;
+        border: 2px solid #00D395 !important;
+        border-radius: 15px 15px 0 0 !important;
+        padding: 20px !important;
+        font-weight: 800 !important;
+        color: #000000 !important;
+        text-align: center !important;
+        margin-top: 20px !important;
     }
 
-    /* Sekcja Zaufania (Trust Items) */
-    .trust-item {
-        background-color: #F8F9FA !important;
-        border: 1px solid #E9ECEF !important;
-        border-radius: 12px !important;
-        padding: 15px 25px !important;
-        margin-bottom: 12px !important;
-        display: flex;
-        align-items: center;
+    .faq-card-answer {
+        background-color: #00D395 !important;
+        border-radius: 0 0 15px 15px !important;
+        padding: 20px !important;
+        color: #FFFFFF !important;
+        text-align: center !important;
+        margin-bottom: 20px !important;
     }
 
-    /* Przyciski i FAQ */
+    /* Przywrócony kolor niebieski/granatowy */
+    .faq-card-answer-blue {
+        background-color: #0E172B !important;
+        border: 2px solid #0E172B !important;
+        color: #FFFFFF !important;
+        border-radius: 0 0 15px 15px !important;
+        padding: 20px !important;
+        text-align: center !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* 5. Przyciski */
     div.stButton > button {
         background-color: #00D395 !important;
         color: white !important;
@@ -198,10 +180,6 @@ st.markdown("""
         height: 60px !important;
         border-radius: 15px !important;
     }
-
-    .faq-card-question { background-color: #FFFFFF; border: 2px solid #00D395; border-radius: 15px 15px 0 0; padding: 20px; font-weight: 800; text-align: center;}
-    .faq-card-answer { background-color: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFFFFF !important; text-align: center;}
-
 </style>
 """, unsafe_allow_html=True)
 
