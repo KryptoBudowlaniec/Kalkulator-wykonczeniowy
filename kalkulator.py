@@ -245,22 +245,22 @@ if branza == "Start":
 
     cols_zaufanie = st.columns(3)
     for i, (tytul, opis) in enumerate(zalety):
-        with cols_zaufanie[i % 3]:
-            st.markdown(f"""
-            <div class="custom-card">
-                <div class="card-title">{tytul}</div>
-                <div class="card-text">{opis}</div>
-            </div>
-            """, unsafe_allow_html=True)
+    with cols_zaufanie[i % 3]:
+        st.markdown(f"""
+        <div class="custom-card">
+            <div class="card-title">{tytul}</div>
+            <div class="card-text">{opis}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
         
         # Przycisk Demo wyśrodkowany
-        if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True):
-            st.session_state.branza = "Malowanie"
-            st.rerun()
-            
-        st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
+    if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True, key="btn_demo_main"):
+        st.session_state.branza = "Malowanie"
+        st.rerun()
+
+    st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
  # --- SEKCJA FAQ ---
         # --- SEKCJA FAQ (KAFELKI STAŁE) ---
