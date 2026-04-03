@@ -323,22 +323,6 @@ for i, (tytul, opis) in enumerate(zalety):
         """, unsafe_allow_html=True)
 
 
-elif branza == "Kontakt":
-    st.header("📞 Kontakt")
-    st.write("📧 biuro@procalc.pl | 📞 +48 123 456 789")
-
-# --- TUTAJ WRZUCASZ LOGO (NA SAMY KONIEC PLIKU) ---
-st.markdown("<br><br>", unsafe_allow_html=True)
-
-_, col_logo_bottom, _ = st.columns([2, 1, 2])
-with col_logo_bottom:
-    try:
-        st.image("logo3.png", use_container_width=True)
-    except:
-        pass
-        
-st.markdown("<p style='text-align: center; color: #BDC3C7; font-size: 14px;'>© 2024 ProCalc. Wszelkie prawa zastrzeżone.</p>", unsafe_allow_html=True)
-st.markdown("<br><br>", unsafe_allow_html=True)
 # --- SEKCJA: MALOWANIE ---
 if branza == "Malowanie":
     st.subheader("Kalkulator Malarski")
@@ -1287,3 +1271,26 @@ elif branza == "Panel Inwestora":
             st.warning("⚠️ Niski zysk! Rozważ negocjację ceny lub optymalizację kosztów.")
         else:
             st.success("💰 Inwestycja wygląda obiecująco!")
+
+
+elif branza == "Kontakt":
+    st.header("📞 Kontakt")
+    st.write("📧 biuro@procalc.pl")
+
+# 2. DOPIERO TUTAJ (na samym końcu pliku, bez żadnych if/elif) 
+# wrzucasz kod stopki i logo, żeby pojawiały się na każdej podstronie:
+
+st.markdown("<br><br>", unsafe_allow_html=True)
+
+# Tworzymy 3 kolumny, aby logo było małe i idealnie na środku
+_, col_logo_bottom, _ = st.columns([2, 1, 2])
+
+with col_logo_bottom:
+    try:
+        st.image("logo3.png", use_container_width=True)
+    except:
+        pass 
+            
+# Mały napis pod dolnym logo
+st.markdown("<p style='text-align: center; color: #BDC3C7; font-size: 14px;'>© 2024 ProCalc. Wszelkie prawa zastrzeżone.</p>", unsafe_allow_html=True)
+st.markdown("<br><br>", unsafe_allow_html=True)
