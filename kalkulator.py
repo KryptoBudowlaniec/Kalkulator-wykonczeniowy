@@ -41,7 +41,6 @@ if nawigacja == "Kalkulatory":
 else:
     branza = nawigacja
 
-st.markdown("---") # Linia oddzielająca header od reszty strony
 
 # --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
 st.markdown("""
