@@ -145,39 +145,30 @@ if 'pokoje' not in st.session_state: st.session_state.pokoje = []
 # --- MENU BOCZNE ---
 
 if branza == "Start":
-    # 1. Nagłówki główne
+    # Nagłówki główne
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0; font-weight: 800;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; font-size: 26px; margin-bottom: 50px; color: #495057;'>Twój Cyfrowy Kosztorysant Wykończeniowy</h3>", unsafe_allow_html=True)
     
-    # 2. Kontener centralny
+    # 2. Kontener centralny (Dla kogo jest ProCalc)
     col_c1, col_center, col_c2 = st.columns([1, 4, 1])
     
     with col_center:
         st.markdown("<h2 style='text-align: center; color: #000000; margin-bottom: 40px; font-weight: 800;'>Dla kogo jest ProCalc?</h2>", unsafe_allow_html=True)
         
-        # Punkt 1: Inwestorzy
-        st.markdown("""
-        <div class="benefit-card">
-            <div class="benefit-title">Inwestorzy</div>
-            <div class="benefit-text">Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję.</div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Używamy ujednoliconej klasy custom-card z efektem hover
+        benefity = [
+            ["Inwestorzy", "Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję."],
+            ["Ekipy Wykonawcze", "Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami, błędami i zbędnymi kursami."],
+            ["Klienci Prywatni", "Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał i robociznę."]
+        ]
 
-        # Punkt 2: Ekipy
-        st.markdown("""
-        <div class="benefit-card">
-            <div class="benefit-title">Ekipy Wykonawcze</div>
-            <div class="benefit-text">Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami, błędami w zamówieniach i zbędnymi kursami do marketu.</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Punkt 3: Klienci Indywidualni
-        st.markdown("""
-        <div class="benefit-card">
-            <div class="benefit-title">Klienci Prywatni</div>
-            <div class="benefit-text">Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał, a ile za robociznę jeszcze przed startem prac.</div>
-        </div>
-        """, unsafe_allow_html=True)
+        for tytul, tekst in benefity:
+            st.markdown(f"""
+            <div class="custom-card">
+                <div class="card-title">{tytul}</div>
+                <div class="card-text">{tekst}</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -198,39 +189,35 @@ if branza == "Start":
             </div>
         """, unsafe_allow_html=True)
 
-
-    # 3. Kafelki możliwości
-    # 3. Kafelki możliwości
-    st.markdown("<br><br><h2 style='text-align: center;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
+    st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
     
-    # Rząd 1
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown("""<div class="feature-card"><div class="feature-title">Malowanie</div><p>Finalne wykończenie powierzchni.</p><ul class="feature-list"><li>Wydajność farb i gruntów</li><li>Obliczanie m2 ścian</li></ul></div>""", unsafe_allow_html=True)
-    with c2:
-        st.markdown("""<div class="feature-card"><div class="feature-title">Szpachlowanie</div><p>Przygotowanie gładzi.</p><ul class="feature-list"><li>Masy gotowe i sypkie</li><li>Zbrojenie narożników</li></ul></div>""", unsafe_allow_html=True)
-    with c3:
-        st.markdown("""<div class="feature-card"><div class="feature-title">Tynkowanie</div><p>Prace tynkarskie.</p><ul class="feature-list"><li>Tynki maszynowe</li><li>Listwy i narożniki</li></ul></div>""", unsafe_allow_html=True)
+    oferta = [
+        ["Malowanie", "Finalne wykończenie powierzchni.", ["Wydajność farb", "Obliczanie m2"]],
+        ["Szpachlowanie", "Przygotowanie gładzi.", ["Masy sypkie", "Zbrojenie narożników"]],
+        ["Tynkowanie", "Prace tynkarskie.", ["Tynki maszynowe", "Listwy i narożniki"]],
+        ["Sucha Zabudowa", "Konstrukcje GK.", ["Profile CD/UD", "Płyty i wkręty"]],
+        ["Elektryka", "Instalacja prądowa.", ["mb przewodów", "Osprzęt i rozdzielnica"]],
+        ["Łazienka", "Kompleksowy remont.", ["Płytki i izolacja", "Biały montaż"]],
+        ["Podłogi", "Panele i winyle.", ["Metraż + naddatek", "Listwy i podkłady"]],
+        ["Drzwi", "Stolarka wewnętrzna.", ["Bezprzylgowe", "Ościeżnice regulowane"]],
+        ["Premium PRO", "Dla profesjonalistów.", ["Raporty PDF", "Kalkulator ROI"]]
+    ]
 
-    # Rząd 2
-    c4, c5, c6 = st.columns(3)
-    with c4:
-        st.markdown("""<div class="feature-card"><div class="feature-title">Sucha Zabudowa</div><p>Konstrukcje i sufity podwieszane.</p><ul class="feature-list"><li>Profile CD60 i UD27</li><li>Płyty GK i wkręty</li><li>Zabudowy rur i wnęk</li></ul></div>""", unsafe_allow_html=True)
-    with c5:
-        st.markdown("""<div class="feature-card"><div class="feature-title">Elektryka</div><p>Pełna instalacja prądowa.</p><ul class="feature-list"><li>mb przewodów (Siła/TV/LAN)</li><li>Osprzęt i rozdzielnica</li><li>Trudność (żelbet/cegła)</li></ul></div>""", unsafe_allow_html=True)
-    with c6:
-        st.markdown("""<div class="feature-card"><div class="feature-title">Łazienka</div><p>Kompleksowy remont sanitarny.</p><ul class="feature-list"><li>Płytki i hydroizolacja</li><li>Biały montaż (WC/Prysznic)</li><li>Klej i fugi</li></ul></div>""", unsafe_allow_html=True)
-
-    # Rząd 3
-    c7, c8, c9 = st.columns(3)
-    with c7:
-        st.markdown("""<div class="feature-card"><div class="feature-title">Podłogi</div><p>Panele, winyle i drewno.</p><ul class="feature-list"><li>Metraż + naddatek 10%</li><li>Podkłady i listwy mb</li><li>Progi i dylatacje</li></ul></div>""", unsafe_allow_html=True)
-    with c8:
-        st.markdown("""<div class="feature-card"><div class="feature-title">Drzwi</div><p>Montaż stolarki wewnętrznej.</p><ul class="feature-list"><li>Rewersyjne i bezprzylgowe</li><li>Klamki i rozety</li><li>Ościeżnice regulowane</li></ul></div>""", unsafe_allow_html=True)
-    with c9:
-        st.markdown("""<div class="feature-card" style="border: 2px solid #00D395;"><div class="feature-title">Premium PRO</div><p>Dla fliperów i deweloperów.</p><ul class="feature-list"><li>Zbiorczy raport materiałowy</li><li>Kalkulator ROI (Rentowność)</li><li>Generowanie PDF</li></ul></div>""", unsafe_allow_html=True)
-
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    cols_oferta = st.columns(3)
+    for i, item in enumerate(oferta):
+        with cols_oferta[i % 3]:
+            # Dodajemy styl dla Premium (zielona ramka)
+            style_extra = "border: 2px solid #00D395;" if item[0] == "Premium PRO" else ""
+            st.markdown(f"""
+            <div class="custom-card" style="{style_extra}">
+                <div class="card-title">{item[0]}</div>
+                <p class="card-text" style="font-size: 14px; margin-bottom: 10px;">{item[1]}</p>
+                <ul class="card-list">
+                    <li>{item[2][0]}</li>
+                    <li>{item[2][1]}</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
     
     st.markdown("""
@@ -245,32 +232,26 @@ if branza == "Start":
     """, unsafe_allow_html=True)
 
      # --- SEKCJA ZAUFANIA (PUNKTY) ---
-    st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
     
-    col_t1, col_trust, col_t2 = st.columns([1, 2.5, 1])
-    
-    with col_trust:
-        st.markdown("<h2 style='text-align: center; margin-top: 50px;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
+    zalety = [
+        ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
+        ["CENY", "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem"],
+        ["EKSPERCI", "Konsultacje merytoryczne z fachowcami"],
+        ["DOŚWIADCZENIE", "Ponad 10 000 m² zrealizowanych inwestycji"],
+        ["PRECYZJA", "Listy zakupowe ograniczające odpady"],
+        ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
+    ]
 
-zalety = [
-    ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
-    ["CENY", "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem"],
-    ["EKSPERCI", "Konsultacje merytoryczne z czynnymi fachowcami"],
-    ["DOŚWIADCZENIE", "Ponad 10 000 m² zrealizowanych inwestycji"],
-    ["PRECYZJA", "Listy zakupowe ograniczające odpady do minimum"],
-    ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki materiałów"]
-]
-
-# Wyświetlamy w 3 kolumnach (2 rzędy), żeby wyglądało to jak nowoczesna siatka
-cols = st.columns(3)
-for i, (tytul, opis) in enumerate(zalety):
-    with cols[i % 3]:
-        st.markdown(f"""
-        <div class="custom-card">
-            <div class="card-title">{tytul}</div>
-            <div class="card-text">{opis}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    cols_zaufanie = st.columns(3)
+    for i, (tytul, opis) in enumerate(zalety):
+        with cols_zaufanie[i % 3]:
+            st.markdown(f"""
+            <div class="custom-card">
+                <div class="card-title">{tytul}</div>
+                <div class="card-text">{opis}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -323,6 +304,26 @@ for i, (tytul, opis) in enumerate(zalety):
             <div class="faq-card-question">Czy otrzymam listę zakupów do sklepu?</div>
             <div class="faq-card-answer-blue">Tak. Po zakończeniu obliczeń możesz wygenerować gotowy raport z listą materiałów, którą wystarczy pokazać sprzedawcy w hurtowni.</div>
         """, unsafe_allow_html=True)
+
+elif branza == "Kontakt":
+    st.markdown("<h1 style='text-align: center; color: #00D395;'>📞 Kontakt</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="custom-card" style="text-align: center;">
+        <p class="card-text">Masz pytania? Napisz do nas!</p>
+        <h3 style="color: #0E172B;">biuro@procalc.pl</h3>
+        <p class="card-text">Infolinia: +48 123 456 789</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# --- 3. STOPKA (Zawsze na dole) ---
+st.markdown("<br><hr>", unsafe_allow_html=True)
+_, col_logo_bottom, _ = st.columns([2, 1, 2])
+with col_logo_bottom:
+    try:
+        st.image("logo3.png", use_container_width=True)
+    except:
+        pass 
+st.markdown("<p style='text-align: center; color: #BDC3C7; font-size: 14px;'>© 2024 ProCalc. Wszelkie prawa zastrzeżone.</p><br><br>", unsafe_allow_html=True)
 
 
 # --- SEKCJA: MALOWANIE ---
@@ -1274,25 +1275,3 @@ elif branza == "Panel Inwestora":
         else:
             st.success("💰 Inwestycja wygląda obiecująco!")
 
-
-elif branza == "Kontakt":
-    st.header("📞 Kontakt")
-    st.write("📧 biuro@procalc.pl")
-
-# 2. DOPIERO TUTAJ (na samym końcu pliku, bez żadnych if/elif) 
-# wrzucasz kod stopki i logo, żeby pojawiały się na każdej podstronie:
-
-st.markdown("<br><br>", unsafe_allow_html=True)
-
-# Tworzymy 3 kolumny, aby logo było małe i idealnie na środku
-_, col_logo_bottom, _ = st.columns([2, 1, 2])
-
-with col_logo_bottom:
-    try:
-        st.image("logo3.png", use_container_width=True)
-    except:
-        pass 
-            
-# Mały napis pod dolnym logo
-st.markdown("<p style='text-align: center; color: #BDC3C7; font-size: 14px;'>© 2024 ProCalc. Wszelkie prawa zastrzeżone.</p>", unsafe_allow_html=True)
-st.markdown("<br><br>", unsafe_allow_html=True)
