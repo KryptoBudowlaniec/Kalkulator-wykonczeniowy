@@ -3,6 +3,9 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
+if 'widok' not in st.session_state:
+    st.session_state.widok = "Start"
+
 # --- HEADER: LOGO LEWA (WIĘKSZE) | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) # Zwiększyłem proporcję dla logo
 
