@@ -63,14 +63,12 @@ st.markdown("""
         margin-bottom: 15px !important;
         transition: 0.3s ease-in-out !important;
         box-shadow: 0px 2px 8px rgba(0,0,0,0.02) !important;
-        
         display: flex !important;
         flex-direction: column !important;
+        align-items: center !important; /* Wszystko na środek */
         text-align: center !important;
-        
-        /* USUNIĘTO sztywne height: 250px */
-        height: auto !important; 
-        min-height: 180px !important; /* Minimalna wysokość, żeby trzymały linię w rzędzie */
+        height: auto !important;
+        min-height: 200px !important;
     }
     /* EFEKT RUCHU (Hover) */
     .custom-card:hover {
@@ -101,26 +99,20 @@ st.markdown("""
         list-style: none !important;
         padding: 0 !important;
         margin: 10px 0 0 0 !important;
-        /* USUNIĘTO border-top, żeby nie było kreski */
-        border-top: none !important; 
-        padding-top: 0 !important;
+        border-top: none !important; /* TO USUWA TĘ KRESKĘ */
         width: 100% !important;
-        text-align: left !important;
     }
 
     .card-list li {
         font-size: 13px !important;
-        color: #495057 !important; /* Ładny szary kolor zamiast "zwykłej" czerni */
+        color: #495057 !important;
         font-family: 'Inter', sans-serif !important;
         margin-bottom: 5px !important;
-        position: relative !important;
-        padding-left: 15px !important;
+        display: block !important;
     }
 
     .card-list li::before {
-        content: "•" !important;
-        position: absolute !important;
-        left: 0 !important;
+        content: "• " !important;
         color: #00D395 !important;
         font-weight: bold !important;
     }
