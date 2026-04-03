@@ -55,82 +55,84 @@ st.markdown("""
     li::before { content: none !important; display: none !important; }
 
     /* 2. UNIWERSALNY KAFELEK (Dla obu sekcji) */
-    .custom-card {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E9ECEF !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
-        margin-bottom: 15px !important;
-        
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        text-align: center !important;
-        
-        /* TO GWARANTUJE IDEALNE ODSTĘPY MIĘDZY ELEMENTAMI */
-        gap: 12px !important; 
-        
-        height: auto !important;
-        min-height: 220px !important;
-    }
-    /* EFEKT RUCHU (Hover) */
-    .custom-card:hover {
-        transform: translateY(-5px) !important;
-        border-color: #00D395 !important;
-        box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.1) !important;
-    }
+.custom-card-forwho {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E9ECEF !important;
+    border-radius: 12px !important;
+    padding: 24px 20px !important;
+    margin-bottom: 20px !important;
+    height: 180px !important;  /* Mniejsze */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 8px !important;
+}
 
-    .card-title {
-        color: #00D395 !important;
-        font-size: 18px !important;
-        font-weight: 800 !important;
-        text-transform: uppercase !important;
-        margin: 0 !important; 
-        padding: 0 !important;
-    }
+.custom-card-forwho:hover {
+    transform: translateY(-4px) !important;
+    border-color: #00D395 !important;
+    box-shadow: 0px 6px 16px rgba(0, 211, 149, 0.12) !important;
+}
 
-    .card-text {
-        color: #6C757D !important;
-        font-size: 14px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1.4 !important;
-    }
+/* KAFELEK DLA "DLACZEGO WARTO" - MIESZKI */
+.custom-card-why {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E9ECEF !important;
+    border-radius: 12px !important;
+    padding: 20px 16px !important;
+    margin-bottom: 20px !important;
+    height: 160px !important;  /* Jeszcze mniejsze */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 6px !important;
+}
 
-    .card-list {
-        list-style: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        width: 100% !important;
-    }
+.custom-card-why:hover {
+    transform: translateY(-3px) !important;
+    border-color: #00D395 !important;
+    box-shadow: 0px 4px 12px rgba(0, 211, 149, 0.1) !important;
+}
 
-    .card-list li {
-        font-size: 13px !important;
-        color: #495057 !important;
-        margin-bottom: 4px !important; /* Odstęp między punktami listy */
-        display: block !important;
-    }
+/* TEKST - MŃSZY I WYŚRODKOWANY */
+.forwho-title {
+    color: #00D395 !important;
+    font-size: 16px !important;  /* Mniejsze */
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+}
 
-    .card-list li::before {
-        content: "• " !important;
-        color: #00D395 !important;
-        font-weight: bold !important;
-    }
+.forwho-text {
+    color: #6C757D !important;
+    font-size: 13px !important;  /* Mniejsze */
+    margin: 0 !important;
+    text-align: center !important;
+    line-height: 1.35 !important;
+}
 
-    /* 3. FAQ i Przyciski */
-    .faq-card-question { background: #FFF; border: 2px solid #00D395; border-radius: 15px 15px 0 0; padding: 20px; font-weight: 800; text-align: center; margin-top: 20px;}
-    .faq-card-answer { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
-    .faq-card-answer-blue { background: #0E172B; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
+.why-title {
+    color: #00D395 !important;
+    font-size: 15px !important;  /* Mniejsze */
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    text-align: center !important;
+}
 
-    div.stButton > button {
-        background-color: #00D395 !important;
-        color: white !important;
-        font-weight: 800 !important;
-        height: 60px !important;
-        border-radius: 15px !important;
-        width: 100%;
-    }
+.why-text {
+    color: #495057 !important;
+    font-size: 12.5px !important;  /* Bardzo małe */
+    margin: 0 !important;
+    text-align: center !important;
+    line-height: 1.3 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -164,9 +166,9 @@ if branza == "Start":
 
         for tytul, tekst in benefity:
             st.markdown(f"""
-            <div class="custom-card">
-                <div class="card-title">{tytul}</div>
-                <div class="card-text">{tekst}</div>
+            <div class="custom-card-forwho">
+                <div class="forwho-title">{tytul}</div>
+                <div class="forwho-text">{tekst}</div>
             </div>
             """, unsafe_allow_html=True)
         
@@ -248,9 +250,9 @@ if branza == "Start":
     for i, (tytul, opis) in enumerate(zalety):
         with cols_zaufanie[i % 3]:
             st.markdown(f"""
-            <div class="custom-card">
-                <div class="card-title">{tytul}</div>
-                <div class="card-text">{opis}</div>
+            <div class="custom-card-why">
+                <div class="why-title">{tytul}</div>
+                <div class="why-text">{opis}</div>
             </div>
             """, unsafe_allow_html=True)
 
