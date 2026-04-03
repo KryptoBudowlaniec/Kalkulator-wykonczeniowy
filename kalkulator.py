@@ -200,6 +200,7 @@ if branza == "Start":
 
 
     # 3. Kafelki możliwości
+    # 3. Kafelki możliwości
     st.markdown("<br><br><h2 style='text-align: center;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
     
     # Rząd 1
@@ -230,6 +231,7 @@ if branza == "Start":
         st.markdown("""<div class="feature-card" style="border: 2px solid #00D395;"><div class="feature-title">Premium PRO</div><p>Dla fliperów i deweloperów.</p><ul class="feature-list"><li>Zbiorczy raport materiałowy</li><li>Kalkulator ROI (Rentowność)</li><li>Generowanie PDF</li></ul></div>""", unsafe_allow_html=True)
 
     st.markdown("<br><br>", unsafe_allow_html=True)
+
     
     st.markdown("""
         <div style='text-align: center; width: 100%; padding: 20px;'>
