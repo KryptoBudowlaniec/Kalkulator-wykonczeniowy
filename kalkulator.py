@@ -778,8 +778,8 @@ elif branza == "Szpachlowanie":
 
 
 # --- SEKCJA: PODŁOGI ---
-elif branza == "📐 Podłogi":
-    st.header("📐 Kalkulator Podłóg: Pływające vs Klejone")
+elif branza == "Podłogi":
+    st.header("Kalkulator Podłóg: Pływające vs Klejone")
     tab_p1, tab_p2 = st.tabs(["⚡ Szybka Wycena", "💎 Szczegóły Montażu"])
 
     with tab_p1:
@@ -936,8 +936,8 @@ elif branza == "Tynkowanie":
                     st.write(f"• **Zbrojenie:** {typ_tasmy}")
                     st.caption("Pamiętaj: Sufity w tym systemie liczymy w zakładce 'Sucha Zabudowa'.")
                     
-elif branza == "⚒️ Sucha Zabudowa":
-    st.header("⚒️ Kompleksowe Systemy G-K")
+elif branza == "Sucha Zabudowa":
+    st.header("Kompleksowe Systemy G-K")
     tab_gk1, tab_gk2 = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
 
     # --- BAZA CENOWA ---
@@ -1203,8 +1203,8 @@ elif branza == "Elektryka":
             st.warning("⚠️ **UWAGA:** Wycena nie uwzględnia zakupu lamp (oprawy oświetleniowe).")
             st.info("Ilość kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podłogach.")
 
-elif branza == "🚪 Drzwi":
-    st.header("🚪 Kalkulator Montażu Drzwi Wewnętrznych")
+elif branza == "Drzwi":
+    st.header("Kalkulator Montażu Drzwi Wewnętrznych")
     
     col_d1, col_d2 = st.columns([1, 1.2])
     
