@@ -357,31 +357,32 @@ elif branza == "Kontakt":
 
 
 
-# --- INICJALIZACJA STANU ---
-if 'pokoje_pro' not in st.session_state:
-    st.session_state.pokoje_pro = []
-
-if branza == "Malowanie":
-    st.subheader("🎨 Zaawansowany System Kosztorysowania")
-    tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
-
-    # --- BAZA WIEDZY (Stała dla obu sekcji) ---
-baza_biale = {
-    "Śnieżka Eko (Akryl)": 14, "Dekoral Polinak": 19, "Tikkurila Anti-Reflex 2": 38,
-    "Bondex Super White": 28, "Magnat Ultra Matt": 34, "Greinplast Comfort": 24
-}
-baza_kolory = {
-    "Dekoral Akrylit W": 24, "Beckers It's Simple": 38, "Tikkurila Optiva 5": 52,
-    "Magnat Ceramic": 62, "Dulux Kolory Świata": 28, "Bondex Smart Paint": 44
-}
-baza_grunty = {
-    "Unigrunt Atlas (Standard)": 7, "Mapei Primer G (Premium)": 15,
-    "Knauf Tiefengrund (Specjalistyczny)": 19, "Grunt Marketowy (Eko)": 4
-}
-baza_tasmy = {
-    "Żółta Papierowa (Market)": 12, "Solid (Niebieska)": 24,
-    "Blue Dolphin (Profesjonalna)": 34, "Tesa Precision (Premium)": 52, "3M / Scotch": 58
-}
+    # --- INICJALIZACJA STANU ---
+    if 'pokoje_pro' not in st.session_state:
+        st.session_state.pokoje_pro = []
+    
+    if branza == "Malowanie":
+    
+        st.subheader("🎨 Zaawansowany System Kosztorysowania")
+        tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
+    
+        # --- BAZA WIEDZY (Stała dla obu sekcji) ---
+        baza_biale = {
+        "Śnieżka Eko (Akryl)": 14, "Dekoral Polinak": 19, "Tikkurila Anti-Reflex 2": 38,
+        "Bondex Super White": 28, "Magnat Ultra Matt": 34, "Greinplast Comfort": 24
+        }
+        baza_kolory = {
+        "Dekoral Akrylit W": 24, "Beckers It's Simple": 38, "Tikkurila Optiva 5": 52,
+        "Magnat Ceramic": 62, "Dulux Kolory Świata": 28, "Bondex Smart Paint": 44
+        }
+        baza_grunty = {
+        "Unigrunt Atlas (Standard)": 7, "Mapei Primer G (Premium)": 15,
+        "Knauf Tiefengrund (Specjalistyczny)": 19, "Grunt Marketowy (Eko)": 4
+        }
+        baza_tasmy = {
+        "Żółta Papierowa (Market)": 12, "Solid (Niebieska)": 24,
+        "Blue Dolphin (Profesjonalna)": 34, "Tesa Precision (Premium)": 52, "3M / Scotch": 58
+        }
 
     # --- 1. ZAKŁADKA: SZYBKA WYCENA ---
     with tab_fast:
