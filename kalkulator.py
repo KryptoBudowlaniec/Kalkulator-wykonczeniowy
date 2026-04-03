@@ -191,7 +191,7 @@ if branza == "Start":
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
     
     oferta = [
-        ["Malowanie", "Finalne wykończenie powierzchni", "Wydajność farb", "Obliczanie m2"], 
+        ["Malowanie", ["Finalne wykończenie powierzchni", "Wydajność farb", "Obliczanie m2"]], 
         ["Szpachlowanie", "Przygotowanie gładzi.", ["Masy sypkie", "Zbrojenie narożników"]],
         ["Tynkowanie", "Prace tynkarskie.", ["Tynki maszynowe", "Listwy i narożniki"]],
         ["Sucha Zabudowa", "Konstrukcje GK.", ["Profile CD/UD", "Płyty i wkręty"]],
