@@ -1295,14 +1295,24 @@ elif branza == "Panel Inwestora":
             st.success("💰 Inwestycja wygląda obiecująco!")
 
 
-        # --- 3. STOPKA (Zawsze na dole) ---
-        st.markdown("<br><hr>", unsafe_allow_html=True)
-        _, col_logo_bottom, _ = st.columns([2, 1, 2])
-            with col_logo_bottom:
-            try:
-            st.image("logo3.png", use_container_width=True)
-        except:
-            pass 
-        st.markdown("<p style='text-align: center; color: #BDC3C7; font-size: 14px;'>© 2024 ProCalc. Wszelkie prawa zastrzeżone.</p><br><br>", unsafe_allow_html=True)
+st.markdown("<br><hr>", unsafe_allow_html=True)
 
+# Tworzymy 3 kolumny, żeby logo było idealnie na środku
+col_l, col_logo_bottom, col_r = st.columns([2, 1, 2])
+
+with col_logo_bottom:
+    try:
+        # Pamiętaj o poprawnym wcięciu wewnątrz 'with'
+        st.image("logo3.png", use_container_width=True)
+    except:
+        # Jeśli pliku nie ma, nic nie robimy
+        pass 
+
+# Tekst praw autorskich pod logo
+st.markdown("""
+    <p style='text-align: center; color: #BDC3C7; font-size: 14px; margin-top: 10px;'>
+        © 2024 ProCalc. Wszelkie prawa zastrzeżone.
+    </p>
+    <br><br>
+""", unsafe_allow_html=True)
 
