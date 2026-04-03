@@ -61,14 +61,17 @@ st.markdown("""
         border-radius: 12px !important;
         padding: 20px !important;
         margin-bottom: 15px !important;
-        transition: 0.3s ease-in-out !important;
-        box-shadow: 0px 2px 8px rgba(0,0,0,0.02) !important;
+        
         display: flex !important;
         flex-direction: column !important;
-        align-items: center !important; /* Wszystko na środek */
+        align-items: center !important;
         text-align: center !important;
+        
+        /* TO GWARANTUJE IDEALNE ODSTĘPY MIĘDZY ELEMENTAMI */
+        gap: 12px !important; 
+        
         height: auto !important;
-        min-height: 200px !important;
+        min-height: 220px !important;
     }
     /* EFEKT RUCHU (Hover) */
     .custom-card:hover {
@@ -82,32 +85,30 @@ st.markdown("""
         font-size: 18px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
-        margin-bottom: 10px !important;
-        /* Rezerwujemy tylko tyle miejsca, ile trzeba na tytuł */
-        min-height: 30px !important;
+        margin: 0 !important; 
+        padding: 0 !important;
     }
 
     .card-text {
         color: #6C757D !important;
         font-size: 14px !important;
+        margin: 0 !important;
+        padding: 0 !important;
         line-height: 1.4 !important;
-        /* Pozwalamy tekstowi swobodnie wypełniać przestrzeń */
-        margin-bottom: 10px !important;
     }
 
     .card-list {
         list-style: none !important;
         padding: 0 !important;
-        margin: 10px 0 0 0 !important;
-        border-top: none !important; /* TO USUWA TĘ KRESKĘ */
+        margin: 0 !important;
+        border: none !important;
         width: 100% !important;
     }
 
     .card-list li {
         font-size: 13px !important;
         color: #495057 !important;
-        font-family: 'Inter', sans-serif !important;
-        margin-bottom: 5px !important;
+        margin-bottom: 4px !important; /* Odstęp między punktami listy */
         display: block !important;
     }
 
