@@ -361,7 +361,11 @@ elif branza == "Kontakt":
 if 'pokoje_pro' not in st.session_state:
     st.session_state.pokoje_pro = []
 
-# --- BAZA WIEDZY (Stała dla obu sekcji) ---
+if branza == "Malowanie":
+    st.subheader("🎨 Zaawansowany System Kosztorysowania")
+    tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
+
+    # --- BAZA WIEDZY (Stała dla obu sekcji) ---
 baza_biale = {
     "Śnieżka Eko (Akryl)": 14, "Dekoral Polinak": 19, "Tikkurila Anti-Reflex 2": 38,
     "Bondex Super White": 28, "Magnat Ultra Matt": 34, "Greinplast Comfort": 24
@@ -378,10 +382,6 @@ baza_tasmy = {
     "Żółta Papierowa (Market)": 12, "Solid (Niebieska)": 24,
     "Blue Dolphin (Profesjonalna)": 34, "Tesa Precision (Premium)": 52, "3M / Scotch": 58
 }
-
-if branza == "Malowanie":
-    st.subheader("🎨 Zaawansowany System Kosztorysowania")
-    tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
 
     # --- 1. ZAKŁADKA: SZYBKA WYCENA ---
     with tab_fast:
