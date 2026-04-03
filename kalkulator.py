@@ -27,8 +27,6 @@ with col_nav:
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
-
 # --- PODMENU (Pojawia się pod headerem tylko gdy wybrano Kalkulatory) ---
 if nawigacja == "Kalkulatory":
     st.markdown("<br>", unsafe_allow_html=True)
