@@ -241,22 +241,45 @@ if branza == "Start":
         ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
     ]
 
-    _, col_zaufanie_left, col_zaufanie_right, _ = st.columns([1, 2.5, 2.5, 1])
+   st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
+    
+    # Otwieramy główny kontener centrujący dla całego bloku zalet
+    st.markdown('<div style="display: flex; justify-content: center; width: 100%;">', unsafe_allow_html=True)
+    
+    # Tworzymy 2 kolumny o równej szerokości, ale w węższym kontenerze (np. 800px)
+    # Używamy st.columns([1, 1]) wewnątrz st.container(), by zachować kontrolę
+    
+    zalety = [
+        ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
+        ["DOŚWIADCZENIE", "Ponad 10 000 m² zrealizowanych inwestycji"],
+        ["CENY", "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem"],
+        ["PRECYZJA", "Listy zakupowe ograniczające odpady"],
+        ["EKSPERCI", "Konsultacje merytoryczne z fachowcami"],
+        ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
+    ]
 
-    for i, (tytul, opis) in enumerate(zalety):
-        # Rozdzielamy parzyste na lewo, nieparzyste na prawo
-        target_col = col_zaufanie_left if i % 2 == 0 else col_zaufanie_right
+    # Tworzymy bazowy układ kolumn (tym razem 3, gdzie środkowa jest szeroka i trzyma treść)
+    _, col_main, _ = st.columns([1, 5, 1])
+
+    with col_main:
+        # Tu tworzymy wewnętrzne pod-kolumny
+        sub_l, sub_r = st.columns(2)
         
-        with target_col:
-            st.markdown(f"""
-            <div style="display: flex; align-items: flex-start; margin-bottom: 25px;">
-                <div style="color: #00D395; font-size: 24px; margin-right: 15px; font-weight: bold; margin-top: 2px; line-height: 1;">✔</div>
-                <div style="font-size: 15px; color: #495057; line-height: 1.5;">
-                    <b style="color: #1E1E1E; font-size: 16px; display: block; margin-bottom: 2px;">{tytul}</b>
-                    <span style="display: block;">{opis}</span>
+        for i, (tytul, opis) in enumerate(zalety):
+            target_col = sub_l if i % 2 == 0 else sub_r
+            
+            with target_col:
+                st.markdown(f"""
+                <div style="display: flex; align-items: flex-start; margin-bottom: 30px; padding-left: 20px;">
+                    <div style="color: #00D395; font-size: 24px; margin-right: 15px; font-weight: bold; margin-top: -2px; line-height: 1;">✔</div>
+                    <div style="font-size: 15px; color: #495057; line-height: 1.4;">
+                        <b style="color: #1E1E1E; font-size: 16px; display: block; margin-bottom: 2px; text-transform: uppercase;">{tytul}</b>
+                        <span style="display: block; opacity: 0.8;">{opis}</span>
+                    </div>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True) # Zamykamy główny div
     st.markdown("<br>", unsafe_allow_html=True)
         
     # Przycisk Demo wyśrodkowany
