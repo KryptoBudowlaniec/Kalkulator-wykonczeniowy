@@ -179,38 +179,37 @@ if 'pokoje' not in st.session_state: st.session_state.pokoje = []
 # --- MENU BOCZNE ---
 
 if branza == "Start":
-    # 1. Nagłówki główne (wyśrodkowane)
-    st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
-    # Zmieniono color na zielony (#00D395)
-    st.markdown("<h3 style='text-align: center; font-size: 28px; margin-bottom: 50px; color: #00D395;'>Twój Cyfrowy Kosztorysant Wykończeniowy</h3>", unsafe_allow_html=True)
+    # 1. Nagłówki główne
+    st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0; font-weight: 800;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; font-size: 26px; margin-bottom: 50px; color: #495057;'>Twój Cyfrowy Kosztorysant Wykończeniowy</h3>", unsafe_allow_html=True)
     
-    # 2. Kontener centralny (Dlaczego ProCalc) - wyśrodkowany
-    col_c1, col_center, col_c2 = st.columns([1, 3, 1])
+    # 2. Kontener centralny
+    col_c1, col_center, col_c2 = st.columns([1, 4, 1])
     
     with col_center:
-        st.markdown("<h2 style='text-align: center; color: #000000; margin-bottom: 40px;'>Dlaczego ProCalc?</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #000000; margin-bottom: 40px; font-weight: 800;'>Dla kogo jest ProCalc?</h2>", unsafe_allow_html=True)
         
         # Punkt 1: Inwestorzy
         st.markdown("""
-        <div style="text-align: center; border-bottom: 2px solid #00D395; padding-bottom: 30px; margin-bottom: 60px;">
-            <div style="color: #00D395; font-size: 26px; font-weight: 800; text-transform: uppercase;">Inwestorzy</div>
-            <div style="font-size: 19px; color: #000000; margin-top: 10px;">Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję.</div>
+        <div class="benefit-card">
+            <div class="benefit-title">Inwestorzy</div>
+            <div class="benefit-text">Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję.</div>
         </div>
         """, unsafe_allow_html=True)
 
         # Punkt 2: Ekipy
         st.markdown("""
-        <div style="text-align: center; border-bottom: 2px solid #00D395; padding-bottom: 30px; margin-bottom: 60px;">
-            <div style="color: #00D395; font-size: 26px; font-weight: 800; text-transform: uppercase;">Ekipy</div>
-            <div style="font-size: 19px; color: #000000; margin-top: 10px;">Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami i zbędnymi kursami do marketu.</div>
+        <div class="benefit-card">
+            <div class="benefit-title">Ekipy Wykonawcze</div>
+            <div class="benefit-text">Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami, błędami w zamówieniach i zbędnymi kursami do marketu.</div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Punkt 3: Klienci
+        # Punkt 3: Klienci Indywidualni
         st.markdown("""
-        <div style="text-align: center; border-bottom: 2px solid #00D395; padding-bottom: 30px; margin-bottom: 60px;">
-            <div style="color: #00D395; font-size: 26px; font-weight: 800; text-transform: uppercase;">Klienci</div>
-            <div style="font-size: 19px; color: #000000; margin-top: 10px;">Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał, a ile za robociznę.</div>
+        <div class="benefit-card">
+            <div class="benefit-title">Klienci Prywatni</div>
+            <div class="benefit-text">Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał, a ile za robociznę jeszcze przed startem prac.</div>
         </div>
         """, unsafe_allow_html=True)
         
