@@ -101,19 +101,24 @@ st.markdown("""
         list-style: none !important;
         padding: 0 !important;
         margin: 10px 0 0 0 !important;
-        border-top: 1px solid #F8F9FA !important;
-        padding-top: 10px !important;
+        /* USUNIĘTO border-top, żeby nie było kreski */
+        border-top: none !important; 
+        padding-top: 0 !important;
+        width: 100% !important;
         text-align: left !important;
     }
 
     .card-list li {
-        font-size: 12px !important; /* Kompaktowa lista */
-        color: #495057 !important;
-        margin-bottom: 4px !important;
+        font-size: 13px !important;
+        color: #495057 !important; /* Ładny szary kolor zamiast "zwykłej" czerni */
+        font-family: 'Inter', sans-serif !important;
+        margin-bottom: 5px !important;
+        position: relative !important;
+        padding-left: 15px !important;
     }
 
     .card-list li::before {
-        content: "›" !important;
+        content: "•" !important;
         position: absolute !important;
         left: 0 !important;
         color: #00D395 !important;
@@ -194,7 +199,7 @@ if branza == "Start":
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
     
     oferta = [
-        ["Malowanie", "Finalne wykończenie powierzchni.", "Wydajność farb", "Obliczanie m2"],
+        ["Malowanie", "Finalne wykończenie powierzchni.", ["Wydajność farb", "Obliczanie m2"]], 
         ["Szpachlowanie", "Przygotowanie gładzi.", ["Masy sypkie", "Zbrojenie narożników"]],
         ["Tynkowanie", "Prace tynkarskie.", ["Tynki maszynowe", "Listwy i narożniki"]],
         ["Sucha Zabudowa", "Konstrukcje GK.", ["Profile CD/UD", "Płyty i wkręty"]],
