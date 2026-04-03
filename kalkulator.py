@@ -44,33 +44,8 @@ st.markdown("---") # Linia oddzielająca header od reszty strony
 # --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
 st.markdown("""
 <style>
-
-    /* Globalne tło bieli */
-    .stApp { background-color: #FFFFFF !important; }
-
-    /* Wyrównanie pigułek, aby były jasne i widoczne */
-    div[data-testid="stPills"] button {
-        background-color: #F1F3F5 !important;
-        border: 1px solid #DEE2E6 !important;
-        color: #495057 !important;
-        padding: 10px 20px !important;
-    }
-
-    /* Aktywna pigułka (Twój miętowy) */
-    div[data-testid="stPills"] button[aria-checked="true"] {
-        background-color: #00D395 !important;
-        border: none !important;
-    }
-    div[data-testid="stPills"] button[aria-checked="true"] p {
-        color: white !important;
-    }
-
-    /* Wycentrowanie pionowe logo i menu w headerze */
-    [data-testid="stHorizontalBlock"] {
-        align-items: center;
-    }
     /* Import czcionki Inter */
-    @import url('https://googleapis.com');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
     /* 1. Globalne ustawienia bieli i czcionki */
     html, body, [class*="st-"] {
@@ -79,6 +54,11 @@ st.markdown("""
 
     .stApp { 
         background-color: #FFFFFF !important; 
+        color: #1E1E1E !important; /* Wymuszenie ciemnego tekstu */
+    }
+
+    /* Wymuszenie widoczności tekstu w standardowych elementach Streamlita */
+    p, span, div, label {
         color: #1E1E1E !important;
     }
 
@@ -89,42 +69,44 @@ st.markdown("""
         padding-top: 4rem;
     }
 
-/* Wyśrodkowanie pigułek w menu poziomym */
+    /* Wycentrowanie pionowe logo i menu w headerze */
+    [data-testid="stHorizontalBlock"] {
+        align-items: center;
+    }
+
+    /* 2. WYGLĄD MENU (PIGUŁKI) - SCALONE I OCZYSZCZONE */
     div[data-testid="stPills"] {
         display: flex;
         justify-content: center;
         width: 100%;
     }
     
-    /* Powiększenie pigułek menu głównego */
     div[data-testid="stPills"] button {
-        padding: 10px 25px !important;
-        font-size: 20px !important;
-    }
-    /* WYGLĄD PIGUŁEK W HEADERZE (JASNY STYL) */
-    div[data-testid="stPills"] button {
-        background-color: #F1F3F5 !important; /* Jasnoszare tło dla widoczności */
+        background-color: #F1F3F5 !important;
         border: 1px solid #DEE2E6 !important;
-        color: #495057 !important; /* Ciemnoszary tekst */
-        padding: 8px 16px !important;
-        min-height: 45px !important;
+        border-radius: 12px !important;
+        padding: 10px 25px !important;
+        min-height: 50px !important;
+        margin-bottom: 8px !important;
+        transition: 0.2s;
+    }
+
+    /* Tekst wewnątrz nieaktywnej pigułki */
+    div[data-testid="stPills"] button p {
+        color: #495057 !important;
+        font-size: 18px !important;
+        font-weight: 600 !important;
     }
 
     /* Aktywna pigułka */
     div[data-testid="stPills"] button[aria-checked="true"] {
         background-color: #00D395 !important;
-        color: white !important;
         border: none !important;
     }
 
     /* Tekst wewnątrz aktywnej pigułki */
     div[data-testid="stPills"] button[aria-checked="true"] p {
-        color: white !important;
-    }
-    
-    /* Tekst wewnątrz nieaktywnej pigułki */
-    div[data-testid="stPills"] button[aria-checked="false"] p {
-        color: #495057 !important;
+        color: #FFFFFF !important;
     }
 
     /* 3. NAGŁÓWKI */
@@ -135,32 +117,7 @@ st.markdown("""
         letter-spacing: -0.5px !important;
     }
 
-    div[data-testid="stPills"] button {
-        width: 100% !important;
-        min-height: 55px !important;
-        background-color: #F5F5F7 !important;
-        border: 1px solid #E5E5E7 !important;
-        border-radius: 12px !important;
-        margin-bottom: 8px !important;
-        transition: 0.2s;
-    }
-
-    div[data-testid="stPills"] button p {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-        color: #1D1D1F !important;
-    }
-
-    button[aria-checked="true"] {
-        background-color: #00D395 !important;
-        border: none !important;
-    }
-
-    button[aria-checked="true"] p {
-        color: #FFFFFF !important;
-    }
-
-    /* 5. KAFELKI (FEATURE & TRUST CARDS) */
+    /* 4. KAFELKI (FEATURE & TRUST CARDS) */
     .feature-card, .trust-card {
         background-color: #FBFBFB;
         border: 1px solid #F0F0F0;
@@ -183,7 +140,7 @@ st.markdown("""
     }
 
     .feature-title, .trust-title {
-        color: #00D395;
+        color: #00D395 !important;
         font-size: 26px;
         font-weight: 800;
         margin-bottom: 15px;
@@ -194,7 +151,7 @@ st.markdown("""
         color: #424245 !important;
     }
 
-    /* 6. LISTA ZALET (TRUST ITEMS) */
+    /* 5. LISTA ZALET (TRUST ITEMS) */
     .trust-item {
         background-color: #FFFFFF;
         border: 1px solid #F0F0F0;
@@ -207,13 +164,13 @@ st.markdown("""
     }
 
     .trust-check {
-        color: #00D395;
+        color: #00D395 !important;
         font-size: 24px;
         font-weight: bold;
         margin-right: 20px;
     }
 
-    /* 7. PRZYCISKI GŁÓWNE (CTA) */
+    /* 6. PRZYCISKI GŁÓWNE (CTA) */
     div.stButton > button {
         display: block !important;
         margin: 0 auto !important;
@@ -227,37 +184,40 @@ st.markdown("""
         box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.3) !important;
         text-transform: uppercase !important;
     }
+    
+    div.stButton > button p {
+        color: white !important; /* Gwarancja, że tekst na przycisku będzie biały */
+    }
 
-    /* Styl dla sekcji FAQ w kafelkach */
+    /* 7. SEKCJA FAQ */
     .faq-card-question {
         background-color: #FFFFFF;
         border: 2px solid #00D395;
-        border-radius: 15px 15px 0 0; /* Zaokrąglona tylko góra */
+        border-radius: 15px 15px 0 0;
         padding: 20px;
         text-align: center;
         font-size: 20px;
         font-weight: 800;
-        color: #000000;
+        color: #000000 !important;
         margin-top: 30px;
     }
 
     .faq-card-answer {
-        background-color: #00D395; /* Zielone tło odpowiedzi */
+        background-color: #00D395;
         border: 2px solid #00D395;
-        border-radius: 0 0 15px 15px; /* Zaokrąglony tylko dół */
+        border-radius: 0 0 15px 15px;
         padding: 20px;
         text-align: center;
         font-size: 18px;
-        color: #FFFFFF;
+        color: #FFFFFF !important;
         margin-bottom: 20px;
         box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.1);
     }
 
-    /* Opcjonalnie wersja z ciemnym niebieskim dla odmiany co drugie pytanie */
     .faq-card-answer-blue {
-        background-color: #0E172B; /* Ciemny niebieski */
+        background-color: #0E172B;
         border: 2px solid #0E172B;
-        color: #FFFFFF;
+        color: #FFFFFF !important;
         border-radius: 0 0 15px 15px;
         padding: 20px;
         text-align: center;
