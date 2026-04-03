@@ -229,31 +229,36 @@ if branza == "Start":
         </div>
     """, unsafe_allow_html=True)
 
-    # --- SEKCJA ZAUFANIA (PUNKTY) ---
+   # --- SEKCJA ZAUFANIA (PUNKTY) ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
     
     zalety = [
         ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
-        ["CENY", "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem"],
-        ["EKSPERCI", "Konsultacje merytoryczne z fachowcami"],
         ["DOŚWIADCZENIE", "Ponad 10 000 m² zrealizowanych inwestycji"],
+        ["CENY", "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem"],
         ["PRECYZJA", "Listy zakupowe ograniczające odpady"],
+        ["EKSPERCI", "Konsultacje merytoryczne z fachowcami"],
         ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
     ]
 
-    # POPRAWKA 2: Prawidłowe użycie kolumn dla sekcji "Dlaczego warto nam zaufać?"
-    cols_zaufanie = st.columns(3)
+    # Triki z układem: [1, 2.5, 2.5, 1] 
+    # Skrajne jedynki to puste marginesy blokujące rozjeżdżanie się tekstu.
+    # 2.5 to nasze dwie główne kolumny na treść.
+    _, col_zaufanie_left, col_zaufanie_right, _ = st.columns([1, 2.5, 2.5, 1])
+
     for i, (tytul, opis) in enumerate(zalety):
-        with cols_zaufanie[i % 3]:
+        # Parzyste indeksy (0, 2, 4) wrzucamy do lewej kolumny, nieparzyste (1, 3, 5) do prawej
+        target_col = col_zaufanie_left if i % 2 == 0 else col_zaufanie_right
+        
+        with target_col:
             st.markdown(f"""
-            <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                <div style="color: #00D395; font-size: 24px; margin-right: 15px; font-weight: bold;">✔</div>
-                <div style="font-size: 14px; color: #495057;">
-                    <b style="color: #1E1E1E;">{tytul}</b><br>{opis}
+            <div style="display: flex; align-items: center; margin-bottom: 25px;">
+                <div style="color: #00D395; font-size: 26px; margin-right: 15px; font-weight: bold;">✔</div>
+                <div style="font-size: 15px; color: #495057;">
+                    <b style="color: #1E1E1E; font-size: 16px;">{tytul}</b><br>{opis}
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
     st.markdown("<br>", unsafe_allow_html=True)
         
     # Przycisk Demo wyśrodkowany
