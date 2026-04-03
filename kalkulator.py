@@ -245,13 +245,13 @@ if branza == "Start":
 
     cols_zaufanie = st.columns(3)
     for i, (tytul, opis) in enumerate(zalety):
-    with cols_zaufanie[i % 3]:
-        st.markdown(f"""
-        <div class="custom-card">
-            <div class="card-title">{tytul}</div>
-            <div class="card-text">{opis}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        with cols_zaufanie[i % 3]:
+            st.markdown(f"""
+            <div class="custom-card">
+                <div class="card-title">{tytul}</div>
+                <div class="card-text">{opis}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
         
