@@ -5,7 +5,6 @@ st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
 
 # --- HEADER: LOGO LEWA (WIĘKSZE) | MENU PRAWA ---
-st.markdown("---")
 col_logo, col_nav = st.columns([1.5, 2.5]) # Zwiększyłem proporcję dla logo
 
 with col_logo:
