@@ -56,11 +56,28 @@ st.markdown("""
     /* Fix na nieszczęsne "arrow" - ukrywamy systemowe punktory */
     li::before { content: none !important; display: none !important; }
 
+    [data-testid="stMarkdownContainer"] ul {
+        list-style-type: none !important;
+        padding-left: 0px !important;
+        margin-left: 0px !important;
+    }
+
+    [data-testid="stMarkdownContainer"] li {
+        list-style-type: none !important;
+    }
+
+    /* 2. Ukrycie pseudo-elementów (tych strzałek), które Streamlit dodaje przed LI */
+    [data-testid="stMarkdownContainer"] li::before {
+        content: none !important;
+        display: none !important;
+    }
+
     /* 2. UNIWERSALNY KAFELEK (Dla obu sekcji) */
     .custom-card {
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
         border-radius: 12px !important;
+        list-style: none !important;
         padding: 20px !important;
         margin-bottom: 15px !important;
         
@@ -100,6 +117,10 @@ st.markdown("""
     }
 
     .card-list {
+        content: "• " !important;
+        color: #00D395 !important;
+        font-weight: bold !important;
+        margin-right: 8px !important;
         list-style: none !important;
         padding: 0 !important;
         margin: 0 !important;
