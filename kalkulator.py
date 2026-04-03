@@ -5,7 +5,7 @@ st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
 
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
-col_logo, col_nav = st.columns([1.5, 2]) 
+col_logo, col_nav = st.columns([1.2, 2]) 
 
 with col_logo:
     try:
@@ -55,29 +55,6 @@ st.markdown("""
     html, bo/* Wyśrodkowanie pionowe elementów w kolumnach */
     [data-testid="stHorizontalBlock"] {
         align-items: center !important;
-    }
-
-    /* Popychamy pigułki do prawej strony */
-    div.nav-container {
-        display: flex;
-        justify-content: flex-end; /* To przesunie menu do prawej */
-        width: 100%;
-    }
-
-    /* Ważne: musimy nadpisać poprzednie wyśrodkowanie pigułek */
-    div[data-testid="stPills"] {
-        display: flex;
-        justify-content: flex-end !important; /* Nadpisujemy center na flex-end */
-        width: auto !important;
-    }
-
-    /* Opcjonalnie: zwiększenie odstępu między logiem a menu na urządzeniach mobilnych */
-    @media (max-width: 768px) {
-        div.nav-container {
-            justify-content: center; /* Na komórkach lepiej zostawić na środku */
-        }
-    }dy, [class*="st-"] {
-        font-family: 'Inter', sans-serif !important;
     }
 
     .stApp { 
