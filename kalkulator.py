@@ -197,6 +197,67 @@ st.markdown("""
         line-height: 1.6 !important;
     }
 
+    /* Kontener kafelka możliwości */
+    .feature-card {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E9ECEF !important;
+        border-radius: 12px !important;
+        padding: 30px !important;
+        margin-bottom: 20px !important;
+        height: 300px !important; 
+        transition: 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .feature-card:hover {
+        border-color: #00D395 !important;
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    .feature-title {
+        color: #00D395 !important;
+        font-size: 19px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important; /* Wielkie litery dla profesjonalnego looku */
+        letter-spacing: 0.5px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .feature-card p {
+        font-size: 15px !important;
+        color: #6C757D !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Lista bez kropek i emoji */
+    .feature-list {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-top: 1px solid #F1F3F5 !important; /* Delikatna linia oddzielająca */
+        padding-top: 15px !important;
+    }
+
+    .feature-list li {
+        font-size: 14px !important;
+        color: #343A40 !important;
+        padding-left: 18px !important;
+        position: relative;
+        margin-bottom: 10px !important;
+    }
+
+    /* Minimalistyczna strzałka zamiast kropki */
+    .feature-list li::before {
+        content: "›" !important; /* Bardziej subtelny znak niż strzałka */
+        position: absolute;
+        left: 0;
+        color: #00D395 !important;
+        font-weight: bold;
+        font-size: 18px;
+        line-height: 14px;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
