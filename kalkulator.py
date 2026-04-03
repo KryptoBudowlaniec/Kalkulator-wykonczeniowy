@@ -334,15 +334,6 @@ elif branza == "Kontakt":
     </div>
     """, unsafe_allow_html=True)
 
-# --- 3. STOPKA (Zawsze na dole) ---
-st.markdown("<br><hr>", unsafe_allow_html=True)
-_, col_logo_bottom, _ = st.columns([2, 1, 2])
-with col_logo_bottom:
-    try:
-        st.image("logo3.png", use_container_width=True)
-    except:
-        pass 
-st.markdown("<p style='text-align: center; color: #BDC3C7; font-size: 14px;'>© 2024 ProCalc. Wszelkie prawa zastrzeżone.</p><br><br>", unsafe_allow_html=True)
 
 
 # --- SEKCJA: MALOWANIE ---
