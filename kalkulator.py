@@ -43,12 +43,13 @@ else:
 
 
 # --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
+# --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO - FINAL FIX) ---
 st.markdown("""
 <style>
     /* Import czcionki Inter */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-    /* 1. Globalne ustawienia bieli i czcionki */
+    /* Globalne ustawienia bieli i czcionki */
     html, body, [class*="st-"] {
         font-family: 'Inter', sans-serif !important;
     }
@@ -58,19 +59,26 @@ st.markdown("""
         color: #1E1E1E !important; 
     }
 
-    /* Wyrównanie pionowe elementów w kolumnach nagłówka */
+    /* FIX: Blokada napisu arrow/strzałek w elementach systemowych Streamlita */
+    [data-testid="stExpander"] li::before, 
+    [data-testid="stSidebar"] li::before,
+    .st-emotion-cache-16ids93 li::before {
+        content: "" !important;
+        display: none !important;
+    }
+
+    /* Nagłówek i wyrównanie kolumn */
     [data-testid="stHorizontalBlock"] {
         align-items: center !important;
     }
 
-    /* Kontener dla menu, żeby pchnąć je na prawo */
+    /* Nawigacja (Pigułki) na prawo */
     .nav-container {
         display: flex;
         justify-content: flex-end;
         width: 100%;
     }
 
-    /* 2. WYGLĄD MENU (PIGUŁKI) - PRZESUNIĘTE NA PRAWO */
     div[data-testid="stPills"] {
         display: flex;
         justify-content: flex-end !important;
@@ -101,74 +109,11 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* Reszta Twoich stylów (Kafelki, Przyciski, FAQ) */
-    .feature-card, .trust-card {
-        background-color: #FBFBFB;
-        border: 1px solid #F0F0F0;
-        border-radius: 20px;
-        padding: 35px;
-        text-align: center; 
-        margin-bottom: 20px;
-    }
-
-    .feature-title { color: #00D395 !important; font-size: 26px; font-weight: 800; }
-
-    div.stButton > button {
-        background-color: #00D395 !important;
-        color: white !important;
-        font-weight: 800 !important;
-        height: 60px !important;
-        border-radius: 15px !important;
-        text-transform: uppercase !important;
-    }
-    
-    .faq-card-question { background-color: #FFFFFF; border: 2px solid #00D395; border-radius: 15px 15px 0 0; padding: 20px; font-weight: 800; color: #000000 !important; margin-top: 30px; text-align: center;}
-    .faq-card-answer { background-color: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFFFFF !important; text-align: center;}
-    .faq-card-answer-blue { background-color: #0E172B; border-radius: 0 0 15px 15px; padding: 20px; color: #FFFFFF !important; text-align: center;}
-
-    /* Styl dla pojedynczego punktu zaufania */
-    .trust-item {
-        background-color: #F8F9FA !important; /* Bardzo jasne szare tło */
-        border: 1px solid #E9ECEF !important; /* Delikatna ramka */
-        border-radius: 12px !important;
-        padding: 15px 25px !important;
-        margin-bottom: 12px !important;
-        display: flex;
-        align-items: center;
-        transition: 0.3s ease;
-    }
-
-    /* Efekt po najechaniu myszką */
-    .trust-item:hover {
-        background-color: #FFFFFF !important;
-        border-color: #00D395 !important;
-        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
-        transform: translateX(5px); /* Delikatne wysunięcie w prawo */
-    }
-
-    /* Styl ikony "ptaszka" */
-    .trust-check {
-        color: #00D395 !important;
-        font-size: 22px !important;
-        font-weight: bold !important;
-        margin-right: 20px !important;
-        flex-shrink: 0; /* Ikona nie będzie się zgniatać */
-    }
-
-    /* Styl tekstu wewnątrz punktu */
-    .trust-item-text {
-        color: #212529 !important;
-        font-size: 17px !important;
-        font-weight: 500 !important;
-        line-height: 1.4 !important;
-        text-align: left !important;
-    }
-
-    /* Kontener na kafelki korzyści */
+    /* Kafelki Korzyści (Benefit Cards) */
     .benefit-card {
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
-        border-left: 5px solid #00D395 !important; /* Zielony pasek z boku dodaje charakteru */
+        border-left: 5px solid #00D395 !important;
         border-radius: 15px !important;
         padding: 30px !important;
         margin-bottom: 25px !important;
@@ -179,30 +124,14 @@ st.markdown("""
     .benefit-card:hover {
         transform: translateY(-5px);
         box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.08);
-        border-color: #00D395 !important;
     }
 
-    .benefit-title {
-        color: #00D395 !important;
-        font-size: 22px !important;
-        font-weight: 800 !important;
-        text-transform: uppercase !important;
-        margin-bottom: 10px !important;
-        letter-spacing: 1px;
-    }
-
-    .benefit-text {
-        font-size: 17px !important;
-        color: #343A40 !important;
-        line-height: 1.6 !important;
-    }
-
-    /* Kontener kafelka możliwości */
+    /* Kafelki Możliwości (Feature Cards) */
     .feature-card {
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
         border-radius: 12px !important;
-        padding: 30px !important;
+        padding: 25px !important;
         margin-bottom: 20px !important;
         height: 300px !important; 
         transition: 0.3s ease;
@@ -219,23 +148,16 @@ st.markdown("""
         color: #00D395 !important;
         font-size: 19px !important;
         font-weight: 800 !important;
-        text-transform: uppercase !important; /* Wielkie litery dla profesjonalnego looku */
-        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
         margin-bottom: 12px !important;
     }
 
-    .feature-card p {
-        font-size: 15px !important;
-        color: #6C757D !important;
-        margin-bottom: 20px !important;
-    }
-
-    /* Lista bez kropek i emoji */
+    /* LISTY TYLKO DLA TWOICH KAFELKÓW (zabezpieczenie przed "arrow") */
     .feature-list {
         list-style: none !important;
         padding: 0 !important;
         margin: 0 !important;
-        border-top: 1px solid #F1F3F5 !important; /* Delikatna linia oddzielająca */
+        border-top: 1px solid #F1F3F5 !important;
         padding-top: 15px !important;
     }
 
@@ -243,24 +165,45 @@ st.markdown("""
         font-size: 14px !important;
         color: #343A40 !important;
         padding-left: 18px !important;
-        position: relative;
+        position: relative !important;
         margin-bottom: 10px !important;
     }
 
-    /* Minimalistyczna strzałka zamiast kropki */
+    /* Subtelny znacznik › TYLKO wewnątrz .feature-list */
     .feature-list li::before {
-        content: "›" !important; /* Bardziej subtelny znak niż strzałka */
-        position: absolute;
-        left: 0;
+        content: "›" !important;
+        position: absolute !important;
+        left: 0 !important;
         color: #00D395 !important;
-        font-weight: bold;
-        font-size: 18px;
-        line-height: 14px;
+        font-weight: bold !important;
+        font-size: 18px !important;
     }
+
+    /* Sekcja Zaufania (Trust Items) */
+    .trust-item {
+        background-color: #F8F9FA !important;
+        border: 1px solid #E9ECEF !important;
+        border-radius: 12px !important;
+        padding: 15px 25px !important;
+        margin-bottom: 12px !important;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Przyciski i FAQ */
+    div.stButton > button {
+        background-color: #00D395 !important;
+        color: white !important;
+        font-weight: 800 !important;
+        height: 60px !important;
+        border-radius: 15px !important;
+    }
+
+    .faq-card-question { background-color: #FFFFFF; border: 2px solid #00D395; border-radius: 15px 15px 0 0; padding: 20px; font-weight: 800; text-align: center;}
+    .faq-card-answer { background-color: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFFFFF !important; text-align: center;}
 
 </style>
 """, unsafe_allow_html=True)
-
 
 
 st.markdown("---") # Linia oddzielająca header od reszty strony
