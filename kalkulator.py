@@ -126,6 +126,44 @@ st.markdown("""
     .faq-card-answer { background-color: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFFFFF !important; text-align: center;}
     .faq-card-answer-blue { background-color: #0E172B; border-radius: 0 0 15px 15px; padding: 20px; color: #FFFFFF !important; text-align: center;}
 
+    /* Styl dla pojedynczego punktu zaufania */
+    .trust-item {
+        background-color: #F8F9FA !important; /* Bardzo jasne szare tło */
+        border: 1px solid #E9ECEF !important; /* Delikatna ramka */
+        border-radius: 12px !important;
+        padding: 15px 25px !important;
+        margin-bottom: 12px !important;
+        display: flex;
+        align-items: center;
+        transition: 0.3s ease;
+    }
+
+    /* Efekt po najechaniu myszką */
+    .trust-item:hover {
+        background-color: #FFFFFF !important;
+        border-color: #00D395 !important;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+        transform: translateX(5px); /* Delikatne wysunięcie w prawo */
+    }
+
+    /* Styl ikony "ptaszka" */
+    .trust-check {
+        color: #00D395 !important;
+        font-size: 22px !important;
+        font-weight: bold !important;
+        margin-right: 20px !important;
+        flex-shrink: 0; /* Ikona nie będzie się zgniatać */
+    }
+
+    /* Styl tekstu wewnątrz punktu */
+    .trust-item-text {
+        color: #212529 !important;
+        font-size: 17px !important;
+        font-weight: 500 !important;
+        line-height: 1.4 !important;
+        text-align: left !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
