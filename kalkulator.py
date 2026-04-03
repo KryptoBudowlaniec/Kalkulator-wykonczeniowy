@@ -4,27 +4,30 @@ import streamlit as st
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
 
-# --- HEADER: LOGO LEWA | MENU PRAWA ---
-col_logo, col_nav = st.columns([1.2, 2]) 
+# --- HEADER: LOGO LEWA (WIĘKSZE) | MENU PRAWA ---
+st.markdown("---")
+col_logo, col_nav = st.columns([1.5, 2.5]) # Zwiększyłem proporcję dla logo
 
 with col_logo:
     try:
-        # Usunąłem width=300, aby logo mogło wypełnić swoją kolumnę (use_container_width)
+        # use_container_width sprawi, że logo zajmie całą dostępną przestrzeń kolumny
         st.image("logo2.png", use_container_width=True)
     except:
         st.error("Brak logo2.png")
 
 with col_nav:
-    # Kontener div pomoże nam w CSS "pchnąć" menu do prawej
+    # Owijamy pigułki w div, który w CSS ma ustawione wyrównanie do prawej
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     nawigacja = st.pills(
         "", 
-        ["Start", "Kalkulatory", "PANEL INWESTORA (PREMIUM)", "Kontakt"],
+        ["Start", "Kalkulatory", "Inwestor Premium", "Kontakt"],
         selection_mode="single",
         default="Start",
         key="main_nav"
     )
     st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown("---")
 
 # --- PODMENU (Pojawia się pod headerem tylko gdy wybrano Kalkulatory) ---
 if nawigacja == "Kalkulatory":
@@ -46,189 +49,87 @@ st.markdown("---") # Linia oddzielająca header od reszty strony
 # --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
 st.markdown("""
 <style>
-
-
     /* Import czcionki Inter */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
     /* 1. Globalne ustawienia bieli i czcionki */
-    html, bo/* Wyśrodkowanie pionowe elementów w kolumnach */
-    [data-testid="stHorizontalBlock"] {
-        align-items: center !important;
+    html, body, [class*="st-"] {
+        font-family: 'Inter', sans-serif !important;
     }
 
     .stApp { 
         background-color: #FFFFFF !important; 
-        color: #1E1E1E !important; /* Wymuszenie ciemnego tekstu */
+        color: #1E1E1E !important; 
     }
 
-    /* Wymuszenie widoczności tekstu w standardowych elementach Streamlita */
-    p, span, div, label {
-        color: #1E1E1E !important;
-    }
-
-    /* Wyczyszczenie kontenera głównego */
-    .main .block-container {
-        background-color: #FFFFFF !important;
-        max-width: 1200px;
-        padding-top: 4rem;
-    }
-
-    /* Wycentrowanie pionowe logo i menu w headerze */
+    /* Wyrównanie pionowe elementów w kolumnach nagłówka */
     [data-testid="stHorizontalBlock"] {
-        align-items: center;
+        align-items: center !important;
     }
 
-    /* 2. WYGLĄD MENU (PIGUŁKI) - SCALONE I OCZYSZCZONE */
+    /* Kontener dla menu, żeby pchnąć je na prawo */
+    .nav-container {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+    }
+
+    /* 2. WYGLĄD MENU (PIGUŁKI) - PRZESUNIĘTE NA PRAWO */
     div[data-testid="stPills"] {
         display: flex;
-        justify-content: center;
-        width: 100%;
+        justify-content: flex-end !important;
+        width: 100% !important;
     }
     
     div[data-testid="stPills"] button {
         background-color: #F1F3F5 !important;
         border: 1px solid #DEE2E6 !important;
         border-radius: 12px !important;
-        padding: 10px 25px !important;
-        min-height: 50px !important;
-        margin-bottom: 8px !important;
+        padding: 10px 20px !important;
+        min-height: 45px !important;
         transition: 0.2s;
     }
 
-    /* Tekst wewnątrz nieaktywnej pigułki */
     div[data-testid="stPills"] button p {
         color: #495057 !important;
-        font-size: 18px !important;
+        font-size: 16px !important;
         font-weight: 600 !important;
     }
 
-    /* Aktywna pigułka */
     div[data-testid="stPills"] button[aria-checked="true"] {
         background-color: #00D395 !important;
         border: none !important;
     }
 
-    /* Tekst wewnątrz aktywnej pigułki */
     div[data-testid="stPills"] button[aria-checked="true"] p {
         color: #FFFFFF !important;
     }
 
-    /* 3. NAGŁÓWKI */
-    h1, h2, h3 {
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 800 !important;
-        color: #000000 !important;
-        letter-spacing: -0.5px !important;
-    }
-
-    /* 4. KAFELKI (FEATURE & TRUST CARDS) */
+    /* Reszta Twoich stylów (Kafelki, Przyciski, FAQ) */
     .feature-card, .trust-card {
         background-color: #FBFBFB;
         border: 1px solid #F0F0F0;
         border-radius: 20px;
         padding: 35px;
-        transition: 0.4s ease;
         text-align: center; 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
         margin-bottom: 20px;
     }
-    
-    .feature-card:hover {
-        background-color: #FFFFFF;
-        border-color: #00D395;
-        transform: translateY(-5px);
-        box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.06);
-    }
 
-    .feature-title, .trust-title {
-        color: #00D395 !important;
-        font-size: 26px;
-        font-weight: 800;
-        margin-bottom: 15px;
-    }
+    .feature-title { color: #00D395 !important; font-size: 26px; font-weight: 800; }
 
-    .feature-card p, .trust-text {
-        font-size: 18px !important;
-        color: #424245 !important;
-    }
-
-    /* 5. LISTA ZALET (TRUST ITEMS) */
-    .trust-item {
-        background-color: #FFFFFF;
-        border: 1px solid #F0F0F0;
-        border-radius: 12px;
-        padding: 20px 30px;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        transition: 0.2s;
-    }
-
-    .trust-check {
-        color: #00D395 !important;
-        font-size: 24px;
-        font-weight: bold;
-        margin-right: 20px;
-    }
-
-    /* 6. PRZYCISKI GŁÓWNE (CTA) */
     div.stButton > button {
-        display: block !important;
-        margin: 0 auto !important;
-        max-width: 550px !important;
         background-color: #00D395 !important;
         color: white !important;
         font-weight: 800 !important;
-        height: 65px !important;
+        height: 60px !important;
         border-radius: 15px !important;
-        border: none !important;
-        box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.3) !important;
         text-transform: uppercase !important;
     }
     
-    div.stButton > button p {
-        color: white !important; /* Gwarancja, że tekst na przycisku będzie biały */
-    }
+    .faq-card-question { background-color: #FFFFFF; border: 2px solid #00D395; border-radius: 15px 15px 0 0; padding: 20px; font-weight: 800; color: #000000 !important; margin-top: 30px; text-align: center;}
+    .faq-card-answer { background-color: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFFFFF !important; text-align: center;}
+    .faq-card-answer-blue { background-color: #0E172B; border-radius: 0 0 15px 15px; padding: 20px; color: #FFFFFF !important; text-align: center;}
 
-    /* 7. SEKCJA FAQ */
-    .faq-card-question {
-        background-color: #FFFFFF;
-        border: 2px solid #00D395;
-        border-radius: 15px 15px 0 0;
-        padding: 20px;
-        text-align: center;
-        font-size: 20px;
-        font-weight: 800;
-        color: #000000 !important;
-        margin-top: 30px;
-    }
-
-    .faq-card-answer {
-        background-color: #00D395;
-        border: 2px solid #00D395;
-        border-radius: 0 0 15px 15px;
-        padding: 20px;
-        text-align: center;
-        font-size: 18px;
-        color: #FFFFFF !important;
-        margin-bottom: 20px;
-        box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.1);
-    }
-
-    .faq-card-answer-blue {
-        background-color: #0E172B;
-        border: 2px solid #0E172B;
-        color: #FFFFFF !important;
-        border-radius: 0 0 15px 15px;
-        padding: 20px;
-        text-align: center;
-        font-size: 18px;
-        margin-bottom: 20px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
