@@ -33,7 +33,7 @@ if nawigacja == "Kalkulatory":
     with sub_nav_col:
         branza = st.pills(
             "Wybierz branżę:", 
-            ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podlogi", "Drzwi"],
+            ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Lazienka", "Podłogi", "Drzwi"],
             selection_mode="single",
             default="Malowanie",
             key="sub_nav"
