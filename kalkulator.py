@@ -19,7 +19,7 @@ with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     nawigacja = st.pills(
         "", 
-        ["Start", "Kalkulatory", "Inwestor Premium", "Kontakt"],
+        ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt"],
         selection_mode="single",
         default="Start",
         key="main_nav"
@@ -1260,7 +1260,7 @@ elif branza == "Drzwi":
             st.info("Cena zakupu drzwi jest orientacyjna (średnia rynkowa z klamką i rozetą).")
 
 
-elif branza == "PANEL INWESTORA (PREMIUM)":
+elif branza == "Panel Inwestora":
     st.title("Panel Inwestora - Kompleksowy Kosztorys Flipu")
     
     with st.expander("CHECKLISTA PRZEDZAKUPOWA (Inspekcja lokalu)", expanded=False):
