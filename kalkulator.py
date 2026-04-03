@@ -241,21 +241,19 @@ if branza == "Start":
         ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
     ]
 
-    # Triki z układem: [1, 2.5, 2.5, 1] 
-    # Skrajne jedynki to puste marginesy blokujące rozjeżdżanie się tekstu.
-    # 2.5 to nasze dwie główne kolumny na treść.
     _, col_zaufanie_left, col_zaufanie_right, _ = st.columns([1, 2.5, 2.5, 1])
 
     for i, (tytul, opis) in enumerate(zalety):
-        # Parzyste indeksy (0, 2, 4) wrzucamy do lewej kolumny, nieparzyste (1, 3, 5) do prawej
+        # Rozdzielamy parzyste na lewo, nieparzyste na prawo
         target_col = col_zaufanie_left if i % 2 == 0 else col_zaufanie_right
         
         with target_col:
             st.markdown(f"""
-            <div style="display: flex; align-items: center; margin-bottom: 25px;">
-                <div style="color: #00D395; font-size: 26px; margin-right: 15px; font-weight: bold;">✔</div>
-                <div style="font-size: 15px; color: #495057;">
-                    <b style="color: #1E1E1E; font-size: 16px;">{tytul}</b><br>{opis}
+            <div style="display: flex; align-items: flex-start; margin-bottom: 25px;">
+                <div style="color: #00D395; font-size: 24px; margin-right: 15px; font-weight: bold; margin-top: 2px; line-height: 1;">✔</div>
+                <div style="font-size: 15px; color: #495057; line-height: 1.5;">
+                    <b style="color: #1E1E1E; font-size: 16px; display: block; margin-bottom: 2px;">{tytul}</b>
+                    <span style="display: block;">{opis}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
