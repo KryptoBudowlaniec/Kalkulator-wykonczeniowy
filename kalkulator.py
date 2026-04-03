@@ -19,7 +19,7 @@ with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     nawigacja = st.pills(
         "", 
-        ["Start", "Kalkulatory", "Inwestor Premium", "Kontakt"],
+        ["Start", "Kalkulatory", "PANEL INWESTORA (PREMIUM)", "Kontakt"],
         selection_mode="single",
         default="Start",
         key="main_nav"
@@ -437,7 +437,7 @@ if branza == "Start":
     st.markdown("<br><br>", unsafe_allow_html=True)
 
 
-elif branza == "📞 Kontakt":
+elif branza == "Kontakt":
     st.header("📞 Kontakt")
     st.write("📧 biuro@procalc.pl | 📞 +48 123 456 789")
 # --- SEKCJA: MALOWANIE ---
