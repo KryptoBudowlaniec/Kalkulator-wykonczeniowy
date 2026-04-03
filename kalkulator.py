@@ -159,13 +159,15 @@ if branza == "Start":
         ]
 
         for i, (tytul, tekst) in enumerate(benefity):
-    with cols_ben[i]:
-        st.markdown(f"""
-        <div class="custom-card">
-            <div class="card-title">{tytul}</div>
-            <div class="card-text">{tekst}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # Linia 162 - MUSI być wcięta (4 spacje w prawo)
+            with cols_ben[i]:
+        # Linia 163 - MUSI być wcięta jeszcze bardziej (kolejne 4 spacje)
+            st.markdown(f"""
+            <div class="custom-card">
+                <div class="card-title">{tytul}</div>
+                <div class="card-text">{tekst}</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         # Przycisk w stylu PRO
         # Kontener centrujący dla przycisku i napisu pod nim
