@@ -135,9 +135,6 @@ st.markdown("""
         letter-spacing: -0.5px !important;
     }
 
-
-    }
-
     div[data-testid="stPills"] button {
         width: 100% !important;
         min-height: 55px !important;
