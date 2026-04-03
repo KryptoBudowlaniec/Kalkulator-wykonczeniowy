@@ -164,6 +164,39 @@ st.markdown("""
         text-align: left !important;
     }
 
+    /* Kontener na kafelki korzyści */
+    .benefit-card {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E9ECEF !important;
+        border-left: 5px solid #00D395 !important; /* Zielony pasek z boku dodaje charakteru */
+        border-radius: 15px !important;
+        padding: 30px !important;
+        margin-bottom: 25px !important;
+        transition: 0.3s ease;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.03);
+    }
+
+    .benefit-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.08);
+        border-color: #00D395 !important;
+    }
+
+    .benefit-title {
+        color: #00D395 !important;
+        font-size: 22px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        margin-bottom: 10px !important;
+        letter-spacing: 1px;
+    }
+
+    .benefit-text {
+        font-size: 17px !important;
+        color: #343A40 !important;
+        line-height: 1.6 !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
