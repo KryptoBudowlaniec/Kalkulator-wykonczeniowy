@@ -232,17 +232,6 @@ if branza == "Start":
    # --- SEKCJA ZAUFANIA (PUNKTY) ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
     
-    zalety = [
-        ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
-        ["DOŚWIADCZENIE", "Ponad 10 000 m² zrealizowanych inwestycji"],
-        ["CENY", "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem"],
-        ["PRECYZJA", "Listy zakupowe ograniczające odpady"],
-        ["EKSPERCI", "Konsultacje merytoryczne z fachowcami"],
-        ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
-    ]
-
-   st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
-    
     # Otwieramy główny kontener centrujący dla całego bloku zalet
     st.markdown('<div style="display: flex; justify-content: center; width: 100%;">', unsafe_allow_html=True)
     
