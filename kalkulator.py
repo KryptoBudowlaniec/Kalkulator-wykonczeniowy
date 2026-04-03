@@ -63,13 +63,14 @@ st.markdown("""
         margin-bottom: 20px !important;
         transition: 0.3s ease-in-out !important;
         box-shadow: 0px 4px 10px rgba(0,0,0,0.02) !important;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        text-align: center; /* Wyśrodkowanie tekstu wewnątrz */
-        height: 100%; /* Żeby były równe */
+        
+        /* Klucz do równości: */
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important; /* Wszystko na środek w poziomie */
+        text-align: center !important;
+        height: 320px !important; /* Stała wysokość dla wszystkich 9 kafelków */
     }
-
     /* EFEKT RUCHU (Hover) */
     .custom-card:hover {
         transform: translateY(-8px) !important;
@@ -78,19 +79,24 @@ st.markdown("""
     }
 
     /* Tytuły w kafelkach */
-    .card-title {
+   .card-title {
         color: #00D395 !important;
-        font-size: 20px !important;
+        font-size: 19px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 15px !important;
+        min-height: 45px !important; /* Rezerwuje miejsce na 2 linie tytułu */
+        display: flex;
+        align-items: center;
     }
 
     /* Tekst w kafelkach */
     .card-text {
-        color: #495057 !important;
-        font-size: 16px !important;
-        line-height: 1.5 !important;
+        color: #6C757D !important;
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+        margin-bottom: auto !important; /* Pcha listę na dół, trzymając tekst wyżej */
+        min-height: 40px !important;
     }
 
     /* Lista wewnątrz kafelka (np. w kalkulatorach) */
@@ -100,7 +106,8 @@ st.markdown("""
         margin: 15px 0 0 0 !important;
         border-top: 1px solid #F1F3F5 !important;
         padding-top: 15px !important;
-        text-align: left; /* Lista lepiej wygląda do lewej */
+        width: 100% !important; /* Linia na całą szerokość */
+        text-align: left !important; /* Lista wewnątrz kafelka do lewej dla czytelności */
     }
 
     .card-list li {
@@ -206,12 +213,13 @@ if branza == "Start":
     cols_oferta = st.columns(3)
     for i, item in enumerate(oferta):
         with cols_oferta[i % 3]:
-            # Dodajemy styl dla Premium (zielona ramka)
-            style_extra = "border: 2px solid #00D395;" if item[0] == "Premium PRO" else ""
+            # dynamiczna ramka dla PRO
+            style_extra = "border: 2px solid #00D395; background-color: #F0FFF4 !important;" if item[0] == "Premium PRO" else ""
+            
             st.markdown(f"""
             <div class="custom-card" style="{style_extra}">
                 <div class="card-title">{item[0]}</div>
-                <p class="card-text" style="font-size: 14px; margin-bottom: 10px;">{item[1]}</p>
+                <div class="card-text">{item[1]}</div>
                 <ul class="card-list">
                     <li>{item[2][0]}</li>
                     <li>{item[2][1]}</li>
