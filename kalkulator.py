@@ -58,63 +58,62 @@ st.markdown("""
     .custom-card {
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
-        border-radius: 15px !important;
-        padding: 25px !important;
-        margin-bottom: 20px !important;
+        border-radius: 12px !important;
+        padding: 18px !important; /* Mniejszy padding */
+        margin-bottom: 15px !important;
         transition: 0.3s ease-in-out !important;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.02) !important;
+        box-shadow: 0px 2px 8px rgba(0,0,0,0.02) !important;
         
-        /* Klucz do równości: */
         display: flex !important;
         flex-direction: column !important;
-        align-items: center !important; /* Wszystko na środek w poziomie */
+        align-items: center !important;
         text-align: center !important;
-        height: 320px !important; /* Stała wysokość dla wszystkich 9 kafelków */
+        
+        /* Zmniejszona wysokość - teraz będą zgrabne */
+        height: 250px !important; 
+    }
     }
     /* EFEKT RUCHU (Hover) */
     .custom-card:hover {
-        transform: translateY(-8px) !important;
+        transform: translateY(-5px) !important;
         border-color: #00D395 !important;
-        box-shadow: 0px 12px 25px rgba(0, 211, 149, 0.1) !important;
+        box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.1) !important;
     }
 
-    /* Tytuły w kafelkach */
-   .card-title {
+    .card-title {
         color: #00D395 !important;
-        font-size: 19px !important;
+        font-size: 17px !important; /* Nieco mniejszy font */
         font-weight: 800 !important;
         text-transform: uppercase !important;
-        margin-bottom: 15px !important;
-        min-height: 45px !important; /* Rezerwuje miejsce na 2 linie tytułu */
+        margin-bottom: 10px !important;
+        min-height: 40px !important; 
         display: flex;
         align-items: center;
+        justify-content: center;
     }
 
-    /* Tekst w kafelkach */
     .card-text {
         color: #6C757D !important;
-        font-size: 14px !important;
-        line-height: 1.4 !important;
-        margin-bottom: auto !important; /* Pcha listę na dół, trzymając tekst wyżej */
-        min-height: 40px !important;
+        font-size: 13px !important; /* Mniejszy, bardziej czytelny tekst */
+        line-height: 1.3 !important;
+        margin-bottom: auto !important;
+        min-height: 35px !important;
     }
 
-    /* Lista wewnątrz kafelka (np. w kalkulatorach) */
     .card-list {
         list-style: none !important;
         padding: 0 !important;
-        margin: 15px 0 0 0 !important;
-        border-top: 1px solid #F1F3F5 !important;
-        padding-top: 15px !important;
-        width: 100% !important; /* Linia na całą szerokość */
-        text-align: left !important; /* Lista wewnątrz kafelka do lewej dla czytelności */
+        margin: 10px 0 0 0 !important;
+        border-top: 1px solid #F8F9FA !important;
+        padding-top: 10px !important;
+        width: 100% !important;
+        text-align: left !important;
     }
 
     .card-list li {
-        font-size: 14px !important;
-        position: relative !important;
-        padding-left: 20px !important;
-        margin-bottom: 8px !important;
+        font-size: 12px !important; /* Kompaktowa lista */
+        color: #495057 !important;
+        margin-bottom: 4px !important;
     }
 
     .card-list li::before {
