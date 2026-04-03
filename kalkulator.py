@@ -59,19 +59,18 @@ st.markdown("""
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
         border-radius: 12px !important;
-        padding: 18px !important; /* Mniejszy padding */
+        padding: 20px !important;
         margin-bottom: 15px !important;
         transition: 0.3s ease-in-out !important;
         box-shadow: 0px 2px 8px rgba(0,0,0,0.02) !important;
         
         display: flex !important;
         flex-direction: column !important;
-        align-items: center !important;
         text-align: center !important;
         
-        /* Zmniejszona wysokość - teraz będą zgrabne */
-        height: 250px !important; 
-    }
+        /* USUNIĘTO sztywne height: 250px */
+        height: auto !important; 
+        min-height: 180px !important; /* Minimalna wysokość, żeby trzymały linię w rzędzie */
     }
     /* EFEKT RUCHU (Hover) */
     .custom-card:hover {
@@ -82,22 +81,20 @@ st.markdown("""
 
     .card-title {
         color: #00D395 !important;
-        font-size: 17px !important; /* Nieco mniejszy font */
+        font-size: 18px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
         margin-bottom: 10px !important;
-        min-height: 40px !important; 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        /* Rezerwujemy tylko tyle miejsca, ile trzeba na tytuł */
+        min-height: 30px !important;
     }
 
     .card-text {
         color: #6C757D !important;
-        font-size: 13px !important; /* Mniejszy, bardziej czytelny tekst */
-        line-height: 1.3 !important;
-        margin-bottom: auto !important;
-        min-height: 35px !important;
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+        /* Pozwalamy tekstowi swobodnie wypełniać przestrzeń */
+        margin-bottom: 10px !important;
     }
 
     .card-list {
@@ -106,7 +103,6 @@ st.markdown("""
         margin: 10px 0 0 0 !important;
         border-top: 1px solid #F8F9FA !important;
         padding-top: 10px !important;
-        width: 100% !important;
         text-align: left !important;
     }
 
