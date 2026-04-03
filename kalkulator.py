@@ -3,7 +3,6 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
-
 # --- HEADER: LOGO LEWA (WIĘKSZE) | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) # Zwiększyłem proporcję dla logo
 
@@ -158,10 +157,11 @@ if branza == "Start":
             ["Klienci Prywatni", "Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał i robociznę."]
         ]
 
+        # POPRAWKA 1: Inicjalizacja kolumn, której brakowało
+        cols_ben = st.columns(3)
+
         for i, (tytul, tekst) in enumerate(benefity):
-    # Linia 162 - MUSI być wcięta (4 spacje w prawo)
             with cols_ben[i]:
-        # Linia 163 - MUSI być wcięta jeszcze bardziej (kolejne 4 spacje)
                 st.markdown(f"""
                 <div class="custom-card">
                     <div class="card-title">{tytul}</div>
@@ -229,7 +229,7 @@ if branza == "Start":
         </div>
     """, unsafe_allow_html=True)
 
-     # --- SEKCJA ZAUFANIA (PUNKTY) ---
+    # --- SEKCJA ZAUFANIA (PUNKTY) ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
     
     zalety = [
@@ -241,27 +241,30 @@ if branza == "Start":
         ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
     ]
 
+    # POPRAWKA 2: Prawidłowe użycie kolumn dla sekcji "Dlaczego warto nam zaufać?"
     cols_zaufanie = st.columns(3)
-    for zaleta in zalety:
+    for i, (tytul, opis) in enumerate(zalety):
+        with cols_zaufanie[i % 3]:
             st.markdown(f"""
-            <div class="trust-item">
-                <div class="trust-check">✔</div>
-                <div class="trust-item-text">{zaleta}</div>
+            <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                <div style="color: #00D395; font-size: 24px; margin-right: 15px; font-weight: bold;">✔</div>
+                <div style="font-size: 14px; color: #495057;">
+                    <b style="color: #1E1E1E;">{tytul}</b><br>{opis}
+                </div>
             </div>
             """, unsafe_allow_html=True)
 
-
     st.markdown("<br>", unsafe_allow_html=True)
         
-        # Przycisk Demo wyśrodkowany
+    # Przycisk Demo wyśrodkowany
     if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True, key="btn_demo_main"):
         st.session_state.branza = "Malowanie"
         st.rerun()
 
     st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
- # --- SEKCJA FAQ ---
-        # --- SEKCJA FAQ (KAFELKI STAŁE) ---
+    # --- SEKCJA FAQ ---
+    # POPRAWKA 3: Wyrównane wcięcia dla sekcji FAQ
     st.markdown("<br><br><h2 style='text-align: center;'>Często Zadawane Pytania</h2>", unsafe_allow_html=True)
     
     col_f1, col_faq, col_f2 = st.columns([1, 2.5, 1])
@@ -284,7 +287,7 @@ if branza == "Start":
             <div class="faq-card-question">Jak dokładne są listy zakupowe?</div>
             <div class="faq-card-answer">Algorytmy uwzględniają oficjalne normy zużycia producentów oraz standardowy naddatek 10% na odpady i docięcia.</div>
         """, unsafe_allow_html=True)
-       
+        
         # Pytanie 4: Formaty płytek (Ciemny niebieski)
         st.markdown("""
             <div class="faq-card-question">Czy format płytek wpływa na wycenę?</div>
