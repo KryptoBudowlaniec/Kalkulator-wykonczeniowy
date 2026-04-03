@@ -5,24 +5,26 @@ st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
 
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
-col_logo, col_nav = st.columns([1, 3])
+col_logo, col_nav = st.columns([1.5, 2]) 
 
 with col_logo:
     try:
-        # Logo z lewej strony, dopasowane do wysokości menu
-        st.image("logo2.png", width=300)
+        # Usunąłem width=300, aby logo mogło wypełnić swoją kolumnę (use_container_width)
+        st.image("logo2.png", use_container_width=True)
     except:
         st.error("Brak logo2.png")
 
 with col_nav:
-    # Menu główne obok logo
+    # Kontener div pomoże nam w CSS "pchnąć" menu do prawej
+    st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     nawigacja = st.pills(
-        "", # Bez tytułu, żeby nie zajmowało miejsca
+        "", 
         ["Start", "Kalkulatory", "Inwestor Premium", "Kontakt"],
         selection_mode="single",
         default="Start",
         key="main_nav"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- PODMENU (Pojawia się pod headerem tylko gdy wybrano Kalkulatory) ---
 if nawigacja == "Kalkulatory":
