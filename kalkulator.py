@@ -232,7 +232,7 @@ if branza == "Start":
     """, unsafe_allow_html=True)
 
      # --- SEKCJA ZAUFANIA (PUNKTY) ---
-st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
+    st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
     
     zalety = [
         ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
