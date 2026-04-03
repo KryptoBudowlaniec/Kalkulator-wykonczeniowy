@@ -46,11 +46,37 @@ st.markdown("---") # Linia oddzielająca header od reszty strony
 # --- 1. ZINTEGROWANE STYLE CSS (PURE WHITE PRO) ---
 st.markdown("""
 <style>
+
+
     /* Import czcionki Inter */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
     /* 1. Globalne ustawienia bieli i czcionki */
-    html, body, [class*="st-"] {
+    html, bo/* Wyśrodkowanie pionowe elementów w kolumnach */
+    [data-testid="stHorizontalBlock"] {
+        align-items: center !important;
+    }
+
+    /* Popychamy pigułki do prawej strony */
+    div.nav-container {
+        display: flex;
+        justify-content: flex-end; /* To przesunie menu do prawej */
+        width: 100%;
+    }
+
+    /* Ważne: musimy nadpisać poprzednie wyśrodkowanie pigułek */
+    div[data-testid="stPills"] {
+        display: flex;
+        justify-content: flex-end !important; /* Nadpisujemy center na flex-end */
+        width: auto !important;
+    }
+
+    /* Opcjonalnie: zwiększenie odstępu między logiem a menu na urządzeniach mobilnych */
+    @media (max-width: 768px) {
+        div.nav-container {
+            justify-content: center; /* Na komórkach lepiej zostawić na środku */
+        }
+    }dy, [class*="st-"] {
         font-family: 'Inter', sans-serif !important;
     }
 
