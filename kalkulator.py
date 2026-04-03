@@ -47,138 +47,89 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-    /* 1. Globalne ustawienia */
-    html, body, [class*="st-"] {
-        font-family: 'Inter', sans-serif !important;
+    /* 1. Globalne */
+    html, body, [class*="st-"] { font-family: 'Inter', sans-serif !important; }
+    .stApp { background-color: #FFFFFF !important; color: #1E1E1E !important; }
+
+    /* Fix na nieszczęsne "arrow" - ukrywamy systemowe punktory */
+    li::before { content: none !important; display: none !important; }
+
+    /* 2. UNIWERSALNY KAFELEK (Dla obu sekcji) */
+    .custom-card {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E9ECEF !important;
+        border-radius: 15px !important;
+        padding: 25px !important;
+        margin-bottom: 20px !important;
+        transition: 0.3s ease-in-out !important;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.02) !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center; /* Wyśrodkowanie tekstu wewnątrz */
+        height: 100%; /* Żeby były równe */
     }
 
-    .stApp { 
-        background-color: #FFFFFF !important; 
-        color: #1E1E1E !important; 
+    /* EFEKT RUCHU (Hover) */
+    .custom-card:hover {
+        transform: translateY(-8px) !important;
+        border-color: #00D395 !important;
+        box-shadow: 0px 12px 25px rgba(0, 211, 149, 0.1) !important;
     }
 
-    /* --- BLOKADA STRZAŁEK (ARROW FIX) --- */
-    /* Najpierw wyłączamy strzałki dla KAŻDEGO elementu li na stronie */
-    li::before {
-        content: none !important;
-        display: none !important;
+    /* Tytuły w kafelkach */
+    .card-title {
+        color: #00D395 !important;
+        font-size: 20px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        margin-bottom: 10px !important;
     }
 
-    /* Włączamy strzałkę TYLKO I WYŁĄCZNIE wewnątrz Twoich kafelków możliwości */
-    .feature-list li::before {
+    /* Tekst w kafelkach */
+    .card-text {
+        color: #495057 !important;
+        font-size: 16px !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Lista wewnątrz kafelka (np. w kalkulatorach) */
+    .card-list {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 15px 0 0 0 !important;
+        border-top: 1px solid #F1F3F5 !important;
+        padding-top: 15px !important;
+        text-align: left; /* Lista lepiej wygląda do lewej */
+    }
+
+    .card-list li {
+        font-size: 14px !important;
+        position: relative !important;
+        padding-left: 20px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .card-list li::before {
         content: "›" !important;
-        display: block !important;
         position: absolute !important;
         left: 0 !important;
         color: #00D395 !important;
         font-weight: bold !important;
-        font-size: 18px !important;
     }
 
-    /* 2. Nawigacja */
-    .nav-container, div[data-testid="stPills"] {
-        display: flex;
-        justify-content: flex-end !important;
-        width: 100% !important;
-    }
-    
-    div[data-testid="stPills"] button {
-        background-color: #F1F3F5 !important;
-        border: 1px solid #DEE2E6 !important;
-        border-radius: 12px !important;
-        padding: 10px 20px !important;
-    }
+    /* 3. FAQ i Przyciski */
+    .faq-card-question { background: #FFF; border: 2px solid #00D395; border-radius: 15px 15px 0 0; padding: 20px; font-weight: 800; text-align: center; margin-top: 20px;}
+    .faq-card-answer { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
+    .faq-card-answer-blue { background: #0E172B; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
 
-    div[data-testid="stPills"] button[aria-checked="true"] {
-        background-color: #00D395 !important;
-        border: none !important;
-    }
-
-    div[data-testid="stPills"] button[aria-checked="true"] p {
-        color: #FFFFFF !important;
-    }
-
-    /* 3. Kafelki (Benefits & Features) */
-    .benefit-card {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E9ECEF !important;
-        border-left: 5px solid #00D395 !important;
-        border-radius: 15px !important;
-        padding: 30px !important;
-        margin-bottom: 25px !important;
-    }
-
-    .feature-card {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E9ECEF !important;
-        border-radius: 12px !important;
-        padding: 25px !important;
-        height: 300px !important; 
-        display: flex;
-        flex-direction: column;
-    }
-
-    .feature-title {
-        color: #00D395 !important;
-        font-size: 19px !important;
-        font-weight: 800 !important;
-        text-transform: uppercase !important;
-    }
-
-    .feature-list {
-        list-style: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border-top: 1px solid #F1F3F5 !important;
-        padding-top: 15px !important;
-    }
-
-    .feature-list li {
-        font-size: 14px !important;
-        padding-left: 18px !important;
-        position: relative !important;
-        margin-bottom: 8px !important;
-    }
-
-    /* 4. SEKCJA FAQ (FIX: PRZYWRÓCENIE KOLORÓW) */
-    .faq-card-question {
-        background-color: #FFFFFF !important;
-        border: 2px solid #00D395 !important;
-        border-radius: 15px 15px 0 0 !important;
-        padding: 20px !important;
-        font-weight: 800 !important;
-        color: #000000 !important;
-        text-align: center !important;
-        margin-top: 20px !important;
-    }
-
-    .faq-card-answer {
-        background-color: #00D395 !important;
-        border-radius: 0 0 15px 15px !important;
-        padding: 20px !important;
-        color: #FFFFFF !important;
-        text-align: center !important;
-        margin-bottom: 20px !important;
-    }
-
-    /* Przywrócony kolor niebieski/granatowy */
-    .faq-card-answer-blue {
-        background-color: #0E172B !important;
-        border: 2px solid #0E172B !important;
-        color: #FFFFFF !important;
-        border-radius: 0 0 15px 15px !important;
-        padding: 20px !important;
-        text-align: center !important;
-        margin-bottom: 20px !important;
-    }
-
-    /* 5. Przyciski */
     div.stButton > button {
         background-color: #00D395 !important;
         color: white !important;
         font-weight: 800 !important;
         height: 60px !important;
         border-radius: 15px !important;
+        width: 100%;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -297,25 +248,27 @@ if branza == "Start":
     col_t1, col_trust, col_t2 = st.columns([1, 2.5, 1])
     
     with col_trust:
-        st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
-        
-        # Lista zalet
-        zalety = [
-            "Algorytmy oparte na realnych normach zużycia materiałów",
-            "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem",
-            "Konsultacje merytoryczne z czynnymi zawodowo fachowcami",
-            "Ponad 10 000 m² przeliczonych i zrealizowanych inwestycji",
-            "Precyzja list zakupowych ograniczająca odpady do minimum",
-            "Niezależność – nie faworyzujemy żadnej marki materiałów"
-        ]
-        
-        for zaleta in zalety:
-            st.markdown(f"""
-            <div class="trust-item">
-                <div class="trust-check">✔</div>
-                <div class="trust-item-text">{zaleta}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; margin-top: 50px;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
+
+zalety = [
+    ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
+    ["CENY", "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem"],
+    ["EKSPERCI", "Konsultacje merytoryczne z czynnymi fachowcami"],
+    ["DOŚWIADCZENIE", "Ponad 10 000 m² zrealizowanych inwestycji"],
+    ["PRECYZJA", "Listy zakupowe ograniczające odpady do minimum"],
+    ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki materiałów"]
+]
+
+# Wyświetlamy w 3 kolumnach (2 rzędy), żeby wyglądało to jak nowoczesna siatka
+cols = st.columns(3)
+for i, (tytul, opis) in enumerate(zalety):
+    with cols[i % 3]:
+        st.markdown(f"""
+        <div class="custom-card">
+            <div class="card-title">{tytul}</div>
+            <div class="card-text">{opis}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         
