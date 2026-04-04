@@ -538,17 +538,56 @@ if branza == "Malowanie":
             if st.button("🗑️ WYCZYŚĆ LISTĘ ŚCIAN"):
                 st.session_state.pokoje_pro = []
                 st.rerun()
-            # PRZYCISKI AKCJI
-            
-        st.write("##")
-            c_btn1, c_btn2 = st.columns(2)
-            with c_btn1:
-                if st.button("🗑️ Wyczyść projekt PRO", use_container_width=True):
-                    st.session_state.pokoje_pro = []
-                    st.rerun()
-            with c_btn2:
-                if st.button("📄 Generuj Raport PDF", use_container_width=True):
-                    st.warning("🔒 Funkcja PDF dostępna tylko dla zalogowanych użytkowników PRO.")
+st.markdown("---")
+        st.subheader("💾 Zarządzanie Projektem")
+        
+        c_btn1, c_btn2 = st.columns(2)
+
+        with c_btn1:
+            if st.button("🗑️ Wyczyść projekt PRO", use_container_width=True):
+                st.session_state.pokoje_pro = []
+                st.rerun()
+
+        with c_btn2:
+            # Tworzymy słownik z danymi (używamy zmiennych obliczonych wyżej w tab_pro)
+            lista_do_pdf = {
+                "Farba Biala": f"{round(l_biala, 1)}L ({f_biala})",
+                "Farba Kolor": f"{round(l_kolor, 1)}L ({f_kolor})",
+                "Grunt": f"{round(l_grunt, 1)}L",
+                "Tasma": f"{round(szt_tasma + 0.5)} szt.",
+                "Akryl": f"{round(szt_akryl + 0.5)} szt."
+            }
+
+            try:
+                from fpdf import FPDF
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", 'B', 16)
+                pdf.cell(200, 10, txt="RAPORT KOSZTORYSOWY PRO", ln=True, align='C')
+                pdf.ln(10)
+                
+                pdf.set_font("Arial", size=12)
+                pdf.cell(200, 10, txt=f"Suma calkowita: {round(total_pro)} PLN", ln=True)
+                pdf.cell(200, 10, txt=f"Robocizna: {round(k_rob_total)} PLN", ln=True)
+                pdf.cell(200, 10, txt=f"Materialy: {round(k_mat_sredni)} PLN", ln=True)
+                pdf.ln(10)
+                
+                pdf.cell(200, 10, txt="LISTA ZAKUPOW:", ln=True)
+                for k, v in lista_do_pdf.items():
+                    pdf.cell(200, 10, txt=f"- {k}: {v}", ln=True)
+                
+                # Generowanie danych binarnych PDF
+                pdf_output = pdf.output(dest='S').encode('latin-1')
+                
+                st.download_button(
+                    label="📄 Pobierz Raport PDF",
+                    data=pdf_output,
+                    file_name="kosztorys_malowanie.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error("Błąd PDF: Sprawdź czy masz zainstalowaną bibliotekę fpdf (pip install fpdf)")
 
 
 elif branza == "Szpachlowanie":
