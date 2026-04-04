@@ -538,9 +538,9 @@ if branza == "Malowanie":
             if st.button("🗑️ WYCZYŚĆ LISTĘ ŚCIAN"):
                 st.session_state.pokoje_pro = []
                 st.rerun()
-
             # PRZYCISKI AKCJI
-            st.write("##")
+            
+        st.write("##")
             c_btn1, c_btn2 = st.columns(2)
             with c_btn1:
                 if st.button("🗑️ Wyczyść projekt PRO", use_container_width=True):
@@ -549,6 +549,7 @@ if branza == "Malowanie":
             with c_btn2:
                 if st.button("📄 Generuj Raport PDF", use_container_width=True):
                     st.warning("🔒 Funkcja PDF dostępna tylko dla zalogowanych użytkowników PRO.")
+
 
 elif branza == "Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
