@@ -2,3 +2,5 @@ streamlit
 fpdf
 pandas
 plotly
+Plaintext
+fpdf2
