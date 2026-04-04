@@ -540,6 +540,17 @@ if branza == "Malowanie":
                 st.rerun()
                 
         st.markdown("---")
+
+        def czysc_polskie_znaki(tekst):
+        """Zamienia polskie litery na ich odpowiedniki bez ogonków."""
+            mapa = {
+                'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
+                'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+            }
+            for pol, ang in mapa.items():
+                tekst = tekst.replace(pol, ang)
+        return tekst
+        
         st.subheader("💾 Zarządzanie Projektem")
         
         c_btn1, c_btn2 = st.columns(2)
@@ -550,17 +561,14 @@ if branza == "Malowanie":
                 st.rerun()
 
         with c_btn2:
-            # Przygotowanie danych do PDF (upewnij się, że te zmienne są obliczone wcześniej w tab_pro!)
-            lista_do_pdf = {
-                "Farba Biala": f"{round(l_biala, 1)}L ({f_biala})",
-                "Farba Kolor": f"{round(l_kolor, 1)}L ({f_kolor})",
-                "Grunt": f"{round(l_grunt, 1)}L",
-                "Tasma": f"{round(szt_tasma + 0.5)} szt.",
-                "Akryl": f"{round(szt_akryl + 0.5)} szt."
-            }
-
             try:
                 from fpdf import FPDF
+                
+                # Przygotowanie danych (czyszczenie ogonków)
+                txt_razem = czysc_polskie_znaki(f"Suma calkowita: {round(total_pro)} PLN")
+                txt_robocizna = czysc_polskie_znaki(f"Robocizna: {round(k_rob_total)} PLN")
+                txt_materialy = czysc_polskie_znaki(f"Materialy: {round(k_mat_sredni)} PLN")
+                
                 pdf = FPDF()
                 pdf.add_page()
                 pdf.set_font("Arial", 'B', 16)
@@ -568,15 +576,27 @@ if branza == "Malowanie":
                 pdf.ln(10)
                 
                 pdf.set_font("Arial", size=12)
-                pdf.cell(200, 10, txt=f"Suma calkowita: {round(total_pro)} PLN", ln=True)
-                pdf.cell(200, 10, txt=f"Robocizna: {round(k_rob_total)} PLN", ln=True)
-                pdf.cell(200, 10, txt=f"Materialy: {round(k_mat_sredni)} PLN", ln=True)
+                pdf.cell(200, 10, txt=txt_razem, ln=True)
+                pdf.cell(200, 10, txt=txt_robocizna, ln=True)
+                pdf.cell(200, 10, txt=txt_materialy, ln=True)
                 pdf.ln(10)
                 
                 pdf.cell(200, 10, txt="LISTA ZAKUPOW:", ln=True)
-                for k, v in lista_do_pdf.items():
-                    pdf.cell(200, 10, txt=f"- {k}: {v}", ln=True)
                 
+                # Dynamiczna lista zakupów z czyszczeniem znaków
+                lista_do_pdf = {
+                    "Farba Biala": f"{round(l_biala, 1)}L ({f_biala})",
+                    "Farba Kolor": f"{round(l_kolor, 1)}L ({f_kolor})",
+                    "Grunt": f"{round(l_grunt, 1)}L ({f_grunt})",
+                    "Tasma": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
+                    "Akryl": f"{round(szt_akryl + 0.5)} szt."
+                }
+
+                for k, v in lista_do_pdf.items():
+                    linia = czysc_polskie_znaki(f"- {k}: {v}")
+                    pdf.cell(200, 10, txt=linia, ln=True)
+                
+                # Generowanie PDF
                 pdf_output = pdf.output(dest='S').encode('latin-1')
                 
                 st.download_button(
