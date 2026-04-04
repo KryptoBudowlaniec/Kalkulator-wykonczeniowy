@@ -503,7 +503,8 @@ if branza == "Malowanie":
             if mb_sztukaterii > 0:
                 st.write(f"**Sztukateria:**")
                 st.write(f"- ⚜️ Robocizna (montaż): **{round(koszt_rob_sztukateria)} zł**")
-                st.write(f"- 🧪 Klej hybrydowy: **{int(mb_sztukaterii/8 + 1)} szt.**")
+                # Tutaj dodajemy nazwę kleju:
+                st.write(f"- 🧪 Klej: **Bostik Mamut** ({int(mb_sztukaterii/8 + 1)} szt.)")
             
             st.info("💡 Kwoty materiałów zawierają doliczony margines bezpieczeństwa (10%) oraz 150 zł na folie i wałki.")
 
@@ -583,7 +584,8 @@ if branza == "Malowanie":
                 
                 pdf.cell(200, 10, txt="LISTA ZAKUPOW:", ln=True)
                 
-                # Dynamiczna lista zakupów z czyszczeniem znaków
+
+                # Dynamiczna lista zakupów do PDF
                 lista_do_pdf = {
                     "Farba Biala": f"{round(l_biala, 1)}L ({f_biala})",
                     "Farba Kolor": f"{round(l_kolor, 1)}L ({f_kolor})",
@@ -591,6 +593,10 @@ if branza == "Malowanie":
                     "Tasma": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
                     "Akryl": f"{round(szt_akryl + 0.5)} szt."
                 }
+
+                # Jeśli jest sztukateria, dopisujemy Mamuta do PDF
+                if mb_sztukaterii > 0:
+                    lista_do_pdf["Klej do listew"] = f"Bostik Mamut ({int(mb_sztukaterii/8 + 1)} szt.)"
 
                 for k, v in lista_do_pdf.items():
                     linia = czysc_polskie_znaki(f"- {k}: {v}")
