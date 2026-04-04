@@ -483,8 +483,7 @@ if branza == "Malowanie":
             c_money1, c_money2 = st.columns(2)
             with c_money1:
                 st.metric("Twoja Robocizna", f"{round(k_rob_total)} zł")
-            with c_res2:
-                # Obliczamy widełki materiałowe dla zachowania profesjonalnego wyglądu
+            with c_money2: # <--- TUTAJ BYŁ BŁĄD (było c_res2)
                 st.metric("Materiały (ok.)", f"{round(k_mat_sredni)} zł")
             
             st.markdown("---")
