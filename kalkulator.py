@@ -576,7 +576,7 @@ if branza == "Malowanie":
                 
                 # --- NAGŁÓWEK Z LOGO ---
                 # Sprawdzamy czy plik logo.png istnieje
-                if os.path.exists("logo.png"):
+                if os.path.exists("logo2.png"):
                     pdf.image("logo.png", x=10, y=8, w=33) # Dostosuj szerokość (w) do swojego logo
                 
                 pdf.set_font("Arial", 'B', 15)
