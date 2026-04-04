@@ -838,7 +838,7 @@ elif branza == "Szpachlowanie":
                     
                     pdf.set_font("Inter" if font_ok else "Arial", size=12)
                     pdf.cell(95, 12, " RAZEM:", 1)
-                    pdf.cell(95, 12, f" {round(suma_pro)} PLN", 1, ln=True)
+                    pdf.cell(95, 12, f" {round(suma_total)} PLN", 1, ln=True)
                     
                     pdf.ln(10)
                     pdf.set_font("Inter" if font_ok else "Arial", size=12)
