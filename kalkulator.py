@@ -796,7 +796,7 @@ elif branza == "Szpachlowanie":
                     st.session_state.pokoje_szp = []
                     st.rerun()
                     
-with c_pdf2:
+            with c_pdf2:
                 try:
                     from fpdf import FPDF
                     import os
