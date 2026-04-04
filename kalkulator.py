@@ -563,7 +563,7 @@ if branza == "Malowanie":
                 pdf.add_page()
 
                 # 2. KONFIGURACJA CZCIONKI INTER
-                font_path = "Inter-Black.ttf"
+                font_path = "Inter-Regular.ttf"
                 if os.path.exists(font_path):
                     # Rejestrujemy czcionkę (nazwa, styl, ścieżka)
                     pdf.add_font("Inter", "", font_path)
