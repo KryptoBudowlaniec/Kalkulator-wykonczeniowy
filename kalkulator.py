@@ -473,18 +473,40 @@ if branza == "Malowanie":
 
         with col_f2:
             st.subheader("💰 Wyniki i Lista zakupów")
+            
+            # Obliczenia końcowe
             total_pro = k_mat_sredni + k_rob_total
+            
+            # --- PANEL FINANSOWY ---
             st.success(f"### RAZEM: **{round(total_pro)} zł**")
             
-            # --- LISTA ZAKUPÓW NA WIERZCHU ---
-            st.markdown("**📦 Twoja lista zakupów:**")
-            st.write(f"- ⚪ Farba Biała: **{round(l_biala, 1)}L** ({f_biala})")
-            st.write(f"- 🎨 Farba Kolor: **{round(l_kolor, 1)}L** ({f_kolor})")
-            st.write(f"- 🛠️ Grunt: **{round(l_grunt, 1)}L**")
-            st.write(f"- 🎞️ Taśma: **{round(szt_tasma + 0.5)} szt.**")
+            c_money1, c_money2 = st.columns(2)
+            with c_money1:
+                st.metric("Twoja Robocizna", f"{round(k_rob_total)} zł")
+            with c_res2:
+                # Obliczamy widełki materiałowe dla zachowania profesjonalnego wyglądu
+                st.metric("Materiały (ok.)", f"{round(k_mat_sredni)} zł")
+            
+            st.markdown("---")
+
+            # --- LISTA ZAKUPÓW (Widoczna na wierzchu) ---
+            st.markdown("### 📦 Twoja lista zakupów")
+            
+            st.write(f"**Farby i Grunt:**")
+            st.write(f"- ⚪ Biała ({f_biala}): **{round(l_biala, 1)}L**")
+            st.write(f"- 🎨 Kolor ({f_kolor}): **{round(l_kolor, 1)}L**")
+            st.write(f"- 🛠️ Grunt ({f_grunt}): **{round(l_grunt, 1)}L**")
+            
+            st.write(f"**Akcesoria:**")
+            st.write(f"- 🎞️ Taśma ({f_tasma}): **{round(szt_tasma + 0.5)} szt.**")
             st.write(f"- 🪟 Akryl szpachlowy: **{round(szt_akryl + 0.5)} szt.**")
+            
             if mb_sztukaterii > 0:
-                st.write(f"- ⚜️ Klej do listew: **{int(mb_sztukaterii/8 + 1)} szt.**")
+                st.write(f"**Sztukateria:**")
+                st.write(f"- ⚜️ Robocizna (montaż): **{round(koszt_rob_sztukateria)} zł**")
+                st.write(f"- 🧪 Klej hybrydowy: **{int(mb_sztukaterii/8 + 1)} szt.**")
+            
+            st.info("💡 Kwoty materiałów zawierają doliczony margines bezpieczeństwa (10%) oraz 150 zł na folie i wałki.")
 
         st.markdown("---")
 
