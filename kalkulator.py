@@ -425,32 +425,31 @@ if branza == "Malowanie":
             *   **Listy zakupowej:** Gotowe zestawienie ile dokładnie litrów farby i sztuk akcesoriów musisz kupić.
             """)
 
-    # --- ZAKŁADKA: KOSZTORYS PRO ---
     with tab_pro:
-        # =======================================================
-        # 1. CZĘŚĆ PRZENIESIONA Z SZYBKIEJ WYCENY (BEZ ZMIAN)
-        # =======================================================
-        st.header("⚡ Szybki szacunek materiałów i robocizny")
+        st.header("💎 Profesjonalny Arkusz Kalkulacyjny")
+        
+        # --- SEKCJA 1: SZYBKI SZACUNEK (Otwarty) ---
+        st.subheader("⚡ Szybki szacunek materiałów i robocizny")
         col_f1, col_f2 = st.columns([1, 1.2])
 
         with col_f1:
-            m_uzytkowy = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="fast_m")
-            stan_f = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="fast_s")
+            m_uzytkowy = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="pro_m_fast")
+            stan_f = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="pro_s_fast")
             
-            st.subheader("Wybór Produktów")
-            f_biala = st.selectbox("Farba BIAŁA (Sufity):", list(baza_biale.keys()))
-            f_kolor = st.selectbox("Farba KOLOR (Ściany):", list(baza_kolory.keys()))
-            f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()))
-            f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()))
+            st.markdown("**Wybór Produktów**")
+            f_biala = st.selectbox("Farba BIAŁA (Sufity):", list(baza_biale.keys()), key="pro_fb")
+            f_kolor = st.selectbox("Farba KOLOR (Ściany):", list(baza_kolory.keys()), key="pro_fk")
+            f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()), key="pro_fg")
+            f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()), key="pro_ft")
             
-            stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 70, 35)
+            stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 100, 35, key="pro_r_fast")
 
             st.markdown("---")
-            st.subheader("⚜️ Sztukateria (Listwy ścienne/sufitowe)")
-            mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0)
-            typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"])
+            st.subheader("⚜️ Sztukateria")
+            mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0, key="pro_sz_fast")
+            typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"], key="pro_tsz_fast")
 
-        # --- LOGIKA OBLICZEŃ (Najpierw liczymy...) ---
+        # --- LOGIKA OBLICZEŃ (Stała) ---
         m2_sufit = m_uzytkowy * 1.0
         m2_sciany = m_uzytkowy * 2.5
         m2_razem = m2_sufit + m2_sciany
@@ -460,152 +459,62 @@ if branza == "Malowanie":
         l_kolor = (m2_sciany / 10) * 2
         l_grunt = m2_razem * 0.15
         szt_akryl = m_uzytkowy / 12
-        koszt_akrylu = (szt_akryl + 0.4) * 15 # przyjmijmy średnio 15 zł za tubkę
         szt_tasma = (m_uzytkowy / 15) * mnoznik
-        opk_folia = (m_uzytkowy / 20) * mnoznik
         
-        # SZTUKATERIA (Logika)
-        szt_klej_sztukateria = mb_sztukaterii / 8
         stawki_szt = {"Styropianowe (Eko)": 25, "Poliuretanowe (Twarde)": 45, "Gipsowe (Premium)": 65}
         koszt_rob_sztukateria = mb_sztukaterii * stawki_szt[typ_sztukaterii]
-        koszt_mat_sztukateria = (szt_klej_sztukateria + 0.4) * 25
+        koszt_mat_sztukateria = (mb_sztukaterii / 8 + 0.4) * 25
             
-        margines = 0.10
         k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
                        (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + \
-                       koszt_mat_sztukateria + 150 # 150zł na drobnicę (folie/wałki)
+                       koszt_mat_sztukateria + 150 
         
-        k_mat_min, k_mat_max = k_mat_sredni * (1 - margines), k_mat_sredni * (1 + margines)
         k_rob_total = (m2_razem * stawka) + koszt_rob_sztukateria
 
-        # --- WYŚWIETLANIE WYNIKÓW (Potem pokazujemy!) ---
         with col_f2:
-            st.subheader("💰 Przewidywany budżet")
-            total_min = k_mat_min + k_rob_total
-            total_max = k_mat_max + k_rob_total
+            st.subheader("💰 Wyniki i Lista zakupów")
+            total_pro = k_mat_sredni + k_rob_total
+            st.success(f"### RAZEM: **{round(total_pro)} zł**")
             
-            st.success(f"### RAZEM: **{round(total_min)} - {round(total_max)} zł**")
-            st.metric("Twoja Robocizna (Stała)", f"{round(k_rob_total)} zł")
-            st.info(f"**Materiały (widełki):** {round(k_mat_min)} - {round(k_mat_max)} zł")
-            total_z_sztukateria = total_max + koszt_rob_sztukateria + koszt_mat_sztukateria
-            st.success(f"### RAZEM Z SZTUKATERIĄ: **{round(total_z_sztukateria)} zł**")
-        
-            with st.expander("📦 Twoja lista zakupów"):
-                # --- LOGIKA PAKOWANIA BIAŁEJ (Wiadra 10L / 5L / 2.5L) ---
-                ile_biala = round(l_biala, 1)
-                w10 = int(ile_biala // 10)
-                reszta_b = ile_biala % 10
-                w5 = 1 if 0 < reszta_b <= 5 else 0
-                w25 = 1 if reszta_b > 5 else 0 # jeśli zostanie >5L, weź 10L lub 5+2.5
-                # Uproszczona logika dla przejrzystości:
-                koszt_b = ile_biala * baza_biale[f_biala]
-                
-                st.write(f"### ⚪ FARBA BIAŁA: {f_biala}")
-                if w10 > 0: st.write(f"- Kup: **{w10} x wiadro 10L**")
-                if reszta_b > 0: 
-                    pucha = "5L" if reszta_b > 2.5 else "2.5L"
-                    st.write(f"- Kup dodatkowo: **1 x puszka {pucha}**")
-                st.write(f"Szacowany koszt bieli: **{round(koszt_b)} zł**")
-                
-                if mb_sztukaterii > 0:
-                    st.write("### ⚜️ SZTUKATERIA")
-                    st.write(f"- Klej: {int(szt_klej_sztukateria + 0.99)} szt.")
-                    st.write(f"- Akryl do łączeń: {int(mb_sztukaterii/15 + 1)} szt.")
-                st.markdown("---")
+            # --- LISTA ZAKUPÓW NA WIERZCHU ---
+            st.markdown("**📦 Twoja lista zakupów:**")
+            st.write(f"- ⚪ Farba Biała: **{round(l_biala, 1)}L** ({f_biala})")
+            st.write(f"- 🎨 Farba Kolor: **{round(l_kolor, 1)}L** ({f_kolor})")
+            st.write(f"- 🛠️ Grunt: **{round(l_grunt, 1)}L**")
+            st.write(f"- 🎞️ Taśma: **{round(szt_tasma + 0.5)} szt.**")
+            st.write(f"- 🪟 Akryl szpachlowy: **{round(szt_akryl + 0.5)} szt.**")
+            if mb_sztukaterii > 0:
+                st.write(f"- ⚜️ Klej do listew: **{int(mb_sztukaterii/8 + 1)} szt.**")
 
-                # --- LOGIKA PAKOWANIA KOLORU (Puszki 5L / 2.5L) ---
-                ile_kolor = round(l_kolor, 1)
-                p5 = int(ile_kolor // 5)
-                reszta_k = ile_kolor % 5
-                p25 = 1 if reszta_k > 0 else 0
-                koszt_k = ile_kolor * baza_kolory[f_kolor]
-
-                st.write(f"### 🎨 FARBA KOLOR: {f_kolor}")
-                if p5 > 0: st.write(f"- Kup: **{p5} x puszka 5L**")
-                if p25 > 0: st.write(f"- Kup dodatkowo: **{p25} x puszka 2.5L**")
-                st.write(f"Szacowany koszt koloru: **{round(koszt_k)} zł**")
-
-                st.markdown("---")
-
-                # --- GRUNT I TAŚMY ---
-                st.write(f"### 🛠️ AKCESORIA")
-                st.write(f"- Grunt **{f_grunt}**: {round(l_grunt)} L (ok. {int(l_grunt/5 + 0.99)} bańki 5L) — **{round(l_grunt * baza_grunty[f_grunt])} zł**")
-                st.write(f"- Taśma **{f_tasma}**: {round(szt_tasma + 0.4)} szt. — **{round((szt_tasma + 0.4) * baza_tasmy[f_tasma])} zł**")
-                st.write(f"- **Akryl szpachlowy (300ml):** {round(szt_akryl + 0.4)} szt. — **{round((szt_akryl + 0.4) * 15)} zł**")
-                koszt_mat_sztukateria = (szt_klej_sztukateria + 0.4) * 25 # ok. 25 zł za dobry klej hybrydowy
-                
-                st.info("💡 Podpowiedzi opakowań są orientacyjne. Wybieraj największe dostępne puszki, aby zaoszczędzić.")
-        
         st.markdown("---")
 
-        # =======================================================
-        # 2. ORYGINALNA LOGIKA PRO Z DODAWANIEM ŚCIAN
-        # =======================================================
-        st.subheader("Precyzyjne planowanie ścian i kolorów")
-    
-        # Formularz dodawania ścian 
-        with st.expander("➕ DODAJ ŚCIANĘ DO PROJEKTU", expanded=True):
-            c1, c2, c3 = st.columns(3)
-            nazwa_p = c1.text_input("Nazwa pokoju:", "Salon", key="pro_room")
-            szer = c2.number_input("Szerokość ściany (m):", min_value=0.1, value=4.0, step=0.1)
-            wys = c3.number_input("Wysokość ściany (m):", min_value=0.1, value=2.6, step=0.1)
-            
-            kolor_hex = st.color_picker("Wybierz kolor tej ściany:", "#D3D3D3")
-            
-            if st.button("Zatwierdź i dodaj ścianę"):
-                # Dodajemy nową ścianę do listy w pamięci (session_state)
-                st.session_state.pokoje_pro.append({
-                    "pokoj": nazwa_p, 
-                    "szer": szer, 
-                    "wys": wys, 
-                    "kolor": kolor_hex
-                })
-                st.success(f"Dodano ścianę do pokoju: {nazwa_p}")
-                st.rerun()
+        # --- SEKCJA 2: DODAWANIE ŚCIAN (Na wierzchu, bez expandera) ---
+        st.subheader("➕ Dodaj konkretną ścianę do projektu")
+        c1, c2, c3 = st.columns([2, 1, 1])
+        nazwa_p = c1.text_input("Nazwa / Pomieszczenie:", "Salon - Ściana TV", key="wall_name")
+        szer = c2.number_input("Szerokość (m):", min_value=0.1, value=4.0, step=0.1, key="wall_w")
+        wys = c3.number_input("Wysokość (m):", min_value=0.1, value=2.6, step=0.1, key="wall_h")
+        
+        kolor_hex = st.color_picker("Kolor tej ściany:", "#D3D3D3", key="wall_c")
+        
+        if st.button("🚀 ZATWIERDŹ I DODAJ ŚCIANĘ", use_container_width=True):
+            st.session_state.pokoje_pro.append({
+                "pokoj": nazwa_p, "szer": szer, "wys": wys, "kolor": kolor_hex
+            })
+            st.rerun()
 
-        st.markdown("---")
-            
-        # Wyświetlanie i podliczanie PRO
-        if not st.session_state.pokoje_pro:
-            # Stan domyślny, gdy lista jest pusta
-            st.info("💡 Twój kosztorys PRO jest pusty. Wypełnij powyższy formularz i kliknij 'Zatwierdź', aby zacząć.")
-        else:
-            # Jeśli są dane, to je podliczamy
-            total_m2_pro = 0
-            zestawienie_kolorow = {}
-
-            st.subheader("📋 Twoje zestawienie ścian:")
-            
-            # Wyświetlamy listę dodanych ścian (żebyś wiedział co już dodałeś)
+        # --- WYKAZ DODANYCH ELEMENTÓW ---
+        if st.session_state.pokoje_pro:
+            st.markdown("### 📋 Zestawienie szczegółowe")
+            total_m2_walls = 0
             for i, s in enumerate(st.session_state.pokoje_pro):
-                pow = s['szer'] * s['wys']
-                total_m2_pro += pow
-                
-                # Grupowanie kolorów
-                zestawienie_kolorow[s['kolor']] = zestawienie_kolorow.get(s['kolor'], 0) + pow
-                
-                # Mały pasek z opisem każdej ściany
-                st.write(f"{i+1}. **{s['pokoj']}**: {s['szer']}m x {s['wys']}m = **{round(pow, 2)} m²** (Kolor: {s['kolor']})")
-
-            st.markdown("---")
-            st.subheader(f"📊 Razem do pomalowania: {round(total_m2_pro, 1)} m² ścian")
-            # Wyniki PRO
-            st.subheader(f"📊 Wyniki precyzyjne: {round(total_m2_pro, 1)} m2 ścian")
+                p_m2 = s['szer'] * s['wys']
+                total_m2_walls += p_m2
+                st.write(f"{i+1}. **{s['pokoj']}**: {s['szer']}m x {s['wys']}m = **{round(p_m2, 2)} m²**")
             
-            # Wyświetlanie kółek z kolorami
-            cols_palette = st.columns(len(zestawienie_kolorow) if len(zestawienie_kolorow) > 0 else 1)
-            for idx, (k, m) in enumerate(zestawienie_kolorow.items()):
-                litry = (m / 10) * 2
-                st.markdown(f"""
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <div style="width: 25px; height: 25px; background-color: {k}; border-radius: 50%; border: 1px solid #ddd; margin-right: 10px;"></div>
-                        <b>{round(litry, 1)} L</b> (Kolor: {k})
-                    </div>
-                """, unsafe_allow_html=True)
-
-            # PRZYCISK CZYSZCZENIA
-            st.write("##")
-            if st.button("🗑️ Wyczyść wszystkie dane PRO"):
+            st.info(f"Łączna powierzchnia dodanych ścian: **{round(total_m2_walls, 1)} m²**")
+            
+            if st.button("🗑️ WYCZYŚĆ LISTĘ ŚCIAN"):
                 st.session_state.pokoje_pro = []
                 st.rerun()
 
