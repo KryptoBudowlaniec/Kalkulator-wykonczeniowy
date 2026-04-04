@@ -1,6 +1,4 @@
 streamlit
-fpdf
+fpdf2
 pandas
 plotly
-Plaintext
-fpdf2
