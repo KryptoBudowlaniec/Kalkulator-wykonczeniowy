@@ -538,7 +538,8 @@ if branza == "Malowanie":
             if st.button("🗑️ WYCZYŚĆ LISTĘ ŚCIAN"):
                 st.session_state.pokoje_pro = []
                 st.rerun()
-st.markdown("---")
+                
+        st.markdown("---")
         st.subheader("💾 Zarządzanie Projektem")
         
         c_btn1, c_btn2 = st.columns(2)
@@ -549,7 +550,15 @@ st.markdown("---")
                 st.rerun()
 
         with c_btn2:
-            # Pamiętaj, aby cały blok try-except też miał równe wcięcia!
+            # Przygotowanie danych do PDF (upewnij się, że te zmienne są obliczone wcześniej w tab_pro!)
+            lista_do_pdf = {
+                "Farba Biala": f"{round(l_biala, 1)}L ({f_biala})",
+                "Farba Kolor": f"{round(l_kolor, 1)}L ({f_kolor})",
+                "Grunt": f"{round(l_grunt, 1)}L",
+                "Tasma": f"{round(szt_tasma + 0.5)} szt.",
+                "Akryl": f"{round(szt_akryl + 0.5)} szt."
+            }
+
             try:
                 from fpdf import FPDF
                 pdf = FPDF()
@@ -568,7 +577,6 @@ st.markdown("---")
                 for k, v in lista_do_pdf.items():
                     pdf.cell(200, 10, txt=f"- {k}: {v}", ln=True)
                 
-                # Generowanie danych binarnych PDF
                 pdf_output = pdf.output(dest='S').encode('latin-1')
                 
                 st.download_button(
