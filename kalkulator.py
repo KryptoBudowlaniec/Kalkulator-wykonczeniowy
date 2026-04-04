@@ -541,7 +541,7 @@ if branza == "Malowanie":
                 
         st.markdown("---")
 
-        def czysc_polskie_znaki(tekst):
+    def czysc_polskie_znaki(tekst):
         """Zamienia polskie litery na ich odpowiedniki bez ogonków."""
             mapa = {
                 'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
