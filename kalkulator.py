@@ -654,11 +654,7 @@ if branza == "Malowanie":
 elif branza == "Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
 
-    # Inicjalizacja pamięci dla pomieszczeń
-    if 'pokoje_szp' not in st.session_state:
-        st.session_state.pokoje_szp = []
-
-    # --- BAZA DANYCH ---
+    # 1. INICJALIZACJA BAZY DANYCH (Musi być na początku sekcji)
     baza_sypkie = {
         "Cekol C-45 (20kg)": {"cena": 58, "waga": 20},
         "FransPol GS-2 (20kg)": {"cena": 50, "waga": 20},
@@ -680,124 +676,125 @@ elif branza == "Szpachlowanie":
         "Ceresit CT 17": 11
     }
 
+    if 'pokoje_szp' not in st.session_state:
+        st.session_state.pokoje_szp = []
+
     tab_s1, tab_s2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
 
     # ==========================================
-    # ZAKŁADKA 1: SZYBKA WYCENA (UPROSZCZONA)
+    # ZAKŁADKA 1: SZYBKA WYCENA (MINIMALISTYCZNA)
     # ==========================================
     with tab_s1:
-        st.subheader("Błyskawiczny szacunek")
-        m2_podl_fast = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=50.0, key="szp_fast_m")
+        st.subheader("Błyskawiczny szacunek kosztów")
+        m2_podl_fast = st.number_input("Podaj metraż podłogi mieszkania (m2):", min_value=1.0, value=50.0)
         
-        # Szybka logika: Średnie rynkowe (50 zł robocizna, 2 warstwy, gładź gotowa średniej klasy)
-        m2_scian_fast = m2_podl_fast * 3.5
-        koszt_orientacyjny = m2_scian_fast * 75  # 75 zł to orientacyjna suma mat + robocizna za m2
+        # Logika uproszczona: 3.5m2 ściany na 1m2 podłogi * średnia cena rynkowa (ok. 80 zł/m2 za wszystko)
+        szacunek_total = m2_podl_fast * 3.5 * 80 
         
-        st.info(f"Przybliżony koszt całkowity (robocizna + materiał): **ok. {round(koszt_orientacyjny)} zł**")
-        st.caption("Dla precyzyjnych obliczeń, wyboru materiałów i stawek przejdź do zakładki Detale PRO.")
+        st.success(f"### Szacowany koszt całkowity: **ok. {round(szacunek_total)} PLN**")
+        st.write("W tym orientacyjnie:")
+        st.write(f"- Robocizna: **{round(szacunek_total * 0.65)} PLN**")
+        st.write(f"- Materiały: **{round(szacunek_total * 0.35)} PLN**")
+        st.info("💡 Aby wybrać konkretne gładzie, ustawić swoją stawkę i dodać pomieszczenia, przejdź do **Detale PRO**.")
 
     # ==========================================
-    # ZAKŁADKA 2: DETALE PRO (PEŁNA KONTROLA)
+    # ZAKŁADKA 2: DETALE PRO (TU JEST WSZYSTKO)
     # ==========================================
     with tab_s2:
-        # --- 1. DODAWANIE POMIESZCZEŃ ---
-        with st.expander("➕ Dodaj pomieszczenie do projektu", expanded=len(st.session_state.pokoje_szp) == 0):
-            col_p1, col_p2 = st.columns(2)
-            with col_p1:
-                n_pom = st.text_input("Nazwa pomieszczenia:", placeholder="np. Sypialnia", key="szp_n")
-                d_pom = st.number_input("Długość (m):", 0.0, 20.0, 4.0, step=0.1)
-                s_pom = st.number_input("Szerokość (m):", 0.0, 20.0, 3.0, step=0.1)
-                w_pom = st.number_input("Wysokość (m):", 0.0, 5.0, 2.6, step=0.1)
-            with col_p2:
-                st.write("**Odliczenia i sufity:**")
-                suf_szp = st.checkbox("Szpachlować sufit?", value=True)
-                o_szp = st.number_input("Okna (m2):", 0.0, 20.0, 1.5, step=0.1)
-                drz_szp = st.number_input("Drzwi (m2):", 0.0, 20.0, 2.0, step=0.1)
+        # --- KROK 1: DODAWANIE POMIESZCZEŃ ---
+        with st.expander("➕ Dodaj pomieszczenie", expanded=len(st.session_state.pokoje_szp) == 0):
+            c1, c2 = st.columns(2)
+            with c1:
+                n_p = st.text_input("Nazwa (np. Salon):", key="n_szp")
+                dl_p = st.number_input("Długość (m):", 0.0, 30.0, 4.0)
+                sz_p = st.number_input("Szerokość (m):", 0.0, 30.0, 3.0)
+                wy_p = st.number_input("Wysokość (m):", 0.0, 6.0, 2.6)
+            with c2:
+                suf_p = st.checkbox("Szpachlować sufit?", value=True)
+                ok_p = st.number_input("Okna (m2):", 0.0, 20.0, 1.5)
+                dr_p = st.number_input("Drzwi (m2):", 0.0, 20.0, 2.0)
 
-            if st.button("Dodaj do listy", use_container_width=True):
-                p_scian = (d_pom + s_pom) * 2 * w_pom
-                p_sufit = (d_pom * s_pom) if suf_szp else 0
-                p_netto = (p_scian + p_sufit) - o_szp - drz_szp
-                
-                if p_netto > 0:
+            if st.button("Dodaj do kosztorysu", use_container_width=True):
+                pow_brutto = ((dl_p + sz_p) * 2 * wy_p) + (dl_p * sz_p if suf_p else 0)
+                pow_netto = pow_brutto - ok_p - dr_p
+                if pow_netto > 0:
                     st.session_state.pokoje_szp.append({
-                        "nazwa": n_pom or f"Pokój {len(st.session_state.pokoje_szp)+1}",
-                        "netto": p_netto,
-                        "podloga": d_pom * s_pom
+                        "nazwa": n_p or f"Pomieszczenie {len(st.session_state.pokoje_szp)+1}",
+                        "netto": pow_netto,
+                        "podloga": dl_p * sz_p
                     })
                     st.rerun()
 
-        # --- 2. LISTA I WYBÓR MATERIAŁÓW (PRZENIESIONE DO PRO) ---
+        # --- KROK 2: KONFIGURACJA MATERIAŁÓW I STAWEK ---
         if st.session_state.pokoje_szp:
-            st.markdown("### 🛠️ Konfiguracja Wykonania")
+            st.markdown("---")
+            st.subheader("🛠️ Ustawienia Wykonania i Materiałów")
             
-            # Wyświetlanie dodanych pokoi
+            # Wyświetlenie listy pokoi pod formularzem
             for i, p in enumerate(st.session_state.pokoje_szp):
-                c_n, c_u = st.columns([5, 1])
-                c_n.write(f"📍 {p['nazwa']}: **{round(p['netto'], 1)} m²**")
-                if c_u.button("Usuń", key=f"del_s_{i}"):
+                cols = st.columns([4, 1])
+                cols[0].write(f"✅ {p['nazwa']}: **{round(p['netto'], 1)} m²**")
+                if cols[1].button("Usuń", key=f"del_{i}"):
                     st.session_state.pokoje_szp.pop(i)
                     st.rerun()
 
-            st.markdown("---")
-            
+            st.write("")
             col_cfg1, col_cfg2 = st.columns(2)
+            
             with col_cfg1:
-                typ_g_pro = st.radio("Rodzaj gładzi:", ["Gotowa (Wiadro)", "Sypka (Worek)"], horizontal=True)
-                if typ_g_pro == "Sypka (Worek)":
-                    m_g_pro = st.selectbox("Wybierz gładź:", list(baza_sypkie.keys()))
-                    d_g_pro = baza_sypkie[m_g_pro]
-                    norma_g = 1.2
+                typ_g = st.radio("Rodzaj gładzi:", ["Gotowa (Wiadro)", "Sypka (Worek)"], horizontal=True)
+                if typ_g == "Sypka (Worek)":
+                    wybrana_g = st.selectbox("Wybierz gładź:", list(baza_sypkie.keys()))
+                    dane_g = baza_sypkie[wybrana_g]
+                    norma_g = 1.2 # kg/m2 na warstwę
                 else:
-                    m_g_pro = st.selectbox("Wybierz gładź:", list(baza_gotowe.keys()))
-                    d_g_pro = baza_gotowe[m_g_pro]
-                    norma_g = 2.0
+                    wybrana_g = st.selectbox("Wybierz gładź:", list(baza_gotowe.keys()))
+                    dane_g = baza_gotowe[wybrana_g]
+                    norma_g = 1.8 # kg/m2 na warstwę
                 
-                m_grunt_pro = st.selectbox("Wybierz Grunt:", list(baza_grunty_szp.keys()))
+                wybrany_grunt = st.selectbox("Wybierz Grunt:", list(baza_grunty_szp.keys()))
 
             with col_cfg2:
-                warstwy_pro = st.slider("Liczba warstw:", 1, 3, 2)
-                stawka_pro = st.number_input("Twoja stawka za m2 (robocizna):", 1, 200, 50)
+                liczba_warstw = st.slider("Liczba warstw:", 1, 3, 2)
+                stawka_m2 = st.number_input("Twoja stawka za m2 (zł):", 1, 250, 50)
 
-            # --- OBLICZENIA FINANSOWE PRO ---
-            suma_m2_szp = sum(p["netto"] for p in st.session_state.pokoje_szp)
-            suma_m2_podl = sum(p["podloga"] for p in st.session_state.pokoje_szp)
+            # --- OBLICZENIA KOŃCOWE ---
+            total_m2_netto = sum(p["netto"] for p in st.session_state.pokoje_szp)
+            total_m2_podl = sum(p["podloga"] for p in st.session_state.pokoje_szp)
             
-            kg_szp_razem = suma_m2_szp * norma_g * warstwy_pro
-            szt_szp_razem = kg_szp_razem / d_g_pro["waga"]
+            # Materiały
+            potrzebne_kg = total_m2_netto * norma_g * liczba_warstw
+            ilosc_opk = int((potrzebne_kg / dane_g["waga"]) + 0.99)
+            koszt_gladzi = ilosc_opk * dane_g["cena"]
             
-            koszt_g_pro = szt_szp_razem * d_g_pro["cena"]
-            koszt_grunt_pro = (suma_m2_szp * 0.2) * baza_grunty_szp[m_grunt_pro]
-            koszt_dodatki = suma_m2_podl * 15 # Narożniki, flizelina, papier ścierny
+            ilosc_gruntu_l = total_m2_netto * 0.2 # 0.1L przed i 0.1L po
+            ilosc_baniek = int((ilosc_gruntu_l / 5) + 0.99)
+            koszt_gruntu = ilosc_baniek * baza_grunty_szp[wybrany_grunt]
             
-            k_mat_total = koszt_g_pro + koszt_grunt_pro + koszt_dodatki
-            k_rob_total = suma_m2_szp * stawka_pro
-            suma_total = k_mat_total + k_rob_total
+            koszt_akcesoriow = total_m2_podl * 15 # Narożniki, papiery, taśmy
+            
+            # Finał
+            materiały_total = koszt_gladzi + koszt_gruntu + koszt_akcesoriow
+            robocizna_total = total_m2_netto * stawka_m2
+            suma_pro = materiały_total + robocizna_total
 
-            # --- WYŚWIETLANIE WYNIKÓW ---
+            # --- PANEL WYNIKÓW ---
             st.markdown("---")
-            st.subheader("💰 Podsumowanie Kosztorysu PRO")
+            st.success(f"## SUMA PRO: **{round(suma_pro)} PLN**")
             
-            st.success(f"## ŁĄCZNIE: **{round(suma_total)} PLN**")
-            
-            c_res1, c_res2 = st.columns(2)
-            c_res1.metric("👷 Robocizna", f"{round(k_rob_total)} PLN")
-            c_res2.metric("📦 Materiały", f"{round(k_mat_total)} PLN")
+            res_c1, res_c2 = st.columns(2)
+            res_c1.metric("👷 Robocizna", f"{round(robocizna_total)} PLN")
+            res_c2.metric("📦 Materiały", f"{round(materiały_total)} PLN")
 
-            with st.expander("📝 Szczegółowa lista zakupów"):
-                st.write(f"- {m_g_pro}: **{int(szt_szp_razem + 0.99)} szt.**")
-                st.write(f"- {m_grunt_pro}: **{int((suma_m2_szp * 0.2 / 5) + 0.99)} bańki (5L)**")
-                st.write(f"- Akcesoria (narożniki, flizelina): **ok. {round(koszt_dodatki)} zł**")
-
-            # --- GENEROWANIE PDF (PRO) ---
+            # --- GENEROWANIE PDF ---
             st.markdown("---")
             c_pdf1, c_pdf2 = st.columns(2)
             
             with c_pdf1:
-                if st.button("🗑️ Wyczyść projekt PRO", use_container_width=True):
+                if st.button("🗑️ Wyczyść wszystko", use_container_width=True):
                     st.session_state.pokoje_szp = []
                     st.rerun()
-            
+                    
             with c_pdf2:
                 try:
                     from fpdf import FPDF
@@ -807,50 +804,55 @@ elif branza == "Szpachlowanie":
                     pdf = FPDF()
                     pdf.add_page()
                     
-                    # Czcionka
+                    # Czcionka Inter
                     f_path = "Inter-Regular.ttf"
                     if os.path.exists(f_path):
                         pdf.add_font("Inter", "", f_path)
                         pdf.set_font("Inter", size=12)
-                        has_f = True
+                        font_ok = True
                     else:
                         pdf.set_font("Arial", size=12)
-                        has_f = False
+                        font_ok = False
 
-                    # Nagłówek
+                    # Logo i Nagłówek
                     if os.path.exists("logo.png"):
                         pdf.image("logo.png", x=10, y=8, w=35)
                     
-                    pdf.set_font("Inter" if has_f else "Arial", size=16)
-                    pdf.cell(0, 15, "PROCALC - KOSZTORYS SZPACHLOWANIA", ln=True, align='C')
+                    pdf.set_font("Inter" if font_ok else "Arial", size=16)
+                    pdf.cell(0, 15, "RAPORT SZPACHLOWANIA - PROCALC", ln=True, align='C')
                     pdf.ln(5)
                     pdf.line(10, 35, 200, 35)
                     pdf.ln(10)
 
-                    # Tabela finansowa
+                    # Treść PDF
                     pdf.set_fill_color(240, 240, 240)
-                    pdf.cell(0, 10, " 1. PODSUMOWANIE FINANSOWE", ln=True, fill=True)
-                    pdf.set_font("Inter" if has_f else "Arial", size=11)
+                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                    pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
+                    
+                    pdf.set_font("Inter" if font_ok else "Arial", size=11)
                     pdf.cell(95, 10, " Robocizna:", 1)
-                    pdf.cell(95, 10, f" {round(k_rob_total)} PLN", 1, ln=True)
+                    pdf.cell(95, 10, f" {round(robocizna_total)} PLN", 1, ln=True)
                     pdf.cell(95, 10, " Materialy:", 1)
-                    pdf.cell(95, 10, f" {round(k_mat_total)} PLN", 1, ln=True)
-                    pdf.set_font("Inter" if has_f else "Arial", size=12)
-                    pdf.cell(95, 12, " SUMA CALKOWITA:", 1)
-                    pdf.cell(95, 12, f" {round(suma_total)} PLN", 1, ln=True)
+                    pdf.cell(95, 10, f" {round(materiały_total)} PLN", 1, ln=True)
+                    
+                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                    pdf.cell(95, 12, " RAZEM:", 1)
+                    pdf.cell(95, 12, f" {round(suma_pro)} PLN", 1, ln=True)
                     
                     pdf.ln(10)
-                    pdf.cell(0, 10, " 2. MATERIALY", ln=True, fill=True)
-                    pdf.set_font("Inter" if has_f else "Arial", size=10)
-                    pdf.cell(0, 8, f"- Gladz: {m_g_pro} ({int(szt_szp_razem+0.99)} szt.)", ln=True)
-                    pdf.cell(0, 8, f"- Grunt: {m_grunt_pro}", ln=True)
-                    pdf.cell(0, 8, f"- Powierzchnia netto: {round(suma_m2_szp, 1)} m2", ln=True)
+                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                    pdf.cell(0, 10, " 2. SZCZEGOLY ZAMOWIENIA", ln=True, fill=True)
+                    pdf.set_font("Inter" if font_ok else "Arial", size=10)
+                    pdf.cell(0, 8, f"- Gladz: {wybrana_g} ({ilosc_opk} szt.)", ln=True)
+                    pdf.cell(0, 8, f"- Grunt: {wybrany_grunt} ({ilosc_baniek} baniek 5L)", ln=True)
+                    pdf.cell(0, 8, f"- Liczba warstw: {liczba_warstw}", ln=True)
+                    pdf.cell(0, 8, f"- Calkowita pow. netto: {round(total_m2_netto, 1)} m2", ln=True)
 
-                    pdf_out = pdf.output()
+                    pdf_bytes = pdf.output()
                     st.download_button(
-                        label="📄 Pobierz Raport Szpachlowanie PDF",
-                        data=bytes(pdf_out),
-                        file_name=f"Szpachlowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        label="📄 Pobierz PDF (PRO)",
+                        data=bytes(pdf_bytes),
+                        file_name=f"Szpachlowanie_Raport_{datetime.now().strftime('%Y%m%d')}.pdf",
                         mime="application/pdf",
                         use_container_width=True
                     )
