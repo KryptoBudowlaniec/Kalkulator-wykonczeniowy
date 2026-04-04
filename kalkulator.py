@@ -541,16 +541,6 @@ if branza == "Malowanie":
                 st.rerun()
                 
         st.markdown("---")
-
-        def czysc_polskie_znaki(tekst):
-            """Zamienia polskie litery na ich odpowiedniki bez ogonków."""
-            mapa = {
-                'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
-                'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
-                }
-            for pol, ang in mapa.items():
-                tekst = tekst.replace(pol, ang)
-            return tekst
         
         st.subheader("💾 Zarządzanie Projektem")
         
@@ -568,86 +558,92 @@ if branza == "Malowanie":
                 import os
                 from datetime import datetime
 
-                # 1. Przygotowanie danych (czyszczenie ogonków)
-                data_generacji = datetime.now().strftime("%d.%m.%Y %H:%M")
-                
+                # 1. Inicjalizacja PDF
                 pdf = FPDF()
                 pdf.add_page()
-                
-                # --- NAGŁÓWEK Z LOGO ---
-                # Sprawdzamy czy plik logo.png istnieje
-                if os.path.exists("logo2.png"):
-                    pdf.image("logo.png", x=10, y=8, w=33) # Dostosuj szerokość (w) do swojego logo
-                
-                pdf.set_font("Arial", 'B', 15)
-                pdf.cell(80) # Przesunięcie w prawo
-                pdf.cell(30, 10, "proCalc - Raport Kosztorysowy", 0, 0, 'C')
-                pdf.ln(20)
 
-                # --- LINIA OZDOBNA ---
-                pdf.set_draw_color(50, 50, 50)
-                pdf.line(10, 32, 200, 32)
+                # 2. KONFIGURACJA CZCIONKI INTER
+                font_path = "Inter-Black.ttf"
+                if os.path.exists(font_path):
+                    # Rejestrujemy czcionkę (nazwa, styl, ścieżka)
+                    pdf.add_font("Inter", "", font_path)
+                    pdf.set_font("Inter", size=12)
+                    font_exists = True
+                else:
+                    pdf.set_font("Arial", size=12)
+                    font_exists = False
+                    st.warning("⚠️ Nie znaleziono pliku Inter-Black.ttf. Używam czcionki zastępczej.")
+
+                # --- NAGŁÓWEK ---
+                if os.path.exists("logo.png"):
+                    pdf.image("logo.png", x=10, y=8, w=35)
+                
+                # Używamy Inter do nagłówka (rozmiar 18 dla efektu 'Black')
+                pdf.set_font("Inter" if font_exists else "Arial", size=18)
+                pdf.cell(0, 15, "PROCALC - RAPORT KOSZTORYSOWY", ln=True, align='C')
+                pdf.ln(10)
+
+                # --- LINIA SEPARATORA ---
+                pdf.set_draw_color(0, 0, 0)
+                pdf.line(10, 35, 200, 35)
                 pdf.ln(5)
 
-                # --- INFORMACJE O PROJEKCIE ---
-                pdf.set_font("Arial", 'B', 12)
-                pdf.cell(0, 10, czysc_polskie_znaki(f"Data wygenerowania: {data_generacji}"), ln=True)
-                pdf.set_font("Arial", '', 10)
-                pdf.cell(0, 8, czysc_polskie_znaki(f"Metraz podlogi: {m_uzytkowy} m2 | Stan: {stan_f}"), ln=True)
+                # --- DANE PROJEKTU ---
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                pdf.cell(0, 8, f"Data: {data_str} | Metraz: {m_uzytkowy} m2", ln=True)
                 pdf.ln(5)
 
-                # --- SEKACJA 1: PODSUMOWANIE FINANSOWE ---
-                pdf.set_fill_color(240, 240, 240)
-                pdf.set_font("Arial", 'B', 12)
+                # --- SEKCJA 1: FINANSE (Tabela) ---
+                pdf.set_fill_color(230, 230, 230)
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
                 pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
-                pdf.set_font("Arial", '', 11)
                 
-                # Tabela finansowa
-                pdf.cell(95, 10, czysc_polskie_znaki("Twoja Robocizna:"), 1)
-                pdf.cell(95, 10, f"{round(k_rob_total)} PLN", 1, ln=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=11)
+                pdf.cell(95, 10, " Twoja Robocizna:", 1)
+                pdf.cell(95, 10, f" {round(k_rob_total)} PLN", 1, ln=True)
                 
-                pdf.cell(95, 10, czysc_polskie_znaki("Szacowany koszt materialow:"), 1)
-                pdf.cell(95, 10, f"{round(k_mat_sredni)} PLN", 1, ln=True)
+                pdf.cell(95, 10, " Szacowane Materialy:", 1)
+                pdf.cell(95, 10, f" {round(k_mat_sredni)} PLN", 1, ln=True)
                 
-                pdf.set_font("Arial", 'B', 12)
-                pdf.cell(95, 12, "RAZEM (Suma szacunkowa):", 1)
-                pdf.cell(95, 12, f"{round(total_pro)} PLN", 1, ln=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=13)
+                pdf.cell(95, 12, " SUMA CALKOWITA:", 1)
+                pdf.cell(95, 12, f" {round(total_pro)} PLN", 1, ln=True)
                 pdf.ln(10)
 
                 # --- SEKCJA 2: LISTA ZAKUPOWA ---
-                pdf.set_fill_color(240, 240, 240)
-                pdf.set_font("Arial", 'B', 12)
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
                 pdf.cell(0, 10, " 2. SZCZEGOLOWA LISTA ZAKUPOW", ln=True, fill=True)
-                pdf.set_font("Arial", '', 10)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
                 pdf.ln(2)
 
+                # Przygotowanie listy z polskimi znakami (fpdf2 to obsłuży!)
                 lista_pdf = {
-                    "Farba Biala (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
-                    "Farba Kolor (Sciany)": f"{round(l_kolor, 1)}L ({f_kolor})",
-                    "Grunt": f"{round(l_grunt, 1)}L ({f_grunt})",
-                    "Tasma malarska": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
+                    "Farba Biała (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
+                    "Farba Kolor (Ściany)": f"{round(l_kolor, 1)}L ({f_kolor})",
+                    "Grunt głęboko penetrujący": f"{round(l_grunt, 1)}L ({f_grunt})",
+                    "Taśma malarska": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
                     "Akryl szpachlowy": f"{round(szt_akryl + 0.5)} szt."
                 }
                 
                 if mb_sztukaterii > 0:
-                    lista_pdf["Sztukateria (mb)"] = f"{mb_sztukaterii} mb"
-                    lista_pdf["Klej (Bostik Mamut)"] = f"{int(mb_sztukaterii/8 + 1)} szt."
+                    lista_pdf["Klej do listew"] = f"Bostik Mamut ({int(mb_sztukaterii/8 + 1)} szt.)"
 
-                for item, opis in lista_pdf.items():
-                    pdf.cell(0, 8, czysc_polskie_znaki(f"- {item}: {opis}"), ln=True)
+                for produkt, opis in lista_pdf.items():
+                    pdf.cell(0, 8, f"- {produkt}: {opis}", ln=True)
 
                 # --- STOPKA ---
-                pdf.set_y(-30)
-                pdf.set_font("Arial", 'I', 8)
-                pdf.set_text_color(120, 120, 120)
-                pdf.cell(0, 10, czysc_polskie_znaki("Wygenerowano w aplikacji proCalc. Kosztorys ma charakter orientacyjny."), 0, 0, 'C')
+                pdf.set_y(-25)
+                pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 10, "Wygenerowano automatycznie przez proCalc. Kosztorys nie stanowi oferty handlowej.", 0, 0, 'C')
 
-                # Generowanie PDF
-                pdf_output = pdf.output(dest='S').encode('latin-1')
+                # Generowanie PDF jako bytes (standard fpdf2)
+                pdf_output = pdf.output()
                 
                 st.download_button(
-                    label="📄 Pobierz Profesjonalny Raport PDF",
-                    data=pdf_output,
+                    label="📄 Pobierz Raport PDF (Inter Black)",
+                    data=bytes(pdf_output),
                     file_name=f"Kosztorys_proCalc_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
                     use_container_width=True
