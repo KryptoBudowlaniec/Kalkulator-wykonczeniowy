@@ -385,7 +385,7 @@ if branza == "Malowanie":
     }
     
     with tab_fast:
-        st.info("Narzędzie kalkulacji zostało przeniesione w całości do zakładki 💎 Kosztorys PRO.")
+        st.info("Pełne możliwości w Kosztorys PRO.")
 
     with tab_fast:
         st.header("⚡ Błyskawiczny szacunek kosztów")
