@@ -561,54 +561,99 @@ if branza == "Malowanie":
                 st.session_state.pokoje_pro = []
                 st.rerun()
 
+        Jasne, czas nadać temu raportowi wygląd profesjonalnej oferty. Aby to działało, musisz mieć plik graficzny ze swoim logo (np. logo.png) w tym samym folderze, co plik .py. Jeśli go nie masz, kod po prostu pominie wstawianie obrazka, żeby nie wywalić błędu.
+
+Oto zaktualizowana, "dopieszczona" wersja sekcji generowania PDF. Dodałem linie oddzielające, lepszą strukturę danych i miejsce na logo.
+
+Podmień cały blok with c_btn2: na ten kod:
+Python
         with c_btn2:
             try:
                 from fpdf import FPDF
-                
-                # Przygotowanie danych (czyszczenie ogonków)
-                txt_razem = czysc_polskie_znaki(f"Suma calkowita: {round(total_pro)} PLN")
-                txt_robocizna = czysc_polskie_znaki(f"Robocizna: {round(k_rob_total)} PLN")
-                txt_materialy = czysc_polskie_znaki(f"Materialy: {round(k_mat_sredni)} PLN")
+                import os
+                from datetime import datetime
+
+                # 1. Przygotowanie danych (czyszczenie ogonków)
+                data_generacji = datetime.now().strftime("%d.%m.%Y %H:%M")
                 
                 pdf = FPDF()
                 pdf.add_page()
-                pdf.set_font("Arial", 'B', 16)
-                pdf.cell(200, 10, txt="RAPORT KOSZTORYSOWY PRO", ln=True, align='C')
-                pdf.ln(10)
                 
-                pdf.set_font("Arial", size=12)
-                pdf.cell(200, 10, txt=txt_razem, ln=True)
-                pdf.cell(200, 10, txt=txt_robocizna, ln=True)
-                pdf.cell(200, 10, txt=txt_materialy, ln=True)
-                pdf.ln(10)
+                # --- NAGŁÓWEK Z LOGO ---
+                # Sprawdzamy czy plik logo.png istnieje
+                if os.path.exists("logo.png"):
+                    pdf.image("logo.png", x=10, y=8, w=33) # Dostosuj szerokość (w) do swojego logo
                 
-                pdf.cell(200, 10, txt="LISTA ZAKUPOW:", ln=True)
-                
+                pdf.set_font("Arial", 'B', 15)
+                pdf.cell(80) # Przesunięcie w prawo
+                pdf.cell(30, 10, "proCalc - Raport Kosztorysowy", 0, 0, 'C')
+                pdf.ln(20)
 
-                # Dynamiczna lista zakupów do PDF
-                lista_do_pdf = {
-                    "Farba Biala": f"{round(l_biala, 1)}L ({f_biala})",
-                    "Farba Kolor": f"{round(l_kolor, 1)}L ({f_kolor})",
+                # --- LINIA OZDOBNA ---
+                pdf.set_draw_color(50, 50, 50)
+                pdf.line(10, 32, 200, 32)
+                pdf.ln(5)
+
+                # --- INFORMACJE O PROJEKCIE ---
+                pdf.set_font("Arial", 'B', 12)
+                pdf.cell(0, 10, czysc_polskie_znaki(f"Data wygenerowania: {data_generacji}"), ln=True)
+                pdf.set_font("Arial", '', 10)
+                pdf.cell(0, 8, czysc_polskie_znaki(f"Metraz podlogi: {m_uzytkowy} m2 | Stan: {stan_f}"), ln=True)
+                pdf.ln(5)
+
+                # --- SEKACJA 1: PODSUMOWANIE FINANSOWE ---
+                pdf.set_fill_color(240, 240, 240)
+                pdf.set_font("Arial", 'B', 12)
+                pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
+                pdf.set_font("Arial", '', 11)
+                
+                # Tabela finansowa
+                pdf.cell(95, 10, czysc_polskie_znaki("Twoja Robocizna:"), 1)
+                pdf.cell(95, 10, f"{round(k_rob_total)} PLN", 1, ln=True)
+                
+                pdf.cell(95, 10, czysc_polskie_znaki("Szacowany koszt materialow:"), 1)
+                pdf.cell(95, 10, f"{round(k_mat_sredni)} PLN", 1, ln=True)
+                
+                pdf.set_font("Arial", 'B', 12)
+                pdf.cell(95, 12, "RAZEM (Suma szacunkowa):", 1)
+                pdf.cell(95, 12, f"{round(total_pro)} PLN", 1, ln=True)
+                pdf.ln(10)
+
+                # --- SEKCJA 2: LISTA ZAKUPOWA ---
+                pdf.set_fill_color(240, 240, 240)
+                pdf.set_font("Arial", 'B', 12)
+                pdf.cell(0, 10, " 2. SZCZEGOLOWA LISTA ZAKUPOW", ln=True, fill=True)
+                pdf.set_font("Arial", '', 10)
+                pdf.ln(2)
+
+                lista_pdf = {
+                    "Farba Biala (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
+                    "Farba Kolor (Sciany)": f"{round(l_kolor, 1)}L ({f_kolor})",
                     "Grunt": f"{round(l_grunt, 1)}L ({f_grunt})",
-                    "Tasma": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
-                    "Akryl": f"{round(szt_akryl + 0.5)} szt."
+                    "Tasma malarska": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
+                    "Akryl szpachlowy": f"{round(szt_akryl + 0.5)} szt."
                 }
-
-                # Jeśli jest sztukateria, dopisujemy Mamuta do PDF
-                if mb_sztukaterii > 0:
-                    lista_do_pdf["Klej do listew"] = f"Bostik Mamut ({int(mb_sztukaterii/8 + 1)} szt.)"
-
-                for k, v in lista_do_pdf.items():
-                    linia = czysc_polskie_znaki(f"- {k}: {v}")
-                    pdf.cell(200, 10, txt=linia, ln=True)
                 
+                if mb_sztukaterii > 0:
+                    lista_pdf["Sztukateria (mb)"] = f"{mb_sztukaterii} mb"
+                    lista_pdf["Klej (Bostik Mamut)"] = f"{int(mb_sztukaterii/8 + 1)} szt."
+
+                for item, opis in lista_pdf.items():
+                    pdf.cell(0, 8, czysc_polskie_znaki(f"- {item}: {opis}"), ln=True)
+
+                # --- STOPKA ---
+                pdf.set_y(-30)
+                pdf.set_font("Arial", 'I', 8)
+                pdf.set_text_color(120, 120, 120)
+                pdf.cell(0, 10, czysc_polskie_znaki("Wygenerowano w aplikacji proCalc. Kosztorys ma charakter orientacyjny."), 0, 0, 'C')
+
                 # Generowanie PDF
                 pdf_output = pdf.output(dest='S').encode('latin-1')
                 
                 st.download_button(
-                    label="📄 Pobierz Raport PDF",
+                    label="📄 Pobierz Profesjonalny Raport PDF",
                     data=pdf_output,
-                    file_name="kosztorys_malowanie.pdf",
+                    file_name=f"Kosztorys_proCalc_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
                     use_container_width=True
                 )
