@@ -761,26 +761,29 @@ elif branza == "Szpachlowanie":
                     st.session_state.pokoje_szp.pop(i)
                     st.rerun()
 
-            # Obliczenia końcowe (te same co wcześniej)
+            # --- OBLICZENIA KOŃCOWE (POPRAWIONE NAZWY) ---
             m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
             podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
-            
+                        
             kg_gladzi = m2_total * norma_g * l_warstw
             szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
-            
+                        
             koszt_m_gladzi = szt_gladzi * dane_g["cena"]
             koszt_m_grunt = (m2_total * 0.2 / 5 + 0.99) * baza_grunty_szp[wybrany_grunt]
             koszt_m_dodatki = podl_total * 15 # Narożniki, flizelina itp.
-            
-            robocizna_suma = m2_total * stawka_szp
-            materialy_suma = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
+                        
+            # Te dwie linie są kluczowe dla Twojego PDF:
+            robocizna_total = m2_total * stawka_szp
+            materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
+            suma_total = robocizna_total + materiały_total
             
             st.markdown("---")
-            st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(robocizna_suma + materialy_suma)} PLN**")
+          
+            st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
             
             res1, res2 = st.columns(2)
-            res1.metric("👷 Twoja Robocizna", f"{round(robocizna_suma)} PLN")
-            res2.metric("📦 Materiały", f"{round(materialy_suma)} PLN")
+            res1.metric("👷 Twoja Robocizna", f"{round(robocizna_total)} PLN")
+            res2.metric("📦 Materiały", f"{round(materiały_total)} PLN")
 
             # Przycisk PDF (taki sam jak wcześniej)
             # ... (tutaj kod generatora PDF z poprzedniego kroku)
