@@ -796,7 +796,7 @@ elif branza == "Szpachlowanie":
                     st.session_state.pokoje_szp = []
                     st.rerun()
                     
-            with c_pdf2:
+with c_pdf2:
                 try:
                     from fpdf import FPDF
                     import os
@@ -844,10 +844,14 @@ elif branza == "Szpachlowanie":
                     pdf.set_font("Inter" if font_ok else "Arial", size=12)
                     pdf.cell(0, 10, " 2. SZCZEGOLY ZAMOWIENIA", ln=True, fill=True)
                     pdf.set_font("Inter" if font_ok else "Arial", size=10)
-                    pdf.cell(0, 8, f"- Gladz: {wybrana_g} ({ilosc_opk} szt.)", ln=True)
-                    pdf.cell(0, 8, f"- Grunt: {wybrany_grunt} ({ilosc_baniek} baniek 5L)", ln=True)
-                    pdf.cell(0, 8, f"- Liczba warstw: {liczba_warstw}", ln=True)
-                    pdf.cell(0, 8, f"- Calkowita pow. netto: {round(total_m2_netto, 1)} m2", ln=True)
+                    
+                    # TUTA BYŁ BŁĄD - poprawione zmienne:
+                    szt_gruntu = int(m2_total * 0.2 / 5 + 0.99) # Wyliczamy bańki gruntu dla PDF
+                    
+                    pdf.cell(0, 8, f"- Gladz: {wybrana_g} ({szt_gladzi} szt.)", ln=True)
+                    pdf.cell(0, 8, f"- Grunt: {wybrany_grunt} ({szt_gruntu} baniek 5L)", ln=True)
+                    pdf.cell(0, 8, f"- Liczba warstw: {l_warstw}", ln=True)
+                    pdf.cell(0, 8, f"- Calkowita pow. netto: {round(m2_total, 1)} m2", ln=True)
 
                     pdf_bytes = pdf.output()
                     st.download_button(
