@@ -390,39 +390,40 @@ if branza == "Malowanie":
     with tab_fast:
         st.header("⚡ Błyskawiczny szacunek kosztów")
         col_input, col_spacer = st.columns([1, 1])
-        st.write("Podaj metraż podłogi, aby otrzymać orientacyjne koszty malowania całego pomieszczenia (ściany + sufity).")
-        
-        # Suwak z metrażem i input dla stawki
-        m2_podloga_fast = st.slider("Metraż mieszkania / pokoju (m2 podłogi):", 1, 1000, 50)
-        stawka_rob_fast = st.number_input("Twoja stawka za m2 robocizny (malowanie):", value=35)
-    
-        # Logika uproszczona: 
-        # Zakładamy, że powierzchnia malowania (ściany + sufit) to ok. 3.5x pow. podłogi
-        pow_malowania_fast = m2_podloga_fast * 3.5
-        estymacja_robocizny = pow_malowania_fast * stawka_rob_fast
-        
-        # Estymacja materiałów: średnio 14 zł za m2 powierzchni malowania (farba, grunt, folia, akcesoria)
-        estymacja_materialow = pow_malowania_fast * 14 
-        
-        # Wyświetlanie wyników w kolumnach
-        c_f1, c_f2 = st.columns(2)
-        with c_f1:
-            st.metric("Szacowana Robocizna", f"{round(estymacja_robocizny)} zł")
-        with c_f2:
-            st.metric("Szacowane Materiały", f"{round(estymacja_materialow)} zł")
+        with col_input:
+            st.write("Podaj metraż podłogi, aby otrzymać orientacyjne koszty malowania całego pomieszczenia (ściany + sufity).")
             
-        st.success(f"### Przybliżony koszt całkowity: **{round(estymacja_robocizny + estymacja_materialow)} zł**")
+            # Suwak z metrażem i input dla stawki
+            m2_podloga_fast = st.slider("Metraż mieszkania / pokoju (m2 podłogi):", 1, 1000, 50)
+            stawka_rob_fast = st.number_input("Twoja stawka za m2 robocizny (malowanie):", value=35)
         
-        # Adnotacja o wersji PRO
-        st.markdown("""
-        ---
-        ### 💎 Chcesz większej precyzji?
-        Przejdź do zakładki **Kosztorys PRO**, aby uzyskać dostęp do:
-        *   **Pełnej bazy materiałów:** Wybór konkretnych marek farb (kolor/biała), gruntów i taśm.
-        *   **Precyzyjnego planowania:** Możliwość dodawania każdej ściany z osobna (szerokość x wysokość).
-        *   **Sztukaterii:** Kalkulator listew ściennych i sufitowych wraz z klejami.
-        *   **Listy zakupowej:** Gotowe zestawienie ile dokładnie litrów farby i sztuk akcesoriów musisz kupić.
-        """)
+            # Logika uproszczona: 
+            # Zakładamy, że powierzchnia malowania (ściany + sufit) to ok. 3.5x pow. podłogi
+            pow_malowania_fast = m2_podloga_fast * 3.5
+            estymacja_robocizny = pow_malowania_fast * stawka_rob_fast
+            
+            # Estymacja materiałów: średnio 14 zł za m2 powierzchni malowania (farba, grunt, folia, akcesoria)
+            estymacja_materialow = pow_malowania_fast * 14 
+            
+            # Wyświetlanie wyników w kolumnach
+            c_f1, c_f2 = st.columns(2)
+            with c_f1:
+                st.metric("Szacowana Robocizna", f"{round(estymacja_robocizny)} zł")
+            with c_f2:
+                st.metric("Szacowane Materiały", f"{round(estymacja_materialow)} zł")
+                
+            st.success(f"### Przybliżony koszt całkowity: **{round(estymacja_robocizny + estymacja_materialow)} zł**")
+            
+            # Adnotacja o wersji PRO
+            st.markdown("""
+            ---
+            ### 💎 Chcesz większej precyzji?
+            Przejdź do zakładki **Kosztorys PRO**, aby uzyskać dostęp do:
+            *   **Pełnej bazy materiałów:** Wybór konkretnych marek farb (kolor/biała), gruntów i taśm.
+            *   **Precyzyjnego planowania:** Możliwość dodawania każdej ściany z osobna (szerokość x wysokość).
+            *   **Sztukaterii:** Kalkulator listew ściennych i sufitowych wraz z klejami.
+            *   **Listy zakupowej:** Gotowe zestawienie ile dokładnie litrów farby i sztuk akcesoriów musisz kupić.
+            """)
 
     # --- ZAKŁADKA: KOSZTORYS PRO ---
     with tab_pro:
