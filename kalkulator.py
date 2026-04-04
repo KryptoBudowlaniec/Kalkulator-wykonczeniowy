@@ -549,15 +549,7 @@ st.markdown("---")
                 st.rerun()
 
         with c_btn2:
-            # Tworzymy słownik z danymi (używamy zmiennych obliczonych wyżej w tab_pro)
-            lista_do_pdf = {
-                "Farba Biala": f"{round(l_biala, 1)}L ({f_biala})",
-                "Farba Kolor": f"{round(l_kolor, 1)}L ({f_kolor})",
-                "Grunt": f"{round(l_grunt, 1)}L",
-                "Tasma": f"{round(szt_tasma + 0.5)} szt.",
-                "Akryl": f"{round(szt_akryl + 0.5)} szt."
-            }
-
+            # Pamiętaj, aby cały blok try-except też miał równe wcięcia!
             try:
                 from fpdf import FPDF
                 pdf = FPDF()
@@ -587,8 +579,7 @@ st.markdown("---")
                     use_container_width=True
                 )
             except Exception as e:
-                st.error("Błąd PDF: Sprawdź czy masz zainstalowaną bibliotekę fpdf (pip install fpdf)")
-
+                st.error(f"Błąd PDF: {e}")
 
 elif branza == "Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
