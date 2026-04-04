@@ -561,12 +561,7 @@ if branza == "Malowanie":
                 st.session_state.pokoje_pro = []
                 st.rerun()
 
-        Jasne, czas nadać temu raportowi wygląd profesjonalnej oferty. Aby to działało, musisz mieć plik graficzny ze swoim logo (np. logo.png) w tym samym folderze, co plik .py. Jeśli go nie masz, kod po prostu pominie wstawianie obrazka, żeby nie wywalić błędu.
-
-Oto zaktualizowana, "dopieszczona" wersja sekcji generowania PDF. Dodałem linie oddzielające, lepszą strukturę danych i miejsce na logo.
-
-Podmień cały blok with c_btn2: na ten kod:
-Python
+        
         with c_btn2:
             try:
                 from fpdf import FPDF
