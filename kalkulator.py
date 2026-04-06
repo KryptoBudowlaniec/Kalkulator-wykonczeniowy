@@ -956,9 +956,9 @@ elif branza == "Podłogi":
 elif branza == "Tynkowanie":
     st.header("Kalkulator Tynków i Suchego Tynku")
     
-    # 1. BAZA WIEDZY: MASY DO SPOINOWANIA
+    # --- BAZA DANYCH ---
     baza_masy = {
-        "Knauf Uniflot (Premium)": 115, # wiadro/worek 25kg
+        "Knauf Uniflot (Premium)": 115, 
         "Knauf Vario (Bardzo elastyczna)": 95,
         "Dolina Nidy Start (Ekonomiczna)": 45,
         "Franspol (Standard)": 55
@@ -971,76 +971,168 @@ elif branza == "Tynkowanie":
     }
     
     baza_grunt_kwarc = {
-        "Dolina Nidy Inter-Grunt (20kg)": 140, "Knauf Betokontakt (20kg)": 200, "Atlas Grunto-Plast (20kg)": 110
+        "Dolina Nidy Inter-Grunt (20kg)": 140, 
+        "Knauf Betokontakt (20kg)": 200, 
+        "Atlas Grunto-Plast (20kg)": 110
     }
 
     tab_t1, tab_t2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
 
+    # --- TAB 1: SZYBKA WYCENA ---
     with tab_t1:
+        st.subheader("Błyskawiczny szacunek")
+        m2_podl_fast = st.number_input("Metraż mieszkania (podłoga m2):", 1.0, 500.0, 50.0)
+        
+        # Uproszczona logika: Średnio 3x metraż podłogi, średnia cena 85 zł/m2 (robocizna + mat)
+        szacunkowy_metraz = m2_podl_fast * 3.0
+        szacunkowy_koszt = szacunkowy_metraz * 85
+        
+        st.metric("Przybliżony koszt całkowity", f"{round(szacunkowy_koszt)} PLN")
+        st.caption(f"Szacowany metraż ścian i sufitów: ok. {round(szacunkowy_metraz)} m²")
+        
+        st.markdown("---")
+        st.info("""
+        **Co zyskujesz w wersji PRO?**
+        * 📊 Wybór konkretnych systemów (Gipsowe, Cem-Wap, GK).
+        * 📏 Precyzyjne ustawienie grubości tynku i stawek.
+        * 📦 Pełna lista zakupów (liczba worków, wiader, płyt).
+        * 📄 Profesjonalny raport PDF dla klienta.
+        """)
+
+    # --- TAB 2: DETALE PRO ---
+    with tab_t2:
         col_t1, col_t2 = st.columns([1, 1.2])
         
         with col_t1:
-            m2_podl_t = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="tyn_m_fast")
-            
-            # LOGIKA POWIERZCHNI: Mokry (Sufit+Ściany=3.5) vs GK (Same ściany=2.5)
+            st.subheader("Konfiguracja")
+            m2_podl_pro = st.number_input("Metraż podłogi (m2):", 1.0, 500.0, 50.0, key="tyn_m_pro")
             wybrany_tynk = st.selectbox("Wybierz system:", list(baza_tynkow.keys()))
             dane_t = baza_tynkow[wybrany_tynk]
             
+            # Logika powierzchni PRO
             mnoznik = 3.5 if dane_t["typ"] == "mokry" else 2.5
-            m2_robocizny = m2_podl_t * mnoznik
-            st.info(f"📐 Powierzchnia prac: **{round(m2_robocizny)} m²**")
+            m2_rob_pro = m2_podl_pro * mnoznik
+            st.warning(f"📐 Powierzchnia obliczeniowa: **{round(m2_rob_pro, 1)} m²**")
 
             if dane_t["typ"] == "drywall":
-                st.markdown("---")
-                st.subheader("Opcje spoinowania GK")
-                typ_tasmy = st.radio("Rodzaj zbrojenia łączy:", ["Wszystko Tuff-Tape (Pancerne)", "Tuff-Tape (Naroża) + Flizelina (Reszta)"])
+                typ_tasmy = st.radio("Rodzaj zbrojenia łączy:", ["Wszystko Tuff-Tape (Pancerne)", "Tuff-Tape + Flizelina"])
                 wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy.keys()))
+                grubosc_t = 0 # Nie dotyczy GK
             else:
                 wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
-                grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 30, 15)
+                grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 40, 15)
             
-            stawka_rob_t = st.slider("Stawka za robociznę (zł/m2):", 1, 120, 45)
+            stawka_rob_t = st.number_input("Stawka robocizny (zł/m2):", 10, 200, 50)
 
-        # --- 2. LOGIKA OBLICZEŃ ---
+        # --- OBLICZENIA PRO ---
         if dane_t["typ"] == "mokry":
             kg_na_m2_t = dane_t["norma"] * grubosc_t
-            kg_razem_t = m2_robocizny * kg_na_m2_t
+            kg_razem_t = m2_rob_pro * kg_na_m2_t
             worki_t = int(kg_razem_t / dane_t["waga"] + 0.99)
-            wiadra_gruntu = int((m2_robocizny * 0.3) / 20 + 0.99)
-            koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_robocizny * 5)
+            wiadra_gruntu = int((m2_rob_pro * 0.3) / 20 + 0.99)
+            koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_rob_pro * 5)
+            lista_zakupow = [
+                (f"Tynk {wybrany_tynk}", f"{worki_t} worków"),
+                (f"Grunt {wybrany_grunt_t}", f"{wiadra_gruntu} wiader 20kg"),
+                ("Narożniki i profile", "Zestaw")
+            ]
         else:
-            # --- LOGIKA GK (WYKLEJANIE) ---
-            liczba_plyt = int((m2_robocizny * 1.1) / 3.12 + 0.99)
+            liczba_plyt = int((m2_rob_pro * 1.1) / 3.12 + 0.99)
             worki_kleju = int(liczba_plyt / 2.5 + 0.99)
-            
-            # Materiały do spoinowania
-            # Norma masy: ok. 0.5kg/m2 płyty (na gotowo)
-            worki_masy = int((m2_robocizny * 0.5) / 25 + 0.99)
-            cena_tasmy = 120 if "Tuff-Tape" in typ_tasmy else 60 # koszt orientacyjny na całość
-            
+            worki_masy = int((m2_rob_pro * 0.5) / 25 + 0.99)
+            cena_tasmy = 150 if "Tuff-Tape" in typ_tasmy else 70
             koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + \
-                          (worki_masy * baza_masy[wybrana_masa]) + cena_tasmy + (m2_robocizny * 2)
-            
-        koszt_rob_t = m2_robocizny * stawka_rob_t
+                          (worki_masy * baza_masy[wybrana_masa]) + cena_tasmy + (m2_rob_pro * 2)
+            lista_zakupow = [
+                ("Płyty GK (1.2x2.6m)", f"{liczba_plyt} szt."),
+                ("Klej Perlfix", f"{worki_kleju} worków"),
+                (f"Masa {wybrana_masa}", f"{worki_masy} szt."),
+                ("Taśmy i zbrojenie", "Zgodnie z wyborem")
+            ]
+
+        koszt_rob_t = m2_rob_pro * stawka_rob_t
+        suma_tynki = koszt_mat_t + koszt_rob_t
 
         with col_t2:
-            st.subheader("💰 Podsumowanie Etapu")
-            st.success(f"### RAZEM: **{round(koszt_mat_t + koszt_rob_t)} zł**")
+            st.subheader("💰 Wynik PRO")
+            st.success(f"### RAZEM: **{round(suma_tynki)} PLN**")
             
             c1, c2 = st.columns(2)
-            c1.metric("Twoja Robocizna", f"{round(koszt_rob_t)} zł")
-            c2.metric("Materiały (ok.)", f"{round(koszt_mat_t)} zł")
+            c1.metric("Robocizna", f"{round(koszt_rob_t)} zł")
+            c2.metric("Materiały", f"{round(koszt_mat_t)} zł")
 
-            with st.expander("📦 SZCZEGÓŁOWA LISTA ZAKUPÓW", expanded=True):
-                if dane_t["typ"] == "mokry":
-                    st.write(f"• **Tynk ({wybrany_tynk}):** {worki_t} worków")
-                    st.write(f"• **Grunt ({wybrany_grunt_t}):** {wiadra_gruntu} wiader (20kg)")
-                else:
-                    st.write(f"• **Płyty GK (1.2x2.6m):** {liczba_plyt} szt.")
-                    st.write(f"• **Klej Perlfix:** {worki_kleju} worków")
-                    st.write(f"• **Masa ({wybrana_masa}):** {worki_masy} szt.")
-                    st.write(f"• **Zbrojenie:** {typ_tasmy}")
-                    st.caption("Pamiętaj: Sufity w tym systemie liczymy w zakładce 'Sucha Zabudowa'.")
+            st.markdown("---")
+            st.subheader("📦 Lista materiałowa")
+            for przedmiot, ilosc in lista_zakupow:
+                st.write(f"• **{przedmiot}:** {ilosc}")
+            
+            st.markdown("---")
+            # --- GENERATOR PDF TYNKI ---
+            try:
+                from fpdf import FPDF
+                from datetime import datetime
+                import os
+
+                if st.button("📄 Generuj Raport PDF", use_container_width=True):
+                    pdf = FPDF()
+                    pdf.add_page()
+                    
+                    # Czcionka (zakładając Inter lub Arial)
+                    f_path = "Inter-Regular.ttf"
+                    if os.path.exists(f_path):
+                        pdf.add_font("Inter", "", f_path)
+                        pdf.set_font("Inter", size=12)
+                    else:
+                        pdf.set_font("Arial", size=12)
+
+                    # Nagłówek
+                    pdf.set_font(pdf.font_family, size=16)
+                    pdf.cell(0, 15, "OFERTA: TYNKOWANIE / SUCHY TYNK", ln=True, align='C')
+                    pdf.ln(5)
+
+                    # Tabela podsumowania
+                    pdf.set_fill_color(245, 245, 245)
+                    pdf.set_font(pdf.font_family, size=12)
+                    pdf.cell(95, 10, " Kategoria", 1, 0, 'L', True)
+                    pdf.cell(95, 10, " Koszt", 1, 1, 'L', True)
+                    
+                    pdf.cell(95, 10, " Robocizna:", 1)
+                    pdf.cell(95, 10, f" {round(koszt_rob_t)} PLN", 1, 1)
+                    pdf.cell(95, 10, " Materialy:", 1)
+                    pdf.cell(95, 10, f" {round(koszt_mat_t)} PLN", 1, 1)
+                    pdf.set_font(pdf.font_family, size=13)
+                    pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
+                    pdf.cell(95, 12, f" {round(suma_tynki)} PLN", 1, 1, 'L', True)
+
+                    # Szczegóły
+                    pdf.ln(10)
+                    pdf.set_font(pdf.font_family, size=12)
+                    pdf.cell(0, 10, "SZCZEGOLY TECHNICZNE:", ln=True)
+                    pdf.set_font(pdf.font_family, size=10)
+                    pdf.cell(0, 7, f"- System: {wybrany_tynk}", ln=True)
+                    pdf.cell(0, 7, f"- Powierzchnia prac: {round(m2_rob_pro, 1)} m2", ln=True)
+                    if grubosc_t > 0:
+                        pdf.cell(0, 7, f"- Srednia grubosc: {grubosc_t} mm", ln=True)
+
+                    # Lista zakupów w PDF
+                    pdf.ln(5)
+                    pdf.set_font(pdf.font_family, size=12)
+                    pdf.cell(0, 10, "LISTA MATERIALOW:", ln=True)
+                    pdf.set_font(pdf.font_family, size=10)
+                    for przedmiot, ilosc in lista_zakupow:
+                        # Zamiana polskich znaków dla FPDF (jeśli nie używasz czcionki z polskimi znakami)
+                        pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
+
+                    pdf_bytes = pdf.output()
+                    st.download_button(
+                        label="⬇️ Pobierz gotowy PDF",
+                        data=bytes(pdf_bytes),
+                        file_name=f"Oferta_Tynki_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+            except Exception as e:
+                st.error(f"Problem z PDF: {e}")
                     
 elif branza == "Sucha Zabudowa":
     st.header("Kompleksowe Systemy G-K")
