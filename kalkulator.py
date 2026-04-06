@@ -1100,7 +1100,7 @@ elif branza == "Tynkowanie":
                 ("Taśmy i zbrojenie", "Zgodnie z wyborem")
             ]
        # --- LOGIKA STOLARKI (OBLICZENIA) ---
-        total_mb_naroznikow = 0.0
+total_mb_naroznikow = 0.0
         total_m2_folii = 0.0
         total_mb_tasmy = 0.0
 
@@ -1108,21 +1108,26 @@ elif branza == "Tynkowanie":
             s = o["szer"] / 100 
             w = o["wys"] / 100
             szt = o["szt"]
+            
             total_mb_naroznikow += (2 * w + s) * szt
             total_m2_folii += (s * w * szt) * 1.1
             total_mb_tasmy += (2 * s + 2 * w) * szt
 
-        # Przeliczenie na opakowania (poprawione nazwy zmiennych)
+        # Przeliczenie na opakowania (prawidłowe nazwy zmiennych)
         szt_naroznik_3m = int(total_mb_naroznikow / 3 + 0.99)
         rolki_tasmy_50m = int(total_mb_tasmy / 50 + 0.99)
         szt_folii_op = int(total_m2_folii / 20 + 0.99)
 
-        # Koszty dodatkowe
         koszt_stolarki = (szt_naroznik_3m * 8) + (rolki_tasmy_50m * 25) + (szt_folii_op * 15)
-        
-        
 
-        koszt_mat_t += koszt_stolarki # Dodajemy do sumy materiałów
+        # TO JEST KLUCZOWE MIEJSCE: Dodajemy do listy zakupów zanim wyświetlimy wyniki
+        if total_mb_naroznikow > 0:
+            lista_zakupow.append(("Narożniki aluminiowe (3m)", f"{szt_naroznik_3m} szt."))
+            lista_zakupow.append(("Taśma tynkarska (50m)", f"{rolki_tasmy_50m} rolka/i"))
+            lista_zakupow.append(("Folia ochronna", f"{szt_folii_op} op."))
+
+        # Podsumowanie kosztów
+        koszt_mat_t += koszt_stolarki
         koszt_rob_t = m2_rob_pro * stawka_rob_t
         suma_tynki = koszt_mat_t + koszt_rob_t
 
