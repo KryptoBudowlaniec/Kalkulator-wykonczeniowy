@@ -726,64 +726,83 @@ elif branza == "Szpachlowanie":
         st.markdown("---")
         
         # --- B. DODAWANIE POMIESZCZEŃ (TERAZ ZAWSZE WIDOCZNE) ---
-        st.subheader("🏠 Dodaj pomieszczenie do projektu")
-        
-        # Usunęliśmy st.expander - teraz pola są bezpośrednio w kolumnach
-        cp1, cp2 = st.columns(2)
-        with cp1:
-            naz_p = st.text_input("Nazwa pomieszczenia:", placeholder="np. Kuchnia", key="p_naz")
-            dl_p = st.number_input("Długość (m):", 0.0, 50.0, 4.0, key="p_dl")
-            sz_p = st.number_input("Szerokość (m):", 0.0, 50.0, 3.0, key="p_sz")
-        with cp2:
-            wy_p = st.number_input("Wysokość (m):", 0.0, 10.0, 2.6, key="p_wy")
-            suf_p = st.checkbox("Szpachlować sufit?", value=True, key="p_suf_check")
-            ok_drz = st.number_input("Odliczenia okna/drzwi (m2):", 0.0, 50.0, 3.5, key="p_odlicz")
+# --- B. WYBÓR METODY POMIARU ---
+        st.subheader("📏 Metraż prac")
+        metoda_pomiaru = st.radio(
+            "Wybierz sposób podania metrażu:",
+            ["Wpisz ogólny metraż ścian (Szybko)", "Dodaj konkretne pomieszczenia (Dokładnie)"],
+            horizontal=True,
+            key="metoda_szp"
+        )
 
-        if st.button("➕ Zapisz i dodaj do listy", use_container_width=True):
-            p_netto = (((dl_p + sz_p) * 2 * wy_p) + (dl_p * sz_p if suf_p else 0)) - ok_drz
-            if p_netto > 0:
-                st.session_state.pokoje_szp.append({
-                    "nazwa": naz_p or f"Pokój {len(st.session_state.pokoje_szp)+1}",
-                    "netto": p_netto,
-                    "podloga": dl_p * sz_p
-                })
-                st.rerun()
+        m2_total = 0.0
+        podl_total = 0.0
 
-        # --- C. LISTA POKOI I WYNIKI ---
-        if st.session_state.pokoje_szp:
-            st.markdown("---")
-            st.subheader("📋 Lista pomieszczeń w tym kosztorysie:")
-            
-            for i, p in enumerate(st.session_state.pokoje_szp):
-                c_l, c_b = st.columns([5, 1])
-                c_l.info(f"**{p['nazwa']}**: {round(p['netto'], 1)} m²")
-                if c_b.button("Usuń", key=f"del_p_{i}"):
-                    st.session_state.pokoje_szp.pop(i)
+        if metoda_pomiaru == "Wpisz ogólny metraż ścian (Szybko)":
+            # Opcja 1: Suwak
+            m2_total = st.slider("Podaj łączny metraż ścian i sufitów (m2):", 5, 1000, 150, step=5)
+            podl_total = m2_total / 3.5  # Szacunek podłogi pod dodatki (narożniki itp.)
+            st.info(f"💡 Przyjęto łączny metraż: {m2_total} m²")
+
+        else:
+            # Opcja 2: Dodawanie pomieszczeń
+            cp1, cp2 = st.columns(2)
+            with cp1:
+                naz_p = st.text_input("Nazwa pomieszczenia:", placeholder="np. Kuchnia", key="p_naz")
+                dl_p = st.number_input("Długość (m):", 0.0, 50.0, 4.0, key="p_dl")
+                sz_p = st.number_input("Szerokość (m):", 0.0, 50.0, 3.0, key="p_sz")
+            with cp2:
+                wy_p = st.number_input("Wysokość (m):", 0.0, 10.0, 2.6, key="p_wy")
+                suf_p = st.checkbox("Szpachlować sufit?", value=True, key="p_suf_check")
+                ok_drz = st.number_input("Odliczenia okna/drzwi (m2):", 0.0, 50.0, 3.5, key="p_odlicz")
+
+            if st.button("➕ Zapisz i dodaj do listy", use_container_width=True):
+                p_netto = (((dl_p + sz_p) * 2 * wy_p) + (dl_p * sz_p if suf_p else 0)) - ok_drz
+                if p_netto > 0:
+                    st.session_state.pokoje_szp.append({
+                        "nazwa": naz_p or f"Pokój {len(st.session_state.pokoje_szp)+1}",
+                        "netto": p_netto,
+                        "podloga": dl_p * sz_p
+                    })
                     st.rerun()
 
-        # --- OBLICZENIA KOŃCOWE (POPRAWIONE NAZWY) ---
-        m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
-        podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
-                        
-        kg_gladzi = m2_total * norma_g * l_warstw
-        szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
-                        
-        koszt_m_gladzi = szt_gladzi * dane_g["cena"]
-        koszt_m_grunt = (m2_total * 0.2 / 5 + 0.99) * baza_grunty_szp[wybrany_grunt]
-        koszt_m_dodatki = podl_total * 15 # Narożniki, flizelina itp.
-                        
-        # Te dwie linie są kluczowe dla Twojego PDF:
-        robocizna_total = m2_total * stawka_szp
-        materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
-        suma_total = robocizna_total + materiały_total
+            # Wyświetlanie listy pokoi i sumowanie metrażu
+            if st.session_state.pokoje_szp:
+                st.markdown("---")
+                for i, p in enumerate(st.session_state.pokoje_szp):
+                    c_l, c_b = st.columns([5, 1])
+                    c_l.info(f"**{p['nazwa']}**: {round(p['netto'], 1)} m²")
+                    if c_b.button("Usuń", key=f"del_p_{i}"):
+                        st.session_state.pokoje_szp.pop(i)
+                        st.rerun()
+                
+                m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
+                podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
+
+        # --- C. WYNIKI (Wykonują się RAZ na samym końcu) ---
+        if m2_total > 0:
+            # Obliczenia materiałowe
+            kg_gladzi = m2_total * norma_g * l_warstw
+            szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
             
-        st.markdown("---")
-          
-        st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
+            koszt_m_gladzi = szt_gladzi * dane_g["cena"]
+            koszt_m_grunt = (m2_total * 0.2 / 5 + 0.99) * baza_grunty_szp[wybrany_grunt]
+            koszt_m_dodatki = podl_total * 15 
             
-        res1, res2 = st.columns(2)
-        res1.metric("👷 Twoja Robocizna", f"{round(robocizna_total)} PLN")
-        res2.metric("📦 Materiały", f"{round(materiały_total)} PLN")
+            # Sumy końcowe
+            robocizna_total = m2_total * stawka_szp
+            materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
+            suma_total = robocizna_total + materiały_total
+            
+            # Wyświetlanie na stronie
+            st.markdown("---")
+            st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
+            
+            res1, res2 = st.columns(2)
+            res1.metric("👷 Twoja Robocizna", f"{round(robocizna_total)} PLN")
+            res2.metric("📦 Materiały", f"{round(materiały_total)} PLN")
+            
+            # Tutaj wstaw kod przycisków PDF (with c_pdf1, c_pdf2 itd.)
 
             # Przycisk PDF (taki sam jak wcześniej)
             # ... (tutaj kod generatora PDF z poprzedniego kroku)
