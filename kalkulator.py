@@ -862,7 +862,7 @@ elif branza == "Szpachlowanie":
                         use_container_width=True
                     )
                 except Exception as e:
-                    st.error(f"Błąd PDF: {e}")
+                st.error(f"Błąd PDF: {e}")
 
 # --- SEKCJA: PODŁOGI ---
 elif branza == "Podłogi":
