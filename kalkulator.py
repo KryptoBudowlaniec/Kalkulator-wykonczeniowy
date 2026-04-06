@@ -761,63 +761,63 @@ elif branza == "Szpachlowanie":
                     st.session_state.pokoje_szp.pop(i)
                     st.rerun()
 
-            # --- OBLICZENIA KOŃCOWE (POPRAWIONE NAZWY) ---
-            m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
-            podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
+        # --- OBLICZENIA KOŃCOWE (POPRAWIONE NAZWY) ---
+        m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
+        podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
                         
-            kg_gladzi = m2_total * norma_g * l_warstw
-            szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
+        kg_gladzi = m2_total * norma_g * l_warstw
+        szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
                         
-            koszt_m_gladzi = szt_gladzi * dane_g["cena"]
-            koszt_m_grunt = (m2_total * 0.2 / 5 + 0.99) * baza_grunty_szp[wybrany_grunt]
-            koszt_m_dodatki = podl_total * 15 # Narożniki, flizelina itp.
+        koszt_m_gladzi = szt_gladzi * dane_g["cena"]
+        koszt_m_grunt = (m2_total * 0.2 / 5 + 0.99) * baza_grunty_szp[wybrany_grunt]
+        koszt_m_dodatki = podl_total * 15 # Narożniki, flizelina itp.
                         
-            # Te dwie linie są kluczowe dla Twojego PDF:
-            robocizna_total = m2_total * stawka_szp
-            materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
-            suma_total = robocizna_total + materiały_total
+        # Te dwie linie są kluczowe dla Twojego PDF:
+        robocizna_total = m2_total * stawka_szp
+        materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
+        suma_total = robocizna_total + materiały_total
             
-            st.markdown("---")
+        st.markdown("---")
           
-            st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
+        st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
             
-            res1, res2 = st.columns(2)
-            res1.metric("👷 Twoja Robocizna", f"{round(robocizna_total)} PLN")
-            res2.metric("📦 Materiały", f"{round(materiały_total)} PLN")
+        res1, res2 = st.columns(2)
+        res1.metric("👷 Twoja Robocizna", f"{round(robocizna_total)} PLN")
+        res2.metric("📦 Materiały", f"{round(materiały_total)} PLN")
 
             # Przycisk PDF (taki sam jak wcześniej)
             # ... (tutaj kod generatora PDF z poprzedniego kroku)
             # --- GENEROWANIE PDF ---
-            st.markdown("---")
-            c_pdf1, c_pdf2 = st.columns(2)
+        st.markdown("---")
+        c_pdf1, c_pdf2 = st.columns(2)
             
-            with c_pdf1:
-                if st.button("🗑️ Wyczyść wszystko", use_container_width=True):
-                    st.session_state.pokoje_szp = []
-                    st.rerun()
+        with c_pdf1:
+            if st.button("🗑️ Wyczyść wszystko", use_container_width=True):
+                st.session_state.pokoje_szp = []
+                st.rerun()
                     
-            with c_pdf2:
-                try:
-                    from fpdf import FPDF
-                    import os
-                    from datetime import datetime
+        with c_pdf2:
+            try:
+                from fpdf import FPDF
+                import os
+                from datetime import datetime
 
-                    pdf = FPDF()
-                    pdf.add_page()
+                pdf = FPDF()
+                pdf.add_page()
                     
-                    # Czcionka Inter
-                    f_path = "Inter-Regular.ttf"
-                    if os.path.exists(f_path):
-                        pdf.add_font("Inter", "", f_path)
-                        pdf.set_font("Inter", size=12)
-                        font_ok = True
-                    else:
-                        pdf.set_font("Arial", size=12)
-                        font_ok = False
+                # Czcionka Inter
+                f_path = "Inter-Regular.ttf"
+                if os.path.exists(f_path):
+                    pdf.add_font("Inter", "", f_path)
+                    pdf.set_font("Inter", size=12)
+                    font_ok = True
+                else:
+                    pdf.set_font("Arial", size=12)
+                    font_ok = False
 
-                    # Logo i Nagłówek
-                    if os.path.exists("logo.png"):
-                        pdf.image("logo.png", x=10, y=8, w=35)
+                # Logo i Nagłówek
+                if os.path.exists("logo.png"):
+                    pdf.image("logo.png", x=10, y=8, w=35)
                     
                     pdf.set_font("Inter" if font_ok else "Arial", size=16)
                     pdf.cell(0, 15, "RAPORT SZPACHLOWANIA - PROCALC", ln=True, align='C')
