@@ -861,8 +861,8 @@ elif branza == "Szpachlowanie":
                         mime="application/pdf",
                         use_container_width=True
                     )
-                except Exception as e:
-                st.error(f"Błąd PDF: {e}")
+            except Exception as e:
+            st.error(f"Błąd PDF: {e}")
 
 # --- SEKCJA: PODŁOGI ---
 elif branza == "Podłogi":
