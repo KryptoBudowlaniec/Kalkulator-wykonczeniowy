@@ -1100,7 +1100,7 @@ elif branza == "Tynkowanie":
                 ("Taśmy i zbrojenie", "Zgodnie z wyborem")
             ]
        # --- LOGIKA STOLARKI (OBLICZENIA) ---
-total_mb_naroznikow = 0.0
+        total_mb_naroznikow = 0.0
         total_m2_folii = 0.0
         total_mb_tasmy = 0.0
 
