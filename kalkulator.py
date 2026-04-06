@@ -1024,6 +1024,56 @@ elif branza == "Tynkowanie":
             
             stawka_rob_t = st.number_input("Stawka robocizny (zł/m2):", 10, 200, 50)
 
+            st.markdown("---")
+            st.subheader("🪟 Stolarka (Okna i Drzwi)")
+            
+            # 1. Definicja standardowych wymiarów (Szer x Wys w cm)
+            std_okna = {
+                "Własny wymiar": None,
+                "60x60 (Łazienkowe)": (60, 60),
+                "90x120 (Jednoskrzydłowe)": (90, 120),
+                "120x120 (Standard)": (120, 120),
+                "150x150 (Duże)": (150, 150),
+                "90x210 (Balkonowe)": (90, 210),
+                "180x210 (Balkonowe podwójne)": (180, 210),
+                "240x210 (Tarasowe HS)": (240, 210),
+                "100x210 (Drzwi wejściowe)": (100, 210)
+            }
+
+            wybor_okna = st.selectbox("Wybierz typ okna:", list(std_okna.keys()))
+            
+            col_o1, col_o2 = st.columns(2)
+            if wybor_okna == "Własny wymiar":
+                w_szer = col_o1.number_input("Szerokość (cm):", 10, 600, 100)
+                w_wys = col_o2.number_input("Wysokość (cm):", 10, 600, 120)
+            else:
+                w_szer, w_wys = std_okna[wybor_okna]
+                col_o1.info(f"Szer: {w_szer} cm")
+                col_o2.info(f"Wys: {w_wys} cm")
+
+            ile_okien = st.number_input("Liczba takich okien (szt.):", 1, 50, 1)
+
+            if "lista_okien_tyn" not in st.session_state:
+                st.session_state.lista_okien_tyn = []
+
+            if st.button("➕ Dodaj okna do zestawienia", use_container_width=True):
+                st.session_state.lista_okien_tyn.append({
+                    "nazwa": wybor_okna,
+                    "szer": w_szer,
+                    "wys": w_wys,
+                    "szt": ile_okien
+                })
+                st.rerun()
+
+            # Wyświetlanie listy okien
+            if st.session_state.lista_okien_tyn:
+                for i, o in enumerate(st.session_state.lista_okien_tyn):
+                    c_ok1, c_ok2 = st.columns([4, 1])
+                    c_ok1.caption(f"{o['szt']}x {o['nazwa']} ({o['szer']}x{o['wys']})")
+                    if c_ok2.button("🗑️", key=f"del_o_{i}"):
+                        st.session_state.lista_okien_tyn.pop(i)
+                        st.rerun()
+
         # --- OBLICZENIA PRO ---
         if dane_t["typ"] == "mokry":
             kg_na_m2_t = dane_t["norma"] * grubosc_t
@@ -1049,7 +1099,30 @@ elif branza == "Tynkowanie":
                 (f"Masa {wybrana_masa}", f"{worki_masy} szt."),
                 ("Taśmy i zbrojenie", "Zgodnie z wyborem")
             ]
+       # --- LOGIKA STOLARKI (OBLICZENIA) ---
+        total_mb_naroznikow = 0.0
+        total_m2_folii = 0.0
+        total_mb_tasmy = 0.0
 
+        for o in st.session_state.get("lista_okien_tyn", []):
+            s = o["szer"] / 100 
+            w = o["wys"] / 100
+            szt = o["szt"]
+            total_mb_naroznikow += (2 * w + s) * szt
+            total_m2_folii += (s * w * szt) * 1.1
+            total_mb_tasmy += (2 * s + 2 * w) * szt
+
+        # Przeliczenie na opakowania (poprawione nazwy zmiennych)
+        szt_naroznik_3m = int(total_mb_naroznikow / 3 + 0.99)
+        rolki_tasmy_50m = int(total_mb_tasmy / 50 + 0.99)
+        szt_folii_op = int(total_m2_folii / 20 + 0.99)
+
+        # Koszty dodatkowe
+        koszt_stolarki = (szt_naroznik_3m * 8) + (rolki_tasmy_50m * 25) + (szt_folii_op * 15)
+        
+        
+
+        koszt_mat_t += koszt_stolarki # Dodajemy do sumy materiałów
         koszt_rob_t = m2_rob_pro * stawka_rob_t
         suma_tynki = koszt_mat_t + koszt_rob_t
 
@@ -1122,6 +1195,10 @@ elif branza == "Tynkowanie":
                     for przedmiot, ilosc in lista_zakupow:
                         # Zamiana polskich znaków dla FPDF (jeśli nie używasz czcionki z polskimi znakami)
                         pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
+                        if total_mb_naroznikow > 0:
+                            lista_zakupow.append(("Narożniki aluminiowe (3m)", f"{szt_naroznik} szt."))
+                            lista_zakupow.append(("Taśma tynkarska (50m)", f"{rolki_tasmy} rolka/i"))
+                            lista_zakupow.append(("Folia ochronna", f"{szt_folii} op."))
 
                     pdf_bytes = pdf.output()
                     st.download_button(
