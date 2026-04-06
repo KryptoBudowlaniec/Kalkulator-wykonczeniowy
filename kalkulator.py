@@ -1193,12 +1193,7 @@ elif branza == "Tynkowanie":
                     pdf.cell(0, 10, "LISTA MATERIALOW:", ln=True)
                     pdf.set_font(pdf.font_family, size=10)
                     for przedmiot, ilosc in lista_zakupow:
-                        # Zamiana polskich znaków dla FPDF (jeśli nie używasz czcionki z polskimi znakami)
                         pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
-                        if total_mb_naroznikow > 0:
-                            lista_zakupow.append(("Narożniki aluminiowe (3m)", f"{szt_naroznik} szt."))
-                            lista_zakupow.append(("Taśma tynkarska (50m)", f"{rolki_tasmy} rolka/i"))
-                            lista_zakupow.append(("Folia ochronna", f"{szt_folii} op."))
 
                     pdf_bytes = pdf.output()
                     st.download_button(
