@@ -1648,8 +1648,8 @@ elif branza == "Łazienka":
             lista_zakupow_lazienka.append(("Tynk wyrównawczy (25kg)", f"{worki_tynku} worków"))
         # ====================================================
 
-        # --- 4. WYŚWIETLANIE WYNIKÓW ---
-# --- 4. WYŚWIETLANIE WYNIKÓW I ANALIZA RENTOWNOŚCI ---
+        
+        # --- 4. WYŚWIETLANIE WYNIKÓW I ANALIZA RENTOWNOŚCI ---
         st.markdown("---")
         
         # Obliczenie wskaźnika na m2 podłogi
@@ -1663,15 +1663,15 @@ elif branza == "Łazienka":
             st.info(f"### CHEMIA BUDOWLANA\n**~{round(materialy_suma)} PLN**")
 
         # --- NOWA SEKCJA: KONTROLA PRZEDZIAŁU 2000-3000 zł/m2 ---
-        st.subheader("📊 Analiza rynkowa wyceny")
+        st.subheader("Analiza rynkowa wyceny")
         
         col_metric1, col_metric2 = st.columns([2, 1])
         
         with col_metric1:
             if 2000 <= cena_za_m2_podlogi <= 3000:
-                st.write(f"✅ Twoja wycena to **{round(cena_za_m2_podlogi)} zł/m²** podłogi. Mieścisz się w standardowym przedziale rynkowym.")
+                st.write(f"Twoja wycena to **{round(cena_za_m2_podlogi)} zł/m²** podłogi. Mieścisz się w standardowym przedziale rynkowym.")
             elif cena_za_m2_podlogi < 2000:
-                st.error(f"⚠️ Uwaga: Wycena wynosi **{round(cena_za_m2_podlogi)} zł/m²** podłogi. To może być za mało przy wysokim standardzie!")
+                st.error(f"Uwaga: Wycena wynosi **{round(cena_za_m2_podlogi)} zł/m²** podłogi. To może być za mało przy wysokim standardzie!")
             else:
                 st.warning(f"💎 Standard Premium: Wycena wynosi **{round(cena_za_m2_podlogi)} zł/m²** podłogi. Upewnij się, że Inwestor akceptuje te stawki.")
 
@@ -1681,7 +1681,7 @@ elif branza == "Łazienka":
         st.markdown("---")
         
         # SEKCJA PŁYTEK I CIĘCIA 45°
-        st.subheader("📦 Zapotrzebowanie i Detale")
+        st.subheader("Zapotrzebowanie i Detale")
         cp1, cp2, cp3 = st.columns(3)
         cp1.metric("Płytki do zakupu", f"{m2_plytek_z_zapasem} m²")
         cp2.metric("Cięcie 45° (mb)", f"{mb_zacinania} mb")
