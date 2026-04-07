@@ -1651,6 +1651,9 @@ elif branza == "Łazienka":
             from fpdf import FPDF
             from datetime import datetime
             import os
+
+        except Exception as e:
+            st.error(f"Problem z generowaniem PDF: {e}")
                
 elif branza == "Drzwi":
     st.header("Kalkulator Montażu Drzwi Wewnętrznych")
