@@ -1526,16 +1526,21 @@ elif branza == "Łazienka":
         m2_podlogi = c_w1.number_input("Powierzchnia podłogi (m2):", 1.0, 100.0, 5.0, step=0.5)
         wysokosc = c_w2.number_input("Wysokość łazienki (m):", 2.0, 4.0, 2.5, step=0.1)
         
-        obwod = st.number_input("Suma długości wszystkich ścian (Obwód w metrach):", 4.0, 50.0, 9.0, step=0.5)
+        # --- AUTOMATYKA OBWODU ---
+        # Zakładamy prostokąt, gdzie jeden bok to x, a drugi to 1.5x (typowa łazienka)
+        import math
+        bok_a = math.sqrt(m2_podlogi / 1.5)
+        bok_b = bok_a * 1.5
+        sugerowany_obwod = round(2 * (bok_a + bok_b), 1)
+        
+        obwod = st.number_input("Suma długości ścian (Obwód w metrach):", 2.0, 100.0, sugerowany_obwod, 
+                               help=f"Dla {m2_podlogi}m2 typowy obwód to ok. {sugerowany_obwod}m")
+        
         okna_drzwi = st.number_input("Otwory do odjęcia (drzwi/okna w m2):", 0.0, 10.0, 1.6, step=0.1)
         
         m2_scian_total = (obwod * wysokosc) - okna_drzwi
         st.info(f"Całkowita powierzchnia ścian do obróbki: **{round(m2_scian_total, 1)} m²**")
-        
-        st.markdown("---")
-        st.subheader("Przygotowanie podłoża")
-        m2_tynku = st.number_input("Powierzchnia do wyrównania (tynk/płyta GK) [m2]:", 0.0, 150.0, m2_scian_total, step=1.0)
-
+               
     with tab_plytki:
         st.subheader("Hydroizolacja (Strefy mokre)")
         c_h1, c_h2 = st.columns(2)
@@ -1576,28 +1581,30 @@ elif branza == "Łazienka":
         else: # Mozaika / Małe / Drewnopodobne
             dl_p, szer_p, grub_p = 600, 170, 8
 
-        # --- 2. OBLICZENIA MATERIAŁOWE ---
+        # --- 2. OBLICZENIA MATERIAŁOWE (Z DODANYM ZAPASEM PŁYTEK) ---
         m2_plytek_total = m2_scian_total + m2_podlogi
         m2_hydro_total = m2_podlogi + m2_hydro_sciany
         
-        # Hydroizolacja
+        # LOGIKA ZAPASU DLA INWESTORA
+        # 15% zapasu dla wielkiego formatu/mozaiki, 10% dla standardu
+        procent_zapasu = 1.15 if "Wielki" in format_plytki or "Mozaika" in format_plytki else 1.10
+        m2_plytek_z_zapasem = round(m2_plytek_total * procent_zapasu, 1)
+
+        # Hydroizolacja i reszta chemii
         kg_folii = m2_hydro_total * 1.2
         op_folii_5kg = int(kg_folii / 5 + 0.99)
         mb_tasmy = int(mb_tasma_hydro * 1.1)
-        szt_mankiety = szt_podejscia * 2  # <--- TUTAJ BYŁ BŁĄD, poprawione z podejscia_woda
+        szt_mankiety = szt_podejscia * 2 
         op_gruntu_5l = int((m2_scian_total * 0.2) / 5 + 0.99)
 
-        # Klej
         zuzycie_kleju = 5.5 if "Wielki" in format_plytki else 4.0
         worki_kleju_25kg = int((m2_plytek_total * zuzycie_kleju) / 25 + 0.99)
         
-        # Fuga
         wspolczynnik_fugi = ((dl_p + szer_p) / (dl_p * szer_p)) * grub_p * szerokosc_fugi * 1.6
         kg_fugi = m2_plytek_total * wspolczynnik_fugi * 1.1 
         op_fugi_2kg = int(kg_fugi / 2 + 0.99)
         if op_fugi_2kg == 0: op_fugi_2kg = 1
 
-        # Silikon
         szt_silikon = int((mb_tasma_hydro + obwod) / 10 + 0.99)
         worki_tynku = int((m2_tynku * 15) / 25 + 0.99)
 
@@ -1614,22 +1621,22 @@ elif branza == "Łazienka":
         robocizna_suma = (koszt_ukladania + koszt_zacinania + koszt_zabudowy_wc + koszt_odplywu + 
                           koszt_wnek + koszt_hydroizolacji + koszt_led + koszt_przygotowania)
         
-        # Koszty materiałów
-        mat_folia = op_folii_5kg * 90
-        mat_tasma = mb_tasmy * 6
-        mat_klej = worki_kleju_25kg * 65
-        mat_fuga_sil = (op_fugi_2kg * 45) + (szt_silikon * 35)
-        mat_tynk = worki_tynku * 30
-        mat_ryczalt_narzedzia = 250
-        
-        materialy_suma = mat_folia + mat_tasma + mat_klej + mat_fuga_sil + mat_tynk + mat_ryczalt_narzedzia
+        materialy_suma = (op_folii_5kg * 90) + (mb_tasmy * 6) + (worki_kleju_25kg * 65) + \
+                         (op_fugi_2kg * 45) + (szt_silikon * 35) + (worki_tynku * 30) + 250
 
         # --- 4. WYŚWIETLANIE WYNIKÓW ---
         st.markdown("---")
         st.success(f"### RAZEM ROBOCIZNA: **{round(robocizna_suma)} PLN**")
         st.info(f"### SZACOWANE MATERIAŁY (Chemia): **~{round(materialy_suma)} PLN**")
 
+        # Specjalna sekcja dla Inwestora (Zapas płytek)
+        with st.expander("ℹ️ ZAPOTRZEBOWANIE NA PŁYTKI (Dla Inwestora)"):
+            st.write(f"Powierzchnia netto (ściany + podłoga): **{round(m2_plytek_total, 1)} m²**")
+            st.write(f"Zalecany zakup (z zapasem {int((procent_zapasu-1)*100)}%): **{m2_plytek_z_zapasem} m²**")
+            st.caption("Zapas uwzględnia docinki, ewentualne pęknięcia przy zacinaniu 45° oraz błędy przy montażu.")
+
         lista_zakupow_lazienka = [
+            ("PŁYTKI (łącznie z zapasem)", f"{m2_plytek_z_zapasem} m²"),
             ("Klej elastyczny S1 (25kg)", f"{worki_kleju_25kg} worków"),
             ("Folia w płynie (5kg)", f"{op_folii_5kg} wiader"),
             ("Taśma uszczelniająca", f"{mb_tasmy} mb"),
