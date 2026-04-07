@@ -378,15 +378,15 @@ if branza == "Start":
         # --- KONIEC SEKCJI ROADMAP ---
 
     # TERAZ ELIF KONTAKT (również od lewej krawędzi)
-    elif branza == "Kontakt":
-        st.markdown("<h1 style='text-align: center; color: #00D395;'>📞 Kontakt</h1>", unsafe_allow_html=True)
-        st.markdown("""
-        <div class="custom-card" style="text-align: center;">
-            <p class="card-text">Masz pytania? Napisz do nas!</p>
-            <h3 style="color: #0E172B;">biuro@procalc.pl</h3>
-            <p class="card-text">Infolinia: +48 123 456 789</p>
-        </div>
-        """, unsafe_allow_html=True)
+elif branza == "Kontakt":
+    st.markdown("<h1 style='text-align: center; color: #00D395;'>📞 Kontakt</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="custom-card" style="text-align: center;">
+        <p class="card-text">Masz pytania? Napisz do nas!</p>
+        <h3 style="color: #0E172B;">biuro@procalc.pl</h3>
+        <p class="card-text">Infolinia: +48 123 456 789</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 
