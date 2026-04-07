@@ -1868,7 +1868,7 @@ elif branza == "Łazienka":
                 from fpdf import FPDF
                 from datetime import datetime
 
-                pdf = FPDF()
+                pdf_output = pdf.output()
                 pdf.add_page()
                 
                 # REJESTRACJA CZCIONKI INTER
@@ -1925,11 +1925,15 @@ elif branza == "Łazienka":
                     pdf.cell(190, 7, txt=f"- {przedmiot}: {ilosc}", ln=True)
 
                 # STOPKA I GENEROWANIE
-                pdf_bytes = pdf.output(dest='S').encode('latin-1', 'replace')
+                if isinstance(pdf_output, str):
+                    pdf_bytes = pdf_output.encode('latin-1', 'replace')
+                else:
+                    pdf_bytes = pdf_output
+
                 st.download_button(
                     label="📥 Pobierz Kosztorys PDF",
                     data=pdf_bytes,
-                    file_name=f"Kosztorys_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    file_name=f"Kosztorys_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf"
                 )
             except Exception as e:
