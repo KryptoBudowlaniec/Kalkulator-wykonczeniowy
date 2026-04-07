@@ -2016,7 +2016,7 @@ elif branza == "Drzwi":
 elif branza == "Panel Inwestora":
     st.title("Panel Inwestora - Kompleksowy Kosztorys i Logistyka")
 
-    # --- 1. CHECKLISTA PRZEDZAKUPOWA (Zawsze na wierzchu) ---
+    # --- 1. CHECKLISTA PRZEDZAKUPOWA ---
     st.subheader("✅ Checklist Przedzakupowa")
     c_ch1, c_ch2, c_ch3 = st.columns(3)
     with c_ch1:
@@ -2036,15 +2036,21 @@ elif branza == "Panel Inwestora":
     with col_inv1:
         st.subheader("⚙️ Parametry i Zakres")
         m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
-        szerokosc_pom = st.number_input("Szerokość najszerszego pom. (m):", value=3.5, help="Wpływa na dobór profili CD60 (3m vs 4m)")
+        szerokosc_pom = st.number_input("Szerokość najszerszego pom. (m):", value=3.5)
         standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
         stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
+        
+        st.markdown("---")
+        # Dane do łazienki przeniesione tutaj, żeby były dostępne dla logiki
+        st.info("📐 Kalkulator Płytek")
+        m2_sciany_l = st.number_input("M2 ścian łazienki:", value=22.0)
+        m2_podloga_l = st.number_input("M2 podłogi łazienki:", value=4.5)
+        zapas_plytki = st.slider("Zapas na docinki (%):", 5, 20, 12)
         
         st.markdown("---")
         do_szpachlowanie = st.checkbox("Szpachlowanie / Gładzie", value=True)
         do_malowanie = st.checkbox("Malowanie (Biała + Kolor)", value=True)
         do_gk = st.checkbox("Sucha Zabudowa (Sufity)", value=False)
-        do_podlogi = st.checkbox("Podłogi i Listwy", value=True)
         do_elektryka = st.checkbox("Nowa Elektryka", value=True)
         do_lazienka = st.checkbox("Remont Łazienki", value=True)
 
@@ -2052,131 +2058,94 @@ elif branza == "Panel Inwestora":
     pow_scian = m2_total * 3.5
     mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
     
-
-    # --- 2. LOGIKA MATEMATYCZNA MATERIAŁOWA ---
-    zakupy = {"Elektryka": [], "Łazienka (Płytki/Chemia)": [], "Wykończeniówka": []}
+    # Inicjalizacja ujednoliconych kluczy
+    zakupy = {
+        "Elektryka": [], 
+        "Łazienka": [], 
+        "Sucha Zabudowa": [], 
+        "Malowanie i Gładzie": [],
+        "Narzędzia i Akcesoria": []
+    }
     koszt_robocizny = 0
-    koszt_materialow = 0
 
-    # --- MALOWANIE ---
+    # MALOWANIE
     if do_malowanie:
-        grunt_l = pow_scian / 10
-        farba_biala = (pow_scian * 0.4) / 8 # 40% powierzchni na biało
-        farba_kolor = (pow_scian * 0.6) / 9 # 60% powierzchni kolor
-        zakupy["Materiały"].append(f"Grunt głęboko penetrujący: {int(grunt_l/5)+1} baniek (5L)")
-        zakupy["Materiały"].append(f"Farba BIAŁA (sufity): {int(farba_biala/10)+1} wiader (10L)")
-        zakupy["Materiały"].append(f"Farba KOLOR: {int(farba_kolor/5)+1} puszek (5L)")
-        zakupy["Narzędzia/Akcesoria"].append(f"Taśma malarska BLUE: {int(pow_scian/25)+2} rolek")
-        zakupy["Narzędzia/Akcesoria"].append(f"Akryl malarski: {int(m2_total/10)+2} szt.")
+        farba_biala = (pow_scian * 0.4) / 8
+        farba_kolor = (pow_scian * 0.6) / 9
+        zakupy["Malowanie i Gładzie"].append(f"Grunt głęboko penetrujący: {int(pow_scian/50)+1} baniek (5L)")
+        zakupy["Malowanie i Gładzie"].append(f"Farba BIAŁA: {int(farba_biala/10)+1} wiader (10L)")
+        zakupy["Malowanie i Gładzie"].append(f"Farba KOLOR: {int(farba_kolor/5)+1} puszek (5L)")
+        zakupy["Narzędzia i Akcesoria"].append(f"Taśma malarska BLUE: {int(pow_scian/25)+2} rolek")
+        zakupy["Narzędzia i Akcesoria"].append(f"Akryl malarski: {int(m2_total/10)+2} szt.")
         koszt_robocizny += pow_scian * 25
 
-    # --- SZPACHLOWANIE ---
+    # SZPACHLOWANIE
     if do_szpachlowanie:
-        gladź_kg = pow_scian * 1.5
-        krazki_szt = int(m2_total / 10) * 1 # 1 szt na 10m2 podłogi
-        zakupy["Materiały"].append(f"Gładź szpachlowa (masa): {int(gladź_kg/20)+1} wiader (20kg)")
-        zakupy["Narzędzia/Akcesoria"].append(f"Krążki P180 (żyrafa): {max(krazki_szt, 5)} szt.")
+        zakupy["Malowanie i Gładzie"].append(f"Gładź (masa): {int((pow_scian * 1.5)/20)+1} wiader (20kg)")
+        zakupy["Narzędzia i Akcesoria"].append(f"Krążki P180 (żyrafa): {max(int(m2_total/10), 5)} szt.")
         koszt_robocizny += pow_scian * 45
 
-    # --- SUCHA ZABUDOWA (G-K) ---
+    # SUCHA ZABUDOWA
     if do_gk:
         dl_profilu = 4 if szerokosc_pom > 4 else 3
-        zakupy["Materiały"].append(f"Płyty G-K 12.5mm: {int(m2_total/2.5)+2} szt.")
-        zakupy["Materiały"].append(f"Profil CD60 ({dl_profilu}mb): {int(m2_total * 0.9)+4} szt.")
-        zakupy["Materiały"].append(f"Profil UD27 (3mb): {int(m2_total * 0.5)+2} szt.")
-        zakupy["Materiały"].append(f"Wieszaki ES/Obrotowe: {int(m2_total * 1.3)} szt.")
-        zakupy["Materiały"].append(f"Wkręty do G-K 3.5x25mm: 1 op. (1000szt)")
-        zakupy["Materiały"].append(f"Wkręty 'Pchełki': 1 op. (250szt)")
-        zakupy["Materiały"].append(f"Gips do spoin (np. Uniflott): {int(m2_total/20)+1} worków")
-        zakupy["Materiały"].append(f"Taśma TUFF-TAPE (narożniki): {int(m2_total/15)+1} rolek")
-        zakupy["Materiały"].append("Taśma flizelina (łączenia): 2 rolki")
+        zakupy["Sucha Zabudowa"].append(f"Płyty G-K 12.5mm: {int(m2_total/2.5)+2} szt.")
+        zakupy["Sucha Zabudowa"].append(f"Profil CD60 ({dl_profilu}mb): {int(m2_total * 0.9)+4} szt.")
+        zakupy["Sucha Zabudowa"].append(f"Wkręty 3.5x25mm: 1 op. (1000szt)")
+        zakupy["Sucha Zabudowa"].append(f"Taśma TUFF-TAPE: {int(m2_total/15)+1} rolek")
         if szerokosc_pom > 4:
-            zakupy["Materiały"].append(f"Łączniki wzdłużne CD60: {int(m2_total/2)} szt.")
+            zakupy["Sucha Zabudowa"].append(f"Łączniki wzdłużne: {int(m2_total/2)} szt.")
         koszt_robocizny += m2_total * 110
 
-    # ELEKTRYKA - Wyliczenia na podstawie metrażu
+    # ELEKTRYKA
     if do_elektryka:
-        n_gniazd = int(m2_total * 0.8) # Szacunkowa liczba punktów
-        zakupy["Elektryka"].append(f"Kabel YDYp 3x2.5 (Gniazda): {int(m2_total * 2.5)} mb")
-        zakupy["Elektryka"].append(f"Kabel YDYp 3x1.5 (Światło): {int(m2_total * 1.5)} mb")
-        zakupy["Elektryka"].append(f"Kabel YDYp 4x1.5 (Schodowe/Siła): 25 mb")
-        zakupy["Elektryka"].append("Rozdzielnica + 10 bezpieczników (Eaton/Hager)")
-        zakupy["Elektryka"].append(f"Uchwyty mocujące (paczki 100 szt.): {int(m2_total/15)+2} op.")
-        zakupy["Elektryka"].append("Kabel antenowy RG6 (TV): 25 mb")
-        zakupy["Elektryka"].append("Kabel LAN kat. 6 (Internet): 50 mb")
-        zakupy["Elektryka"].append(f"Osprzęt (Gniazda/Włączniki): {n_gniazd} szt.")
-        zakupy["Elektryka"].append("Puszki LAN/RTV/Końcowe: 4 szt.")
+        n_gniazd = int(m2_total * 0.8)
+        zakupy["Elektryka"].append(f"Kabel 3x2.5 (Gniazda): {int(m2_total * 2.5)} mb")
+        zakupy["Elektryka"].append(f"Kabel 3x1.5 (Światło): {int(m2_total * 1.5)} mb")
+        zakupy["Elektryka"].append("Rozdzielnica + 10 bezpieczników")
+        zakupy["Elektryka"].append(f"Osprzęt: {n_gniazd} szt.")
+        koszt_robocizny += m2_total * 100
 
-    # ŁAZIENKA - Wyliczenia na podstawie m2 ścian/podłogi
+    # ŁAZIENKA
     if do_lazienka:
         total_m2_plytek = (m2_sciany_l + m2_podloga_l) * (1 + zapas_plytki/100)
-        worki_kleju = int(total_m2_plytek / 5) + 1 # 1 worek na ok 5m2
-        zakupy["Łazienka (Płytki/Chemia)"].append(f"PŁYTKI ŁĄCZNIE (z zapasem): {round(total_m2_plytek, 1)} m2")
-        zakupy["Łazienka (Płytki/Chemia)"].append(f"Klej elastyczny S1 (25kg): {worki_kleju} worków")
-        zakupy["Łazienka (Płytki/Chemia)"].append(f"Folia w płynie (5kg): {int(m2_podloga_l/3)+1} szt.")
-        zakupy["Łazienka (Płytki/Chemia)"].append("Taśma uszczelniająca: 10 mb")
-        zakupy["Łazienka (Płytki/Chemia)"].append("Mankiety ścienne: 2 szt.")
-        zakupy["Łazienka (Płytki/Chemia)"].append(f"Fuga elastyczna (2kg): {int(total_m2_plytek/10)+1} szt.")
-        zakupy["Łazienka (Płytki/Chemia)"].append("Silikon sanitarny: 2 szt.")
-        zakupy["Łazienka (Płytki/Chemia)"].append("Grunt pod hydroizolację: 1 szt.")
+        zakupy["Łazienka"].append(f"PŁYTKI: {round(total_m2_plytek, 1)} m2")
+        zakupy["Łazienka"].append(f"Klej S1: {int(total_m2_plytek / 5) + 1} worków")
+        zakupy["Łazienka"].append("Hydroizolacja (Folia + Taśmy + Mankiety)")
+        koszt_robocizny += 12000 # Ryczałt łazienka
 
     # --- 3. WIDOK WYNIKÓW ---
     with col_inv2:
         st.subheader("📦 Kompletna Lista Zakupów")
+        res_c1, res_c2 = st.columns(2)
         
-        c_res1, c_res2 = st.columns(2)
+        keys = list(zakupy.keys())
+        for i, key in enumerate(keys):
+            target_col = res_c1 if i % 2 == 0 else res_c2
+            if zakupy[key]:
+                with target_col:
+                    st.write(f"**{key}**")
+                    for item in zakupy[key]:
+                        st.write(f"- {item}")
         
-        with c_res1:
-            if do_elektryka:
-                st.info("**ELEKTRYKA (Instalacja)**")
-                for e in zakupy["Elektryka"]:
-                    st.write(f"⚡ {e}")
-            
-            if do_lazienka:
-                st.success("**ŁAZIENKA (Płytki i Chemia)**")
-                for l in zakupy["Łazienka (Płytki/Chemia)"]:
-                    st.write(f"🛀 {l}")
-
-        with c_res2:
-            # Tutaj Malowanie i G-K (z poprzedniego kroku)
-            st.warning("**WYKOŃCZENIÓWKA (Ściany/Sufity)**")
-            if do_malowanie:
-                st.write(f"🎨 Farba Biała: {int(m2_total/10)+1} L")
-                st.write(f"🎨 Farba Kolor: {int(m2_total/8)+1} L")
-                st.write("🎨 Grunt, Taśmy Blue, Akryle")
-            if do_szpachlowanie:
-                st.write(f"☁️ Gładź: {int(m2_total*3.5*1.5/20)+1} wiader")
-                st.write(f"☁️ Krążki P180: {int(m2_total/10)} szt.")
-
         st.markdown("---")
         
-        # Prosta estymacja kosztów dla Inwestora
-        koszt_ele = (m2_total * 120) if do_elektryka else 0
-        koszt_laz = (m2_sciany_l + m2_podloga_l) * 250 if do_lazienka else 0 # Robocizna + materiał bazowy
-        total_remont = koszt_ele + koszt_laz + (m2_total * 400) # + uśredniona reszta
+        # Obliczenia końcowe
+        total_remont = koszt_robocizny + (m2_total * 300 * mnoznik_std)
+        if stan_lokalu == "Rynek Wtórny (Do remontu)": total_remont *= 1.25
         
-        st.success(f"### Budżet Materiał + Robocizna: **{round(total_remont)} zł**")
+        st.success(f"### Szacowany Koszt Remontu: **{round(total_remont)} zł**")
         
-        # Kalkulator ROI (Zintegrowany)
-        with st.expander("📊 Kalkulator ROI & Zysk", expanded=True):
-            c_a, c_b = st.columns(2)
-            c_zakup = c_a.number_input("Cena zakupu lokalu:", value=350000)
-            c_sprzedaz = c_b.number_input("Cena sprzedaży:", value=550000)
+        with st.expander("📊 Kalkulator ROI", expanded=True):
+            c_zakup = st.number_input("Cena zakupu lokalu:", value=350000)
+            c_sprzedaz = st.number_input("Cena sprzedaży:", value=550000)
             
-            prowizje = (c_zakup * 0.02) + 5000 # PCC + Notariusz
-            koszt_calkowity = c_zakup + prowizje + total_estymacja
-            zysk_brutto = c_sprzedaz - koszt_calkowity
-            roi = (zysk_brutto / koszt_calkowity) * 100 if koszt_calkowity > 0 else 0
+            koszt_transakcyjny = (c_zakup * 0.02) + 4000
+            koszt_calkowity = c_zakup + koszt_transakcyjny + total_remont
+            zysk = c_sprzedaz - koszt_calkowity
+            roi = (zysk / koszt_calkowity) * 100 if koszt_calkowity > 0 else 0
             
-            r1, r2, r3 = st.columns(3)
-            r1.metric("Zysk Brutto", f"{round(zysk_brutto)} zł")
-            r2.metric("ROI", f"{round(roi, 1)}%")
-            r3.metric("Koszt / m2", f"{round(total_estymacja / m2_total)} zł")
-
-    # Generator PDF (Zintegrowany dla Panelu Inwestora)
-    if st.button("📄 Pobierz Listę Zakupów i Kosztorys"):
-        st.write("Generowanie dokumentu z pełną specyfikacją G-K, Malowania i ROI...")
-        # Tutaj analogiczna logika PDF jak w poprzednich krokach, używająca list 'zakupy'
+            st.metric("Przewidywany Zysk", f"{round(zysk)} zł")
+            st.metric("ROI", f"{round(roi, 1)} %")
 
 # Tekst praw autorskich pod logo
 st.markdown("""
