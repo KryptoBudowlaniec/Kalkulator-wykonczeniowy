@@ -346,41 +346,41 @@ if branza == "Start":
         """, unsafe_allow_html=True)
 
     # --- SEKCJA ROZWOJU PROJEKTU (ROADMAP) - WIDOCZNA NA STAŁE ---
-st.markdown("---")
-st.header("🚀 Plan Rozwoju Aplikacji (Roadmap)")
-st.write("Budujemy najbardziej kompletne narzędzie dla nowoczesnych wykonawców. Sprawdź, nad czym obecnie pracujemy:")
-
-col_dev1, col_dev2 = st.columns(2)
-
-with col_dev1:
-    st.markdown("#### 🏗️ W TRAKCIE (Koncept/Dev)")
-    st.info("""
-    **📈 Live Progress (CRM)**  
-    Interaktywna checklista etapów prac. Zamykasz etap jednym kliknięciem, a system przelicza % zaawansowania dla inwestora.
-    """)
-    st.info("""
-    **📸 Dokumentacja Foto**  
-    Możliwość wgrywania zdjęć z budowy przypisanych do konkretnych etapów (np. gruntowanie, narożniki) – pełna przejrzystość.
-    """)
-    st.info("""
-    **🛠️ Kalkulator Łazienki PRO**  
-    Kompleksowe wyliczanie hydroizolacji, taśm narożnikowych i tynków pod glazurę.
-    """)
-
-with col_dev2:
-    st.markdown("#### 🟦 DO ZROBIENIA (Plany)")
-    st.success("✨ **Efekty Dekoracyjne** – Beton architektoniczny, stiuk, trawertyn (liczenie warstw i zestawów).")
-    st.success("🔗 **System Linków** – Generowanie unikalnego adresu budowy dla inwestora (podgląd bez logowania).")
-    st.success("💾 **Baza Danych (Cloud)** – Integracja z Firebase, aby Twoje wyceny i zdjęcia nigdy nie zginęły.")
-    st.success("💰 **Panel Marży** – Ukryte ustawienia cen zakupu i Twoich narzutów dla błyskawicznej wyceny.")
-
-st.markdown("""
-<div style="background-color:#f0f2f6; padding:15px; border-radius:10px; border-left: 5px solid #ff4b4b;">
-    <strong>💡 Masz pomysł na ulepszenie?</strong><br>
-    Napisz do nas! Rozwijamy ten projekt razem z wykonawcami, aby ułatwić codzienną pracę na budowie.
-</div>
-""", unsafe_content_allowed=True)
-st.ln(2)
+    st.markdown("---")
+    st.header("🚀 Plan Rozwoju Aplikacji (Roadmap)")
+    st.write("Budujemy najbardziej kompletne narzędzie dla nowoczesnych wykonawców. Sprawdź, nad czym obecnie pracujemy:")
+    
+    col_dev1, col_dev2 = st.columns(2)
+    
+    with col_dev1:
+        st.markdown("#### 🏗️ W TRAKCIE (Koncept/Dev)")
+        st.info("""
+        **📈 Live Progress (CRM)**  
+        Interaktywna checklista etapów prac. Zamykasz etap jednym kliknięciem, a system przelicza % zaawansowania dla inwestora.
+        """)
+        st.info("""
+        **📸 Dokumentacja Foto**  
+        Możliwość wgrywania zdjęć z budowy przypisanych do konkretnych etapów (np. gruntowanie, narożniki) – pełna przejrzystość.
+        """)
+        st.info("""
+        **🛠️ Kalkulator Łazienki PRO**  
+        Kompleksowe wyliczanie hydroizolacji, taśm narożnikowych i tynków pod glazurę.
+        """)
+    
+    with col_dev2:
+        st.markdown("#### 🟦 DO ZROBIENIA (Plany)")
+        st.success("✨ **Efekty Dekoracyjne** – Beton architektoniczny, stiuk, trawertyn (liczenie warstw i zestawów).")
+        st.success("🔗 **System Linków** – Generowanie unikalnego adresu budowy dla inwestora (podgląd bez logowania).")
+        st.success("💾 **Baza Danych (Cloud)** – Integracja z Firebase, aby Twoje wyceny i zdjęcia nigdy nie zginęły.")
+        st.success("💰 **Panel Marży** – Ukryte ustawienia cen zakupu i Twoich narzutów dla błyskawicznej wyceny.")
+    
+    st.markdown("""
+    <div style="background-color:#f0f2f6; padding:15px; border-radius:10px; border-left: 5px solid #ff4b4b;">
+        <strong>💡 Masz pomysł na ulepszenie?</strong><br>
+        Napisz do nas! Rozwijamy ten projekt razem z wykonawcami, aby ułatwić codzienną pracę na budowie.
+    </div>
+    """, unsafe_content_allowed=True)
+    st.ln(2)
 
 elif branza == "Kontakt":
     st.markdown("<h1 style='text-align: center; color: #00D395;'>📞 Kontakt</h1>", unsafe_allow_html=True)
