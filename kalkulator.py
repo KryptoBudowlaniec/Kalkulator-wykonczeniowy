@@ -917,7 +917,6 @@ elif branza == "Szpachlowanie":
                 st.error(f"Błąd PDF: {e}")
 
 # --- SEKCJA: PODŁOGI ---
-# --- SEKCJA: PODŁOGI ---
 elif branza == "Podłogi":
     st.header("Kalkulator Podłóg: Panele, Deska i Płytki")
     tab_p1, tab_p2 = st.tabs(["⚡ Szybka Wycena", "💎 Szczegóły Montażu"])
@@ -928,13 +927,11 @@ elif branza == "Podłogi":
         with col_p1:
             m2_p = st.number_input("Metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m")
             
-            # DODANO: OPCJA PŁYTEK
             system_montazu = st.radio("System montażu:", 
                                      ["Pływający (Na podkładzie)", 
                                       "Klejony (Na gruncie i kleju)", 
                                       "Płytki / Gres (System poziomujący)"])
             
-            # Logika dla płytek (wymiary i system poziomujący)
             if system_montazu == "Płytki / Gres (System poziomujący)":
                 st.markdown("---")
                 st.subheader("Parametry płytek")
@@ -948,7 +945,6 @@ elif branza == "Podłogi":
                 m2_paczka = st.number_input("M2 w paczce paneli/desek:", min_value=0.1, value=2.22, step=0.01)
             
             st.markdown("---")
-            # Domyślna stawka 120 zł dla płytek
             domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 120)
             stawka_podl = st.slider("Twoja stawka za m2 montażu (zł):", 1, 250, domyslna_stawka)
 
@@ -961,9 +957,7 @@ elif branza == "Podłogi":
         m2_z_zapasem = m2_p * (1 + zapas)
         paczki_szt = int(m2_z_zapasem / m2_paczka + 0.99)
         
-        # Inicjalizacja zmiennych dla listy zakupów
-        info_zakup = ""
-        koszt_akc = 0.0
+        info_zakup = [] # Lista do przechowywania pozycji zakupowych
 
         if system_montazu == "Pływający (Na podkładzie)":
             wybrany_mat = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)", "Standard (Pianka 10m2)"])
@@ -971,60 +965,60 @@ elif branza == "Podłogi":
             ceny_p = {"Premium (Rolka 8m2)": 160, "Ecopor (Paczka 7m2)": 45, "Standard (Pianka 10m2)": 30}
             szt_podkladu = int(m2_p / wydajnosci[wybrany_mat] + 0.99)
             koszt_akc = szt_podkladu * ceny_p[wybrany_mat]
-            info_zakup = f"{szt_podkladu} szt. podkładu {wybrany_mat}"
+            info_zakup.append(f"Podkład {wybrany_mat}: {szt_podkladu} szt.")
 
         elif system_montazu == "Klejony (Na gruncie i kleju)":
             kg_kleju = m2_p * 1.2
             l_gruntu = m2_p * 0.15
-            koszt_akc = m2_p * 55 # Średni koszt chemii na m2
-            info_zakup = f"{int(kg_kleju/15 + 0.99)} wiader kleju (15kg) + {int(l_gruntu/5 + 0.99)} bańki gruntu (5L)"
+            koszt_akc = m2_p * 55 
+            info_zakup.append(f"Klej do podłóg (15kg): {int(kg_kleju/15 + 0.99)} wiader")
+            info_zakup.append(f"Grunt do posadzki (5L): {int(l_gruntu/5 + 0.99)} baniek")
 
         else: # Płytki / Gres
-            # Obliczenie zużycia systemu poziomującego (klipsy na m2)
-            # Wzór: (1 / (długość_m * szerokość_m)) * 4 klipsy (uśrednione dla gresu)
             zuzycie_m2 = (1 / ((dl_p/100) * (sz_p/100))) * 4
-            suma_klipsow = int(zuzycie_m2 * m2_p * 1.1) # 10% zapasu na pęknięcia
-            op_klipsy = int(suma_klipsow / 100 + 0.99) # paczki po 100 szt
-            
-            kg_kleju_gres = m2_p * 5.0 # ok 5kg na m2 gresu
+            suma_klipsow = int(zuzycie_m2 * m2_p * 1.1)
+            op_klipsy = int(suma_klipsow / 100 + 0.99)
+            kg_kleju_gres = m2_p * 5.0
             worki_kleju = int(kg_kleju_gres / 25 + 0.99)
             
-            koszt_akc = (op_klipsy * 35) + (worki_kleju * 65) # szacunkowy koszt klipsów i kleju
-            info_zakup = f"{op_klipsy} op. klipsów (system 1mm/2mm), {worki_kleju} worków kleju S1, kliny (wielorazowe)"
+            koszt_akc = (op_klipsy * 35) + (worki_kleju * 65)
+            info_zakup.append(f"System poziomujący (klipsy): {op_klipsy} op. (po 100 szt.)")
+            info_zakup.append(f"Klej S1 (25kg): {worki_kleju} worków")
+            info_zakup.append("Kliny do systemu: wielorazowe (sprawdzić stan)")
 
-        # Finanse
         k_robocizna = m2_p * stawka_podl
-        # Przyjęta cena materiału głównego (płytka/panel) - 100 zł/m2 dla estymacji
         total_mat = (paczki_szt * m2_paczka * 100) + koszt_akc 
 
         with col_p2:
-            st.subheader("Kosztorys Podłogi")
+            st.subheader("Kosztorys i Lista Zakupów")
             st.success(f"### RAZEM: **{round((total_mat + k_robocizna) * 0.95)} - {round((total_mat + k_robocizna) * 1.05)} zł**")
             
             c1, c2 = st.columns(2)
             c1.metric("Twoja Robocizna", f"{round(k_robocizna)} zł")
             c2.metric("Materiały / System", f"{round(koszt_akc)} zł")
 
-            with st.expander("🔍 Szczegóły listy zakupów"):
-                st.write(f"• **Materiał główny:** {paczki_szt} paczek")
-                st.write(f"• **Akcesoria:** {info_zakup}")
-                
-                if "Płytki" in system_montazu:
-                    st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm: ok. {int(zuzycie_m2)} klipsów/m².")
-                
-                if system_montazu == "Klejony (Na gruncie i kleju)":
-                    st.warning("⚠️ Pamiętaj o sprawdzeniu wilgotności posadzki przed klejeniem!")
-                
-                st.caption(f"Przyjęto zapas materiału: {int(zapas*100)}%")
+            # --- LISTA ZAKUPÓW ZAWSZE NA WIDOKU ---
+            st.markdown("📦 **WYKAZ MATERIAŁÓW:**")
+            
+            # Główny materiał
+            st.write(f"✅ **Materiał główny:** {paczki_szt} paczek ({round(paczki_szt * m2_paczka, 2)} m²)")
+            
+            # Akcesoria i chemia
+            for item in info_zakup:
+                st.write(f"✅ **{item.split(':')[0]}:** {item.split(':')[1] if ':' in item else ''}")
+            
+            if "Płytki" in system_montazu:
+                st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm: ok. {int(zuzycie_m2)} klipsów/m².")
+            
+            st.caption(f"Przyjęto zapas materiału: {int(zapas*100)}%")
 
             # Czas pracy
             if "Płytki" in system_montazu:
-                tempo = 8 # m2 na dzień (z fugowaniem)
+                tempo = 8
             else:
                 tempo = 25 if "Pływający" in system_montazu else 12
                 
             st.warning(f"Szacowany czas realizacji: ok. **{round(m2_p/tempo + 1)} dni**")
-
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "Tynkowanie":
     st.header("Kalkulator Tynków i Suchego Tynku")
