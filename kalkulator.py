@@ -1928,8 +1928,11 @@ elif branza == "Łazienka":
         
                 # 4. NA SAMYM KOŃCU GENERUJEMY WYJŚCIE
                 pdf_output = pdf.output()
-        
-                if isinstance(pdf_output, str):
+
+        # Konwersja na format akceptowany przez Streamlit (standardowe bytes)
+                if isinstance(pdf_output, (bytearray, bytes)):
+                    pdf_bytes = bytes(pdf_output)
+                elif isinstance(pdf_output, str):
                     pdf_bytes = pdf_output.encode('latin-1', 'replace')
                 else:
                     pdf_bytes = pdf_output
