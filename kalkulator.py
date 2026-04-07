@@ -1633,7 +1633,22 @@ elif branza == "Łazienka":
         materialy_suma = (op_folii_5kg * 90) + (mb_tasmy * 6) + (worki_kleju_25kg * 65) + \
                          (op_fugi_2kg * 45) + (szt_silikon * 35) + (worki_tynku * 30) + 250
 
-        # --- 4. WYŚWIETLANIE WYNIKÓW (WERSJA DLA INWESTORA - ZAWSZE WIDOCZNA) ---
+        # === TUTAJ BRAKOWAŁO TEGO BLOKU (DEFINICJA LISTY) ===
+        lista_zakupow_lazienka = [
+            ("PŁYTKI (łącznie z zapasem)", f"{m2_plytek_z_zapasem} m²"),
+            ("Klej elastyczny S1 (25kg)", f"{worki_kleju_25kg} worków"),
+            ("Folia w płynie (5kg)", f"{op_folii_5kg} wiader"),
+            ("Taśma uszczelniająca", f"{mb_tasmy} mb"),
+            ("Mankiety ścienne", f"{szt_mankiety} szt."),
+            ("Fuga elastyczna (2kg)", f"{op_fugi_2kg} op."),
+            ("Silikon sanitarny", f"{szt_silikon} szt."),
+            ("Grunt pod hydroizolację", f"{op_gruntu_5l} wiader 5L"),
+        ]
+        if worki_tynku > 0:
+            lista_zakupow_lazienka.append(("Tynk wyrównawczy (25kg)", f"{worki_tynku} worków"))
+        # ====================================================
+
+        # --- 4. WYŚWIETLANIE WYNIKÓW ---
         st.markdown("---")
         
         # Główne podsumowanie finansowe
@@ -1645,21 +1660,19 @@ elif branza == "Łazienka":
 
         st.markdown("---")
         
-        # SEKCJA PŁYTEK - ZAWSZE NA WIDOKU
+        # SEKCJA PŁYTEK
         st.subheader("📦 Zapotrzebowanie na płytki")
         cp1, cp2, cp3 = st.columns(3)
-        
         cp1.metric("Powierzchnia netto", f"{round(m2_plytek_total, 1)} m²")
         cp2.metric("Zalecany zapas", f"{int((procent_zapasu-1)*100)}%")
         cp3.metric("DO ZAKUPU", f"{m2_plytek_z_zapasem} m²", delta="Zapas uwzględniony")
         
-        st.warning("💡 **Wskazówka:** Powyższy metraż uwzględnia docinki i ryzyko pęknięć. Pamiętaj, aby zachować 2-3 płytki na przyszłość w razie awarii rur!")
+        st.warning("💡 **Wskazówka:** Powyższy metraż uwzględnia docinki i ryzyko pęknięć.")
 
-        # Lista zakupów (Chemia)
+        # Wyświetlanie listy zakupów
         st.markdown("---")
-        st.subheader("🛒 Wykaz Chemii Budowlanej (Lista Zakupów)")
+        st.subheader("Wykaz Chemii Budowlanej (Lista Zakupów)")
         
-        # Wyświetlamy listę w dwóch kolumnach dla lepszej czytelności
         col_list1, col_list2 = st.columns(2)
         half = len(lista_zakupow_lazienka) // 2 + 1
         
@@ -1669,6 +1682,7 @@ elif branza == "Łazienka":
         with col_list2:
             for przedmiot, ilosc in lista_zakupow_lazienka[half:]:
                 st.write(f"• **{przedmiot}:** {ilosc}")
+                  
         # --- PDF GENERATOR (ŁAZIENKA) ---
         try:
             from fpdf import FPDF
