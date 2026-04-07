@@ -989,36 +989,43 @@ elif branza == "Podłogi":
         k_robocizna = m2_p * stawka_podl
         total_mat = (paczki_szt * m2_paczka * 100) + koszt_akc 
 
-        with col_p2:
-            st.subheader("Kosztorys i Lista Zakupów")
-            st.success(f"### RAZEM: **{round((total_mat + k_robocizna) * 0.95)} - {round((total_mat + k_robocizna) * 1.05)} zł**")
+with col_p2:
+            st.subheader("Podsumowanie Kosztorysu")
             
+            # Obliczamy sumę BEZ ceny samych płytek/paneli (tylko Twoja praca + systemy/chemia)
+            usluga_plus_chemia = k_robocizna + koszt_akc
+            
+            # Wyświetlamy główną kwotę jako koszt realizacji (robocizna + materiały pomocnicze)
+            st.success(f"### KOSZT REALIZACJI: **{round(usluga_plus_chemia)} PLN**")
+            st.caption("Cena obejmuje robociznę oraz niezbędną chemię/systemy montażowe. Nie zawiera ceny okładziny (płytek/paneli).")
+
             c1, c2 = st.columns(2)
             c1.metric("Twoja Robocizna", f"{round(k_robocizna)} zł")
-            c2.metric("Materiały / System", f"{round(koszt_akc)} zł")
+            c2.metric("Chemia / Systemy", f"{round(koszt_akc)} zł")
 
-            # --- LISTA ZAKUPÓW ZAWSZE NA WIDOKU ---
-            st.markdown("📦 **WYKAZ MATERIAŁÓW:**")
+            st.markdown("---")
+            st.markdown("📦 **PEŁNA LISTA ZAKUPÓW (Co musi być na budowie):**")
             
-            # Główny materiał
-            st.write(f"✅ **Materiał główny:** {paczki_szt} paczek ({round(paczki_szt * m2_paczka, 2)} m²)")
-            
-            # Akcesoria i chemia
+            # 1. MATERIAŁ GŁÓWNY (WYKOŃCZENIOWY)
+            cena_materialu_szacunek = paczki_szt * m2_paczka * 100 # szacunkowe 100zł/m2
+            st.write(f"🛒 **Płytki/Panele:** {paczki_szt} paczek (ok. {round(paczki_szt * m2_paczka, 2)} m²)")
+            st.caption(f"Szacowany koszt okładziny: ~{round(cena_materialu_szacunek)} zł (przyjęto ok. 100zł/m²)")
+
+            # 2. MATERIAŁY POMOCNICZE (WLICZONE W WYCENĘ REALIZACJI)
             for item in info_zakup:
-                st.write(f"✅ **{item.split(':')[0]}:** {item.split(':')[1] if ':' in item else ''}")
+                st.write(f"🛠️ **{item.split(':')[0]}:** {item.split(':')[1] if ':' in item else ''}")
             
             if "Płytki" in system_montazu:
                 st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm: ok. {int(zuzycie_m2)} klipsów/m².")
             
-            st.caption(f"Przyjęto zapas materiału: {int(zapas*100)}%")
-
+            st.markdown("---")
+            # Całkowity koszt inwestycji (z płytkami)
+            suma_z_okladzina = usluga_plus_chemia + cena_materialu_szacunek
+            st.warning(f"**Szacowany całkowity koszt inwestycji z materiałem:** ok. {round(suma_z_okladzina)} zł")
+            
             # Czas pracy
-            if "Płytki" in system_montazu:
-                tempo = 8
-            else:
-                tempo = 25 if "Pływający" in system_montazu else 12
-                
-            st.warning(f"Szacowany czas realizacji: ok. **{round(m2_p/tempo + 1)} dni**")
+            tempo = 8 if "Płytki" in system_montazu else (25 if "Pływający" in system_montazu else 12)
+            st.write(f"⏱️ **Przewidywany czas prac:** ok. {round(m2_p/tempo + 1)} dni")
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "Tynkowanie":
     st.header("Kalkulator Tynków i Suchego Tynku")
