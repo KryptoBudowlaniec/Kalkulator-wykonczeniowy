@@ -1861,85 +1861,79 @@ elif branza == "Łazienka":
                 st.write(f"• **{przedmiot}:** {ilosc}")
                   
         # --- 5. GENERATOR PDF (ŁAZIENKA PRO) ---
+        # --- 5. GENERATOR PDF (ŁAZIENKA PRO - CZCIONKA INTER) ---
         st.markdown("---")
         if st.button("📄 Generuj Pełny Kosztorys PDF (Łazienka)"):
             try:
                 from fpdf import FPDF
                 from datetime import datetime
 
-                # Konfiguracja dokumentu
                 pdf = FPDF()
                 pdf.add_page()
-                pdf.add_font('Inter-Regular', '', 'Inter-Regular.ttf', uni=True)
+                
+                # REJESTRACJA CZCIONKI INTER
+                pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True)
                 
                 # NAGŁÓWEK
-                pdf.set_font('Inter-Regular', '', 16)
+                pdf.set_font('Inter', '', 16)
                 pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: ŁAZIENKA", ln=True, align='C')
-                pdf.set_font('DejaVu', '', 10)
+                pdf.set_font('Inter', '', 10)
                 pdf.cell(190, 10, txt=f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
                 pdf.ln(10)
 
                 # SEKCJA 1: PODSUMOWANIE FINANSOWE
-                pdf.set_font('Inter-Regular', '', 12)
+                pdf.set_font('Inter', '', 12)
                 pdf.set_fill_color(230, 230, 230)
                 pdf.cell(190, 10, txt="1. PODSUMOWANIE KOSZTÓW", ln=True, align='L', fill=True)
                 pdf.ln(2)
                 
-                pdf.set_font('Inter-Regular', '', 10)
+                pdf.set_font('Inter', '', 10)
                 pdf.cell(140, 8, txt="Pakiet Bazowy (Robocizna + przygotowanie)", border=1)
                 pdf.cell(50, 8, txt=f"{round(robocizna_baza)} zł", border=1, ln=True, align='R')
                 
-                pdf.cell(140, 8, txt="Suma dodatków i detali (zgodnie z tabelą)", border=1)
+                pdf.cell(140, 8, txt="Suma dodatków i detali", border=1)
                 pdf.cell(50, 8, txt=f"{round(suma_dodatkow)} zł", border=1, ln=True, align='R')
                 
                 pdf.cell(140, 8, txt="Szacowany koszt chemii budowlanej", border=1)
                 pdf.cell(50, 8, txt=f"{round(materialy_suma)} zł", border=1, ln=True, align='R')
                 
-                pdf.set_font('DInter-Regular', '', 11)
+                pdf.set_font('Inter', '', 11)
                 pdf.cell(140, 10, txt="RAZEM DO ZAPŁATY (Usługa + Chemia):", border=1, fill=True)
                 pdf.cell(50, 10, txt=f"{round(robocizna_suma + materialy_suma)} zł", border=1, ln=True, align='R', fill=True)
                 pdf.ln(5)
 
-                # SEKCJA 2: SZCZEGÓŁOWA WYCENA DETALI
+                # SEKCJA 2: TABELA DETALI
                 if detale:
-                    pdf.set_font('Inter-Regular', '', 12)
+                    pdf.set_font('Inter', '', 12)
                     pdf.cell(190, 10, txt="2. WYCENA ELEMENTÓW DODATKOWYCH", ln=True, align='L', fill=True)
-                    pdf.set_font('Inter-Regular', '', 9)
+                    pdf.set_font('Inter', '', 9)
                     pdf.cell(100, 8, "Zadanie / Detal", 1, 0, 'C')
                     pdf.cell(40, 8, "Ilość", 1, 0, 'C')
                     pdf.cell(50, 8, "Koszt", 1, 1, 'C')
-                    
                     for d in detale:
                         pdf.cell(100, 8, d["Zadanie"], 1)
                         pdf.cell(40, 8, d["Ilość"], 1, 0, 'C')
                         pdf.cell(50, 8, d["Koszt"], 1, 1, 'R')
                     pdf.ln(5)
 
-                # SEKCJA 3: LISTA ZAKUPÓW DLA KLIENTA
-                pdf.set_font('Inter-Regular', '', 12)
+                # SEKCJA 3: LISTA ZAKUPÓW
+                pdf.set_font('Inter', '', 12)
                 pdf.cell(190, 10, txt="3. WYKAZ MATERIAŁÓW (Do dostarczenia)", ln=True, align='L', fill=True)
-                pdf.set_font('Inter-Regular', '', 10)
+                pdf.set_font('Inter', '', 10)
                 pdf.ln(2)
-                
                 for przedmiot, ilosc in lista_zakupow_lazienka:
                     pdf.cell(190, 7, txt=f"- {przedmiot}: {ilosc}", ln=True)
-                
-                pdf.ln(10)
-                pdf.set_font('Inter-Regular', '', 8)
-                pdf.multi_cell(190, 5, txt="Uwagi: Kosztorys nie zawiera ceny płytek oraz białego montażu (ceramiki). "
-                                           "Podane ilości materiałów zawierają standardowy zapas technologiczny.")
 
-                # EKSPORT
+                # STOPKA I GENEROWANIE
                 pdf_bytes = pdf.output(dest='S').encode('latin-1', 'replace')
                 st.download_button(
                     label="📥 Pobierz Kosztorys PDF",
                     data=pdf_bytes,
-                    file_name=f"Oferta_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    file_name=f"Kosztorys_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf"
                 )
-
             except Exception as e:
-                st.error(f"Błąd generatora PDF: {e}. Upewnij się, że plik DejaVuSans.ttf jest w folderze głównym.")
+                st.error(f"Błąd PDF: {e}. Sprawdź czy plik Inter-Regular.ttf jest w folderze.")
                
 elif branza == "Drzwi":
     st.header("Kalkulator Montażu Drzwi Wewnętrznych")
