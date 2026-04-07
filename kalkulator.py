@@ -1511,6 +1511,195 @@ elif branza == "Elektryka":
             st.warning("⚠️ **UWAGA:** Wycena nie uwzględnia zakupu lamp (oprawy oświetleniowe).")
             st.info("Ilość kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podłogach.")
 
+elif branza == "Łazienka":
+    st.header("Kompleksowy Kalkulator: Łazienka PRO")
+    st.write("Profesjonalna wycena prac łazienkowych uwzględniająca hydroizolację, format płytek i biały montaż.")
+
+    # --- ZAKŁADKI KROKOWE ---
+    tab_wym, tab_plytki, tab_inst, tab_wynik = st.tabs([
+        "1. Wymiary", "2. Płytki i Hydro", "3. Instalacje", "4. Podsumowanie"
+    ])
+
+    with tab_wym:
+        st.subheader("Wymiary pomieszczenia")
+        c_w1, c_w2 = st.columns(2)
+        m2_podlogi = c_w1.number_input("Powierzchnia podłogi (m2):", 1.0, 100.0, 5.0, step=0.5)
+        wysokosc = c_w2.number_input("Wysokość łazienki (m):", 2.0, 4.0, 2.5, step=0.1)
+        
+        obwod = st.number_input("Suma długości wszystkich ścian (Obwód w metrach):", 4.0, 50.0, 9.0, step=0.5)
+        okna_drzwi = st.number_input("Otwory do odjęcia (drzwi/okna w m2):", 0.0, 10.0, 1.6, step=0.1)
+        
+        m2_scian_total = (obwod * wysokosc) - okna_drzwi
+        st.info(f"📐 Całkowita powierzchnia ścian do obróbki: **{round(m2_scian_total, 1)} m²**")
+        
+        st.markdown("---")
+        st.subheader("Przygotowanie podłoża")
+        m2_tynku = st.number_input("Powierzchnia do wyrównania (tynk/płyta GK) [m2]:", 0.0, 150.0, m2_scian_total, step=1.0)
+
+    with tab_plytki:
+        st.subheader("Hydroizolacja (Strefy mokre)")
+        c_h1, c_h2 = st.columns(2)
+        m2_hydro_sciany = c_h1.number_input("Ściany pod prysznicem/wanną (m2):", 0.0, 50.0, 5.0, step=0.5)
+        mb_tasma_hydro = c_h2.number_input("Długość taśm narożnikowych (mb):", 0.0, 100.0, 12.0, step=1.0)
+        
+        st.markdown("---")
+        st.subheader("Płytki i Detale")
+        format_plytki = st.selectbox("Format płytek ściennych:", ["Standardowe (np. 60x60, 30x60)", "Wielki Format (np. 120x60, 120x120)", "Mozaika / Małe płytki"])
+        szerokosc_fugi = st.slider("Zakładana szerokość fugi (mm):", 1.0, 5.0, 2.0, step=0.5)
+        
+        c_p1, c_p2 = st.columns(2)
+        mb_zacinania = c_p1.number_input("Zacinanie płytek 45° (mb):", 0.0, 100.0, 5.0, step=0.5)
+        mb_listwy = c_p2.number_input("Listwy narożne ozdobne (mb):", 0.0, 100.0, 0.0, step=0.5)
+
+    with tab_inst:
+        st.subheader("Prace instalacyjne i Biały Montaż")
+        c_i1, c_i2 = st.columns(2)
+        szt_wc = c_i1.number_input("Zabudowa stelaża WC (szt.):", 0, 5, 1)
+        szt_odplyw = c_i2.number_input("Odpływ liniowy z kopertą (szt.):", 0, 5, 1)
+        
+        szt_podejscia = c_i1.number_input("Punkty wodne (mankiety uszczelniające):", 0, 20, 6)
+        szt_wneki = c_i2.number_input("Półki / wnęki podświetlane (szt.):", 0, 10, 1)
+        mb_led = st.number_input("Montaż profili LED w płytkach (mb):", 0.0, 50.0, 0.0, step=1.0)
+
+    with tab_wynik:
+        st.subheader("Cennik Wykonawcy (Dostosuj stawki)")
+        # Ceny są wyeksponowane, żeby nie "wysypały" się w tle. Użytkownik ma pełną kontrolę.
+        c_c1, c_c2, c_c3 = st.columns(3)
+        stawka_m2_plytek = c_c1.number_input("Układanie płytek (zł/m2):", 50, 400, 150 if "Wielki Format" not in format_plytki else 220)
+        stawka_mb_45 = c_c2.number_input("Zacinanie 45° (zł/mb):", 50, 300, 120)
+        stawka_wc = c_c3.number_input("Zabudowa WC (zł/szt):", 100, 1500, 450)
+        
+        # --- OBLICZENIA MATERIAŁOWE ---
+        # Hydroizolacja
+        m2_hydro_total = m2_podlogi + m2_hydro_sciany
+        kg_folii = m2_hydro_total * 1.2 # na dwie warstwy
+        op_folii_5kg = int(kg_folii / 5 + 0.99)
+        mb_tasmy = int(mb_tasma_hydro * 1.1) # 10% zapasu
+        szt_mankiety = szt_podejscia * 2 # zimna + ciepła (zapas)
+        op_gruntu_5l = int((m2_scian_total * 0.2) / 5 + 0.99)
+
+        # Glazura
+        m2_plytek_total = m2_scian_total + m2_podlogi
+        zuzycie_kleju = 5.5 if "Wielki" in format_plytki else 4.0
+        worki_kleju_25kg = int((m2_plytek_total * zuzycie_kleju) / 25 + 0.99)
+        
+        # Fuga i Silikon
+        kg_fugi = m2_plytek_total * 0.4 * szerokosc_fugi # Uproszczony ryczałt bezpieczny
+        op_fugi_2kg = int(kg_fugi / 2 + 0.99)
+        szt_silikon = int((mb_tasma_hydro + obwod) / 10 + 0.99)
+
+        # Inne
+        worki_tynku = int((m2_tynku * 15) / 25 + 0.99)
+
+        # --- OBLICZENIA FINANSOWE (Kosztorys robocizny) ---
+        koszt_ukladania = m2_plytek_total * stawka_m2_plytek
+        koszt_zacinania = mb_zacinania * stawka_mb_45
+        koszt_zabudowy_wc = szt_wc * stawka_wc
+        koszt_odplywu = szt_odplyw * 600 # ryczałt montaż z kopertą
+        koszt_wnek = szt_wneki * 350
+        koszt_hydroizolacji = m2_hydro_total * 45 # 45 zł/m2 za folię i taśmy
+        koszt_led = mb_led * 80
+        koszt_przygotowania = m2_tynku * 40
+        
+        robocizna_suma = (koszt_ukladania + koszt_zacinania + koszt_zabudowy_wc + koszt_odplywu + 
+                          koszt_wnek + koszt_hydroizolacji + koszt_led + koszt_przygotowania)
+        
+        # Koszty Materiałów (Wartości przybliżone do wyceny)
+        mat_folia = op_folii_5kg * 90
+        mat_tasma = mb_tasmy * 6
+        mat_klej = worki_kleju_25kg * 65
+        mat_fuga_sil = (op_fugi_2kg * 45) + (szt_silikon * 35)
+        mat_tynk = worki_tynku * 30
+        mat_ryczalt_narzedzia = 250 # tarcze, krzyżyki, klipsy
+        
+        materialy_suma = mat_folia + mat_tasma + mat_klej + mat_fuga_sil + mat_tynk + mat_ryczalt_narzedzia
+
+        st.markdown("---")
+        st.success(f"### RAZEM ROBOCIZNA: **{round(robocizna_suma)} PLN**")
+        st.info(f"### SZACOWANE MATERIAŁY (Chemia): **~{round(materialy_suma)} PLN**")
+        st.caption("*(Koszty płytek, armatury i stelaży leżą po stronie Inwestora)*")
+
+        lista_zakupow_lazienka = [
+            ("Klej elastyczny S1 (25kg)", f"{worki_kleju_25kg} worków"),
+            ("Folia w płynie (5kg)", f"{op_folii_5kg} wiader"),
+            ("Taśma uszczelniająca", f"{mb_tasmy} mb"),
+            ("Mankiety ścienne", f"{szt_mankiety} szt."),
+            ("Fuga elastyczna (2kg)", f"{op_fugi_2kg} op."),
+            ("Silikon sanitarny", f"{szt_silikon} szt."),
+            ("Grunt pod hydroizolację", f"{op_gruntu_5l} wiader 5L"),
+        ]
+        if worki_tynku > 0:
+            lista_zakupow_lazienka.append(("Tynk wyrównawczy (25kg)", f"{worki_tynku} worków"))
+
+        st.markdown("---")
+        st.subheader("📦 Wykaz Chemii Budowlanej (Lista Zakupów)")
+        for przedmiot, ilosc in lista_zakupow_lazienka:
+            st.write(f"• **{przedmiot}:** {ilosc}")
+
+        # --- PDF GENERATOR (ŁAZIENKA) ---
+        try:
+            from fpdf import FPDF
+            from datetime import datetime
+            import os
+
+            if st.button("📄 Generuj Raport PDF - Łazienka", use_container_width=True):
+                pdf = FPDF()
+                pdf.add_page()
+                
+                f_path = "Inter-Regular.ttf"
+                if os.path.exists(f_path):
+                    pdf.add_font("Inter", "", f_path)
+                    pdf.set_font("Inter", size=12)
+                else:
+                    pdf.set_font("Arial", size=12)
+
+                pdf.set_font(pdf.font_family, size=16)
+                pdf.cell(0, 15, "OFERTA WYKONAWSTWA: LAZIENKA PRO", ln=True, align='C')
+                pdf.ln(5)
+
+                pdf.set_fill_color(245, 245, 245)
+                pdf.set_font(pdf.font_family, size=12)
+                pdf.cell(95, 10, " Kategoria", 1, 0, 'L', True)
+                pdf.cell(95, 10, " Koszt", 1, 1, 'L', True)
+                
+                pdf.cell(95, 10, " Robocizna:", 1)
+                pdf.cell(95, 10, f" {round(robocizna_suma)} PLN", 1, 1)
+                pdf.cell(95, 10, " Chemia budowlana (szacunek):", 1)
+                pdf.cell(95, 10, f" {round(materialy_suma)} PLN", 1, 1)
+                pdf.set_font(pdf.font_family, size=13)
+                pdf.cell(95, 12, " SUMA CALKOWITA (Bez plytek):", 1, 0, 'L', True)
+                pdf.cell(95, 12, f" {round(robocizna_suma + materialy_suma)} PLN", 1, 1, 'L', True)
+
+                pdf.ln(10)
+                pdf.set_font(pdf.font_family, size=12)
+                pdf.cell(0, 10, "SZCZEGOLY PRAC:", ln=True)
+                pdf.set_font(pdf.font_family, size=10)
+                pdf.cell(0, 7, f"- Metraz do plytkowania: {round(m2_plytek_total,1)} m2", ln=True)
+                if mb_zacinania > 0:
+                    pdf.cell(0, 7, f"- Zacinanie naroznikow 45 stopni: {mb_zacinania} mb", ln=True)
+                if szt_wc > 0:
+                    pdf.cell(0, 7, f"- Zabudowa stelaża WC: {szt_wc} szt.", ln=True)
+                if szt_odplyw > 0:
+                    pdf.cell(0, 7, "- Montaz odplywu liniowego ze spadkiem", ln=True)
+
+                pdf.ln(5)
+                pdf.set_font(pdf.font_family, size=12)
+                pdf.cell(0, 10, "ZAPOTRZEBOWANIE NA CHEMIE (DO ZAKUPU):", ln=True)
+                pdf.set_font(pdf.font_family, size=10)
+                for przedmiot, ilosc in lista_zakupow_lazienka:
+                    pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
+
+                pdf_bytes = pdf.output()
+                st.download_button(
+                    label="⬇️ Pobierz Kosztorys PDF",
+                    data=bytes(pdf_bytes),
+                    file_name=f"Oferta_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+        except Exception as e:
+            st.error(f"Problem z generowaniem PDF: {e}")
+
 elif branza == "Drzwi":
     st.header("Kalkulator Montażu Drzwi Wewnętrznych")
     
