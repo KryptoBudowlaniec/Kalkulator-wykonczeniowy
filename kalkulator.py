@@ -362,7 +362,7 @@ if branza == "Start":
             st.info("**Kalkulator Łazienki PRO**\n\nKompleksowe wyliczanie hydroizolacji, taśm narożnikowych i tynków pod glazurę.")
         
         with col_dev2:
-            st.markdown("####DO ZROBIENIA (Plany)")
+            st.markdown("#### DO ZROBIENIA (Plany)")
             st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk, trawertyn.")
             st.success("**System Linków** – Unikalny adres budowy dla inwestora.")
             st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
