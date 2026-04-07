@@ -1549,7 +1549,7 @@ elif branza == "Łazienka":
         
         m2_scian_total = (obwod * wysokosc) - okna_drzwi
         st.info(f"Całkowita powierzchnia ścian do obróbki: **{round(m2_scian_total, 1)} m²**")
-               
+                
     with tab_plytki:
         st.subheader("Hydroizolacja (Strefy mokre)")
         c_h1, c_h2 = st.columns(2)
@@ -1558,7 +1558,7 @@ elif branza == "Łazienka":
         
         st.markdown("---")
         st.subheader("Płytki i Detale")
-        format_plytki = st.selectbox("Format płytek ściennych:", ["Standardowe (np. 60x60, 30x60)", "Wielki Format (np. 120x60, 120x120)", "Mozaika / Małe płytki"])
+        format_plytki = st.selectbox("Format płytek ściennych:", ["Standardowe (np. 60x60, 30x60)", "Wielki Format (np. 120x60, 120x120)", "Mozaika / Małe płyki"])
         szerokosc_fugi = st.slider("Zakładana szerokość fugi (mm):", 1.0, 5.0, 2.0, step=0.5)
         
         c_p1, c_p2 = st.columns(2)
@@ -1595,7 +1595,6 @@ elif branza == "Łazienka":
         m2_hydro_total = m2_podlogi + m2_hydro_sciany
         
         # LOGIKA ZAPASU DLA INWESTORA
-        # 15% zapasu dla wielkiego formatu/mozaiki, 10% dla standardu
         procent_zapasu = 1.15 if "Wielki" in format_plytki or "Mozaika" in format_plytki else 1.10
         m2_plytek_z_zapasem = round(m2_plytek_total * procent_zapasu, 1)
 
@@ -1618,12 +1617,11 @@ elif branza == "Łazienka":
         worki_tynku = int((m2_tynku * 15) / 25 + 0.99)
 
         # --- 3. OBLICZENIA FINANSOWE ---
-# BAZA: 2000 zł za każdy m2 podłogi (pokrywa standard prac)
+        # BAZA: 2000 zł za każdy m2 podłogi (pokrywa standard prac)
         stawka_bazowa_m2 = 2000 
         robocizna_baza = m2_podlogi * stawka_bazowa_m2
         
         # DODATKI (Płatne ekstra poza bazą)
-        # Tutaj stawki za detale - możesz je zmienić
         koszt_zacinania = mb_zacinania * stawka_mb_45
         koszt_listwy = mb_listwy * 100  # Przykład: 100 zł/mb listwy ozdobnej
         koszt_odplywu = szt_odplyw * 800 # Odpływ jest trudniejszy niż standardowy brodzik
@@ -1635,13 +1633,22 @@ elif branza == "Łazienka":
         robocizna_suma = (robocizna_baza + koszt_zacinania + koszt_listwy + 
                           koszt_odplywu + koszt_wneki + koszt_led + koszt_wc)
 
+        # --- DODANY BLOK: OBLICZENIA KOSZTÓW MATERIAŁÓW (Naprawia NameError) ---
+        mat_folia = op_folii_5kg * 90
+        mat_tasma = mb_tasmy * 6
+        mat_klej = worki_kleju_25kg * 65
+        mat_fuga_sil = (op_fugi_2kg * 45) + (szt_silikon * 35)
+        mat_tynk = worki_tynku * 30
+        materialy_suma = mat_folia + mat_tasma + mat_klej + mat_fuga_sil + mat_tynk + 250
+        # ------------------------------------------------------------------------
+
         # --- 4. WYŚWIETLANIE WYNIKÓW (WERSJA BIZNESOWA) ---
         st.markdown("---")
         
         # Główny wynik
         st.success(f"### ŁĄCZNA KWOTA ROBOCIZNY: **{round(robocizna_suma)} PLN**")
         
-        # Rozbicie na Baza vs Dodatki (Żeby inwestor widział, skąd się bierze cena)
+        # Rozbicie na Baza vs Dodatki
         c1, c2 = st.columns(2)
         with c1:
             st.metric("Pakiet Bazowy (Łazienka)", f"{round(robocizna_baza)} zł", help="Obejmuje standardowe układanie płytek, hydroizolację i przygotowanie.")
@@ -1651,7 +1658,7 @@ elif branza == "Łazienka":
 
         st.markdown("---")
         
-        # SZCZEGÓŁOWA LISTA DODATKÓW (Najważniejsza dla argumentacji ceny)
+        # SZCZEGÓŁOWA LISTA DODATKÓW
         st.subheader("🛠️ Wycena detali (Poza pakietem bazowym)")
         
         detale = []
@@ -1666,7 +1673,7 @@ elif branza == "Łazienka":
         else:
             st.info("Brak dodatkowych detali - łazienka w standardzie prostym.")
 
-        # === TUTAJ BRAKOWAŁO TEGO BLOKU (DEFINICJA LISTY) ===
+        # --- DEFINICJA LISTY ---
         lista_zakupow_lazienka = [
             ("PŁYTKI (łącznie z zapasem)", f"{m2_plytek_z_zapasem} m²"),
             ("Klej elastyczny S1 (25kg)", f"{worki_kleju_25kg} worków"),
@@ -1679,10 +1686,8 @@ elif branza == "Łazienka":
         ]
         if worki_tynku > 0:
             lista_zakupow_lazienka.append(("Tynk wyrównawczy (25kg)", f"{worki_tynku} worków"))
-        # ====================================================
 
-        
-        # --- 4. WYŚWIETLANIE WYNIKÓW I ANALIZA RENTOWNOŚCI ---
+        # --- WYŚWIETLANIE WYNIKÓW I ANALIZA RENTOWNOŚCI ---
         st.markdown("---")
         
         # Obliczenie wskaźnika na m2 podłogi
@@ -1695,7 +1700,7 @@ elif branza == "Łazienka":
         with c_res2:
             st.info(f"### CHEMIA BUDOWLANA\n**~{round(materialy_suma)} PLN**")
 
-        # --- NOWA SEKCJA: KONTROLA PRZEDZIAŁU 2000-3000 zł/m2 ---
+        # KONTROLA PRZEDZIAŁU 2000-3000 zł/m2
         st.subheader("Analiza rynkowa wyceny")
         
         col_metric1, col_metric2 = st.columns([2, 1])
