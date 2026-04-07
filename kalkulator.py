@@ -350,27 +350,27 @@ if branza == "Start":
         
         # --- SEKCJA ROZWOJU PROJEKTU (ROADMAP) - WIDOCZNA NA STAŁE ---
         st.markdown("---")
-        st.header("🚀 Plan Rozwoju Aplikacji (Roadmap)")
+        st.header("Plan Rozwoju Aplikacji (Roadmap)")
         st.write("Budujemy najbardziej kompletne narzędzie dla nowoczesnych wykonawców. Sprawdź, nad czym obecnie pracujemy:")
         
         col_dev1, col_dev2 = st.columns(2)
         
         with col_dev1:
-            st.markdown("#### 🏗️ W TRAKCIE (Koncept/Dev)")
-            st.info("**📈 Live Progress (CRM)**\n\nInteraktywna checklista etapów prac. Zamykasz etap jednym kliknięciem, a system przelicza % zaawansowania dla inwestora.")
-            st.info("**📸 Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy przypisanych do konkretnych etapów – pełna przejrzystość.")
-            st.info("**🛠️ Kalkulator Łazienki PRO**\n\nKompleksowe wyliczanie hydroizolacji, taśm narożnikowych i tynków pod glazurę.")
+            st.markdown("#### W TRAKCIE (Koncept/Dev)")
+            st.info("**Live Progress (CRM)**\n\nInteraktywna checklista etapów prac. Zamykasz etap jednym kliknięciem, a system przelicza % zaawansowania dla inwestora.")
+            st.info("**Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy przypisanych do konkretnych etapów – pełna przejrzystość.")
+            st.info("**Kalkulator Łazienki PRO**\n\nKompleksowe wyliczanie hydroizolacji, taśm narożnikowych i tynków pod glazurę.")
         
         with col_dev2:
-            st.markdown("#### 🟦 DO ZROBIENIA (Plany)")
-            st.success("✨ **Efekty Dekoracyjne** – Beton architektoniczny, stiuk, trawertyn.")
-            st.success("🔗 **System Linków** – Unikalny adres budowy dla inwestora.")
-            st.success("💾 **Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
-            st.success("💰 **Panel Marży** – Ukryte ustawienia cen i narzutów.")
+            st.markdown("####DO ZROBIENIA (Plany)")
+            st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk, trawertyn.")
+            st.success("**System Linków** – Unikalny adres budowy dla inwestora.")
+            st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
+            st.success("**Panel Marży** – Ukryte ustawienia cen i narzutów.")
         
         st.markdown("""
         <div style="background-color:#f0f2f6; padding:15px; border-radius:10px; border-left: 5px solid #ff4b4b;">
-            <strong>💡 Masz pomysł na ulepszenie?</strong><br>
+            <strong>Masz pomysł na ulepszenie?</strong><br>
             Napisz do nas! Rozwijamy ten projekt razem z wykonawcami, aby ułatwić codzienną pracę na budowie.
         </div>
         """, unsafe_allow_html=True) # Poprawione na unsafe_allow_html=True
@@ -379,7 +379,7 @@ if branza == "Start":
 
     # TERAZ ELIF KONTAKT (również od lewej krawędzi)
 elif branza == "Kontakt":
-    st.markdown("<h1 style='text-align: center; color: #00D395;'>📞 Kontakt</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #00D395;'>Kontakt</h1>", unsafe_allow_html=True)
     st.markdown("""
     <div class="custom-card" style="text-align: center;">
         <p class="card-text">Masz pytania? Napisz do nas!</p>
@@ -478,7 +478,7 @@ if branza == "Malowanie":
             stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 100, 35, key="pro_r_fast")
 
             st.markdown("---")
-            st.subheader("⚜️ Sztukateria")
+            st.subheader("Sztukateria")
             mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0, key="pro_sz_fast")
             typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"], key="pro_tsz_fast")
 
@@ -505,7 +505,7 @@ if branza == "Malowanie":
         k_rob_total = (m2_razem * stawka) + koszt_rob_sztukateria
 
         with col_f2:
-            st.subheader("💰 Wyniki i Lista zakupów")
+            st.subheader("Wyniki i Lista zakupów")
             
             # Obliczenia końcowe
             total_pro = k_mat_sredni + k_rob_total
@@ -522,24 +522,24 @@ if branza == "Malowanie":
             st.markdown("---")
 
             # --- LISTA ZAKUPÓW (Widoczna na wierzchu) ---
-            st.markdown("### 📦 Twoja lista zakupów")
+            st.markdown("###Twoja lista zakupów")
             
             st.write(f"**Farby i Grunt:**")
-            st.write(f"- ⚪ Biała ({f_biala}): **{round(l_biala, 1)}L**")
-            st.write(f"- 🎨 Kolor ({f_kolor}): **{round(l_kolor, 1)}L**")
-            st.write(f"- 🛠️ Grunt ({f_grunt}): **{round(l_grunt, 1)}L**")
+            st.write(f"- Biała ({f_biala}): **{round(l_biala, 1)}L**")
+            st.write(f"- Kolor ({f_kolor}): **{round(l_kolor, 1)}L**")
+            st.write(f"- Grunt ({f_grunt}): **{round(l_grunt, 1)}L**")
             
             st.write(f"**Akcesoria:**")
-            st.write(f"- 🎞️ Taśma ({f_tasma}): **{round(szt_tasma + 0.5)} szt.**")
-            st.write(f"- 🪟 Akryl szpachlowy: **{round(szt_akryl + 0.5)} szt.**")
+            st.write(f"- Taśma ({f_tasma}): **{round(szt_tasma + 0.5)} szt.**")
+            st.write(f"- Akryl szpachlowy: **{round(szt_akryl + 0.5)} szt.**")
             
             if mb_sztukaterii > 0:
                 st.write(f"**Sztukateria:**")
-                st.write(f"- ⚜️ Robocizna (montaż): **{round(koszt_rob_sztukateria)} zł**")
+                st.write(f"- Robocizna (montaż): **{round(koszt_rob_sztukateria)} zł**")
                 # Tutaj dodajemy nazwę kleju:
-                st.write(f"- 🧪 Klej: **Bostik Mamut** ({int(mb_sztukaterii/8 + 1)} szt.)")
+                st.write(f"- Klej: **Bostik Mamut** ({int(mb_sztukaterii/8 + 1)} szt.)")
             
-            st.info("💡 Kwoty materiałów zawierają doliczony margines bezpieczeństwa (10%) oraz 150 zł na folie i wałki.")
+            st.info("Kwoty materiałów zawierają doliczony margines bezpieczeństwa (10%) oraz 150 zł na folie i wałki.")
 
         st.markdown("---")
 
@@ -552,7 +552,7 @@ if branza == "Malowanie":
         
         kolor_hex = st.color_picker("Kolor tej ściany:", "#D3D3D3", key="wall_c")
         
-        if st.button("🚀 ZATWIERDŹ I DODAJ ŚCIANĘ", use_container_width=True):
+        if st.button("ZATWIERDŹ I DODAJ ŚCIANĘ", use_container_width=True):
             st.session_state.pokoje_pro.append({
                 "pokoj": nazwa_p, "szer": szer, "wys": wys, "kolor": kolor_hex
             })
@@ -560,7 +560,7 @@ if branza == "Malowanie":
 
         # --- WYKAZ DODANYCH ELEMENTÓW ---
         if st.session_state.pokoje_pro:
-            st.markdown("### 📋 Zestawienie szczegółowe")
+            st.markdown("### Zestawienie szczegółowe")
             total_m2_walls = 0
             for i, s in enumerate(st.session_state.pokoje_pro):
                 p_m2 = s['szer'] * s['wys']
@@ -569,18 +569,18 @@ if branza == "Malowanie":
             
             st.info(f"Łączna powierzchnia dodanych ścian: **{round(total_m2_walls, 1)} m²**")
             
-            if st.button("🗑️ WYCZYŚĆ LISTĘ ŚCIAN"):
+            if st.button("WYCZYŚĆ LISTĘ ŚCIAN"):
                 st.session_state.pokoje_pro = []
                 st.rerun()
                 
         st.markdown("---")
         
-        st.subheader("💾 Zarządzanie Projektem")
+        st.subheader("Zarządzanie Projektem")
         
         c_btn1, c_btn2 = st.columns(2)
 
         with c_btn1:
-            if st.button("🗑️ Wyczyść projekt PRO", use_container_width=True):
+            if st.button("Wyczyść projekt PRO", use_container_width=True):
                 st.session_state.pokoje_pro = []
                 st.rerun()
 
@@ -675,7 +675,7 @@ if branza == "Malowanie":
                 pdf_output = pdf.output()
                 
                 st.download_button(
-                    label="📄 Pobierz Raport PDF (Inter Black)",
+                    label="Pobierz Raport PDF (Inter Black)",
                     data=bytes(pdf_output),
                     file_name=f"Kosztorys_proCalc_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
@@ -728,13 +728,13 @@ elif branza == "Szpachlowanie":
         st.write("W tym orientacyjnie:")
         st.write(f"- Robocizna: **{round(szacunek_total * 0.65)} PLN**")
         st.write(f"- Materiały: **{round(szacunek_total * 0.35)} PLN**")
-        st.info("💡 Aby wybrać konkretne gładzie, ustawić swoją stawkę i dodać pomieszczenia, przejdź do **Detale PRO**.")
+        st.info("Aby wybrać konkretne gładzie, ustawić swoją stawkę i dodać pomieszczenia, przejdź do **Detale PRO**.")
 
     # ==========================================
     # ZAKŁADKA 2: DETALE PRO
     # ==========================================
     with tab_s2:
-        st.subheader("⚙️ Konfiguracja Wykonania (PRO)")
+        st.subheader("Konfiguracja Wykonania (PRO)")
         
         # --- A. WYBÓR MATERIAŁÓW I STAWEK ---
         col_c1, col_c2 = st.columns(2)
@@ -775,7 +775,7 @@ elif branza == "Szpachlowanie":
             # Opcja 1: Suwak
             m2_total = st.slider("Podaj łączny metraż ścian i sufitów (m2):", 5, 1000, 150, step=5)
             podl_total = m2_total / 3.5  # Szacunek podłogi pod dodatki (narożniki itp.)
-            st.info(f"💡 Przyjęto łączny metraż: {m2_total} m²")
+            st.info(f"Przyjęto łączny metraż: {m2_total} m²")
 
         else:
             # Opcja 2: Dodawanie pomieszczeń
@@ -789,7 +789,7 @@ elif branza == "Szpachlowanie":
                 suf_p = st.checkbox("Szpachlować sufit?", value=True, key="p_suf_check")
                 ok_drz = st.number_input("Odliczenia okna/drzwi (m2):", 0.0, 50.0, 3.5, key="p_odlicz")
 
-            if st.button("➕ Zapisz i dodaj do listy", use_container_width=True):
+            if st.button("Zapisz i dodaj do listy", use_container_width=True):
                 p_netto = (((dl_p + sz_p) * 2 * wy_p) + (dl_p * sz_p if suf_p else 0)) - ok_drz
                 if p_netto > 0:
                     st.session_state.pokoje_szp.append({
@@ -832,8 +832,8 @@ elif branza == "Szpachlowanie":
             st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
             
             res1, res2 = st.columns(2)
-            res1.metric("👷 Twoja Robocizna", f"{round(robocizna_total)} PLN")
-            res2.metric("📦 Materiały", f"{round(materiały_total)} PLN")
+            res1.metric("Twoja Robocizna", f"{round(robocizna_total)} PLN")
+            res2.metric("Materiały", f"{round(materiały_total)} PLN")
             
             # Tutaj wstaw kod przycisków PDF (with c_pdf1, c_pdf2 itd.)
 
@@ -844,7 +844,7 @@ elif branza == "Szpachlowanie":
         c_pdf1, c_pdf2 = st.columns(2)
             
         with c_pdf1:
-            if st.button("🗑️ Wyczyść wszystko", use_container_width=True):
+            if st.button("Wyczyść wszystko", use_container_width=True):
                 st.session_state.pokoje_szp = []
                 st.rerun()
                     
@@ -907,7 +907,7 @@ elif branza == "Szpachlowanie":
 
                     pdf_bytes = pdf.output()
                     st.download_button(
-                        label="📄 Pobierz PDF (PRO)",
+                        label="Pobierz PDF (PRO)",
                         data=bytes(pdf_bytes),
                         file_name=f"Szpachlowanie_Raport_{datetime.now().strftime('%Y%m%d')}.pdf",
                         mime="application/pdf",
@@ -967,14 +967,14 @@ elif branza == "Podłogi":
         total_mat = (paczki_szt * m2_paczka * 100) + koszt_akc # przyjąłem średnią cenę deski 100zł/m2
 
         with col_p2:
-            st.subheader("💰 Kosztorys Podłogi")
+            st.subheader("Kosztorys Podłogi")
             st.success(f"### RAZEM: **{round((total_mat + k_robocizna) * 0.95)} - {round((total_mat + k_robocizna) * 1.05)} zł**")
             
             c1, c2 = st.columns(2)
             c1.metric("Twoja Robocizna", f"{round(k_robocizna)} zł")
             c2.metric("Chemia / Podkład", f"{round(koszt_akc)} zł")
 
-            with st.expander("📦 Twoja lista zakupów"):
+            with st.expander("Twoja lista zakupów"):
                 st.write(f"• **Panele/Deska:** {paczki_szt} paczek")
                 st.write(f"• **System:** {info_zakup}")
                 if system_montazu == "Klejony (Na gruncie i kleju)":
@@ -983,7 +983,7 @@ elif branza == "Podłogi":
 
             # Czas pracy (klejenie trwa dłużej)
             tempo = 25 if system_montazu == "Pływający (Na podkładzie)" else 12
-            st.warning(f"⏳ Czas realizacji: ok. **{round(m2_p/tempo + 1)} dni**")
+            st.warning(f"Czas realizacji: ok. **{round(m2_p/tempo + 1)} dni**")
 
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "Tynkowanie":
@@ -1026,10 +1026,10 @@ elif branza == "Tynkowanie":
         st.markdown("---")
         st.info("""
         **Co zyskujesz w wersji PRO?**
-        * 📊 Wybór konkretnych systemów (Gipsowe, Cem-Wap, GK).
-        * 📏 Precyzyjne ustawienie grubości tynku i stawek.
-        * 📦 Pełna lista zakupów (liczba worków, wiader, płyt).
-        * 📄 Profesjonalny raport PDF dla klienta.
+        * Wybór konkretnych systemów (Gipsowe, Cem-Wap, GK).
+        * Precyzyjne ustawienie grubości tynku i stawek.
+        * Pełna lista zakupów (liczba worków, wiader, płyt).
+        * Profesjonalny raport PDF dla klienta.
         """)
 
     # --- TAB 2: DETALE PRO ---
@@ -1045,7 +1045,7 @@ elif branza == "Tynkowanie":
             # Logika powierzchni PRO
             mnoznik = 3.5 if dane_t["typ"] == "mokry" else 2.5
             m2_rob_pro = m2_podl_pro * mnoznik
-            st.warning(f"📐 Powierzchnia obliczeniowa: **{round(m2_rob_pro, 1)} m²**")
+            st.warning(f"Powierzchnia obliczeniowa: **{round(m2_rob_pro, 1)} m²**")
 
             if dane_t["typ"] == "drywall":
                 typ_tasmy = st.radio("Rodzaj zbrojenia łączy:", ["Wszystko Tuff-Tape (Pancerne)", "Tuff-Tape + Flizelina"])
@@ -1058,7 +1058,7 @@ elif branza == "Tynkowanie":
             stawka_rob_t = st.number_input("Stawka robocizny (zł/m2):", 10, 200, 50)
 
             st.markdown("---")
-            st.subheader("🪟 Stolarka (Okna i Drzwi)")
+            st.subheader("Stolarka (Okna i Drzwi)")
             
             # 1. Definicja standardowych wymiarów (Szer x Wys w cm)
             std_okna = {
