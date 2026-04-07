@@ -1561,7 +1561,7 @@ elif branza == "Łazienka":
         szt_wneki = c_i2.number_input("Półki / wnęki podświetlane (szt.):", 0, 10, 1)
         mb_led = st.number_input("Montaż profili LED w płytkach (mb):", 0.0, 50.0, 0.0, step=1.0)
 
-   with tab_wynik:
+    with tab_wynik:
         st.subheader("Cennik Wykonawcy (Dostosuj stawki)")
         c_c1, c_c2, c_c3 = st.columns(3)
         stawka_m2_plytek = c_c1.number_input("Układanie płytek (zł/m2):", 50, 400, 150 if "Wielki Format" not in format_plytki else 220)
@@ -1576,7 +1576,7 @@ elif branza == "Łazienka":
         else: # Mozaika / Małe / Drewnopodobne
             dl_p, szer_p, grub_p = 600, 170, 8
 
-        # --- 2. OBLICZENIA MATERIAŁOWE (POPRAWIONE) ---
+        # --- 2. OBLICZENIA MATERIAŁOWE ---
         m2_plytek_total = m2_scian_total + m2_podlogi
         m2_hydro_total = m2_podlogi + m2_hydro_sciany
         
@@ -1584,21 +1584,20 @@ elif branza == "Łazienka":
         kg_folii = m2_hydro_total * 1.2
         op_folii_5kg = int(kg_folii / 5 + 0.99)
         mb_tasmy = int(mb_tasma_hydro * 1.1)
-        szt_mankiety = podejscia_woda * 2
+        szt_mankiety = szt_podejscia * 2  # <--- TUTAJ BYŁ BŁĄD, poprawione z podejscia_woda
         op_gruntu_5l = int((m2_scian_total * 0.2) / 5 + 0.99)
 
         # Klej
         zuzycie_kleju = 5.5 if "Wielki" in format_plytki else 4.0
         worki_kleju_25kg = int((m2_plytek_total * zuzycie_kleju) / 25 + 0.99)
         
-        # Fuga (Profesjonalny wzór)
-        # [(dl+szer)/(dl*szer)] * grub * szer_fugi * 1.6
+        # Fuga
         wspolczynnik_fugi = ((dl_p + szer_p) / (dl_p * szer_p)) * grub_p * szerokosc_fugi * 1.6
-        kg_fugi = m2_plytek_total * wspolczynnik_fugi * 1.1 # 10% zapasu
+        kg_fugi = m2_plytek_total * wspolczynnik_fugi * 1.1 
         op_fugi_2kg = int(kg_fugi / 2 + 0.99)
         if op_fugi_2kg == 0: op_fugi_2kg = 1
 
-        # Silikon (1 kartusz na 10mb styków/narożników)
+        # Silikon
         szt_silikon = int((mb_tasma_hydro + obwod) / 10 + 0.99)
         worki_tynku = int((m2_tynku * 15) / 25 + 0.99)
 
@@ -1615,7 +1614,7 @@ elif branza == "Łazienka":
         robocizna_suma = (koszt_ukladania + koszt_zacinania + koszt_zabudowy_wc + koszt_odplywu + 
                           koszt_wnek + koszt_hydroizolacji + koszt_led + koszt_przygotowania)
         
-        # Koszty materiałów (ceny orientacyjne)
+        # Koszty materiałów
         mat_folia = op_folii_5kg * 90
         mat_tasma = mb_tasmy * 6
         mat_klej = worki_kleju_25kg * 65
@@ -1652,65 +1651,7 @@ elif branza == "Łazienka":
             from fpdf import FPDF
             from datetime import datetime
             import os
-
-            if st.button("📄 Generuj Raport PDF - Łazienka", use_container_width=True):
-                pdf = FPDF()
-                pdf.add_page()
-                
-                f_path = "Inter-Regular.ttf"
-                if os.path.exists(f_path):
-                    pdf.add_font("Inter", "", f_path)
-                    pdf.set_font("Inter", size=12)
-                else:
-                    pdf.set_font("Arial", size=12)
-
-                pdf.set_font(pdf.font_family, size=16)
-                pdf.cell(0, 15, "OFERTA WYKONAWSTWA: LAZIENKA PRO", ln=True, align='C')
-                pdf.ln(5)
-
-                pdf.set_fill_color(245, 245, 245)
-                pdf.set_font(pdf.font_family, size=12)
-                pdf.cell(95, 10, " Kategoria", 1, 0, 'L', True)
-                pdf.cell(95, 10, " Koszt", 1, 1, 'L', True)
-                
-                pdf.cell(95, 10, " Robocizna:", 1)
-                pdf.cell(95, 10, f" {round(robocizna_suma)} PLN", 1, 1)
-                pdf.cell(95, 10, " Chemia budowlana (szacunek):", 1)
-                pdf.cell(95, 10, f" {round(materialy_suma)} PLN", 1, 1)
-                pdf.set_font(pdf.font_family, size=13)
-                pdf.cell(95, 12, " SUMA CALKOWITA (Bez plytek):", 1, 0, 'L', True)
-                pdf.cell(95, 12, f" {round(robocizna_suma + materialy_suma)} PLN", 1, 1, 'L', True)
-
-                pdf.ln(10)
-                pdf.set_font(pdf.font_family, size=12)
-                pdf.cell(0, 10, "SZCZEGOLY PRAC:", ln=True)
-                pdf.set_font(pdf.font_family, size=10)
-                pdf.cell(0, 7, f"- Metraz do plytkowania: {round(m2_plytek_total,1)} m2", ln=True)
-                if mb_zacinania > 0:
-                    pdf.cell(0, 7, f"- Zacinanie naroznikow 45 stopni: {mb_zacinania} mb", ln=True)
-                if szt_wc > 0:
-                    pdf.cell(0, 7, f"- Zabudowa stelaża WC: {szt_wc} szt.", ln=True)
-                if szt_odplyw > 0:
-                    pdf.cell(0, 7, "- Montaz odplywu liniowego ze spadkiem", ln=True)
-
-                pdf.ln(5)
-                pdf.set_font(pdf.font_family, size=12)
-                pdf.cell(0, 10, "ZAPOTRZEBOWANIE NA CHEMIE (DO ZAKUPU):", ln=True)
-                pdf.set_font(pdf.font_family, size=10)
-                for przedmiot, ilosc in lista_zakupow_lazienka:
-                    pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
-
-                pdf_bytes = pdf.output()
-                st.download_button(
-                    label="⬇️ Pobierz Kosztorys PDF",
-                    data=bytes(pdf_bytes),
-                    file_name=f"Oferta_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
-        except Exception as e:
-            st.error(f"Problem z generowaniem PDF: {e}")
-
+               
 elif branza == "Drzwi":
     st.header("Kalkulator Montażu Drzwi Wewnętrznych")
     
