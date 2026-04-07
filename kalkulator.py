@@ -1530,7 +1530,7 @@ elif branza == "Łazienka":
         okna_drzwi = st.number_input("Otwory do odjęcia (drzwi/okna w m2):", 0.0, 10.0, 1.6, step=0.1)
         
         m2_scian_total = (obwod * wysokosc) - okna_drzwi
-        st.info(f"📐 Całkowita powierzchnia ścian do obróbki: **{round(m2_scian_total, 1)} m²**")
+        st.info(f"Całkowita powierzchnia ścian do obróbki: **{round(m2_scian_total, 1)} m²**")
         
         st.markdown("---")
         st.subheader("Przygotowanie podłoża")
@@ -1584,9 +1584,27 @@ elif branza == "Łazienka":
         worki_kleju_25kg = int((m2_plytek_total * zuzycie_kleju) / 25 + 0.99)
         
         # Fuga i Silikon
-        kg_fugi = m2_plytek_total * 0.4 * szerokosc_fugi # Uproszczony ryczałt bezpieczny
+        # --- DANE DO WZORU NA FUGĘ ---
+        # Przypisujemy wymiary w zależności od wybranego formatu (w mm)
+        if "Wielki Format" in format_plytki:
+            dl_p, szer_p, grub_p = 1200, 600, 10
+        elif "Standardowe" in format_plytki:
+            dl_p, szer_p, grub_p = 600, 600, 9
+        else: # Mozaika / Małe (np. drewnopodobne)
+            dl_p, szer_p, grub_p = 600, 170, 8
+
+        # --- PROFESJONALNY WZÓR NA ZUŻYCIE FUGI ---
+        # Wzór: [(A+B)/(A*B)] * C * D * 1.6
+        # A, B - wymiary płytki, C - grubość, D - szerokość fugi, 1.6 - współczynnik gęstości
+        wspolczynnik_fugi = ((dl_p + szer_p) / (dl_p * szer_p)) * grub_p * szerokosc_fugi * 1.6
+        kg_fugi = m2_plytek_total * wspolczynnik_fugi
+        
+        # Dodajemy 10% zapasu na straty w wiadrze
+        kg_fugi = kg_fugi * 1.1
         op_fugi_2kg = int(kg_fugi / 2 + 0.99)
-        szt_silikon = int((mb_tasma_hydro + obwod) / 10 + 0.99)
+        
+        # Jeśli wyjdzie zero (błąd danych), dajemy minimum 1 opakowanie
+        if op_fugi_2kg == 0: op_fugi_2kg = 1
 
         # Inne
         worki_tynku = int((m2_tynku * 15) / 25 + 0.99)
