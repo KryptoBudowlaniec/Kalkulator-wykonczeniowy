@@ -1649,7 +1649,11 @@ elif branza == "Łazienka":
         # ====================================================
 
         # --- 4. WYŚWIETLANIE WYNIKÓW ---
+# --- 4. WYŚWIETLANIE WYNIKÓW I ANALIZA RENTOWNOŚCI ---
         st.markdown("---")
+        
+        # Obliczenie wskaźnika na m2 podłogi
+        cena_za_m2_podlogi = robocizna_suma / m2_podlogi
         
         # Główne podsumowanie finansowe
         c_res1, c_res2 = st.columns(2)
@@ -1658,15 +1662,32 @@ elif branza == "Łazienka":
         with c_res2:
             st.info(f"### CHEMIA BUDOWLANA\n**~{round(materialy_suma)} PLN**")
 
+        # --- NOWA SEKCJA: KONTROLA PRZEDZIAŁU 2000-3000 zł/m2 ---
+        st.subheader("📊 Analiza rynkowa wyceny")
+        
+        col_metric1, col_metric2 = st.columns([2, 1])
+        
+        with col_metric1:
+            if 2000 <= cena_za_m2_podlogi <= 3000:
+                st.write(f"✅ Twoja wycena to **{round(cena_za_m2_podlogi)} zł/m²** podłogi. Mieścisz się w standardowym przedziale rynkowym.")
+            elif cena_za_m2_podlogi < 2000:
+                st.error(f"⚠️ Uwaga: Wycena wynosi **{round(cena_za_m2_podlogi)} zł/m²** podłogi. To może być za mało przy wysokim standardzie!")
+            else:
+                st.warning(f"💎 Standard Premium: Wycena wynosi **{round(cena_za_m2_podlogi)} zł/m²** podłogi. Upewnij się, że Inwestor akceptuje te stawki.")
+
+        with col_metric2:
+            st.metric("Cena / m² podłogi", f"{round(cena_za_m2_podlogi)} zł")
+
         st.markdown("---")
         
-        # SEKCJA PŁYTEK
-        st.subheader("📦 Zapotrzebowanie na płytki")
+        # SEKCJA PŁYTEK I CIĘCIA 45°
+        st.subheader("📦 Zapotrzebowanie i Detale")
         cp1, cp2, cp3 = st.columns(3)
-        cp1.metric("Powierzchnia netto", f"{round(m2_plytek_total, 1)} m²")
-        cp2.metric("Zalecany zapas", f"{int((procent_zapasu-1)*100)}%")
-        cp3.metric("DO ZAKUPU", f"{m2_plytek_z_zapasem} m²", delta="Zapas uwzględniony")
+        cp1.metric("Płytki do zakupu", f"{m2_plytek_z_zapasem} m²")
+        cp2.metric("Cięcie 45° (mb)", f"{mb_zacinania} mb")
+        cp3.metric("Koszt cięcia", f"{round(koszt_zacinania)} PLN")
         
+        st.info(f"💡 **Cięcie 45°:** Uwzględniono {mb_zacinania} mb szlifowania krawędzi w stawce {stawka_mb_45} zł/mb.")
         st.warning("💡 **Wskazówka:** Powyższy metraż uwzględnia docinki i ryzyko pęknięć.")
 
         # Wyświetlanie listy zakupów
