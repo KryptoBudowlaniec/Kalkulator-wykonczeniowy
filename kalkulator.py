@@ -1860,27 +1860,29 @@ elif branza == "Łazienka":
             for przedmiot, ilosc in lista_zakupow_lazienka[half:]:
                 st.write(f"• **{przedmiot}:** {ilosc}")
                   
-        # --- 5. GENERATOR PDF (ŁAZIENKA PRO) ---
+        
         # --- 5. GENERATOR PDF (ŁAZIENKA PRO - CZCIONKA INTER) ---
         st.markdown("---")
         if st.button("📄 Generuj Pełny Kosztorys PDF (Łazienka)"):
             try:
                 from fpdf import FPDF
                 from datetime import datetime
-
-                pdf_output = pdf.output()
+        
+                # 1. NAJPIERW TWORZYMY OBIEKT PDF
+                pdf = FPDF()
                 pdf.add_page()
                 
-                # REJESTRACJA CZCIONKI INTER
+                # 2. REJESTRACJA CZCIONKI
                 pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True)
                 
+                # 3. TREŚĆ DOKUMENTU
                 # NAGŁÓWEK
                 pdf.set_font('Inter', '', 16)
                 pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: ŁAZIENKA", ln=True, align='C')
                 pdf.set_font('Inter', '', 10)
                 pdf.cell(190, 10, txt=f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
                 pdf.ln(10)
-
+        
                 # SEKCJA 1: PODSUMOWANIE FINANSOWE
                 pdf.set_font('Inter', '', 12)
                 pdf.set_fill_color(230, 230, 230)
@@ -1901,7 +1903,7 @@ elif branza == "Łazienka":
                 pdf.cell(140, 10, txt="RAZEM DO ZAPŁATY (Usługa + Chemia):", border=1, fill=True)
                 pdf.cell(50, 10, txt=f"{round(robocizna_suma + materialy_suma)} zł", border=1, ln=True, align='R', fill=True)
                 pdf.ln(5)
-
+        
                 # SEKCJA 2: TABELA DETALI
                 if detale:
                     pdf.set_font('Inter', '', 12)
@@ -1915,7 +1917,7 @@ elif branza == "Łazienka":
                         pdf.cell(40, 8, d["Ilość"], 1, 0, 'C')
                         pdf.cell(50, 8, d["Koszt"], 1, 1, 'R')
                     pdf.ln(5)
-
+        
                 # SEKCJA 3: LISTA ZAKUPÓW
                 pdf.set_font('Inter', '', 12)
                 pdf.cell(190, 10, txt="3. WYKAZ MATERIAŁÓW (Do dostarczenia)", ln=True, align='L', fill=True)
@@ -1923,21 +1925,23 @@ elif branza == "Łazienka":
                 pdf.ln(2)
                 for przedmiot, ilosc in lista_zakupow_lazienka:
                     pdf.cell(190, 7, txt=f"- {przedmiot}: {ilosc}", ln=True)
-
-                # STOPKA I GENEROWANIE
+        
+                # 4. NA SAMYM KOŃCU GENERUJEMY WYJŚCIE
+                pdf_output = pdf.output()
+        
                 if isinstance(pdf_output, str):
                     pdf_bytes = pdf_output.encode('latin-1', 'replace')
                 else:
                     pdf_bytes = pdf_output
-
+        
                 st.download_button(
                     label="📥 Pobierz Kosztorys PDF",
                     data=pdf_bytes,
-                    file_name=f"Kosztorys_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    file_name=f"Kosztorys_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf"
                 )
             except Exception as e:
-                st.error(f"Błąd PDF: {e}. Sprawdź czy plik Inter-Regular.ttf jest w folderze.")
+                st.error(f"Błąd PDF: {e}")
                
 elif branza == "Drzwi":
     st.header("Kalkulator Montażu Drzwi Wewnętrznych")
