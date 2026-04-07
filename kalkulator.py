@@ -1618,20 +1618,53 @@ elif branza == "Łazienka":
         worki_tynku = int((m2_tynku * 15) / 25 + 0.99)
 
         # --- 3. OBLICZENIA FINANSOWE ---
-        koszt_ukladania = m2_plytek_total * stawka_m2_plytek
+# BAZA: 2000 zł za każdy m2 podłogi (pokrywa standard prac)
+        stawka_bazowa_m2 = 2000 
+        robocizna_baza = m2_podlogi * stawka_bazowa_m2
+        
+        # DODATKI (Płatne ekstra poza bazą)
+        # Tutaj stawki za detale - możesz je zmienić
         koszt_zacinania = mb_zacinania * stawka_mb_45
-        koszt_zabudowy_wc = szt_wc * stawka_wc
-        koszt_odplywu = szt_odplyw * 600
-        koszt_wnek = szt_wneki * 350
-        koszt_hydroizolacji = m2_hydro_total * 45
-        koszt_led = mb_led * 80
-        koszt_przygotowania = m2_tynku * 40
+        koszt_listwy = mb_listwy * 100  # Przykład: 100 zł/mb listwy ozdobnej
+        koszt_odplywu = szt_odplyw * 800 # Odpływ jest trudniejszy niż standardowy brodzik
+        koszt_wneki = szt_wneki * 500
+        koszt_led = mb_led * 120
+        koszt_wc = szt_wc * 500
         
-        robocizna_suma = (koszt_ukladania + koszt_zacinania + koszt_zabudowy_wc + koszt_odplywu + 
-                          koszt_wnek + koszt_hydroizolacji + koszt_led + koszt_przygotowania)
+        # Suma całkowita robocizny
+        robocizna_suma = (robocizna_baza + koszt_zacinania + koszt_listwy + 
+                          koszt_odplywu + koszt_wneki + koszt_led + koszt_wc)
+
+        # --- 4. WYŚWIETLANIE WYNIKÓW (WERSJA BIZNESOWA) ---
+        st.markdown("---")
         
-        materialy_suma = (op_folii_5kg * 90) + (mb_tasmy * 6) + (worki_kleju_25kg * 65) + \
-                         (op_fugi_2kg * 45) + (szt_silikon * 35) + (worki_tynku * 30) + 250
+        # Główny wynik
+        st.success(f"### ŁĄCZNA KWOTA ROBOCIZNY: **{round(robocizna_suma)} PLN**")
+        
+        # Rozbicie na Baza vs Dodatki (Żeby inwestor widział, skąd się bierze cena)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.metric("Pakiet Bazowy (Łazienka)", f"{round(robocizna_baza)} zł", help="Obejmuje standardowe układanie płytek, hydroizolację i przygotowanie.")
+        with c2:
+            suma_dodatkow = robocizna_suma - robocizna_baza
+            st.metric("Suma dodatków (Detale)", f"{round(suma_dodatkow)} zł", delta="Ekstra za trudność")
+
+        st.markdown("---")
+        
+        # SZCZEGÓŁOWA LISTA DODATKÓW (Najważniejsza dla argumentacji ceny)
+        st.subheader("🛠️ Wycena detali (Poza pakietem bazowym)")
+        
+        detale = []
+        if mb_zacinania > 0: detale.append({"Zadanie": "Szlifowanie narożników 45°", "Ilość": f"{mb_zacinania} mb", "Koszt": f"{round(koszt_zacinania)} zł"})
+        if mb_listwy > 0: detale.append({"Zadanie": "Montaż listew ozdobnych", "Ilość": f"{mb_listwy} mb", "Koszt": f"{round(koszt_listwy)} zł"})
+        if szt_wneki > 0: detale.append({"Zadanie": "Wykonanie wnęk/półek", "Ilość": f"{szt_wneki} szt", "Koszt": f"{round(koszt_wneki)} zł"})
+        if mb_led > 0: detale.append({"Zadanie": "Montaż profili LED", "Ilość": f"{mb_led} mb", "Koszt": f"{round(koszt_led)} zł"})
+        if szt_odplyw > 0: detale.append({"Zadanie": "Odpływ liniowy (koperta)", "Ilość": f"{szt_odplyw} szt", "Koszt": f"{round(koszt_odplywu)} zł"})
+        
+        if detale:
+            st.table(detale)
+        else:
+            st.info("Brak dodatkowych detali - łazienka w standardzie prostym.")
 
         # === TUTAJ BRAKOWAŁO TEGO BLOKU (DEFINICJA LISTY) ===
         lista_zakupow_lazienka = [
