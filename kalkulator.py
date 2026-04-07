@@ -1870,22 +1870,22 @@ elif branza == "Łazienka":
                 # Konfiguracja dokumentu
                 pdf = FPDF()
                 pdf.add_page()
-                pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+                pdf.add_font('Inter-Regular', '', 'Inter-Regular.ttf', uni=True)
                 
                 # NAGŁÓWEK
-                pdf.set_font('DejaVu', '', 16)
+                pdf.set_font('Inter-Regular', '', 16)
                 pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: ŁAZIENKA", ln=True, align='C')
                 pdf.set_font('DejaVu', '', 10)
                 pdf.cell(190, 10, txt=f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
                 pdf.ln(10)
 
                 # SEKCJA 1: PODSUMOWANIE FINANSOWE
-                pdf.set_font('DejaVu', '', 12)
+                pdf.set_font('Inter-Regular', '', 12)
                 pdf.set_fill_color(230, 230, 230)
                 pdf.cell(190, 10, txt="1. PODSUMOWANIE KOSZTÓW", ln=True, align='L', fill=True)
                 pdf.ln(2)
                 
-                pdf.set_font('DejaVu', '', 10)
+                pdf.set_font('Inter-Regular', '', 10)
                 pdf.cell(140, 8, txt="Pakiet Bazowy (Robocizna + przygotowanie)", border=1)
                 pdf.cell(50, 8, txt=f"{round(robocizna_baza)} zł", border=1, ln=True, align='R')
                 
@@ -1895,16 +1895,16 @@ elif branza == "Łazienka":
                 pdf.cell(140, 8, txt="Szacowany koszt chemii budowlanej", border=1)
                 pdf.cell(50, 8, txt=f"{round(materialy_suma)} zł", border=1, ln=True, align='R')
                 
-                pdf.set_font('DejaVu', '', 11)
+                pdf.set_font('DInter-Regular', '', 11)
                 pdf.cell(140, 10, txt="RAZEM DO ZAPŁATY (Usługa + Chemia):", border=1, fill=True)
                 pdf.cell(50, 10, txt=f"{round(robocizna_suma + materialy_suma)} zł", border=1, ln=True, align='R', fill=True)
                 pdf.ln(5)
 
                 # SEKCJA 2: SZCZEGÓŁOWA WYCENA DETALI
                 if detale:
-                    pdf.set_font('DejaVu', '', 12)
+                    pdf.set_font('Inter-Regular', '', 12)
                     pdf.cell(190, 10, txt="2. WYCENA ELEMENTÓW DODATKOWYCH", ln=True, align='L', fill=True)
-                    pdf.set_font('DejaVu', '', 9)
+                    pdf.set_font('Inter-Regular', '', 9)
                     pdf.cell(100, 8, "Zadanie / Detal", 1, 0, 'C')
                     pdf.cell(40, 8, "Ilość", 1, 0, 'C')
                     pdf.cell(50, 8, "Koszt", 1, 1, 'C')
@@ -1916,16 +1916,16 @@ elif branza == "Łazienka":
                     pdf.ln(5)
 
                 # SEKCJA 3: LISTA ZAKUPÓW DLA KLIENTA
-                pdf.set_font('DejaVu', '', 12)
+                pdf.set_font('Inter-Regular', '', 12)
                 pdf.cell(190, 10, txt="3. WYKAZ MATERIAŁÓW (Do dostarczenia)", ln=True, align='L', fill=True)
-                pdf.set_font('DejaVu', '', 10)
+                pdf.set_font('Inter-Regular', '', 10)
                 pdf.ln(2)
                 
                 for przedmiot, ilosc in lista_zakupow_lazienka:
                     pdf.cell(190, 7, txt=f"- {przedmiot}: {ilosc}", ln=True)
                 
                 pdf.ln(10)
-                pdf.set_font('DejaVu', '', 8)
+                pdf.set_font('Inter-Regular', '', 8)
                 pdf.multi_cell(190, 5, txt="Uwagi: Kosztorys nie zawiera ceny płytek oraz białego montażu (ceramiki). "
                                            "Podane ilości materiałów zawierają standardowy zapas technologiczny.")
 
