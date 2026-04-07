@@ -989,7 +989,7 @@ elif branza == "Podłogi":
         k_robocizna = m2_p * stawka_podl
         total_mat = (paczki_szt * m2_paczka * 100) + koszt_akc 
 
-with col_p2:
+        with col_p2:
             st.subheader("Podsumowanie Kosztorysu")
             
             # Obliczamy sumę BEZ ceny samych płytek/paneli (tylko Twoja praca + systemy/chemia)
@@ -1026,6 +1026,7 @@ with col_p2:
             # Czas pracy
             tempo = 8 if "Płytki" in system_montazu else (25 if "Pływający" in system_montazu else 12)
             st.write(f"⏱️ **Przewidywany czas prac:** ok. {round(m2_p/tempo + 1)} dni")
+                      
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "Tynkowanie":
     st.header("Kalkulator Tynków i Suchego Tynku")
