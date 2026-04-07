@@ -1026,6 +1026,82 @@ elif branza == "Podłogi":
             # Czas pracy
             tempo = 8 if "Płytki" in system_montazu else (25 if "Pływający" in system_montazu else 12)
             st.write(f"⏱️ **Przewidywany czas prac:** ok. {round(m2_p/tempo + 1)} dni")
+
+        # --- 5. GENERATOR PDF (PODŁOGI) ---
+        st.markdown("---")
+        if st.button("📄 Generuj Ofertę PDF (Podłoga)"):
+            try:
+                from fpdf import FPDF
+                from datetime import datetime
+
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+                pdf.set_font('DejaVu', '', 16)
+                
+                # Nagłówek
+                pdf.cell(200, 10, txt="KOSZTORYS PRAC PODŁOGOWYCH", ln=True, align='C')
+                pdf.set_font('DejaVu', '', 10)
+                pdf.cell(200, 10, txt=f"Data: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
+                pdf.ln(10)
+
+                # Tabela parametrów
+                pdf.set_fill_color(240, 240, 240)
+                pdf.cell(95, 10, "Parametr", 1, 0, 'L', fill=True)
+                pdf.cell(95, 10, "Wartość", 1, 1, 'L', fill=True)
+                
+                pdf.cell(95, 10, "Metraż całkowity", 1)
+                pdf.cell(95, 10, f"{m2_p} m2", 1, 1)
+                pdf.cell(95, 10, "System montażu", 1)
+                pdf.cell(95, 10, f"{system_montazu}", 1, 1)
+                
+                if "Płytki" in system_montazu:
+                    pdf.cell(95, 10, "Format płytki", 1)
+                    pdf.cell(95, 10, f"{dl_p}x{sz_p} cm", 1, 1)
+
+                pdf.ln(10)
+
+                # Podsumowanie Finansowe
+                pdf.set_font('DejaVu', '', 12)
+                pdf.cell(200, 10, txt="PODSUMOWANIE KOSZTÓW:", ln=True, align='L')
+                pdf.set_font('DejaVu', '', 10)
+                
+                pdf.cell(140, 10, "1. Robocizna (Montaż)", 1)
+                pdf.cell(50, 10, f"{round(k_robocizna)} zł", 1, 1, 'R')
+                
+                pdf.cell(140, 10, "2. Materiały pomocnicze (Chemia/Systemy)", 1)
+                pdf.cell(50, 10, f"{round(koszt_akc)} zł", 1, 1, 'R')
+                
+                pdf.set_font('DejaVu', '', 11)
+                pdf.cell(140, 10, "ŁĄCZNIE DO ZAPŁATY (Usługa + Chemia):", 1, 0, 'L', fill=True)
+                pdf.cell(50, 10, f"{round(usluga_plus_chemia)} zł", 1, 1, 'R', fill=True)
+                
+                pdf.ln(5)
+                pdf.set_font('DejaVu', '', 9)
+                pdf.multi_cell(190, 5, txt="UWAGA: Powyższa kwota nie zawiera kosztu zakupu okładziny (paneli/płytek). "
+                                           "Koszt okładziny zależy od wybranego przez klienta modelu.")
+                
+                pdf.ln(10)
+                
+                # Lista zakupów
+                pdf.set_font('DejaVu', '', 12)
+                pdf.cell(200, 10, txt="LISTA ZAKUPÓW (Do dostarczenia na budowę):", ln=True, align='L')
+                pdf.set_font('DejaVu', '', 10)
+                
+                pdf.cell(190, 10, f"- Okładzina główna: {paczki_szt} paczek (z zapasem {int(zapas*100)}%)", ln=True)
+                for item in info_zakup:
+                    pdf.cell(190, 10, f"- {item}", ln=True)
+
+                # Generowanie pliku
+                pdf_output = pdf.output(dest='S').encode('latin-1', 'replace')
+                st.download_button(
+                    label="📥 Pobierz kosztorys PDF",
+                    data=pdf_output,
+                    file_name=f"Kosztorys_Podloga_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf"
+                )
+            except Exception as e:
+                st.error(f"Błąd podczas generowania PDF: {e}")
                       
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "Tynkowanie":
