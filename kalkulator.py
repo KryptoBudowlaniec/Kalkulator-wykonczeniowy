@@ -1512,6 +1512,15 @@ elif branza == "Elektryka":
             st.info("Ilość kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podłogach.")
 
 elif branza == "Łazienka":
+    # --- 1. INICJALIZACJA ZMIENNYCH (To naprawi NameError) ---
+    m2_tynku = 0.0
+    m2_scian_total = 0.0
+    m2_podlogi = 0.0
+    obwod = 0.0
+    mb_tasma_hydro = 0.0
+    m2_hydro_sciany = 0.0
+    format_plytki = "Standardowe (np. 60x60, 30x60)" # domyślna wartość
+    # ---------------------------------------------------------
     st.header("Kompleksowy Kalkulator: Łazienka PRO")
     st.write("Profesjonalna wycena prac łazienkowych uwzględniająca hydroizolację, format płytek i biały montaż.")
 
