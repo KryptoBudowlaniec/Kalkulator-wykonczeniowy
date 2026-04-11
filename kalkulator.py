@@ -199,6 +199,7 @@ elif branza == "Logowanie":
     _, col_log, _ = st.columns([1, 1.5, 1])
     
     with col_log:
+        # ZWRÓĆ UWAGĘ NA POTRÓJNE CUDZYSŁOWY PONIŻEJ!
         st.markdown("""
         <div style="background-color: #FFFFFF; border: 1px solid #E9ECEF; border-radius: 15px; padding: 40px; box-shadow: 0px 10px 30px rgba(0,0,0,0.05);">
             <h2 style="text-align: center; color: #1E1E1E; font-weight: 800; margin-bottom: 5px;">Zaloguj się do ProCalc</h2>
