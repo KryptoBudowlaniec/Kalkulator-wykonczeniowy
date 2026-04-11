@@ -1795,7 +1795,7 @@ elif branza == "Elektryka":
         typ_scian = st.radio("Material scian:", ["Gazobeton/Cegla", "Zelbet (Wielka Plyta)"])
         n_punkty_tele = 2
         wybrany_standard = st.selectbox("Marka osprzetu:", list(opcje_osprzetu.keys()), index=1)
-        stawka_punkt = st.slider("Stawka montazu osprzetu (zl/szt):", 20, 100, 45)
+        stawka_punkt = st.slider("Stawka montazu osprzetu (zl/szt):", 1, 100, 45)
 
     # --- OBLICZENIA ---
     kabel_25 = 150 * mnoznik_m2
