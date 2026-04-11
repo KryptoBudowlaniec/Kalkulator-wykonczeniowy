@@ -30,20 +30,30 @@ with col_logo:
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     
-    # Lista opcji musi być identyczna jak ta w index() poniżej
     opcje_menu = ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"]
     
+    # 1. Zabezpieczenie: Sprawdzamy, czy nasz stan jest na liście (na wszelki wypadek)
+    if st.session_state.nawigacja_stan not in opcje_menu:
+        st.session_state.nawigacja_stan = "Start"
+    
+    # 2. Obliczamy numer pozycji (0 dla Start, 1 dla Kalkulatory itd.)
+    pozycja = opcje_menu.index(st.session_state.nawigacja_stan)
+    
+    # 3. Wywołujemy pills używając TYLKO parametru 'selection_mode' i 'index'
     nawigacja = st.pills(
-        "", 
-        opcje_menu,
+        label="Nawigacja", # Możesz zostawić "" jeśli chcesz ukryć
+        options=opcje_menu,
         selection_mode="single",
-        # Teraz Python już wie, co to jest nawigacja_stan, więc się nie wywali:
-        index=opcje_menu.index(st.session_state.nawigacja_stan),
-        key="main_nav_widget"
+        index=pozycja,
+        key="main_nav_widget",
+        label_visibility="collapsed" # To ukryje napis "Nawigacja" zachowując czysty wygląd
     )
     
-    # Aktualizujemy stan na wypadek, gdyby użytkownik kliknął myszką w menu
-    st.session_state.nawigacja_stan = nawigacja
+    # 4. Jeśli użytkownik kliknął coś innego, aktualizujemy stan
+    if nawigacja and nawigacja != st.session_state.nawigacja_stan:
+        st.session_state.nawigacja_stan = nawigacja
+        st.rerun()
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- PODMENU ---
