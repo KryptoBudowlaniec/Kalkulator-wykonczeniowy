@@ -813,13 +813,18 @@ elif branza == "Szpachlowanie":
                 podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
 
         # --- C. WYNIKI (Wykonują się RAZ na samym końcu) ---
+        # --- C. WYNIKI (Wykonują się RAZ na samym końcu) ---
         if m2_total > 0:
-            # Obliczenia materiałowe
+            # 1. Obliczenia materiałowe (Wyciągnięte na wierzch, by działały w UI i PDF)
             kg_gladzi = m2_total * norma_g * l_warstw
             szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
+            szt_gruntu = int(m2_total * 0.2 / 5 + 0.99) # Wyliczamy bańki (5L)
+            szt_krazkow = max(int(podl_total / 10), 5) # 1 krążek na 10m2 podłogi (min. 5 szt.)
             
+            # Obliczenia kosztów
             koszt_m_gladzi = szt_gladzi * dane_g["cena"]
-            koszt_m_grunt = (m2_total * 0.2 / 5 + 0.99) * baza_grunty_szp[wybrany_grunt]
+            # Zakładamy, że w słowniku masz cenę za 1L, więc bańka 5L to cena * 5
+            koszt_m_grunt = szt_gruntu * (baza_grunty_szp[wybrany_grunt] * 5) 
             koszt_m_dodatki = podl_total * 15 
             
             # Sumy końcowe
@@ -827,7 +832,7 @@ elif branza == "Szpachlowanie":
             materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
             suma_total = robocizna_total + materiały_total
             
-            # Wyświetlanie na stronie
+            # 2. Wyświetlanie wyników na stronie
             st.markdown("---")
             st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
             
@@ -835,10 +840,102 @@ elif branza == "Szpachlowanie":
             res1.metric("Twoja Robocizna", f"{round(robocizna_total)} PLN")
             res2.metric("Materiały", f"{round(materiały_total)} PLN")
             
-            # Tutaj wstaw kod przycisków PDF (with c_pdf1, c_pdf2 itd.)
+            # --- NOWOŚĆ: LISTA ZAKUPÓW NA WIERZCHU ---
+            st.markdown("---")
+            st.subheader("📦 Lista Zakupów")
+            c_zak1, c_zak2 = st.columns(2)
+            
+            with c_zak1:
+                st.info("**MATERIAŁY GŁÓWNE**")
+                st.write(f"🔹 **Gładź ({wybrana_g}):** {szt_gladzi} szt.")
+                st.write(f"🔹 **Grunt ({wybrany_grunt}):** {szt_gruntu} baniek (5L)")
+            with c_zak2:
+                st.warning("**MATERIAŁY ZUŻYWALNE**")
+                st.write(f"🔸 **Krążki ścierne P180:** {szt_krazkow} szt.")
+                st.write(f"🔸 **Narożniki / Akcesoria:** wliczono ryczałt (~{round(koszt_m_dodatki)} zł)")
 
-            # Przycisk PDF (taki sam jak wcześniej)
-            # ... (tutaj kod generatora PDF z poprzedniego kroku)
+            # --- GENEROWANIE PDF ---
+            st.markdown("---")
+            c_pdf1, c_pdf2 = st.columns(2)
+                
+            with c_pdf1:
+                if st.button("Wyczyść wszystko", use_container_width=True):
+                    st.session_state.pokoje_szp = []
+                    st.rerun()
+                        
+            with c_pdf2:
+                try:
+                    from fpdf import FPDF
+                    import os
+                    from datetime import datetime
+
+                    pdf = FPDF()
+                    pdf.add_page()
+                        
+                    # Czcionka Inter
+                    f_path = "Inter-Regular.ttf"
+                    if os.path.exists(f_path):
+                        pdf.add_font("Inter", "", f_path)
+                        pdf.set_font("Inter", size=12)
+                        font_ok = True
+                    else:
+                        pdf.set_font("Arial", size=12)
+                        font_ok = False
+
+                    # Logo i Nagłówek
+                    if os.path.exists("logo.png"):
+                        pdf.image("logo.png", x=10, y=8, w=35)
+                        
+                    pdf.set_font("Inter" if font_ok else "Arial", size=16)
+                    pdf.cell(0, 15, "RAPORT SZPACHLOWANIA - PROCALC", ln=True, align='C')
+                    pdf.ln(5)
+                    pdf.line(10, 35, 200, 35)
+                    pdf.ln(10)
+
+                    # Treść PDF
+                    pdf.set_fill_color(240, 240, 240)
+                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                    pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
+                        
+                    pdf.set_font("Inter" if font_ok else "Arial", size=11)
+                    pdf.cell(95, 10, " Robocizna:", 1)
+                    pdf.cell(95, 10, f" {round(robocizna_total)} PLN", 1, ln=True)
+                    pdf.cell(95, 10, " Materialy:", 1)
+                    pdf.cell(95, 10, f" {round(materiały_total)} PLN", 1, ln=True)
+                        
+                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                    pdf.cell(95, 12, " RAZEM:", 1)
+                    pdf.cell(95, 12, f" {round(suma_total)} PLN", 1, ln=True)
+                        
+                    pdf.ln(10)
+                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                    pdf.cell(0, 10, " 2. SZCZEGOLY ZAMOWIENIA", ln=True, fill=True)
+                    pdf.set_font("Inter" if font_ok else "Arial", size=10)
+                        
+                    # Zmienne szt_gruntu i szt_gladzi są już pobierane z góry!
+                    pdf.cell(0, 8, f"- Gladz: {wybrana_g} ({szt_gladzi} szt.)", ln=True)
+                    pdf.cell(0, 8, f"- Grunt: {wybrany_grunt} ({szt_gruntu} baniek 5L)", ln=True)
+                    pdf.cell(0, 8, f"- Krazki scierne (zyrafa): {szt_krazkow} szt.", ln=True)
+                    pdf.cell(0, 8, f"- Liczba warstw: {l_warstw}", ln=True)
+                    pdf.cell(0, 8, f"- Calkowita pow. netto: {round(m2_total, 1)} m2", ln=True)
+
+                    pdf_bytes = pdf.output()
+                    
+                    # Konwersja do bezpiecznego formatu dla Streamlit
+                    if isinstance(pdf_bytes, (bytearray, bytes)):
+                        safe_bytes = bytes(pdf_bytes)
+                    else:
+                        safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+
+                    st.download_button(
+                        label="Pobierz PDF (PRO)",
+                        data=safe_bytes,
+                        file_name=f"Szpachlowanie_Raport_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"Błąd PDF: {e}")
             # --- GENEROWANIE PDF ---
         st.markdown("---")
         c_pdf1, c_pdf2 = st.columns(2)
