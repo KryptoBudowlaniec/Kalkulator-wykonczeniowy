@@ -1776,29 +1776,28 @@ elif branza == "Sucha Zabudowa":
 elif branza == "Elektryka":
     st.header("Instalacja Elektryczna (Mieszkanie)")
     
-    # Przeniesienie definicji kolumn do środka elif
     col_e1, col_e2 = st.columns([1, 1.2])
 
-    # --- KONFIGURACJA MAREK OSPRZĘTU ---
+    # --- KONFIGURACJA MAREK OSPRZĘTU (Zaktualizowane) ---
     opcje_osprzetu = {
-        "Ekonomiczny (np. Simon 10, Adelid)": 12,
-        "Standard (np. Simon 54, Legrand Niloe)": 38,
-        "Premium (np. Berker R.1, Jung, Gira)": 95
+        "Ekonomiczny (np. Simon 10, Adelid)": 15,
+        "Standard (np. Simon 54, Legrand Niloe)": 45,
+        "Premium (np. Berker R.1, Jung, Gira)": 110
     }
 
     with col_e1:
         st.subheader("Parametry instalacji")
-        m2_mieszkania = st.number_input("Metraż mieszkania (m²):", min_value=10, value=60)
+        m2_mieszkania = st.number_input("Metraz mieszkania (m2):", min_value=10, value=60)
         mnoznik_m2 = m2_mieszkania / 60
         st.markdown("---")
         sugerowane_punkty = int(m2_mieszkania * 0.75)
-        n_punktow = st.slider("Liczba punktów (gniazda/włączniki):", 10, 150, sugerowane_punkty) 
-        typ_scian = st.radio("Materiał ścian:", ["Gazobeton/Cegła", "Żelbet (Wielka Płyta)"])
+        n_punktow = st.slider("Liczba punktow (gniazda/wlaczniki):", 10, 150, sugerowane_punkty) 
+        typ_scian = st.radio("Material scian:", ["Gazobeton/Cegla", "Zelbet (Wielka Plyta)"])
         n_punkty_tele = 2
-        wybrany_standard = st.selectbox("Marka osprzętu:", list(opcje_osprzetu.keys()), index=1)
-        stawka_punkt = st.slider("Stawka montażu osprzętu (zł/szt):", 20, 60, 35)
+        wybrany_standard = st.selectbox("Marka osprzetu:", list(opcje_osprzetu.keys()), index=1)
+        stawka_punkt = st.slider("Stawka montazu osprzetu (zl/szt):", 20, 100, 45)
 
-    # --- OBLICZENIA (Te linie MUSZĄ być idealnie pod 'with') ---
+    # --- OBLICZENIA ---
     kabel_25 = 150 * mnoznik_m2
     kabel_15 = 100 * mnoznik_m2
     kabel_4x15 = 30 * mnoznik_m2
@@ -1809,44 +1808,122 @@ elif branza == "Elektryka":
     paczki_mocowania = int(szt_mocowania / 100) + 1
     
     srednia_cena_szt = opcje_osprzetu[wybrany_standard]
-    koszt_rozdzielnicy_mat = 1500 
+    koszt_rozdzielnicy_mat = 1800 
 
-    mat_kable = (kabel_25 * 4.50) + (kabel_15 * 3.20) + (kabel_4x15 * 5.50) + (kabel_tv * 2.80) + (kabel_lan * 3.50)
+    mat_kable = (kabel_25 * 5.20) + (kabel_15 * 3.80) + (kabel_4x15 * 6.50) + (kabel_tv * 2.50) + (kabel_lan * 3.00)
     mat_osprzet = n_punktow * srednia_cena_szt
-    mat_mocowania = paczki_mocowania * 22.0
+    mat_mocowania = paczki_mocowania * 25.0
     
     total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
 
-    # ROBOCIZNA (zgodnie z wytycznymi elektryka na 7-10 tys.)
-    mnoznik_trudnosci = 1.4 if typ_scian == "Żelbet (Wielka Płyta)" else 1.0
+    # ROBOCIZNA
+    mnoznik_trudnosci = 1.4 if typ_scian == "Zelbet (Wielka Plyta)" else 1.0
     robocizna_baza = (m2_mieszkania * 90) # Podstawa za mb i bruzdy
     robocizna_osprzet = (n_punktow + n_punkty_tele) * stawka_punkt
-    robocizna_rozdzielnica = 1200
+    robocizna_rozdzielnica = 1500
     
     total_robocizna_e = (robocizna_baza + robocizna_osprzet + robocizna_rozdzielnica) * mnoznik_trudnosci
 
+    # PRZYGOTOWANIE LISTY ZAKUPÓW
+    lista_zakupow_ele = [
+        ("Kabel 3x2.5 (Gniazda)", f"{round(kabel_25)} mb"),
+        ("Kabel 3x1.5 (Swiatlo)", f"{round(kabel_15)} mb"),
+        ("Kabel 4x1.5 (Schodowe/Sila)", f"{round(kabel_4x15)} mb"),
+        ("Kabel antenowy RG6 (TV)", f"{round(kabel_tv)} mb"),
+        ("Kabel LAN kat. 6 (Internet)", f"{round(kabel_lan)} mb"),
+        ("Rozdzielnica + 10-15 bezpiecznikow (Eaton/Hager)", "1 kpl"),
+        (f"Osprzet ({wybrany_standard})", f"{n_punktow} szt."),
+        ("Uchwyty mocujace (paczki 100 szt.)", f"{paczki_mocowania} op."),
+        ("Dodatkowe puszki/gniazda LAN/RTV", f"{n_punkty_tele} szt.")
+    ]
+
     with col_e2:
-        st.subheader("💰 Kosztorys Elektryki")
+        st.subheader("Kosztorys Elektryki")
         total_e = total_material_e + total_robocizna_e
-        st.success(f"### RAZEM: **{round(total_e)} zł**")
+        st.success(f"### RAZEM: **{round(total_e)} PLN**")
         
         c1, c2 = st.columns(2)
-        c1.metric("Materiały", f"{round(total_material_e)} zł")
-        c2.metric("Robocizna", f"{round(total_robocizna_e)} zł")
+        c1.metric("Materialy", f"{round(total_material_e)} PLN")
+        c2.metric("Robocizna", f"{round(total_robocizna_e)} PLN")
 
-        with st.expander("📦 WYKAZ MATERIAŁÓW DO KUPNA", expanded=True):
-            st.write(f"• Kabel 3x2.5 (Gniazda): **{round(kabel_25)} mb**")
-            st.write(f"• Kabel 3x1.5 (Światło): **{round(kabel_15)} mb**")
-            st.write(f"• Kabel 4x1.5 (Schodowe/Siła): **{round(kabel_4x15)} mb**")
-            st.write(f"• Rozdzielnica + 10 bezpieczników (Eaton/Hager): **1 kpl**")
-            st.write(f"• Osprzęt: **{n_punktow} szt.** ({wybrany_standard})")
-            st.write(f"• Uchwyty mocujące (paczki 100 szt.): **{paczki_mocowania} op.**")
-            st.write(f"• Kabel antenowy RG6 (TV): **{round(kabel_tv)} mb**")
-            st.write(f"• Kabel LAN kat. 6 (Internet): **{round(kabel_lan)} mb**")
-            st.write(f"• Dodatkowe puszki/gniazda LAN/RTV: **{n_punkty_tele} szt.**")
+        st.markdown("---")
+        st.subheader("Wykaz materialow do kupna")
+        
+        for przedmiot, ilosc in lista_zakupow_ele:
+            st.write(f"• **{przedmiot}:** {ilosc}")
             
-            st.warning("⚠️ **UWAGA:** Wycena nie uwzględnia zakupu lamp (oprawy oświetleniowe).")
-            st.info("Ilość kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podłogach.")
+        st.markdown("---")
+        st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podlogach.")
+
+        # --- GENERATOR PDF ELEKTRYKA ---
+        try:
+            from fpdf import FPDF
+            from datetime import datetime
+            import os
+
+            if st.button("Generuj Kosztorys PDF", use_container_width=True, key="ele_pdf_btn"):
+                pdf = FPDF()
+                pdf.add_page()
+                
+                f_path = "Inter-Regular.ttf"
+                if os.path.exists(f_path):
+                    pdf.add_font("Inter", "", f_path)
+                    pdf.set_font("Inter", size=12)
+                else:
+                    pdf.set_font("Arial", size=12)
+
+                pdf.set_font(pdf.font_family, size=16)
+                pdf.cell(0, 15, "KOSZTORYS: INSTALACJA ELEKTRYCZNA", ln=True, align='C')
+                pdf.ln(5)
+
+                pdf.set_fill_color(245, 245, 245)
+                pdf.set_font(pdf.font_family, size=12)
+                pdf.cell(95, 10, " Kategoria", 1, 0, 'L', True)
+                pdf.cell(95, 10, " Koszt", 1, 1, 'L', True)
+                
+                pdf.cell(95, 10, " Robocizna:", 1)
+                pdf.cell(95, 10, f" {round(total_robocizna_e)} PLN", 1, 1)
+                pdf.cell(95, 10, " Materialy:", 1)
+                pdf.cell(95, 10, f" {round(total_material_e)} PLN", 1, 1)
+                pdf.set_font(pdf.font_family, size=13)
+                pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
+                pdf.cell(95, 12, f" {round(total_e)} PLN", 1, 1, 'L', True)
+
+                pdf.ln(10)
+                pdf.set_font(pdf.font_family, size=12)
+                pdf.cell(0, 10, "SZCZEGOLY PROJEKTU:", ln=True)
+                pdf.set_font(pdf.font_family, size=10)
+                pdf.cell(0, 7, f"- Metraz lokalu: {m2_mieszkania} m2", ln=True)
+                pdf.cell(0, 7, f"- Typ scian: {typ_scian}", ln=True)
+                pdf.cell(0, 7, f"- Liczba punktow do osadzenia: {n_punktow}", ln=True)
+
+                pdf.ln(5)
+                pdf.set_font(pdf.font_family, size=12)
+                pdf.cell(0, 10, "LISTA MATERIALOW DO ZAKUPU:", ln=True)
+                pdf.set_font(pdf.font_family, size=10)
+                for przedmiot, ilosc in lista_zakupow_ele:
+                    pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
+                
+                pdf.ln(5)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 7, "* Wycena nie uwzglednia zakupu lamp i opraw oswietleniowych.", ln=True)
+
+                pdf_bytes = pdf.output()
+                
+                if isinstance(pdf_bytes, (bytearray, bytes)):
+                    safe_bytes = bytes(pdf_bytes)
+                else:
+                    safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+
+                st.download_button(
+                    label="Pobierz gotowy PDF",
+                    data=safe_bytes,
+                    file_name=f"Kosztorys_Elektryka_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+        except Exception as e:
+            st.error(f"Problem z generowaniem PDF: {e}")
 
 elif branza == "Łazienka":
     # --- 1. INICJALIZACJA ZMIENNYCH (To naprawi NameError) ---
