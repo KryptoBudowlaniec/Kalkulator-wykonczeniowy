@@ -6,12 +6,17 @@ st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 # --- STAN APLIKACJI ---
 if 'pokaz_rejestracje' not in st.session_state:
     st.session_state.pokaz_rejestracje = False
-    
-# DODAJ TE DWIE LINIJKI:
+
 if 'zalogowany' not in st.session_state:
     st.session_state.zalogowany = False
+
 if 'pakiet' not in st.session_state:
     st.session_state.pakiet = "Podstawowy"
+
+# TUTAJ WKLEJASZ TĘ LINIJKĘ (To jest klucz do naprawy błędu):
+if 'nawigacja_stan' not in st.session_state:
+    st.session_state.nawigacja_stan = "Start"
+
 
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
@@ -24,14 +29,21 @@ with col_logo:
 
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
-    # ZMIANA: Dodano "Logowanie" na stałe do głównego menu!
+    
+    # Lista opcji musi być identyczna jak ta w index() poniżej
+    opcje_menu = ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"]
+    
     nawigacja = st.pills(
         "", 
-        ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"],
+        opcje_menu,
         selection_mode="single",
-        default="Start",
-        key="main_nav"
+        # Teraz Python już wie, co to jest nawigacja_stan, więc się nie wywali:
+        index=opcje_menu.index(st.session_state.nawigacja_stan),
+        key="main_nav_widget"
     )
+    
+    # Aktualizujemy stan na wypadek, gdyby użytkownik kliknął myszką w menu
+    st.session_state.nawigacja_stan = nawigacja
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- PODMENU ---
