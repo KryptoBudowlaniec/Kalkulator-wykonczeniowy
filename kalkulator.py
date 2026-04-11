@@ -199,31 +199,11 @@ elif branza == "Logowanie":
     _, col_log, _ = st.columns([1, 1.5, 1])
     
     with col_log:
-        # ZWRÓĆ UWAGĘ NA POTRÓJNE CUDZYSŁOWY PONIŻEJ!
-        st.markdown("""
-        <div style="background-color: #FFFFFF; border: 1px solid #E9ECEF; border-radius: 15px; padding: 40px; box-shadow: 0px 10px 30px rgba(0,0,0,0.05);">
-            <h2 style="text-align: center; color: #1E1E1E; font-weight: 800; margin-bottom: 5px;">Zaloguj się do ProCalc</h2>
-            <p style="text-align: center; color: #6C757D; margin-bottom: 30px; font-size: 15px;">Zarządzaj swoimi kosztorysami i generuj raporty PDF</p>
-            
-            <div style="display:flex; justify-content:center; padding-bottom: 25px;">
-                <a href="#" style="text-decoration:none; display:flex; align-items:center; justify-content:center; background-color:white; color:#3c4043; width:100%; height:50px; border-radius:12px; border:2px solid #E9ECEF; font-family:'Inter',sans-serif; font-size:16px; font-weight:600; transition:0.3s; cursor:pointer;" onmouseover="this.style.borderColor='#00D395';this.style.backgroundColor='#F0FFF4'" onmouseout="this.style.borderColor='#E9ECEF';this.style.backgroundColor='white'">
-                    <svg style="margin-right:12px;" width="20" height="20" viewBox="0 0 18 18">
-                        <path d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.84 2.07-1.79 2.7l2.85 2.21c1.67-1.54 2.63-3.81 2.63-6.56z" fill="#4285F4"/>
-                        <path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.85-2.21c-.79.53-1.8.85-3.11.85-2.39 0-4.41-1.61-5.14-3.77L1.03 13.4C2.51 16.34 5.51 18 9 18z" fill="#34A853"/>
-                        <path d="M3.86 10.74c-.19-.53-.3-1.1-.3-1.74s.11-1.21.3-1.74L1.03 4.98C.37 6.2.01 7.57.01 9s.36 2.8 1.02 4.02l2.83-2.28z" fill="#FBBC05"/>
-                        <path d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.47.89 11.42 0 9 0 5.51 0 2.51 1.66 1.03 4.6L3.86 6.87c.73-2.16 2.75-3.77 5.14-3.77z" fill="#EA4335"/>
-                    </svg>
-                    <span>Kontynuuj z Google</span>
-                </a>
-            </div>
-            
-            <div style="display: flex; align-items: center; text-align: center; color: #6C757D; margin-bottom: 20px;">
-                <div style="flex: 1; border-bottom: 1px solid #E9ECEF;"></div>
-                <span style="padding: 0 15px; font-size: 13px; font-weight: 600; text-transform: uppercase;">lub użyj e-maila</span>
-                <div style="flex: 1; border-bottom: 1px solid #E9ECEF;"></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # KULOODPORNY SPOSÓB: Cały HTML w jednej ciągłej linijce. 
+        # Streamlit nie zobaczy tu wcięć, więc nie zamieni tego w surowy kod!
+        html_code = "<style>.google-btn { background-color: #FFFFFF; border: 2px solid #E9ECEF; border-radius: 12px; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 15px; transition: 0.3s; } .google-btn:hover { border-color: #00D395 !important; background-color: #F0FFF4 !important; cursor: pointer; }</style><div style='background-color: #FFFFFF; border: 1px solid #E9ECEF; border-radius: 15px; padding: 40px; box-shadow: 0px 10px 30px rgba(0,0,0,0.05);'><h2 style='text-align: center; color: #1E1E1E; font-weight: 800; margin-bottom: 5px;'>Zaloguj się do ProCalc</h2><p style='text-align: center; color: #6C757D; margin-bottom: 30px; font-size: 15px;'>Zarządzaj swoimi kosztorysami i generuj raporty PDF</p><a href='#' style='text-decoration: none; display: block; margin-bottom: 25px;'><div class='google-btn'><svg style='margin-right:12px;' width='20' height='20' viewBox='0 0 18 18'><path d='M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.84 2.07-1.79 2.7l2.85 2.21c1.67-1.54 2.63-3.81 2.63-6.56z' fill='#4285F4'/><path d='M9 18c2.43 0 4.47-.8 5.96-2.18l-2.85-2.21c-.79.53-1.8.85-3.11.85-2.39 0-4.41-1.61-5.14-3.77L1.03 13.4C2.51 16.34 5.51 18 9 18z' fill='#34A853'/><path d='M3.86 10.74c-.19-.53-.3-1.1-.3-1.74s.11-1.21.3-1.74L1.03 4.98C.37 6.2.01 7.57.01 9s.36 2.8 1.02 4.02l2.83-2.28z' fill='#FBBC05'/><path d='M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.47.89 11.42 0 9 0 5.51 0 2.51 1.66 1.03 4.6L3.86 6.87c.73-2.16 2.75-3.77 5.14-3.77z' fill='#EA4335'/></svg><span style='color: #1E1E1E; font-weight: 600; font-size: 16px;'>Kontynuuj z Google</span></div></a><div style='display: flex; align-items: center; text-align: center; color: #6C757D; margin-bottom: 20px;'><div style='flex: 1; border-bottom: 1px solid #E9ECEF;'></div><span style='padding: 0 15px; font-size: 13px; font-weight: 600; text-transform: uppercase;'>lub użyj e-maila</span><div style='flex: 1; border-bottom: 1px solid #E9ECEF;'></div></div></div>"
+        
+        st.markdown(html_code, unsafe_allow_html=True)
         
         email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
         haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
