@@ -1,7 +1,18 @@
 import streamlit as st
 
 # 1. KONFIGURACJA GŁÓWNA
-st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
+st.set_page_config(
+    page_title="ProCalc - Ekspert Wykończeń", 
+    page_icon="🏗️", # Ikona, która pojawi się na karcie przeglądarki
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    # To poniżej odpowiada za wygląd linku w sieci (Open Graph)
+    menu_items={
+        'Get Help': 'https://procalc.pl/kontakt',
+        'Report a bug': "mailto:biuro@procalc.pl",
+        'About': "# ProCalc: Twój Cyfrowy Kosztorysant. Precyzyjne wyceny remontów w 2 minuty!"
+    }
+)
 
 # --- STAN APLIKACJI (INICJALIZACJA) ---
 if 'zalogowany' not in st.session_state:
