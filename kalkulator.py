@@ -2185,15 +2185,14 @@ elif branza == "Drzwi":
     with tab_d2:
         # --- ZAKŁADAMY KŁÓDKĘ ---
         if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
-            st.markdown("<br><br>", unsafe_allow_html=True)
             st.error("🔒 **Dostęp zablokowany**")
-            st.warning("Ta sekcja (Dokładne wyliczenia, Dodatki, Generowanie PDF) jest dostępna tylko dla użytkowników z aktywnym pakietem **Premium PRO**.")
+            st.warning("Ta sekcja jest dostępna tylko dla użytkowników z aktywnym pakietem Premium PRO.")
             
             _, col_k, _ = st.columns([1, 2, 1])
             with col_k:
+                # Zmieniamy działanie przycisku:
                 if st.button("Odblokuj dostęp (Przejdź do logowania)", use_container_width=True, key="btn_gate_drzwi"):
-                    # MAGIA STREAMLITA: Wymuszamy zmianę górnego menu i odświeżamy!
-                    st.session_state.main_nav = "Logowanie"
+                    st.session_state.przekierowanie = True
                     st.rerun()
         
         else:
