@@ -73,12 +73,12 @@ st.markdown("""
         
         display: flex !important;
         flex-direction: column !important;
-        align-items: center !important; /* Środkuje elementy w osi X */
-        justify-content: flex-start !important; /* Zaczyna od góry */
+        align-items: center !important; 
+        justify-content: flex-start !important; 
         text-align: center !important;
         
         gap: 12px !important; 
-        height: 100% !important; /* Wymusza równą wysokość w kolumnach */
+        height: 100% !important; 
         min-height: 220px !important;
         transition: 0.3s;
     }
@@ -105,12 +105,12 @@ st.markdown("""
         line-height: 1.4 !important;
     }
 
-    /* POPRAWIONA LISTA W KAFELKACH - Równa i wyśrodkowana */
+    /* POPRAWIONA LISTA W KAFELKACH */
     .card-list {
-        display: inline-block !important; /* Pozwala na wyśrodkowanie całego bloku listy */
-        text-align: left !important; /* Tekst wewnątrz listy jest do lewej */
+        display: inline-block !important; 
+        text-align: left !important; 
         padding: 0 !important;
-        margin: 0 auto !important; /* Środkowanie bloku */
+        margin: 0 auto !important; 
         border: none !important;
     }
 
@@ -123,7 +123,7 @@ st.markdown("""
     }
 
     .card-list li::before {
-        content: "✔ " !important; /* Zmiana na "ptaszek" dla lepszego efektu */
+        content: "✔ " !important; 
         color: #00D395 !important;
         font-weight: bold !important;
         margin-right: 5px !important;
@@ -219,10 +219,13 @@ if branza == "Start":
                 </div>
                 """, unsafe_allow_html=True)
         
+        # Zwężamy kolumnę dla przycisku głównego, by nie był za długi
         st.markdown("<div style='text-align: center; margin-top: 20px;'>", unsafe_allow_html=True)
-        if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
-            st.session_state.branza = "Rejestracja"
-            st.rerun()
+        _, col_btn_top, _ = st.columns([1, 2, 1])
+        with col_btn_top:
+            if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
+                st.session_state.branza = "Rejestracja"
+                st.rerun()
 
         st.markdown("""
             <div style='text-align: center; width: 100%; margin-top: 15px;'>
@@ -275,8 +278,7 @@ if branza == "Start":
     """, unsafe_allow_html=True)
 
     # --- SEKCJA ZAUFANIA (PUNKTY) ---
-    st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
-    st.markdown('<div style="display: flex; justify-content: center; width: 100%;">', unsafe_allow_html=True)
+    st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2><br>", unsafe_allow_html=True)
     
     zalety = [
         ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
@@ -287,7 +289,8 @@ if branza == "Start":
         ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
     ]
 
-    _, col_main, _ = st.columns([1, 5, 1])
+    # ZMIANA: Twardsze, węższe proporcje [1, 2.5, 1], żeby wymusić wyśrodkowanie tekstu
+    _, col_main, _ = st.columns([1, 2.5, 1])
 
     with col_main:
         sub_l, sub_r = st.columns(2)
@@ -304,14 +307,16 @@ if branza == "Start":
                 </div>
                 """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
         
-    if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True, key="btn_demo_main"):
-        st.session_state.branza = "Malowanie"
-        st.rerun()
+    # ZMIANA: Przycisk Demo wyśrodkowany za pomocą kolumn
+    _, col_demo, _ = st.columns([1, 1.5, 1])
+    with col_demo:
+        if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True, key="btn_demo_main"):
+            st.session_state.branza = "Malowanie"
+            st.rerun()
 
-    st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 14px; color: gray; margin-top: 5px;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
     # --- NOWA SEKCJA: CENNIK ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Wybierz pakiet dla siebie</h2>", unsafe_allow_html=True)
