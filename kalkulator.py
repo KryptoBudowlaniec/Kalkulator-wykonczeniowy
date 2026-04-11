@@ -689,24 +689,27 @@ elif branza == "Szpachlowanie":
 
     # 1. INICJALIZACJA BAZY DANYCH (Musi być na początku sekcji)
     baza_sypkie = {
-        "Cekol C-45 (20kg)": {"cena": 58, "waga": 20},
-        "FransPol GS-2 (20kg)": {"cena": 50, "waga": 20},
-        "Dolina Nidy Omega (20kg)": {"cena": 37, "waga": 20},
-        "Atlas Gipsar Uni (20kg)": {"cena": 52, "waga": 20}
+        "Cekol C-45 (20kg)": {"cena": 65, "waga": 20},
+        "FransPol GS-2 (20kg)": {"cena": 45, "waga": 20},
+        "Dolina Nidy Omega (20kg)": {"cena": 38, "waga": 20},
+        "Atlas Gipsar Uni (20kg)": {"cena": 45, "waga": 20}
     }
+    
     baza_gotowe = {
-        "Śmig A-2 (Wiadro 17kg)": {"cena": 63, "waga": 17},
-        "Knauf Goldband Finish (18kg)": {"cena": 50, "waga": 18},
-        "Knauf Goldband Finish (28kg)": {"cena": 72, "waga": 28},
-        "Knauf Fill & Finish (20kg)": {"cena": 115, "waga": 20},
-        "Sheetrock Blue (28kg)": {"cena": 145, "waga": 28},
-        "Atlas GTA (20kg)": {"cena": 94, "waga": 20}
+        "Śmig A-2 (Wiadro 20kg)": {"cena": 55, "waga": 20},
+        "Knauf Goldband Finish (18kg)": {"cena": 60, "waga": 18},
+        "Knauf Goldband Finish (28kg)": {"cena": 80, "waga": 28},
+        "Knauf Fill & Finish Light (20kg)": {"cena": 120, "waga": 20},
+        "Sheetrock Super Finish (28kg)": {"cena": 135, "waga": 28},
+        "Atlas GTA (18kg)": {"cena": 70, "waga": 18},
+        "Atlas GTA (25kg)": {"cena": 90, "waga": 25}
     }
+    
     baza_grunty_szp = {
-        "Atlas Unigrunt (Standard)": 7,
-        "Knauf Tiefengrund (Premium)": 18,
-        "Mapei Primer G": 15,
-        "Ceresit CT 17": 11
+        "Atlas Unigrunt (Standard)": 8,        # ok. 40 zł za 5L
+        "Ceresit CT 17 (Klasyk)": 12,          # ok. 60 zł za 5L
+        "Knauf Tiefengrund (Premium)": 14,     # ok. 70 zł za 5L
+        "Mapei Primer G Pro (Koncentrat)": 17  # ok. 85 zł za 5L
     }
 
     if 'pokoje_szp' not in st.session_state:
