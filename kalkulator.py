@@ -973,36 +973,80 @@ elif branza == "Szpachlowanie":
            
 
 # --- SEKCJA: PODŁOGI ---
+# --- SEKCJA: PODŁOGI ---
 elif branza == "Podłogi":
     st.header("Kalkulator Podłóg: Panele, Deska i Płytki")
-    tab_p1, tab_p2 = st.tabs(["⚡ Szybka Wycena", "💎 Szczegóły Montażu"])
+    
+    # --- BAZA CENOWA CHEMII GLAZURNICZEJ ---
+    baza_kleje_plytki = {
+        "Atlas Geoflex (Żelowy S1) - 25kg": 75.0,
+        "Mapei Keraflex Extra S1 - 25kg": 80.0,
+        "Kerakoll Bioflex (Żelowy S1) - 25kg": 85.0,
+        "Atlas Plus (Wysokoelastyczny S1) - 25kg": 105.0,
+        "Kerakoll H40 No Limits (Top Żel) - 25kg": 125.0
+    }
 
+    tab_p1, tab_p2 = st.tabs(["Szybka Wycena", "Kosztorys PRO"])
+
+    # ==========================================
+    # TAB 1: SZYBKA WYCENA
+    # ==========================================
     with tab_p1:
+        st.subheader("Błyskawiczny szacunek kosztów")
+        m2_fast_p = st.number_input("Metraż podłogi (m2):", min_value=1.0, value=20.0, step=1.0, key="pod_m_fast")
+        typ_fast = st.radio("Typ posadzki:", ["Panele (Pływające)", "Płytki / Gres"])
+        
+        if typ_fast == "Panele (Pływające)":
+            k_rob_fast = m2_fast_p * 45
+            k_mat_fast = m2_fast_p * 15
+        else:
+            k_rob_fast = m2_fast_p * 120
+            k_mat_fast = m2_fast_p * 45
+            
+        total_fast = k_rob_fast + k_mat_fast
+        
+        st.success(f"### Szacowany koszt realizacji: ok. {round(total_fast)} PLN")
+        st.caption("Cena nie zawiera zakupu samych paneli/płytek.")
+        
+        c_f1, c_f2 = st.columns(2)
+        c_f1.metric("Szacowana Robocizna", f"{round(k_rob_fast)} PLN")
+        c_f2.metric("Szacowana Chemia/Dodatki", f"{round(k_mat_fast)} PLN")
+        
+        st.info("Przejdź do zakładki Kosztorys PRO, aby wyliczyć zapasy, wybrać konkretny klej (np. Geoflex, Kerakoll) i wygenerować PDF.")
+
+    # ==========================================
+    # TAB 2: KOSZTORYS PRO
+    # ==========================================
+    with tab_p2:
         col_p1, col_p2 = st.columns([1, 1.2])
         
         with col_p1:
-            m2_p = st.number_input("Metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m")
+            st.subheader("Konfiguracja posadzki")
+            m2_p = st.number_input("Dokładny metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m_pro")
             
             system_montazu = st.radio("System montażu:", 
                                      ["Pływający (Na podkładzie)", 
-                                      "Klejony (Na gruncie i kleju)", 
+                                      "Klejony (Deska na kleju)", 
                                       "Płytki / Gres (System poziomujący)"])
             
             if system_montazu == "Płytki / Gres (System poziomujący)":
                 st.markdown("---")
-                st.subheader("Parametry płytek")
+                st.write("**Parametry płytek i chemia**")
                 c_pl1, c_pl2 = st.columns(2)
                 dl_p = c_pl1.number_input("Długość płytki (cm):", 10, 200, 60)
                 sz_p = c_pl2.number_input("Szerokość płytki (cm):", 10, 200, 60)
                 typ_ukladania = "Płytki (10% zapasu)"
                 m2_paczka = st.number_input("M2 w paczce płytek:", min_value=0.1, value=1.44, step=0.01)
+                wybrany_klej_plytki = st.selectbox("Wybierz klej do gresu:", list(baza_kleje_plytki.keys()))
             else:
+                st.markdown("---")
+                st.write("**Parametry deski/paneli**")
                 typ_ukladania = st.selectbox("Sposób układania:", ["Zwykły panel (7% zapasu)", "Jodełka (20% zapasu)"])
                 m2_paczka = st.number_input("M2 w paczce paneli/desek:", min_value=0.1, value=2.22, step=0.01)
             
             st.markdown("---")
-            domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 120)
-            stawka_podl = st.slider("Twoja stawka za m2 montażu (zł):", 1, 250, domyslna_stawka)
+            domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
+            stawka_podl = st.number_input("Stawka za m2 montażu (zł):", 1, 300, domyslna_stawka)
 
         # --- LOGIKA OBLICZEŃ ---
         if "Płytki" in system_montazu:
@@ -1013,149 +1057,145 @@ elif branza == "Podłogi":
         m2_z_zapasem = m2_p * (1 + zapas)
         paczki_szt = int(m2_z_zapasem / m2_paczka + 0.99)
         
-        info_zakup = [] # Lista do przechowywania pozycji zakupowych
+        info_zakup = [] 
+        koszt_akc = 0
 
         if system_montazu == "Pływający (Na podkładzie)":
             wybrany_mat = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)", "Standard (Pianka 10m2)"])
             wydajnosci = {"Premium (Rolka 8m2)": 8, "Ecopor (Paczka 7m2)": 7, "Standard (Pianka 10m2)": 10}
-            ceny_p = {"Premium (Rolka 8m2)": 160, "Ecopor (Paczka 7m2)": 45, "Standard (Pianka 10m2)": 30}
+            ceny_p = {"Premium (Rolka 8m2)": 180, "Ecopor (Paczka 7m2)": 55, "Standard (Pianka 10m2)": 35}
             szt_podkladu = int(m2_p / wydajnosci[wybrany_mat] + 0.99)
             koszt_akc = szt_podkladu * ceny_p[wybrany_mat]
-            info_zakup.append(f"Podkład {wybrany_mat}: {szt_podkladu} szt.")
+            info_zakup.append((f"Podkład {wybrany_mat}", f"{szt_podkladu} szt."))
 
-        elif system_montazu == "Klejony (Na gruncie i kleju)":
-            kg_kleju = m2_p * 1.2
-            l_gruntu = m2_p * 0.15
-            koszt_akc = m2_p * 55 
-            info_zakup.append(f"Klej do podłóg (15kg): {int(kg_kleju/15 + 0.99)} wiader")
-            info_zakup.append(f"Grunt do posadzki (5L): {int(l_gruntu/5 + 0.99)} baniek")
+        elif system_montazu == "Klejony (Deska na kleju)":
+            wiader_kleju = int(m2_p / 12 + 0.99) 
+            baniek_gruntu = int(m2_p / 30 + 0.99) 
+            koszt_akc = (wiader_kleju * 280) + (baniek_gruntu * 60) 
+            info_zakup.append(("Klej poliuretanowy do podłóg (15kg)", f"{wiader_kleju} wiader"))
+            info_zakup.append(("Grunt podkładowy (5L)", f"{baniek_gruntu} baniek"))
 
         else: # Płytki / Gres
             zuzycie_m2 = (1 / ((dl_p/100) * (sz_p/100))) * 4
             suma_klipsow = int(zuzycie_m2 * m2_p * 1.1)
             op_klipsy = int(suma_klipsow / 100 + 0.99)
+            
             kg_kleju_gres = m2_p * 5.0
             worki_kleju = int(kg_kleju_gres / 25 + 0.99)
             
-            koszt_akc = (op_klipsy * 35) + (worki_kleju * 65)
-            info_zakup.append(f"System poziomujący (klipsy): {op_klipsy} op. (po 100 szt.)")
-            info_zakup.append(f"Klej S1 (25kg): {worki_kleju} worków")
-            info_zakup.append("Kliny do systemu: wielorazowe (sprawdzić stan)")
+            cena_wybranego_kleju = baza_kleje_plytki[wybrany_klej_plytki]
+            koszt_akc = (op_klipsy * 40) + (worki_kleju * cena_wybranego_kleju)
+            info_zakup.append(("System poziomujący (klipsy)", f"{op_klipsy} op. (po 100 szt.)"))
+            info_zakup.append((f"{wybrany_klej_plytki}", f"{worki_kleju} worków"))
 
         k_robocizna = m2_p * stawka_podl
-        total_mat = (paczki_szt * m2_paczka * 100) + koszt_akc 
+        usluga_plus_chemia = k_robocizna + koszt_akc 
 
         with col_p2:
             st.subheader("Podsumowanie Kosztorysu")
             
-            # Obliczamy sumę BEZ ceny samych płytek/paneli (tylko Twoja praca + systemy/chemia)
-            usluga_plus_chemia = k_robocizna + koszt_akc
-            
-            # Wyświetlamy główną kwotę jako koszt realizacji (robocizna + materiały pomocnicze)
             st.success(f"### KOSZT REALIZACJI: **{round(usluga_plus_chemia)} PLN**")
-            st.caption("Cena obejmuje robociznę oraz niezbędną chemię/systemy montażowe. Nie zawiera ceny okładziny (płytek/paneli).")
+            st.caption("Cena obejmuje robociznę oraz niezbędną chemię/systemy montażowe. Nie zawiera ceny zakupu samej okładziny.")
 
             c1, c2 = st.columns(2)
-            c1.metric("Twoja Robocizna", f"{round(k_robocizna)} zł")
-            c2.metric("Chemia / Systemy", f"{round(koszt_akc)} zł")
+            c1.metric("Robocizna", f"{round(k_robocizna)} PLN")
+            c2.metric("Chemia / Podkłady", f"{round(koszt_akc)} PLN")
 
             st.markdown("---")
-            st.markdown("📦 **PEŁNA LISTA ZAKUPÓW (Co musi być na budowie):**")
+            st.subheader("Lista materiałowa do zamówienia")
             
-            # 1. MATERIAŁ GŁÓWNY (WYKOŃCZENIOWY)
-            cena_materialu_szacunek = paczki_szt * m2_paczka * 100 # szacunkowe 100zł/m2
-            st.write(f"🛒 **Płytki/Panele:** {paczki_szt} paczek (ok. {round(paczki_szt * m2_paczka, 2)} m²)")
-            st.caption(f"Szacowany koszt okładziny: ~{round(cena_materialu_szacunek)} zł (przyjęto ok. 100zł/m²)")
-
-            # 2. MATERIAŁY POMOCNICZE (WLICZONE W WYCENĘ REALIZACJI)
-            for item in info_zakup:
-                st.write(f"🛠️ **{item.split(':')[0]}:** {item.split(':')[1] if ':' in item else ''}")
+            st.write(f"• **Okładzina główna:** {paczki_szt} paczek")
+            st.caption(f"Powierzchnia z uwzględnieniem {int(zapas*100)}% zapasu: {round(m2_z_zapasem, 2)} m2")
+            
+            for nazwa, ilosc in info_zakup:
+                st.write(f"• **{nazwa}:** {ilosc}")
             
             if "Płytki" in system_montazu:
-                st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm: ok. {int(zuzycie_m2)} klipsów/m².")
+                st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm (ok. {int(zuzycie_m2)} klipsów na m2). Należy dokupić lub sprawdzić stan klinów wielorazowych.")
             
             st.markdown("---")
-            # Całkowity koszt inwestycji (z płytkami)
-            suma_z_okladzina = usluga_plus_chemia + cena_materialu_szacunek
-            st.warning(f"**Szacowany całkowity koszt inwestycji z materiałem:** ok. {round(suma_z_okladzina)} zł")
-            
-            # Czas pracy
-            tempo = 8 if "Płytki" in system_montazu else (25 if "Pływający" in system_montazu else 12)
-            st.write(f"⏱️ **Przewidywany czas prac:** ok. {round(m2_p/tempo + 1)} dni")
 
-        # --- 5. GENERATOR PDF (PODŁOGI) ---
-        st.markdown("---")
-        if st.button("📄 Generuj Ofertę PDF (Podłoga)"):
+            # --- GENERATOR PDF (PODŁOGI) ---
             try:
                 from fpdf import FPDF
                 from datetime import datetime
+                import os
 
-                pdf = FPDF()
-                pdf.add_page()
-                pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
-                pdf.set_font('DejaVu', '', 16)
-                
-                # Nagłówek
-                pdf.cell(200, 10, txt="KOSZTORYS PRAC PODŁOGOWYCH", ln=True, align='C')
-                pdf.set_font('DejaVu', '', 10)
-                pdf.cell(200, 10, txt=f"Data: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
-                pdf.ln(10)
+                if st.button("Generuj Kosztorys PDF", use_container_width=True, key="pod_pdf_btn"):
+                    pdf = FPDF()
+                    pdf.add_page()
+                    
+                    f_path = "Inter-Regular.ttf"
+                    if os.path.exists(f_path):
+                        pdf.add_font("Inter", "", f_path)
+                        pdf.set_font("Inter", size=12)
+                    else:
+                        pdf.set_font("Arial", size=12)
+                    
+                    pdf.set_font(pdf.font_family, size=16)
+                    pdf.cell(0, 15, "KOSZTORYS: PRACE POSADZKOWE", ln=True, align='C')
+                    pdf.ln(5)
 
-                # Tabela parametrów
-                pdf.set_fill_color(240, 240, 240)
-                pdf.cell(95, 10, "Parametr", 1, 0, 'L', fill=True)
-                pdf.cell(95, 10, "Wartość", 1, 1, 'L', fill=True)
-                
-                pdf.cell(95, 10, "Metraż całkowity", 1)
-                pdf.cell(95, 10, f"{m2_p} m2", 1, 1)
-                pdf.cell(95, 10, "System montażu", 1)
-                pdf.cell(95, 10, f"{system_montazu}", 1, 1)
-                
-                if "Płytki" in system_montazu:
-                    pdf.cell(95, 10, "Format płytki", 1)
-                    pdf.cell(95, 10, f"{dl_p}x{sz_p} cm", 1, 1)
+                    pdf.set_fill_color(245, 245, 245)
+                    pdf.set_font(pdf.font_family, size=12)
+                    
+                    pdf.cell(95, 10, " Metraż całkowity:", 1)
+                    pdf.cell(95, 10, f" {m2_p} m2", 1, 1)
+                    pdf.cell(95, 10, " System montażu:", 1)
+                    pdf.cell(95, 10, f" {system_montazu}", 1, 1)
+                    
+                    if "Płytki" in system_montazu:
+                        pdf.cell(95, 10, " Format płytki:", 1)
+                        pdf.cell(95, 10, f" {dl_p}x{sz_p} cm", 1, 1)
+                        pdf.cell(95, 10, " Wybrany klej:", 1)
+                        pdf.cell(95, 10, f" {wybrany_klej_plytki.split(' -')[0]}", 1, 1)
 
-                pdf.ln(10)
+                    pdf.ln(10)
 
-                # Podsumowanie Finansowe
-                pdf.set_font('DejaVu', '', 12)
-                pdf.cell(200, 10, txt="PODSUMOWANIE KOSZTÓW:", ln=True, align='L')
-                pdf.set_font('DejaVu', '', 10)
-                
-                pdf.cell(140, 10, "1. Robocizna (Montaż)", 1)
-                pdf.cell(50, 10, f"{round(k_robocizna)} zł", 1, 1, 'R')
-                
-                pdf.cell(140, 10, "2. Materiały pomocnicze (Chemia/Systemy)", 1)
-                pdf.cell(50, 10, f"{round(koszt_akc)} zł", 1, 1, 'R')
-                
-                pdf.set_font('DejaVu', '', 11)
-                pdf.cell(140, 10, "ŁĄCZNIE DO ZAPŁATY (Usługa + Chemia):", 1, 0, 'L', fill=True)
-                pdf.cell(50, 10, f"{round(usluga_plus_chemia)} zł", 1, 1, 'R', fill=True)
-                
-                pdf.ln(5)
-                pdf.set_font('DejaVu', '', 9)
-                pdf.multi_cell(190, 5, txt="UWAGA: Powyższa kwota nie zawiera kosztu zakupu okładziny (paneli/płytek). "
-                                           "Koszt okładziny zależy od wybranego przez klienta modelu.")
-                
-                pdf.ln(10)
-                
-                # Lista zakupów
-                pdf.set_font('DejaVu', '', 12)
-                pdf.cell(200, 10, txt="LISTA ZAKUPÓW (Do dostarczenia na budowę):", ln=True, align='L')
-                pdf.set_font('DejaVu', '', 10)
-                
-                pdf.cell(190, 10, f"- Okładzina główna: {paczki_szt} paczek (z zapasem {int(zapas*100)}%)", ln=True)
-                for item in info_zakup:
-                    pdf.cell(190, 10, f"- {item}", ln=True)
+                    pdf.set_font(pdf.font_family, size=12)
+                    pdf.cell(0, 10, "PODSUMOWANIE KOSZTÓW:", ln=True)
+                    pdf.set_font(pdf.font_family, size=10)
+                    
+                    pdf.cell(95, 10, " Robocizna (Montaż):", 1)
+                    pdf.cell(95, 10, f" {round(k_robocizna)} PLN", 1, 1)
+                    
+                    pdf.cell(95, 10, " Chemia i materiały pomocnicze:", 1)
+                    pdf.cell(95, 10, f" {round(koszt_akc)} PLN", 1, 1)
+                    
+                    pdf.set_font(pdf.font_family, size=13)
+                    pdf.cell(95, 12, " ŁĄCZNIE REALIZACJA:", 1, 0, 'L', True)
+                    pdf.cell(95, 12, f" {round(usluga_plus_chemia)} PLN", 1, 1, 'L', True)
+                    
+                    pdf.ln(5)
+                    pdf.set_font(pdf.font_family, size=9)
+                    pdf.set_text_color(100, 100, 100)
+                    pdf.multi_cell(0, 5, txt="Powyższa kwota nie zawiera kosztu zakupu okładziny głównej (paneli/płytek).")
+                    pdf.set_text_color(0, 0, 0)
+                    
+                    pdf.ln(10)
+                    
+                    pdf.set_font(pdf.font_family, size=12)
+                    pdf.cell(0, 10, "LISTA MATERIAŁOWA DO ZAMÓWIENIA:", ln=True)
+                    pdf.set_font(pdf.font_family, size=10)
+                    
+                    pdf.cell(0, 7, f"- Okładzina: {paczki_szt} paczek (zawiera {int(zapas*100)}% zapasu)", ln=True)
+                    for nazwa, ilosc in info_zakup:
+                        pdf.cell(0, 7, f"- {nazwa}: {ilosc}", ln=True)
 
-                # Generowanie pliku
-                pdf_output = pdf.output(dest='S').encode('latin-1', 'replace')
-                st.download_button(
-                    label="📥 Pobierz kosztorys PDF",
-                    data=pdf_output,
-                    file_name=f"Kosztorys_Podloga_{datetime.now().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf"
-                )
+                    pdf_bytes = pdf.output()
+                    
+                    if isinstance(pdf_bytes, (bytearray, bytes)):
+                        safe_bytes = bytes(pdf_bytes)
+                    else:
+                        safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+
+                    st.download_button(
+                        label="Pobierz gotowy PDF",
+                        data=safe_bytes,
+                        file_name=f"Kosztorys_Podloga_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
             except Exception as e:
                 st.error(f"Błąd podczas generowania PDF: {e}")
                       
