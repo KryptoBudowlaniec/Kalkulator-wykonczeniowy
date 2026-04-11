@@ -8,8 +8,8 @@ if 'zalogowany' not in st.session_state:
     st.session_state.zalogowany = False
 if 'pakiet' not in st.session_state:
     st.session_state.pakiet = "Podstawowy"
-if 'pokaz_rejestracje' not in st.session_state:
-    st.session_state.pokaz_rejestracje = False
+if 'przekierowanie' not in st.session_state:
+    st.session_state.przekierowanie = False
 
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
@@ -35,12 +35,11 @@ with col_nav:
 
 # --- LOGIKA PRZEKIEROWANIA (Klucz do naprawy) ---
 # Jeśli przycisk w Drzwiach ustawił tę zmienną, nadpisujemy wybór menu
-if 'przekierowanie' in st.session_state and st.session_state.przekierowanie:
+if st.session_state.przekierowanie:
     branza = "Logowanie"
-    # Czyścimy flagę, żeby nie utknąć w pętli
-    st.session_state.przekierowanie = False
 else:
     branza = nawigacja
+
 
 # --- PODMENU ---
 if nawigacja == "Kalkulatory":
@@ -212,37 +211,34 @@ elif branza == "Kontakt":
         """, unsafe_allow_html=True)
 
 elif branza == "Logowanie":
-    # ---------------- EKRAN REJESTRACJI / LOGOWANIA ----------------
+    # 1. To jest najważniejsze: Wyłączamy flagę, żeby "odblokować" menu
+    st.session_state.przekierowanie = False
+    
+    # 2. Reszta Twojego kodu logowania (ten z przyciskiem Google)
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_log, _ = st.columns([1, 1.5, 1])
     
     with col_log:
-        # KULOODPORNY SPOSÓB: Cały HTML w jednej ciągłej linijce. 
-        # Streamlit nie zobaczy tu wcięć, więc nie zamieni tego w surowy kod!
-        html_code = "<style>.google-btn { background-color: #FFFFFF; border: 2px solid #E9ECEF; border-radius: 12px; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 15px; transition: 0.3s; } .google-btn:hover { border-color: #00D395 !important; background-color: #F0FFF4 !important; cursor: pointer; }</style><div style='background-color: #FFFFFF; border: 1px solid #E9ECEF; border-radius: 15px; padding: 40px; box-shadow: 0px 10px 30px rgba(0,0,0,0.05);'><h2 style='text-align: center; color: #1E1E1E; font-weight: 800; margin-bottom: 5px;'>Zaloguj się do ProCalc</h2><p style='text-align: center; color: #6C757D; margin-bottom: 30px; font-size: 15px;'>Zarządzaj swoimi kosztorysami i generuj raporty PDF</p><a href='#' style='text-decoration: none; display: block; margin-bottom: 25px;'><div class='google-btn'><svg style='margin-right:12px;' width='20' height='20' viewBox='0 0 18 18'><path d='M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.84 2.07-1.79 2.7l2.85 2.21c1.67-1.54 2.63-3.81 2.63-6.56z' fill='#4285F4'/><path d='M9 18c2.43 0 4.47-.8 5.96-2.18l-2.85-2.21c-.79.53-1.8.85-3.11.85-2.39 0-4.41-1.61-5.14-3.77L1.03 13.4C2.51 16.34 5.51 18 9 18z' fill='#34A853'/><path d='M3.86 10.74c-.19-.53-.3-1.1-.3-1.74s.11-1.21.3-1.74L1.03 4.98C.37 6.2.01 7.57.01 9s.36 2.8 1.02 4.02l2.83-2.28z' fill='#FBBC05'/><path d='M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.47.89 11.42 0 9 0 5.51 0 2.51 1.66 1.03 4.6L3.86 6.87c.73-2.16 2.75-3.77 5.14-3.77z' fill='#EA4335'/></svg><span style='color: #1E1E1E; font-weight: 600; font-size: 16px;'>Kontynuuj z Google</span></div></a><div style='display: flex; align-items: center; text-align: center; color: #6C757D; margin-bottom: 20px;'><div style='flex: 1; border-bottom: 1px solid #E9ECEF;'></div><span style='padding: 0 15px; font-size: 13px; font-weight: 600; text-transform: uppercase;'>lub użyj e-maila</span><div style='flex: 1; border-bottom: 1px solid #E9ECEF;'></div></div></div>"
-        
-        # ... (tutaj jest ten długi kod html_code, zostaw go bez zmian)
+        # Tutaj wklejasz tę długą linijkę html_code, którą robiliśmy wcześniej
+        html_code = "<style>...</style><div>...</div>" 
         st.markdown(html_code, unsafe_allow_html=True)
         
         email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
         haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # --- ZMIENIONA LOGIKA PRZYCISKU ---
+        # Logika przycisku logowania
         if not st.session_state.zalogowany:
             if st.button("ZALOGUJ SIĘ / ZAREJESTRUJ (Tryb Testowy)", use_container_width=True):
-                # Symulujemy poprawne logowanie po kliknięciu
                 st.session_state.zalogowany = True
                 st.session_state.pakiet = "PRO"
-                st.rerun() # Odświeża stronę
+                st.rerun()
         else:
-            st.success("Jesteś zalogowany! Twój aktywny pakiet: **Premium PRO** 💎")
+            st.success("Jesteś zalogowany! Twój aktywny pakiet: Premium PRO")
             if st.button("WYLOGUJ SIĘ", use_container_width=True):
                 st.session_state.zalogowany = False
                 st.session_state.pakiet = "Podstawowy"
                 st.rerun()
-                
-        st.markdown("<p style='text-align: center; color: #6C757D; font-size: 12px; margin-top: 20px;'>Logując się, akceptujesz Regulamin oraz Politykę Prywatności ProCalc.</p>", unsafe_allow_html=True)
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
     st.session_state.pokoje_pro = []
@@ -2183,17 +2179,14 @@ elif branza == "Drzwi":
     # TAB 2: KOSZTORYS PRO
     # ==========================================
     with tab_d2:
-        # --- ZAKŁADAMY KŁÓDKĘ ---
         if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
             st.error("🔒 **Dostęp zablokowany**")
-            st.warning("Ta sekcja jest dostępna tylko dla użytkowników z aktywnym pakietem Premium PRO.")
             
             _, col_k, _ = st.columns([1, 2, 1])
             with col_k:
-                # Zmieniamy działanie przycisku:
-                if st.button("Odblokuj dostęp (Przejdź do logowania)", use_container_width=True, key="btn_gate_drzwi"):
-                    st.session_state.przekierowanie = True
-                    st.rerun()
+                if st.button("Odblokuj dostęp (Przejdź do logowania)", use_container_width=True):
+                    st.session_state.przekierowanie = True  # Ustawiamy flagę
+                    st.rerun()  # Wymuszamy przeładowanie kodu od góry
         
         else:
             # --- TUTAJKOD WYKONUJE SIĘ TYLKO DLA ZALOGOWANYCH ---
