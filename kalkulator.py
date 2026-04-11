@@ -2180,11 +2180,12 @@ elif branza == "Drzwi":
             st.error("🔒 **Dostęp zablokowany**")
             st.warning("Ta sekcja (Dokładne wyliczenia, Dodatki, Generowanie PDF) jest dostępna tylko dla użytkowników z aktywnym pakietem **Premium PRO**.")
             
-            _, col_k, _ = st.columns([1, 2, 1])
+           _, col_k, _ = st.columns([1, 2, 1])
             with col_k:
                 if st.button("Odblokuj dostęp (Przejdź do logowania)", use_container_width=True):
-                    # Ten przycisk dla wygody może od razu przełączać na zakładkę "Start" lub instruować:
-                    st.info("Wybierz zakładkę 'Logowanie' z głównego menu na górze strony.")
+                    # MAGIA STREAMLITA: Wymuszamy zmianę górnego menu i odświeżamy!
+                    st.session_state.main_nav = "Logowanie"
+                    st.rerun()
         
         col_d1, col_d2 = st.columns([1, 1.2])
 
