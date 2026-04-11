@@ -63,7 +63,7 @@ st.markdown("""
         display: none !important;
     }
 
-    /* 2. UNIWERSALNY KAFELEK - POPRAWIONE WYRÓWNANIE */
+    /* 2. UNIWERSALNY KAFELEK */
     .custom-card {
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
@@ -79,7 +79,7 @@ st.markdown("""
         
         gap: 12px !important; 
         height: 100% !important; 
-        min-height: 220px !important;
+        min-height: 240px !important;
         transition: 0.3s;
     }
     .custom-card:hover {
@@ -107,11 +107,12 @@ st.markdown("""
 
     /* POPRAWIONA LISTA W KAFELKACH */
     .card-list {
-        display: inline-block !important; 
-        text-align: left !important; 
+        display: block !important; 
+        text-align: center !important; 
         padding: 0 !important;
         margin: 0 auto !important; 
         border: none !important;
+        width: 100% !important;
     }
 
     .card-list li {
@@ -120,6 +121,7 @@ st.markdown("""
         margin-bottom: 6px !important; 
         display: block !important;
         font-weight: 600 !important;
+        text-align: center !important;
     }
 
     .card-list li::before {
@@ -157,6 +159,7 @@ st.markdown("""
         font-size: 12px;
         font-weight: bold;
         text-transform: uppercase;
+        white-space: nowrap;
     }
     .pricing-price {
         font-size: 42px;
@@ -168,6 +171,7 @@ st.markdown("""
         font-size: 13px;
         color: #6C757D;
         margin-bottom: 20px;
+        min-height: 35px; /* Wyśrodkowuje tekst jeśli w innej karcie są dwie linijki */
     }
 
     /* 4. FAQ i Przyciski */
@@ -219,7 +223,6 @@ if branza == "Start":
                 </div>
                 """, unsafe_allow_html=True)
         
-        # Zwężamy kolumnę dla przycisku głównego, by nie był za długi
         st.markdown("<div style='text-align: center; margin-top: 20px;'>", unsafe_allow_html=True)
         _, col_btn_top, _ = st.columns([1, 2, 1])
         with col_btn_top:
@@ -238,15 +241,15 @@ if branza == "Start":
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
     
     oferta = [
-        ["Malowanie", "Finalne wykończenie powierzchni.", ["Wydajność farb", "Obliczanie m2"]], 
-        ["Szpachlowanie", "Przygotowanie gładzi.", ["Masy sypkie", "Zbrojenie narożników"]],
-        ["Tynkowanie", "Prace tynkarskie.", ["Tynki maszynowe", "Listwy i narożniki"]],
-        ["Sucha Zabudowa", "Konstrukcje GK.", ["Profile CD/UD", "Płyty i wkręty"]],
-        ["Elektryka", "Instalacja prądowa.", ["mb przewodów", "Osprzęt i rozdzielnica"]],
-        ["Łazienka", "Kompleksowy remont.", ["Płytki i izolacja", "Biały montaż"]],
-        ["Podłogi", "Panele i winyle.", ["Metraż + naddatek", "Listwy i podkłady"]],
-        ["Drzwi", "Stolarka wewnętrzna.", ["Bezprzylgowe", "Ościeżnice regulowane"]],
-        ["Premium PRO", "Dla profesjonalistów.", ["Raporty PDF", "Kalkulator ROI"]]
+        ["Malowanie", "Finalne wykończenie powierzchni.", ["Wydajność farb z bazy", "Obliczanie m2 i zapasów", "Dobór gruntów", "Wycena drobnego sprzętu"]], 
+        ["Szpachlowanie", "Przygotowanie gładzi.", ["Masy sypkie i gotowe", "Zbrojenie narożników", "Taśmy flizelinowe", "Oszacowanie dniówek"]],
+        ["Tynkowanie", "Prace tynkarskie.", ["Tynki maszynowe i GK", "Listwy i narożniki", "Dokładne zużycie kleju", "Grunty kwarcowe"]],
+        ["Sucha Zabudowa", "Konstrukcje GK.", ["Systemy profili CD/UD", "Wyliczanie sztuk płyt", "Zbrojenie łączy (Tuff-Tape)", "Wełna izolacyjna"]],
+        ["Elektryka", "Instalacja prądowa.", ["Szacowanie mb przewodów", "Osprzęt i rozdzielnica", "Uchwyty montażowe", "Puszki rtv/lan"]],
+        ["Łazienka", "Kompleksowy remont.", ["Płytki (format i zapas)", "Hydroizolacja i taśmy", "Biały montaż (ryczałt)", "Fugi i sylikony"]],
+        ["Podłogi", "Panele i winyle.", ["Metraż i odpad (jodełka)", "Listwy i podkłady", "Systemy poziomujące", "Chemia posadzkowa"]],
+        ["Drzwi", "Stolarka wewnętrzna.", ["Drzwi bezprzylgowe", "Ościeżnice regulowane", "Pianki montażowe", "Opaski maskujące"]],
+        ["Premium PRO", "Dla profesjonalistów.", ["Zapisywanie projektów", "Eksport PDF do hurtowni", "Zarządzanie stawkami", "Analiza ROI (flipy)"]]
     ]
 
     cols_oferta = st.columns(3)
@@ -254,13 +257,14 @@ if branza == "Start":
         with cols_oferta[i % 3]:
             style_extra = "border: 2px solid #00D395; background-color: #F0FFF4 !important;" if item[0] == "Premium PRO" else ""
             
+            lista_html = "".join([f"<li>{punkt}</li>" for punkt in item[2]])
+            
             st.markdown(f"""
             <div class="custom-card" style="{style_extra}">
                 <div class="card-title">{item[0]}</div>
                 <div class="card-text" style="margin-bottom: 10px !important;">{item[1]}</div>
                 <ul class="card-list">
-                    <li>{item[2][0]}</li>
-                    <li>{item[2][1]}</li>
+                    {lista_html}
                 </ul>
             </div>
             """, unsafe_allow_html=True)
@@ -277,31 +281,31 @@ if branza == "Start":
         </div>
     """, unsafe_allow_html=True)
 
-    # --- SEKCJA ZAUFANIA (PUNKTY) ---
+    # --- SEKCJA ZAUFANIA ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2><br>", unsafe_allow_html=True)
     
     zalety = [
-        ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
-        ["DOŚWIADCZENIE", "Ponad 10 000 m² zrealizowanych inwestycji"],
-        ["CENY", "Bazy cenowe aktualizowane co 30 dni zgodnie z rynkiem"],
-        ["PRECYZJA", "Listy zakupowe ograniczające odpady"],
-        ["EKSPERCI", "Konsultacje merytoryczne z fachowcami"],
-        ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
+        ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów z kart technicznych."],
+        ["DOŚWIADCZENIE", "Aplikacja stworzona przy współpracy z wieloletnimi wykonawcami."],
+        ["CENY", "Bazy cenowe aktualizowane na bieżąco według największych hurtowni."],
+        ["PRECYZJA", "Zminimalizujesz ryzyko przestojów z powodu braku 1 worka kleju."],
+        ["LISTY ZAKUPÓW", "Gotowe raporty dla sklepów oszczędzają Twój czas."],
+        ["NIEZALEŻNOŚĆ", "Nie jesteśmy sponsorowani - dobierasz producenta sam."]
     ]
 
-    # ZMIANA: Twardsze, węższe proporcje [1, 2.5, 1], żeby wymusić wyśrodkowanie tekstu
-    _, col_main, _ = st.columns([1, 2.5, 1])
+    _, col_main, _ = st.columns([1, 4, 1])
 
     with col_main:
-        sub_l, sub_r = st.columns(2)
+        sub_l, sub_m, sub_r = st.columns(3) 
+        kolumny = [sub_l, sub_m, sub_r, sub_l, sub_m, sub_r]
+        
         for i, (tytul, opis) in enumerate(zalety):
-            target_col = sub_l if i % 2 == 0 else sub_r
-            with target_col:
+            with kolumny[i]:
                 st.markdown(f"""
-                <div style="display: flex; align-items: flex-start; margin-bottom: 30px; padding-left: 20px;">
-                    <div style="color: #00D395; font-size: 24px; margin-right: 15px; font-weight: bold; margin-top: -2px; line-height: 1;">✔</div>
+                <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 30px; padding: 0 10px;">
+                    <div style="color: #00D395; font-size: 28px; margin-bottom: 10px; font-weight: bold; line-height: 1;">✔</div>
                     <div style="font-size: 15px; color: #495057; line-height: 1.4;">
-                        <b style="color: #1E1E1E; font-size: 16px; display: block; margin-bottom: 2px; text-transform: uppercase;">{tytul}</b>
+                        <b style="color: #1E1E1E; font-size: 16px; display: block; margin-bottom: 5px; text-transform: uppercase;">{tytul}</b>
                         <span style="display: block; opacity: 0.8;">{opis}</span>
                     </div>
                 </div>
@@ -309,7 +313,6 @@ if branza == "Start":
 
     st.markdown("<br>", unsafe_allow_html=True)
         
-    # ZMIANA: Przycisk Demo wyśrodkowany za pomocą kolumn
     _, col_demo, _ = st.columns([1, 1.5, 1])
     with col_demo:
         if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True, key="btn_demo_main"):
@@ -318,39 +321,55 @@ if branza == "Start":
 
     st.markdown("<p style='text-align: center; font-size: 14px; color: gray; margin-top: 5px;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
-    # --- NOWA SEKCJA: CENNIK ---
+    # --- ZAKTUALIZOWANA SEKCJA: 3 PAKIETY CENNIKA ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Wybierz pakiet dla siebie</h2>", unsafe_allow_html=True)
     
-    _, col_price1, col_price2, _ = st.columns([1, 3, 3, 1])
+    # 3 równe kolumny, lekko zwężone na brzegach by karty wyglądały zgrabnie
+    _, col_p1, col_p2, col_p3, _ = st.columns([0.5, 3, 3, 3, 0.5])
 
-    with col_price1:
+    with col_p1:
         st.markdown("""
         <div class="pricing-card">
-            <h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">Wersja Podstawowa</h3>
+            <h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">Podstawowy</h3>
             <div class="pricing-price">0 zł</div>
             <div class="pricing-sub">Zawsze za darmo</div>
-            <ul class="card-list" style="margin-top: 20px !important;">
+            <ul class="card-list" style="margin-top: 10px !important;">
                 <li>Dostęp do Szybkich Wycen</li>
                 <li>Podstawowe algorytmy zużycia</li>
                 <li>Brak możliwości zapisu projektów</li>
-                <li>Brak generatora PDF</li>
+                <li>Brak generatora ofert PDF</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
 
-    with col_price2:
+    with col_p2:
         st.markdown("""
-        <div class="pricing-card pricing-pro">
-            <div class="pricing-badge">NAJLEPSZY WYBÓR</div>
-            <h3 style="color: #00D395; font-weight: 800; margin-bottom: 0;">Premium PRO</h3>
-            <div class="pricing-price">490 zł <span style="font-size: 20px; color: #6C757D;">/ rok</span></div>
-            <div class="pricing-sub">Oszczędzasz 98 zł (2 miesiące GRATIS!)<br>lub 49 zł / miesięcznie</div>
+        <div class="pricing-card">
+            <h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">PRO (Miesiąc)</h3>
+            <div class="pricing-price">19 zł <span style="font-size: 20px; color: #6C757D;">/ mc</span></div>
+            <div class="pricing-sub">Elastyczna subskrypcja z możliwością rezygnacji</div>
             <ul class="card-list" style="margin-top: 10px !important;">
                 <li><b>Wszystko z wersji Podstawowej</b></li>
                 <li>Precyzyjne listy zakupowe PRO</li>
                 <li>Nielimitowane generowanie PDF</li>
                 <li>Zapisywanie i edycja kosztorysów</li>
-                <li>Kalkulator rentowności (ROI)</li>
+                <li>Zaawansowany kalkulator (ROI)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_p3:
+        st.markdown("""
+        <div class="pricing-card pricing-pro">
+            <div class="pricing-badge">NAJLEPSZY WYBÓR</div>
+            <h3 style="color: #00D395; font-weight: 800; margin-bottom: 0;">PRO (Rok)</h3>
+            <div class="pricing-price">190 zł <span style="font-size: 20px; color: #6C757D;">/ rok</span></div>
+            <div class="pricing-sub"><b>Oszczędzasz 38 zł</b><br>(2 miesiące całkowicie GRATIS!)</div>
+            <ul class="card-list" style="margin-top: 10px !important;">
+                <li><b>Wszystko to, co w pakiecie Miesiąc</b></li>
+                <li>Gwarancja stałej, niższej ceny</li>
+                <li>Priorytetowe wsparcie mailowe</li>
+                <li>Wcześniejszy dostęp do nowości</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
