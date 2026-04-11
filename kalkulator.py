@@ -7,17 +7,15 @@ if 'widok' not in st.session_state:
     st.session_state.widok = "Start"
 
 # --- HEADER: LOGO LEWA (WIĘKSZE) | MENU PRAWA ---
-col_logo, col_nav = st.columns([1.5, 2.5]) # Zwiększyłem proporcję dla logo
+col_logo, col_nav = st.columns([1.5, 2.5]) 
 
 with col_logo:
     try:
-        # use_container_width sprawi, że logo zajmie całą dostępną przestrzeń kolumny
         st.image("logo2.png", use_container_width=True)
     except:
         st.error("Brak logo2.png")
 
 with col_nav:
-    # Owijamy pigułki w div, który w CSS ma ustawione wyrównanie do prawej
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     nawigacja = st.pills(
         "", 
@@ -28,7 +26,7 @@ with col_nav:
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- PODMENU (Pojawia się pod headerem tylko gdy wybrano Kalkulatory) ---
+# --- PODMENU ---
 if nawigacja == "Kalkulatory":
     st.markdown("<br>", unsafe_allow_html=True)
     sub_nav_col = st.columns([1])[0]
@@ -44,7 +42,7 @@ else:
     branza = nawigacja
 
 
-# --- 1. ZINTEGROWANE STYLE CSS (FIX: FAQ COLORS & NO ARROWS) ---
+# --- 1. ZINTEGROWANE STYLE CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -53,46 +51,37 @@ st.markdown("""
     html, body, [class*="st-"] { font-family: 'Inter', sans-serif !important; }
     .stApp { background-color: #FFFFFF !important; color: #1E1E1E !important; }
 
-    /* Fix na nieszczęsne "arrow" - ukrywamy systemowe punktory */
+    /* Fix na systemowe punktory */
     li::before { content: none !important; display: none !important; }
-
-    [data-testid="stMarkdownContainer"] ul {
+    [data-testid="stMarkdownContainer"] ul, [data-testid="stMarkdownContainer"] li {
         list-style-type: none !important;
         padding-left: 0px !important;
         margin-left: 0px !important;
     }
-
-    [data-testid="stMarkdownContainer"] li {
-        list-style-type: none !important;
-    }
-
-    /* 2. Ukrycie pseudo-elementów (tych strzałek), które Streamlit dodaje przed LI */
     [data-testid="stMarkdownContainer"] li::before {
         content: none !important;
         display: none !important;
     }
 
-    /* 2. UNIWERSALNY KAFELEK (Dla obu sekcji) */
+    /* 2. UNIWERSALNY KAFELEK - POPRAWIONE WYRÓWNANIE */
     .custom-card {
         background-color: #FFFFFF !important;
         border: 1px solid #E9ECEF !important;
         border-radius: 12px !important;
-        list-style: none !important;
         padding: 20px !important;
         margin-bottom: 15px !important;
         
         display: flex !important;
         flex-direction: column !important;
-        align-items: center !important;
+        align-items: center !important; /* Środkuje elementy w osi X */
+        justify-content: flex-start !important; /* Zaczyna od góry */
         text-align: center !important;
         
-        /* TO GWARANTUJE IDEALNE ODSTĘPY MIĘDZY ELEMENTAMI */
         gap: 12px !important; 
-        
-        height: auto !important;
+        height: 100% !important; /* Wymusza równą wysokość w kolumnach */
         min-height: 220px !important;
+        transition: 0.3s;
     }
-    /* EFEKT RUCHU (Hover) */
     .custom-card:hover {
         transform: translateY(-5px) !important;
         border-color: #00D395 !important;
@@ -116,32 +105,72 @@ st.markdown("""
         line-height: 1.4 !important;
     }
 
+    /* POPRAWIONA LISTA W KAFELKACH - Równa i wyśrodkowana */
     .card-list {
-        content: "• " !important;
-        color: #00D395 !important;
-        font-weight: bold !important;
-        margin-right: 8px !important;
-        list-style: none !important;
+        display: inline-block !important; /* Pozwala na wyśrodkowanie całego bloku listy */
+        text-align: left !important; /* Tekst wewnątrz listy jest do lewej */
         padding: 0 !important;
-        margin: 0 !important;
+        margin: 0 auto !important; /* Środkowanie bloku */
         border: none !important;
-        width: 100% !important;
     }
 
     .card-list li {
         font-size: 13px !important;
         color: #495057 !important;
-        margin-bottom: 4px !important; /* Odstęp między punktami listy */
+        margin-bottom: 6px !important; 
         display: block !important;
+        font-weight: 600 !important;
     }
 
     .card-list li::before {
-        content: "• " !important;
+        content: "✔ " !important; /* Zmiana na "ptaszek" dla lepszego efektu */
         color: #00D395 !important;
         font-weight: bold !important;
+        margin-right: 5px !important;
     }
 
-    /* 3. FAQ i Przyciski */
+    /* 3. STYLE DLA CENNIKA */
+    .pricing-card {
+        background-color: #FFFFFF;
+        border: 2px solid #E9ECEF;
+        border-radius: 15px;
+        padding: 30px 20px;
+        text-align: center;
+        height: 100%;
+        transition: 0.3s;
+        position: relative;
+    }
+    .pricing-pro {
+        border-color: #00D395;
+        background-color: #F0FFF4;
+        box-shadow: 0px 10px 30px rgba(0, 211, 149, 0.15);
+    }
+    .pricing-badge {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #00D395;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .pricing-price {
+        font-size: 42px;
+        font-weight: 800;
+        color: #1E1E1E;
+        margin: 15px 0 5px 0;
+    }
+    .pricing-sub {
+        font-size: 13px;
+        color: #6C757D;
+        margin-bottom: 20px;
+    }
+
+    /* 4. FAQ i Przyciski */
     .faq-card-question { background: #FFF; border: 2px solid #00D395; border-radius: 15px 15px 0 0; padding: 20px; font-weight: 800; text-align: center; margin-top: 20px;}
     .faq-card-answer { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
     .faq-card-answer-blue { background: #0E172B; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
@@ -174,16 +203,13 @@ if branza == "Start":
     with col_center:
         st.markdown("<h2 style='text-align: center; color: #000000; margin-bottom: 40px; font-weight: 800;'>Dla kogo jest ProCalc?</h2>", unsafe_allow_html=True)
         
-        # Używamy ujednoliconej klasy custom-card z efektem hover
         benefity = [
             ["Inwestorzy", "Błyskawiczna analiza ROI i rentowności flipa. Podejmuj decyzje zakupowe w oparciu o twarde dane, a nie intuicję."],
             ["Ekipy Wykonawcze", "Precyzyjne listy materiałowe z dokładnością do jednego worka. Koniec z przestojami, błędami i zbędnymi kursami."],
             ["Klienci Prywatni", "Pełna kontrola nad budżetem remontowym. Wiesz dokładnie, ile zapłacisz za materiał i robociznę."]
         ]
 
-        # POPRAWKA 1: Inicjalizacja kolumn, której brakowało
         cols_ben = st.columns(3)
-
         for i, (tytul, tekst) in enumerate(benefity):
             with cols_ben[i]:
                 st.markdown(f"""
@@ -193,11 +219,7 @@ if branza == "Start":
                 </div>
                 """, unsafe_allow_html=True)
         
-        # Przycisk w stylu PRO
-        # Kontener centrujący dla przycisku i napisu pod nim
-        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-        
-        # Sam przycisk (Streamlit automatycznie go wycentruje w tym divie dzięki CSS w sekcji style)
+        st.markdown("<div style='text-align: center; margin-top: 20px;'>", unsafe_allow_html=True)
         if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
             st.session_state.branza = "Rejestracja"
             st.rerun()
@@ -227,13 +249,12 @@ if branza == "Start":
     cols_oferta = st.columns(3)
     for i, item in enumerate(oferta):
         with cols_oferta[i % 3]:
-            # dynamiczna ramka dla PRO
             style_extra = "border: 2px solid #00D395; background-color: #F0FFF4 !important;" if item[0] == "Premium PRO" else ""
             
             st.markdown(f"""
             <div class="custom-card" style="{style_extra}">
                 <div class="card-title">{item[0]}</div>
-                <div class="card-text">{item[1]}</div>
+                <div class="card-text" style="margin-bottom: 10px !important;">{item[1]}</div>
                 <ul class="card-list">
                     <li>{item[2][0]}</li>
                     <li>{item[2][1]}</li>
@@ -253,14 +274,9 @@ if branza == "Start":
         </div>
     """, unsafe_allow_html=True)
 
-   # --- SEKCJA ZAUFANIA (PUNKTY) ---
+    # --- SEKCJA ZAUFANIA (PUNKTY) ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2>", unsafe_allow_html=True)
-    
-    # Otwieramy główny kontener centrujący dla całego bloku zalet
     st.markdown('<div style="display: flex; justify-content: center; width: 100%;">', unsafe_allow_html=True)
-    
-    # Tworzymy 2 kolumny o równej szerokości, ale w węższym kontenerze (np. 800px)
-    # Używamy st.columns([1, 1]) wewnątrz st.container(), by zachować kontrolę
     
     zalety = [
         ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów"],
@@ -271,16 +287,12 @@ if branza == "Start":
         ["NIEZALEŻNOŚĆ", "Nie faworyzujemy żadnej marki"]
     ]
 
-    # Tworzymy bazowy układ kolumn (tym razem 3, gdzie środkowa jest szeroka i trzyma treść)
     _, col_main, _ = st.columns([1, 5, 1])
 
     with col_main:
-        # Tu tworzymy wewnętrzne pod-kolumny
         sub_l, sub_r = st.columns(2)
-        
         for i, (tytul, opis) in enumerate(zalety):
             target_col = sub_l if i % 2 == 0 else sub_r
-            
             with target_col:
                 st.markdown(f"""
                 <div style="display: flex; align-items: flex-start; margin-bottom: 30px; padding-left: 20px;">
@@ -292,63 +304,90 @@ if branza == "Start":
                 </div>
                 """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True) # Zamykamy główny div
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
         
-    # Przycisk Demo wyśrodkowany
     if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True, key="btn_demo_main"):
         st.session_state.branza = "Malowanie"
         st.rerun()
 
     st.markdown("<p style='text-align: center; font-size: 14px; color: gray;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
+    # --- NOWA SEKCJA: CENNIK ---
+    st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Wybierz pakiet dla siebie</h2>", unsafe_allow_html=True)
+    
+    _, col_price1, col_price2, _ = st.columns([1, 3, 3, 1])
+
+    with col_price1:
+        st.markdown("""
+        <div class="pricing-card">
+            <h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">Wersja Podstawowa</h3>
+            <div class="pricing-price">0 zł</div>
+            <div class="pricing-sub">Zawsze za darmo</div>
+            <ul class="card-list" style="margin-top: 20px !important;">
+                <li>Dostęp do Szybkich Wycen</li>
+                <li>Podstawowe algorytmy zużycia</li>
+                <li>Brak możliwości zapisu projektów</li>
+                <li>Brak generatora PDF</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_price2:
+        st.markdown("""
+        <div class="pricing-card pricing-pro">
+            <div class="pricing-badge">NAJLEPSZY WYBÓR</div>
+            <h3 style="color: #00D395; font-weight: 800; margin-bottom: 0;">Premium PRO</h3>
+            <div class="pricing-price">490 zł <span style="font-size: 20px; color: #6C757D;">/ rok</span></div>
+            <div class="pricing-sub">Oszczędzasz 98 zł (2 miesiące GRATIS!)<br>lub 49 zł / miesięcznie</div>
+            <ul class="card-list" style="margin-top: 10px !important;">
+                <li><b>Wszystko z wersji Podstawowej</b></li>
+                <li>Precyzyjne listy zakupowe PRO</li>
+                <li>Nielimitowane generowanie PDF</li>
+                <li>Zapisywanie i edycja kosztorysów</li>
+                <li>Kalkulator rentowności (ROI)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+
     # --- SEKCJA FAQ ---
-    # POPRAWKA 3: Wyrównane wcięcia dla sekcji FAQ
     st.markdown("<br><br><h2 style='text-align: center;'>Często Zadawane Pytania</h2>", unsafe_allow_html=True)
     
     col_f1, col_faq, col_f2 = st.columns([1, 2.5, 1])
     
     with col_faq:
-        # Pytanie 1
         st.markdown("""
             <div class="faq-card-question">Czy wyceny materiałów są aktualne?</div>
             <div class="faq-card-answer">Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen rynkowych z największych marketów i hurtowni.</div>
         """, unsafe_allow_html=True)
 
-        # Pytanie 2
         st.markdown("""
             <div class="faq-card-question">Czy mogę zapisać swój kosztorys?</div>
             <div class="faq-card-answer-blue">Funkcja zapisywania i edycji wielu projektów jest dostępna dla zalogowanych użytkowników w wersji <b>Premium PRO</b>.</div>
         """, unsafe_allow_html=True)
 
-        # Pytanie 3
         st.markdown("""
             <div class="faq-card-question">Jak dokładne są listy zakupowe?</div>
             <div class="faq-card-answer">Algorytmy uwzględniają oficjalne normy zużycia producentów oraz standardowy naddatek 10% na odpady i docięcia.</div>
         """, unsafe_allow_html=True)
         
-        # Pytanie 4: Formaty płytek (Ciemny niebieski)
         st.markdown("""
             <div class="faq-card-question">Czy format płytek wpływa na wycenę?</div>
             <div class="faq-card-answer-blue">Oczywiście. W sekcji Łazienka możesz wybrać format (np. 120x60), a system automatycznie podniesie stawkę za robociznę i zużycie kleju.</div>
         """, unsafe_allow_html=True)
 
-        # Pytanie 5: Ukryte koszty
         st.markdown("""
             <div class="faq-card-question">Czy kalkulator uwzględnia tzw. drobnicę?</div>
             <div class="faq-card-answer">Tak. System dolicza szacunkowe koszty folii, taśm, kołków czy gruntów, o których inwestorzy często zapominają przy planowaniu budżetu.</div>
         """, unsafe_allow_html=True)
 
-        # Pytanie 6: Eksport do PDF
         st.markdown("""
             <div class="faq-card-question">Czy otrzymam listę zakupów do sklepu?</div>
             <div class="faq-card-answer-blue">Tak. Po zakończeniu obliczeń możesz wygenerować gotowy raport z listą materiałów, którą wystarczy pokazać sprzedawcy w hurtowni.</div>
         """, unsafe_allow_html=True)
 
-   # --- KONIEC SEKCJI OBLICZEŃ BRANŻY (np. Tynków) ---
-        # Upewnij się, że poniższy kod NIE JEST wsunięty (nie ma spacji na początku linii)
-        
-        # --- SEKCJA ROZWOJU PROJEKTU (ROADMAP) - WIDOCZNA NA STAŁE ---
+        # --- SEKCJA ROZWOJU PROJEKTU (ROADMAP) ---
         st.markdown("---")
         st.header("Plan Rozwoju Aplikacji (Roadmap)")
         st.write("Budujemy najbardziej kompletne narzędzie dla nowoczesnych wykonawców. Sprawdź, nad czym obecnie pracujemy:")
@@ -373,11 +412,8 @@ if branza == "Start":
             <strong>Masz pomysł na ulepszenie?</strong><br>
             Napisz do nas! Rozwijamy ten projekt razem z wykonawcami, aby ułatwić codzienną pracę na budowie.
         </div>
-        """, unsafe_allow_html=True) # Poprawione na unsafe_allow_html=True
+        """, unsafe_allow_html=True) 
         
-        # --- KONIEC SEKCJI ROADMAP ---
-
-    # TERAZ ELIF KONTAKT (również od lewej krawędzi)
 elif branza == "Kontakt":
     st.markdown("<h1 style='text-align: center; color: #00D395;'>Kontakt</h1>", unsafe_allow_html=True)
     st.markdown("""
@@ -387,8 +423,6 @@ elif branza == "Kontakt":
         <p class="card-text">Infolinia: +48 123 456 789</p>
     </div>
     """, unsafe_allow_html=True)
-
-
 
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
