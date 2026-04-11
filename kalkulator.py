@@ -2105,71 +2105,210 @@ elif branza == "Łazienka":
             except Exception as e:
                 st.error(f"Błąd PDF: {e}")
                
+# --- SEKCJA: DRZWI ---
 elif branza == "Drzwi":
     st.header("Kalkulator Montażu Drzwi Wewnętrznych")
     
-    col_d1, col_d2 = st.columns([1, 1.2])
-    
-    # --- CENNIK ZAKUPU ---
-    ceny_zakupu = {
-        "Standard (np. Porta, DRE - przylgowe)": 1200,
-        "Bezprzylgowe (ukryte zawiasy)": 1900,
-        "Rewersyjne (otwierane do wewnątrz)": 2300,
-        "Ukryte (do pomalowania / Discret)": 1600
+    # Baza cenowa skrzydeł (średnia rynkowa: skrzydło + ościeżnica + klamka)
+    baza_drzwi = {
+        "Standardowe (Przylgowe)": 1200.0,
+        "Bezprzylgowe (Ukryte zawiasy)": 1900.0,
+        "Rewersyjne (Otwierane do wewnątrz)": 2300.0,
+        "Ukryte (System zlicowany ze ścianą)": 1600.0
     }
 
-    with col_d1:
-        st.subheader("Parametry zamówienia")
-        szt_drzwi = st.number_input("Liczba kompletów (skrzydło + ościeżnica):", min_value=1, value=5)
-        
-        wybrany_model = st.selectbox(
-            "Model i standard drzwi:", 
-            options=list(ceny_zakupu.keys())
-        )
-        
-        szerokosc_muru = st.radio("Szerokość muru (zakres):", ["Standard (do 140mm)", "Szeroki (140mm+ dopłata)"])
-        
-        st.markdown("---")
-        st.subheader("Dodatki")
-        podciecie = st.checkbox("Podcięcie wentylacyjne / tuleje?")
-        demontaz = st.checkbox("Demontaż starych drzwi/ościeżnic?")
-        
-        # Koszt montażu na sztywno
-        stawka_montazu = 250 
+    tab_d1, tab_d2 = st.tabs(["Szybka Wycena", "Kosztorys PRO"])
 
-    # --- LOGIKA OBLICZEŃ ---
-    cena_jednostkowa = ceny_zakupu[wybrany_model]
-    
-    # Koszt materiałów (drzwi + pianka 40zł/szt)
-    koszt_pianki = szt_drzwi * 40
-    total_zakup = (szt_drzwi * cena_jednostkowa) + koszt_pianki
-    
-    # Koszt robocizny
-    doplata_szeroki = 50 if szerokosc_muru == "Szeroki (140mm+ dopłata)" else 0
-    doplata_podciecie = 30 if podciecie else 0
-    doplata_demontaz = 100 if demontaz else 0
-    
-    robocizna_jednostkowa = stawka_montazu + doplata_szeroki + doplata_podciecie + doplata_demontaz
-    total_robocizna_d = szt_drzwi * robocizna_jednostkowa
-
-    with col_d2:
-        st.subheader("💰 Kosztorys Stolarki")
-        suma_d = total_zakup + total_robocizna_d
-        st.success(f"### RAZEM: **{round(suma_d)} zł**")
+    # ==========================================
+    # TAB 1: SZYBKA WYCENA
+    # ==========================================
+    with tab_d1:
+        st.subheader("Błyskawiczny szacunek kosztów")
+        szt_fast = st.number_input("Liczba drzwi (kompletów):", min_value=1, value=5, step=1, key="drzwi_fast")
+        typ_fast = st.radio("Standard wykończenia:", ["Zwykłe (Przylgowe)", "Premium (Bezprzylgowe/Ukryte)"])
         
-        c1, c2 = st.columns(2)
-        c1.metric("Zakup + Materiały", f"{round(total_zakup)} zł")
-        c2.metric("Montaż (Suma)", f"{round(total_robocizna_d)} zł")
-
-        with st.expander("📦 SZCZEGÓŁY ZAMÓWIENIA", expanded=True):
-            st.write(f"• Wybrany model: **{wybrany_model}**")
-            st.write(f"• Liczba skrzydeł i ościeżnic: **{szt_drzwi} kpl.**")
-            st.write(f"• Pianka montażowa (1 puszka/szt): **{szt_drzwi} szt.**")
-            if demontaz:
-                st.write(f"• Usługa demontażu starych drzwi: **TAK**")
-            st.write(f"• Koszt montażu za sztukę: **{robocizna_jednostkowa} zł**")
+        # Uproszczone stawki
+        if typ_fast == "Zwykłe (Przylgowe)":
+            k_drzwi_fast = szt_fast * 1200
+            k_rob_fast = szt_fast * 250
+            k_chem_fast = szt_fast * 50
+        else:
+            k_drzwi_fast = szt_fast * 1800
+            k_rob_fast = szt_fast * 350
+            k_chem_fast = szt_fast * 60
             
-            st.info("Cena zakupu drzwi jest orientacyjna (średnia rynkowa z klamką i rozetą).")
+        total_fast = k_drzwi_fast + k_rob_fast + k_chem_fast
+        
+        st.success(f"### Szacowany całkowity koszt inwestycji: ok. {round(total_fast)} PLN")
+        st.caption("Cena zawiera szacunkowy koszt zakupu drzwi, chemię montażową oraz robociznę.")
+        
+        c_f1, c_f2 = st.columns(2)
+        c_f1.metric("Szacowany zakup drzwi z chemią", f"{round(k_drzwi_fast + k_chem_fast)} PLN")
+        c_f2.metric("Szacowana Robocizna", f"{round(k_rob_fast)} PLN")
+        
+        st.info("Przejdź do zakładki Kosztorys PRO, aby doliczyć podcięcia wentylacyjne, dopłaty za szeroki mur i wygenerować PDF.")
+
+    # ==========================================
+    # TAB 2: KOSZTORYS PRO
+    # ==========================================
+    with tab_d2:
+        col_d1, col_d2 = st.columns([1, 1.2])
+
+        with col_d1:
+            st.subheader("Parametry zamówienia")
+            szt_drzwi = st.number_input("Liczba kompletów (skrzydło + ościeżnica):", min_value=1, value=5, key="drzwi_pro")
+            
+            wybrany_model = st.selectbox(
+                "Model i standard drzwi:", 
+                options=list(baza_drzwi.keys())
+            )
+            
+            szerokosc_muru = st.radio("Szerokość muru (zakres):", ["Standard (do 140mm)", "Szeroki (powyżej 140mm)"])
+            
+            st.markdown("---")
+            st.write("**Usługi dodatkowe**")
+            podciecie = st.checkbox("Podcięcie wentylacyjne (np. do łazienki/pralni)")
+            demontaz = st.checkbox("Demontaż starych ościeżnic")
+            
+            st.markdown("---")
+            # Dynamiczna stawka domyślna w zależności od stopnia skomplikowania
+            if "Ukryte" in wybrany_model or "Rewersyjne" in wybrany_model:
+                domyslna_stawka = 380
+            elif "Bezprzylgowe" in wybrany_model:
+                domyslna_stawka = 320
+            else:
+                domyslna_stawka = 250
+                
+            stawka_montazu = st.number_input("Bazowa stawka za montaż 1 kpl. (zł):", 100, 1000, domyslna_stawka)
+
+        # --- LOGIKA OBLICZEŃ ---
+        cena_jednostkowa = baza_drzwi[wybrany_model]
+        koszt_samych_drzwi = szt_drzwi * cena_jednostkowa
+        
+        # Obliczenia chemii i akcesoriów
+        ilosc_pianki = szt_drzwi  # 1 puszka pistoletowa na 1 ościeżnicę
+        ilosc_akrylu = int(szt_drzwi / 2 + 0.99) # 1 tuba akrylu na 2 drzwi (do opasek)
+        ilosc_klinow = int(szt_drzwi / 3 + 0.99) # 1 paczka klinów plastikowych na 3 drzwi
+        
+        koszt_chemii = (ilosc_pianki * 45) + (ilosc_akrylu * 20) + (ilosc_klinow * 35)
+        
+        info_zakup = [
+            (f"Drzwi wewnętrzne ({wybrany_model})", f"{szt_drzwi} kpl."),
+            ("Pianka montażowa niskoprężna", f"{ilosc_pianki} szt."),
+            ("Akryl malarski (do opasek)", f"{ilosc_akrylu} szt."),
+            ("Kliny montażowe tworzywowe", f"{ilosc_klinow} opk.")
+        ]
+        
+        total_materialy = koszt_samych_drzwi + koszt_chemii
+        
+        # Koszt robocizny z dopłatami
+        doplata_szeroki = 50 if szerokosc_muru == "Szeroki (powyżej 140mm)" else 0
+        doplata_podciecie = 35 if podciecie else 0
+        doplata_demontaz = 120 if demontaz else 0
+        
+        robocizna_jednostkowa = stawka_montazu + doplata_szeroki + doplata_podciecie + doplata_demontaz
+        total_robocizna = szt_drzwi * robocizna_jednostkowa
+
+        with col_d2:
+            st.subheader("Podsumowanie Kosztorysu")
+            suma_calkowita = total_materialy + total_robocizna
+            
+            st.success(f"### KOSZT CAŁKOWITY: **{round(suma_calkowita)} PLN**")
+            st.caption("Cena obejmuje zakup drzwi, chemię montażową oraz robociznę.")
+
+            c1, c2 = st.columns(2)
+            c1.metric("Materiał (Drzwi + Chemia)", f"{round(total_materialy)} PLN")
+            c2.metric("Robocizna", f"{round(total_robocizna)} PLN")
+
+            st.markdown("---")
+            st.subheader("Lista materiałowa do zamówienia")
+            
+            for nazwa, ilosc in info_zakup:
+                st.write(f"• **{nazwa}:** {ilosc}")
+            
+            st.markdown("---")
+            st.write("**Szczegóły robocizny (za 1 komplet):**")
+            st.write(f"- Montaż bazowy: {stawka_montazu} PLN")
+            if doplata_szeroki > 0: st.write(f"- Dopłata za szeroki mur: {doplata_szeroki} PLN")
+            if doplata_podciecie > 0: st.write(f"- Podcięcie wentylacyjne: {doplata_podciecie} PLN")
+            if doplata_demontaz > 0: st.write(f"- Demontaż starych drzwi: {doplata_demontaz} PLN")
+            st.write(f"**Łącznie za 1 sztukę: {robocizna_jednostkowa} PLN**")
+
+            # --- GENERATOR PDF (DRZWI) ---
+            try:
+                from fpdf import FPDF
+                from datetime import datetime
+                import os
+
+                if st.button("Generuj Kosztorys PDF", use_container_width=True, key="drzwi_pdf_btn"):
+                    pdf = FPDF()
+                    pdf.add_page()
+                    
+                    f_path = "Inter-Regular.ttf"
+                    if os.path.exists(f_path):
+                        pdf.add_font("Inter", "", f_path)
+                        pdf.set_font("Inter", size=12)
+                    else:
+                        pdf.set_font("Arial", size=12)
+                    
+                    pdf.set_font(pdf.font_family, size=16)
+                    pdf.cell(0, 15, "KOSZTORYS: STOLARKA DRZWIOWA", ln=True, align='C')
+                    pdf.ln(5)
+
+                    pdf.set_fill_color(245, 245, 245)
+                    pdf.set_font(pdf.font_family, size=12)
+                    
+                    pdf.cell(95, 10, " Liczba kompletów:", 1)
+                    pdf.cell(95, 10, f" {szt_drzwi} szt.", 1, 1)
+                    pdf.cell(95, 10, " Model drzwi:", 1)
+                    pdf.cell(95, 10, f" {wybrany_model.split(' (')[0]}", 1, 1)
+                    pdf.cell(95, 10, " Szerokość muru:", 1)
+                    pdf.cell(95, 10, f" {szerokosc_muru}", 1, 1)
+
+                    pdf.ln(10)
+
+                    pdf.set_font(pdf.font_family, size=12)
+                    pdf.cell(0, 10, "PODSUMOWANIE KOSZTÓW:", ln=True)
+                    pdf.set_font(pdf.font_family, size=10)
+                    
+                    pdf.cell(95, 10, " Robocizna (Montaż całości):", 1)
+                    pdf.cell(95, 10, f" {round(total_robocizna)} PLN", 1, 1)
+                    
+                    pdf.cell(95, 10, " Koszt zakupu drzwi (szacunek):", 1)
+                    pdf.cell(95, 10, f" {round(koszt_samych_drzwi)} PLN", 1, 1)
+
+                    pdf.cell(95, 10, " Chemia i akcesoria:", 1)
+                    pdf.cell(95, 10, f" {round(koszt_chemii)} PLN", 1, 1)
+                    
+                    pdf.set_font(pdf.font_family, size=13)
+                    pdf.cell(95, 12, " ŁĄCZNY KOSZT INWESTYCJI:", 1, 0, 'L', True)
+                    pdf.cell(95, 12, f" {round(suma_calkowita)} PLN", 1, 1, 'L', True)
+                    
+                    pdf.ln(10)
+                    
+                    pdf.set_font(pdf.font_family, size=12)
+                    pdf.cell(0, 10, "LISTA ZAKUPÓW:", ln=True)
+                    pdf.set_font(pdf.font_family, size=10)
+                    
+                    for nazwa, ilosc in info_zakup:
+                        pdf.cell(0, 7, f"- {nazwa}: {ilosc}", ln=True)
+
+                    pdf_bytes = pdf.output()
+                    
+                    if isinstance(pdf_bytes, (bytearray, bytes)):
+                        safe_bytes = bytes(pdf_bytes)
+                    else:
+                        safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+
+                    st.download_button(
+                        label="Pobierz gotowy PDF",
+                        data=safe_bytes,
+                        file_name=f"Kosztorys_Drzwi_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+            except Exception as e:
+                st.error(f"Błąd podczas generowania PDF: {e}")
 
 
 elif branza == "Panel Inwestora":
