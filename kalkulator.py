@@ -1163,27 +1163,27 @@ elif branza == "Podłogi":
 elif branza == "Tynkowanie":
     st.header("Kalkulator Tynków i Suchego Tynku")
     
-    # --- BAZA DANYCH ---
+    # --- BAZA DANYCH (Zaktualizowane ceny rynkowe) ---
     baza_masy = {
-        "Knauf Uniflot (Premium)": 115, 
-        "Knauf Vario (Bardzo elastyczna)": 95,
-        "Dolina Nidy Start (Ekonomiczna)": 45,
-        "Franspol (Standard)": 55
+        "Knauf Uniflott (25kg)": 140, 
+        "Knauf Vario (5kg)": 45,
+        "Dolina Nidy Start (20kg)": 50,
+        "Franspol (20kg)": 60
     }
 
     baza_tynkow = {
-        "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 25, "waga": 30, "norma": 0.8, "typ": "mokry"},
-        "Baumit MPI25 Cem-Wap ": {"cena": 27, "waga": 30, "norma": 1.4, "typ": "mokry"},
-        "Wyklejanie Płytami GK (Suchy Tynk)": {"cena_plyta": 35, "cena_klej": 24, "typ": "drywall"}
+        "Knauf MP 75 (Maszynowy Gipsowy)": {"cena": 34, "waga": 30, "norma": 0.8, "typ": "mokry"},
+        "Baumit MPI25 Cem-Wap": {"cena": 32, "waga": 30, "norma": 1.4, "typ": "mokry"},
+        "Wyklejanie Płytami GK (Suchy Tynk)": {"cena_plyta": 35, "cena_klej": 28, "typ": "drywall"}
     }
     
     baza_grunt_kwarc = {
-        "Dolina Nidy Inter-Grunt (20kg)": 140, 
-        "Knauf Betokontakt (20kg)": 200, 
-        "Atlas Grunto-Plast (20kg)": 110
+        "Dolina Nidy Inter-Grunt (20kg)": 130, 
+        "Knauf Betokontakt (20kg)": 220, 
+        "Atlas Grunto-Plast (20kg)": 145
     }
 
-    tab_t1, tab_t2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
+    tab_t1, tab_t2 = st.tabs(["Szybka Wycena", "Detale PRO"])
 
     # --- TAB 1: SZYBKA WYCENA ---
     with tab_t1:
@@ -1202,7 +1202,7 @@ elif branza == "Tynkowanie":
         **Co zyskujesz w wersji PRO?**
         * Wybór konkretnych systemów (Gipsowe, Cem-Wap, GK).
         * Precyzyjne ustawienie grubości tynku i stawek.
-        * Pełna lista zakupów (liczba worków, wiader, płyt).
+        * Pełna lista zakupów (liczba worków, wiader, płyt, rolek taśm).
         * Profesjonalny raport PDF dla klienta.
         """)
 
@@ -1263,7 +1263,7 @@ elif branza == "Tynkowanie":
             if "lista_okien_tyn" not in st.session_state:
                 st.session_state.lista_okien_tyn = []
 
-            if st.button("➕ Dodaj okna do zestawienia", use_container_width=True):
+            if st.button("Dodaj okna do zestawienia", use_container_width=True):
                 st.session_state.lista_okien_tyn.append({
                     "nazwa": wybor_okna,
                     "szer": w_szer,
@@ -1277,7 +1277,7 @@ elif branza == "Tynkowanie":
                 for i, o in enumerate(st.session_state.lista_okien_tyn):
                     c_ok1, c_ok2 = st.columns([4, 1])
                     c_ok1.caption(f"{o['szt']}x {o['nazwa']} ({o['szer']}x{o['wys']})")
-                    if c_ok2.button("🗑️", key=f"del_o_{i}"):
+                    if c_ok2.button("Usuń", key=f"del_o_{i}"):
                         st.session_state.lista_okien_tyn.pop(i)
                         st.rerun()
 
@@ -1290,23 +1290,39 @@ elif branza == "Tynkowanie":
             koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_rob_pro * 5)
             lista_zakupow = [
                 (f"Tynk {wybrany_tynk}", f"{worki_t} worków"),
-                (f"Grunt {wybrany_grunt_t}", f"{wiadra_gruntu} wiader 20kg"),
-                ("Narożniki i profile", "Zestaw")
+                (f"Grunt {wybrany_grunt_t}", f"{wiadra_gruntu} wiader 20kg")
             ]
         else:
             liczba_plyt = int((m2_rob_pro * 1.1) / 3.12 + 0.99)
             worki_kleju = int(liczba_plyt / 2.5 + 0.99)
             worki_masy = int((m2_rob_pro * 0.5) / 25 + 0.99)
-            cena_tasmy = 150 if "Tuff-Tape" in typ_tasmy else 70
+            
+            # Logika taśm i zbrojenia GK
+            mb_laczen = m2_rob_pro * 1.5
+            if typ_tasmy == "Wszystko Tuff-Tape (Pancerne)":
+                rolki_tuff = int(mb_laczen / 30 + 0.99)
+                cena_tasmy = rolki_tuff * 150
+                zbrojenie_lista = [("Taśma Tuff-Tape (30m)", f"{rolki_tuff} rolka/i")]
+            else:
+                rolki_tuff = int((m2_rob_pro * 0.4) / 30 + 0.99) # Narożniki wewnętrzne
+                rolki_fliz = int((m2_rob_pro * 1.1) / 25 + 0.99) # Łączenia płaskie
+                cena_tasmy = (rolki_tuff * 150) + (rolki_fliz * 20)
+                zbrojenie_lista = [
+                    ("Taśma Tuff-Tape (30m)", f"{rolki_tuff} rolka/i"),
+                    ("Taśma flizelina (25m)", f"{rolki_fliz} rolka/i")
+                ]
+
             koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + \
                           (worki_masy * baza_masy[wybrana_masa]) + cena_tasmy + (m2_rob_pro * 2)
+            
             lista_zakupow = [
                 ("Płyty GK (1.2x2.6m)", f"{liczba_plyt} szt."),
                 ("Klej Perlfix", f"{worki_kleju} worków"),
-                (f"Masa {wybrana_masa}", f"{worki_masy} szt."),
-                ("Taśmy i zbrojenie", "Zgodnie z wyborem")
+                (f"Masa {wybrana_masa}", f"{worki_masy} szt.")
             ]
-       # --- LOGIKA STOLARKI (OBLICZENIA) ---
+            lista_zakupow.extend(zbrojenie_lista)
+
+        # --- LOGIKA STOLARKI (OBLICZENIA) ---
         total_mb_naroznikow = 0.0
         total_m2_folii = 0.0
         total_mb_tasmy = 0.0
@@ -1320,14 +1336,12 @@ elif branza == "Tynkowanie":
             total_m2_folii += (s * w * szt) * 1.1
             total_mb_tasmy += (2 * s + 2 * w) * szt
 
-        # Przeliczenie na opakowania (prawidłowe nazwy zmiennych)
         szt_naroznik_3m = int(total_mb_naroznikow / 3 + 0.99)
         rolki_tasmy_50m = int(total_mb_tasmy / 50 + 0.99)
         szt_folii_op = int(total_m2_folii / 20 + 0.99)
 
         koszt_stolarki = (szt_naroznik_3m * 8) + (rolki_tasmy_50m * 25) + (szt_folii_op * 15)
 
-        # TO JEST KLUCZOWE MIEJSCE: Dodajemy do listy zakupów zanim wyświetlimy wyniki
         if total_mb_naroznikow > 0:
             lista_zakupow.append(("Narożniki aluminiowe (3m)", f"{szt_naroznik_3m} szt."))
             lista_zakupow.append(("Taśma tynkarska (50m)", f"{rolki_tasmy_50m} rolka/i"))
@@ -1339,7 +1353,7 @@ elif branza == "Tynkowanie":
         suma_tynki = koszt_mat_t + koszt_rob_t
 
         with col_t2:
-            st.subheader("💰 Wynik PRO")
+            st.subheader("Wynik PRO")
             st.success(f"### RAZEM: **{round(suma_tynki)} PLN**")
             
             c1, c2 = st.columns(2)
@@ -1347,7 +1361,7 @@ elif branza == "Tynkowanie":
             c2.metric("Materiały", f"{round(koszt_mat_t)} zł")
 
             st.markdown("---")
-            st.subheader("📦 Lista materiałowa")
+            st.subheader("Lista materiałowa")
             for przedmiot, ilosc in lista_zakupow:
                 st.write(f"• **{przedmiot}:** {ilosc}")
             
@@ -1358,7 +1372,7 @@ elif branza == "Tynkowanie":
                 from datetime import datetime
                 import os
 
-                if st.button("📄 Generuj Raport PDF", use_container_width=True):
+                if st.button("Generuj Raport PDF", use_container_width=True):
                     pdf = FPDF()
                     pdf.add_page()
                     
@@ -1408,9 +1422,15 @@ elif branza == "Tynkowanie":
                         pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
 
                     pdf_bytes = pdf.output()
+                    
+                    if isinstance(pdf_bytes, (bytearray, bytes)):
+                        safe_bytes = bytes(pdf_bytes)
+                    else:
+                        safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+
                     st.download_button(
-                        label="⬇️ Pobierz gotowy PDF",
-                        data=bytes(pdf_bytes),
+                        label="Pobierz gotowy PDF",
+                        data=safe_bytes,
                         file_name=f"Oferta_Tynki_{datetime.now().strftime('%Y%m%d')}.pdf",
                         mime="application/pdf",
                         use_container_width=True
