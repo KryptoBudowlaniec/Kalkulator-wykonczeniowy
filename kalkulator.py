@@ -1506,7 +1506,7 @@ elif branza == "Sucha Zabudowa":
     # TAB 2: KOSZTORYS PRO
     # ==========================================
     with tab_gk2:
-        # --- ZMIENNE BAZOWE ---
+        # --- ZMIENNE BAZOWE (Zawsze dostępne) ---
         m2_gk = 0.0
         robocizna = 0
         total_material = 0
@@ -1517,6 +1517,7 @@ elif branza == "Sucha Zabudowa":
         grubosc_welny = None
         izolacja_gk = False
         plytowanie = "1xGK (Jednostronnie)"
+        lista_z = []
         
         col_g1, col_g2 = st.columns([1, 1.2])
 
@@ -1554,20 +1555,16 @@ elif branza == "Sucha Zabudowa":
                             st.session_state.pokoje_sufit.pop(i)
                             st.rerun()
                     
-                    # --- SUMOWANIE MATERIAŁÓW ZE WSZYSTKICH POKOI ---
+                    # Sumowanie materiałów ze wszystkich pokoi
                     for p in st.session_state.pokoje_sufit:
                         p_dl = p['dl']
                         p_sz = p['sz']
                         p_m2 = p_dl * p_sz
                         m2_gk += p_m2
                         
-                        # Profil UD27 (Obwód + 10% zapasu na narożniki i ścinki)
                         szt_ud += int(((p_dl + p_sz) * 2 * 1.1) / 3) + 1
-                        
-                        # Wieszaki (0.7m2 na wieszak to bezpieczny standard)
                         szt_wieszaki += int(p_m2 / 0.7) + 1
                         
-                        # Profile CD60 (Główne)
                         rozstaw_cd1 = 0.40 if p['typ'] == "Pojedynczy" else 1.10
                         liczba_cd1 = int(p_sz / rozstaw_cd1) + 1
                         odcinki_cd1 = int(p_dl / dl_profilu_cd)
@@ -1576,7 +1573,6 @@ elif branza == "Sucha Zabudowa":
                         szt_cd += liczba_cd1 * (odcinki_cd1 + (1 if reszta_cd1 > 0 else 0))
                         laczniki_cd1 += odcinki_cd1 * liczba_cd1
 
-                        # Profile CD60 (Nośne w krzyżowym)
                         if p['typ'] == "Krzyzowy":
                             rozstaw_cd2 = 0.40
                             liczba_cd2 = int(p_dl / rozstaw_cd2) + 1
@@ -1586,10 +1582,8 @@ elif branza == "Sucha Zabudowa":
                             szt_cd += liczba_cd2 * (odcinki_cd2 + (1 if reszta_cd2 > 0 else 0))
                             laczniki_cd2 += odcinki_cd2 * liczba_cd2
                             laczniki_krzyzowe += (liczba_cd1 * liczba_cd2)
-                else:
-                    st.warning("Dodaj co najmniej jedno pomieszczenie, aby zobaczyc wyliczenia.")
 
-            else: # Ściana Działowa (bez zmian)
+            else: # Ściana Działowa
                 c1, c2 = st.columns(2)
                 szer_sciany = c1.number_input("Dlugosc scianki (m):", min_value=0.1, value=4.0)
                 wys_sciany = c2.number_input("Wysokosc scianki (m):", min_value=0.1, value=2.6)
@@ -1615,7 +1609,7 @@ elif branza == "Sucha Zabudowa":
             wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()))
             stawka_gk = st.number_input("Stawka za robocizne (zl/m2):", 1, 300, 110)
 
-        # --- LOGIKA MATERIAŁOWA (ZBIORCZA) ---
+        # --- LOGIKA MATERIAŁOWA (Wykona się tylko gdy jest metraż) ---
         if m2_gk > 0:
             naddatek = 1.10
             
@@ -1624,7 +1618,6 @@ elif branza == "Sucha Zabudowa":
             elif "4 warstwy" in plytowanie: mnoznik_plyt = 4
             
             szt_plyt = int(((m2_gk * mnoznik_plyt) * naddatek) / 3.12) + 1
-            
             wkret_25 = int(m2_gk * 20 * mnoznik_plyt * naddatek)
             szt_pchelki = int(m2_gk * 12) if rodzaj_gk == "Sufit Podwieszany" else int(m2_gk * 5)
 
@@ -1657,8 +1650,7 @@ elif branza == "Sucha Zabudowa":
             total_material = koszt_plyt + koszt_profile + koszt_akcesoria + koszt_welny + koszt_masy + koszt_pchelki + koszt_wkrety + koszt_tasm + koszt_laczniki
             robocizna = m2_gk * stawka_gk
 
-            # ZBIORCZA LISTA ZAKUPÓW
-            lista_z = []
+            # Tworzenie zbiorczej listy zakupów
             if rodzaj_gk == "Sufit Podwieszany":
                 lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
                 lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
@@ -1684,29 +1676,35 @@ elif branza == "Sucha Zabudowa":
             lista_z.append((f"Masa do spoinowania ({wybrana_masa})", f"{worki_masy} worki/wiadra"))
             if izolacja_gk: lista_z.append((f"Welna izolacyjna {grubosc_welny}mm", f"{round(m2_gk * 1.1, 1)} m2"))
 
-            # --- WYŚWIETLANIE (PRAWA KOLUMNA) ---
-            with col_g2:
-                st.subheader("Podsumowanie")
-                st.success(f"### RAZEM: **{round(total_material + robocizna)} PLN**")
-                
-                c_r1, c_r2 = st.columns(2)
-                c_r1.metric("Robocizna", f"{round(robocizna)} PLN")
-                c_r2.metric("Materialy", f"{round(total_material)} PLN")
-                
-                st.markdown("---")
-                st.subheader("Lista zakupow (Zbiorcza)")
+        # --- WYŚWIETLANIE (PRAWA KOLUMNA - TERAZ ZAWSZE WIDOCZNA) ---
+        with col_g2:
+            st.subheader("Podsumowanie")
+            st.success(f"### RAZEM: **{round(total_material + robocizna)} PLN**")
+            
+            c_r1, c_r2 = st.columns(2)
+            c_r1.metric("Robocizna", f"{round(robocizna)} PLN")
+            c_r2.metric("Materialy", f"{round(total_material)} PLN")
+            
+            st.markdown("---")
+            st.subheader("Lista zakupow (Zbiorcza)")
+            if m2_gk > 0:
                 for poz, ilosc in lista_z:
                     st.write(f"• **{poz}:** {ilosc}")
-                
-                st.markdown("---")
-                
-                # --- GENERATOR PDF GK ---
-                try:
-                    from fpdf import FPDF
-                    from datetime import datetime
-                    import os
+            else:
+                st.info("Dodaj pomieszczenie lub parametry sciany, aby wygenerowac liste zakupow.")
+            
+            st.markdown("---")
+            
+            # --- GENERATOR PDF GK ---
+            try:
+                from fpdf import FPDF
+                from datetime import datetime
+                import os
 
-                    if st.button("Generuj Kosztorys PDF", use_container_width=True, key="gk_pdf_btn"):
+                if st.button("Generuj Kosztorys PDF", use_container_width=True, key="gk_pdf_btn"):
+                    if m2_gk == 0:
+                        st.warning("Nie mozna wygenerowac PDF dla zerowego metrazu.")
+                    else:
                         pdf = FPDF()
                         pdf.add_page()
                         
@@ -1742,6 +1740,13 @@ elif branza == "Sucha Zabudowa":
                         pdf.cell(0, 7, f"- Laczna powierzchnia: {round(m2_gk, 1)} m2", ln=True)
                         if rodzaj_gk == "Sciana Dzialowa":
                             pdf.cell(0, 7, f"- Konstrukcja poszycia: {plytowanie}", ln=True)
+                        
+                        # Zestawienie pokoi w PDF (jeśli dodano)
+                        if rodzaj_gk == "Sufit Podwieszany" and st.session_state.pokoje_sufit:
+                            pdf.ln(3)
+                            pdf.cell(0, 7, "Wykaz pomieszczen:", ln=True)
+                            for p in st.session_state.pokoje_sufit:
+                                pdf.cell(0, 7, f"  * {p['nazwa']}: {p['dl']}m x {p['sz']}m", ln=True)
 
                         pdf.ln(5)
                         pdf.set_font(pdf.font_family, size=12)
@@ -1764,8 +1769,8 @@ elif branza == "Sucha Zabudowa":
                             mime="application/pdf",
                             use_container_width=True
                         )
-                except Exception as e:
-                    st.error(f"Problem z generowaniem PDF: {e}")
+            except Exception as e:
+                st.error(f"Problem z generowaniem PDF: {e}")
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "Elektryka":
