@@ -1473,9 +1473,9 @@ elif branza == "Sucha Zabudowa":
     
     baza_masy_gk = {
         "Knauf Uniflott (25kg)": 140, 
-        "Knauf Vario (5kg)": 45, 
-        "Dolina Nidy Start (20kg)": 50, 
-        "Franspol (20kg)": 60
+        "Rigips Vario (25kg)": 145, 
+        "Dolina Nidy Start (20kg)": 60, 
+        "Franspol GS-6(20kg)": 96
     }
 
     if "pokoje_sufit" not in st.session_state:
