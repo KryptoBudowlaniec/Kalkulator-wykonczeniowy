@@ -719,17 +719,36 @@ elif branza == "Szpachlowanie":
     # ==========================================
     with tab_s1:
         st.subheader("Błyskawiczny szacunek kosztów")
-        m2_podl_fast = st.number_input("Podaj metraż podłogi mieszkania (m2):", min_value=1.0, value=50.0)
         
-        # Logika uproszczona: 3.5m2 ściany na 1m2 podłogi * średnia cena rynkowa (ok. 80 zł/m2 za wszystko)
-        szacunek_total = m2_podl_fast * 3.5 * 80 
+        c_fast1, c_fast2 = st.columns(2)
+        with c_fast1:
+            m2_podl_fast = st.number_input("Podaj metraż podłogi mieszkania (m2):", min_value=1.0, value=50.0, key="fast_podl")
+        with c_fast2:
+            l_warstw_fast = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="fast_warstwy", help="1 warstwa = odświeżenie, 2 = standard, 3 = bardzo krzywe ściany")
         
-        st.success(f"### Szacowany koszt całkowity: **ok. {round(szacunek_total)} PLN**")
-        st.write("W tym orientacyjnie:")
-        st.write(f"- Robocizna: **{round(szacunek_total * 0.65)} PLN**")
-        st.write(f"- Materiały: **{round(szacunek_total * 0.35)} PLN**")
-        st.info("Aby wybrać konkretne gładzie, ustawić swoją stawkę i dodać pomieszczenia, przejdź do **Detale PRO**.")
-
+        st.markdown("---")
+        
+        # LOGIKA: 3.5m2 ściany na 1m2 podłogi
+        m2_scian_fast = m2_podl_fast * 3.5
+        
+        # DYNAMICZNA CENA: 
+        # Baza (gruntowanie/szlifowanie) = 20 zł
+        # Każda warstwa gładzi (materiał + robota) = 30 zł
+        # W efekcie: 1 warstwa = 50 zł/m2, 2 warstwy = 80 zł/m2, 3 warstwy = 110 zł/m2
+        cena_za_m2_fast = 20 + (l_warstw_fast * 30)
+        
+        szacunek_total = m2_scian_fast * cena_za_m2_fast 
+        
+        st.success(f"### Szacowany koszt całkowity: **ok. {round(szacunek_total):,} PLN**".replace(",", " "))
+        
+        # Wyświetlanie rozbicia w ładnych kafelkach
+        c_wynik1, c_wynik2 = st.columns(2)
+        c_wynik1.metric("Szacowana Robocizna (~65%)", f"{round(szacunek_total * 0.65):,} PLN".replace(",", " "))
+        c_wynik2.metric("Szacowane Materiały (~35%)", f"{round(szacunek_total * 0.35):,} PLN".replace(",", " "))
+        
+        st.info("💡 **Jak to policzyliśmy?** Przyjęto średnio 3.5 m² ścian na każdy metr podłogi. "
+                f"Obecna stawka ryczałtowa to **{cena_za_m2_fast} zł/m²** (robocizna + materiał) za {l_warstw_fast} warstwy.")
+        st.caption("Aby wybrać konkretny rodzaj gładzi (gotowa/sypka), ustawić własne stawki lub dodać precyzyjnie wymiary pomieszczeń, przejdź do zakładki **Detale PRO**.")
     # ==========================================
     # ZAKŁADKA 2: DETALE PRO
     # ==========================================
