@@ -399,29 +399,44 @@ if branza == "Malowanie":
     st.subheader("Kalkulator Malarski")
     tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
 
-    # --- BAZA WIEDZY ---
+    # --- BAZA WIEDZY (Ceny rynkowe zaktualizowane: za 1 Litr / 1 Sztukę) ---
     baza_biale = {
-        "Śnieżka Eko (Akryl)": 14, "Dekoral Polinak": 19, "Tikkurila Anti-Reflex 2": 38,
-        "Bondex Super White": 28, "Magnat Ultra Matt": 34, "Greinplast Comfort": 24
+        "Śnieżka Eko (Ekonomiczna)": 7,          # ok. 70 zł / 10L
+        "Dekoral Polinak (Standard)": 10,        # ok. 100 zł / 10L
+        "Beckers Designer White (Standard+)": 14,# ok. 140 zł / 10L
+        "Magnat Ultra Matt (Premium)": 18,       # ok. 180 zł / 10L
+        "Tikkurila Anti-Reflex 2 (Premium+)": 28,# ok. 280 zł / 10L
+        "Flugger Flutex Pro 5 (Top Premium)": 35 # ok. 350 zł / 10L
     }
+    
     baza_kolory = {
-        "Dekoral Akrylit W": 24, "Beckers It's Simple": 38, "Tikkurila Optiva 5": 52,
-        "Magnat Ceramic": 62, "Dulux Kolory Świata": 28, "Bondex Smart Paint": 44
+        "Śnieżka Barwy Natury (Eko)": 17,        # ok. 85 zł / 5L
+        "Dekoral Akrylit W (Standard)": 20,      # ok. 100 zł / 5L
+        "Magnat Ceramic (Standard+)": 30,        # ok. 150 zł / 5L
+        "Beckers Designer Colour (Premium)": 32, # ok. 160 zł / 5L
+        "Tikkurila Optiva 5 (Premium+)": 50,     # ok. 250 zł / 5L
+        "Flugger Dekso (Top Premium)": 70        # ok. 350 zł / 5L (z barwieniem)
     }
+    
     baza_grunty = {
-        "Unigrunt Atlas (Standard)": 7, "Mapei Primer G (Premium)": 15,
-        "Knauf Tiefengrund (Specjalistyczny)": 19, "Grunt Marketowy (Eko)": 4
+        "Grunt Marketowy (Eko)": 5,              # ok. 25 zł / 5L
+        "Unigrunt Atlas (Standard)": 8,          # ok. 40 zł / 5L
+        "Ceresit CT 17 (Klasyk)": 12,            # ok. 60 zł / 5L
+        "Mapei Primer G Pro (Premium)": 17       # ok. 85 zł / 5L
     }
+    
     baza_tasmy = {
-        "Żółta Papierowa (Market)": 12, "Solid (Niebieska)": 24,
-        "Blue Dolphin (Profesjonalna)": 34, "Tesa Precision (Premium)": 52, "3M / Scotch": 58
+        "Żółta Papierowa (Market)": 8,
+        "Solid (Niebieska)": 14,
+        "Blue Dolphin (Profesjonalna)": 18,
+        "Tesa Precision (Premium)": 25,
+        "3M / Scotch (Top)": 30
     }
     
     with tab_fast:
-        st.info("Pełne możliwości w Kosztorys PRO.")
-
-    with tab_fast:
         st.header("⚡ Błyskawiczny szacunek kosztów")
+        st.info("Pełne możliwości, dokładne pomiary i wybór konkretnych marek farb znajdziesz w zakładce Kosztorys PRO.")
+        
         col_input, col_spacer = st.columns([1, 1])
         with col_input:
             st.write("Podaj metraż podłogi, aby otrzymać orientacyjne koszty malowania całego pomieszczenia (ściany + sufity).")
@@ -435,8 +450,9 @@ if branza == "Malowanie":
             pow_malowania_fast = m2_podloga_fast * 3.5
             estymacja_robocizny = pow_malowania_fast * stawka_rob_fast
             
-            # Estymacja materiałów: średnio 14 zł za m2 powierzchni malowania (farba, grunt, folia, akcesoria)
-            estymacja_materialow = pow_malowania_fast * 14 
+            # Estymacja materiałów: średnio 12 zł za m2 powierzchni malowania (farba, grunt, folia, akcesoria) 
+            # (obniżone z 14 zł po aktualizacji rynkowej dla standardu)
+            estymacja_materialow = pow_malowania_fast * 12 
             
             # Wyświetlanie wyników w kolumnach
             c_f1, c_f2 = st.columns(2)
@@ -452,10 +468,10 @@ if branza == "Malowanie":
             ---
             ### 💎 Chcesz większej precyzji?
             Przejdź do zakładki **Kosztorys PRO**, aby uzyskać dostęp do:
-            *   **Pełnej bazy materiałów:** Wybór konkretnych marek farb (kolor/biała), gruntów i taśm.
-            *   **Precyzyjnego planowania:** Możliwość dodawania każdej ściany z osobna (szerokość x wysokość).
-            *   **Sztukaterii:** Kalkulator listew ściennych i sufitowych wraz z klejami.
-            *   **Listy zakupowej:** Gotowe zestawienie ile dokładnie litrów farby i sztuk akcesoriów musisz kupić.
+            * **Pełnej bazy materiałów:** Wybór konkretnych marek farb (kolor/biała), gruntów i taśm.
+            * **Precyzyjnego planowania:** Możliwość dodawania każdej ściany z osobna (szerokość x wysokość).
+            * **Sztukaterii:** Kalkulator listew ściennych i sufitowych wraz z klejami.
+            * **Listy zakupowej:** Gotowe zestawienie ile dokładnie litrów farby i sztuk akcesoriów musisz kupić.
             """)
 
     with tab_pro:
@@ -516,13 +532,13 @@ if branza == "Malowanie":
             c_money1, c_money2 = st.columns(2)
             with c_money1:
                 st.metric("Twoja Robocizna", f"{round(k_rob_total)} zł")
-            with c_money2: # <--- TUTAJ BYŁ BŁĄD (było c_res2)
+            with c_money2: 
                 st.metric("Materiały (ok.)", f"{round(k_mat_sredni)} zł")
             
             st.markdown("---")
 
             # --- LISTA ZAKUPÓW (Widoczna na wierzchu) ---
-            st.markdown("###Twoja lista zakupów")
+            st.markdown("### Twoja lista zakupów")
             
             st.write(f"**Farby i Grunt:**")
             st.write(f"- Biała ({f_biala}): **{round(l_biala, 1)}L**")
@@ -536,7 +552,6 @@ if branza == "Malowanie":
             if mb_sztukaterii > 0:
                 st.write(f"**Sztukateria:**")
                 st.write(f"- Robocizna (montaż): **{round(koszt_rob_sztukateria)} zł**")
-                # Tutaj dodajemy nazwę kleju:
                 st.write(f"- Klej: **Bostik Mamut** ({int(mb_sztukaterii/8 + 1)} szt.)")
             
             st.info("Kwoty materiałów zawierają doliczony margines bezpieczeństwa (10%) oraz 150 zł na folie i wałki.")
@@ -584,7 +599,6 @@ if branza == "Malowanie":
                 st.session_state.pokoje_pro = []
                 st.rerun()
 
-        
         with c_btn2:
             try:
                 from fpdf import FPDF
@@ -598,20 +612,17 @@ if branza == "Malowanie":
                 # 2. KONFIGURACJA CZCIONKI INTER
                 font_path = "Inter-Regular.ttf"
                 if os.path.exists(font_path):
-                    # Rejestrujemy czcionkę (nazwa, styl, ścieżka)
                     pdf.add_font("Inter", "", font_path)
                     pdf.set_font("Inter", size=12)
                     font_exists = True
                 else:
                     pdf.set_font("Arial", size=12)
                     font_exists = False
-                    st.warning("⚠️ Nie znaleziono pliku Inter-Black.ttf. Używam czcionki zastępczej.")
 
                 # --- NAGŁÓWEK ---
                 if os.path.exists("logo.png"):
                     pdf.image("logo.png", x=10, y=8, w=35)
                 
-                # Używamy Inter do nagłówka (rozmiar 18 dla efektu 'Black')
                 pdf.set_font("Inter" if font_exists else "Arial", size=18)
                 pdf.cell(0, 15, "PROCALC - RAPORT KOSZTORYSOWY", ln=True, align='C')
                 pdf.ln(10)
@@ -650,7 +661,6 @@ if branza == "Malowanie":
                 pdf.set_font("Inter" if font_exists else "Arial", size=10)
                 pdf.ln(2)
 
-                # Przygotowanie listy z polskimi znakami (fpdf2 to obsłuży!)
                 lista_pdf = {
                     "Farba Biała (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
                     "Farba Kolor (Ściany)": f"{round(l_kolor, 1)}L ({f_kolor})",
@@ -671,19 +681,22 @@ if branza == "Malowanie":
                 pdf.set_text_color(100, 100, 100)
                 pdf.cell(0, 10, "Wygenerowano automatycznie przez proCalc. Kosztorys nie stanowi oferty handlowej.", 0, 0, 'C')
 
-                # Generowanie PDF jako bytes (standard fpdf2)
                 pdf_output = pdf.output()
                 
+                if isinstance(pdf_output, (bytearray, bytes)):
+                    safe_bytes = bytes(pdf_output)
+                else:
+                    safe_bytes = pdf_output.encode('latin-1', 'replace')
+                
                 st.download_button(
-                    label="Pobierz Raport PDF (Inter Black)",
-                    data=bytes(pdf_output),
-                    file_name=f"Kosztorys_proCalc_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    label="Pobierz Raport PDF (Inter)",
+                    data=safe_bytes,
+                    file_name=f"Kosztorys_Malowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
                     use_container_width=True
                 )
             except Exception as e:
                 st.error(f"Błąd PDF: {e}")
-
 elif branza == "Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
 
