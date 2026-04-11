@@ -197,26 +197,34 @@ elif branza == "Logowanie":
     # ---------------- EKRAN REJESTRACJI / LOGOWANIA ----------------
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_log, _ = st.columns([1, 1.5, 1])
+    
     with col_log:
+        # UWAGA: Ten blok kodu celowo nie ma spacji po lewej stronie! 
+        # Dzięki temu Streamlit nie zamieni tego na brzydki blok tekstowy.
         st.markdown("""
-        <div style="background-color: #FFFFFF; border: 1px solid #E9ECEF; border-radius: 15px; padding: 40px; box-shadow: 0px 10px 30px rgba(0,0,0,0.05);">
-            <h2 style="text-align: center; color: #1E1E1E; font-weight: 800; margin-bottom: 5px;">Zaloguj się do ProCalc</h2>
-            <p style="text-align: center; color: #6C757D; margin-bottom: 30px; font-size: 15px;">Zarządzaj swoimi kosztorysami i generuj raporty PDF</p>
-            
-            <a href="#" style="text-decoration: none; display: block; margin-bottom: 25px;">
-                <div style="background-color: #FFFFFF; border: 2px solid #E9ECEF; border-radius: 12px; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 15px; transition: 0.3s;" onmouseover="this.style.borderColor='#00D395'; this.style.backgroundColor='#F0FFF4';" onmouseout="this.style.borderColor='#E9ECEF'; this.style.backgroundColor='#FFFFFF';">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="24">
-                    <span style="color: #1E1E1E; font-weight: 600; font-size: 16px;">Kontynuuj z Google</span>
-                </div>
-            </a>
-            
-            <div style="display: flex; align-items: center; text-align: center; color: #6C757D; margin-bottom: 20px;">
-                <div style="flex: 1; border-bottom: 1px solid #E9ECEF;"></div>
-                <span style="padding: 0 15px; font-size: 13px; font-weight: 600; text-transform: uppercase;">lub użyj e-maila</span>
-                <div style="flex: 1; border-bottom: 1px solid #E9ECEF;"></div>
-            </div>
+<style>
+.google-btn { background-color: #FFFFFF; border: 2px solid #E9ECEF; border-radius: 12px; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 15px; transition: 0.3s; }
+.google-btn:hover { border-color: #00D395 !important; background-color: #F0FFF4 !important; cursor: pointer; }
+</style>
+
+<div style="background-color: #FFFFFF; border: 1px solid #E9ECEF; border-radius: 15px; padding: 40px; box-shadow: 0px 10px 30px rgba(0,0,0,0.05);">
+    <h2 style="text-align: center; color: #1E1E1E; font-weight: 800; margin-bottom: 5px;">Zaloguj się do ProCalc</h2>
+    <p style="text-align: center; color: #6C757D; margin-bottom: 30px; font-size: 15px;">Zarządzaj swoimi kosztorysami i generuj raporty PDF</p>
+    
+    <a href="#" style="text-decoration: none; display: block; margin-bottom: 25px;">
+        <div class="google-btn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="24">
+            <span style="color: #1E1E1E; font-weight: 600; font-size: 16px;">Kontynuuj z Google</span>
         </div>
-        """, unsafe_allow_html=True)
+    </a>
+    
+    <div style="display: flex; align-items: center; text-align: center; color: #6C757D; margin-bottom: 20px;">
+        <div style="flex: 1; border-bottom: 1px solid #E9ECEF;"></div>
+        <span style="padding: 0 15px; font-size: 13px; font-weight: 600; text-transform: uppercase;">lub użyj e-maila</span>
+        <div style="flex: 1; border-bottom: 1px solid #E9ECEF;"></div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
         
         email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
         haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
@@ -226,7 +234,6 @@ elif branza == "Logowanie":
             st.info("System rejestracji jest w trakcie podłączania do bezpiecznej bazy danych. Wróć tu wkrótce!")
             
         st.markdown("<p style='text-align: center; color: #6C757D; font-size: 12px; margin-top: 20px;'>Logując się, akceptujesz Regulamin oraz Politykę Prywatności ProCalc.</p>", unsafe_allow_html=True)
-
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
     st.session_state.pokoje_pro = []
