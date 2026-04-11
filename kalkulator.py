@@ -3,10 +3,15 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
-if 'widok' not in st.session_state:
-    st.session_state.widok = "Start"
+# --- FUNKCJE NAWIGACJI (NAPRAWA PRZYCISKÓW) ---
+def zresetuj_rejestracje():
+    # Kiedy ktoś klika inne zakładki w menu, wyłączamy widok rejestracji
+    st.session_state.pokaz_rejestracje = False
 
-# --- HEADER: LOGO LEWA (WIĘKSZE) | MENU PRAWA ---
+if 'pokaz_rejestracje' not in st.session_state:
+    st.session_state.pokaz_rejestracje = False
+
+# --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
 
 with col_logo:
@@ -22,7 +27,8 @@ with col_nav:
         ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt"],
         selection_mode="single",
         default="Start",
-        key="main_nav"
+        key="main_nav",
+        on_change=zresetuj_rejestracje  # Funkcja zamykająca rejestrację
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -31,179 +37,61 @@ if nawigacja == "Kalkulatory":
     st.markdown("<br>", unsafe_allow_html=True)
     sub_nav_col = st.columns([1])[0]
     with sub_nav_col:
-        branza = st.pills(
+        branza_wybor = st.pills(
             "Wybierz branżę:", 
             ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Łazienka", "Podłogi", "Drzwi"],
             selection_mode="single",
             default="Malowanie",
-            key="sub_nav"
+            key="sub_nav",
+            on_change=zresetuj_rejestracje
         )
+        branza = branza_wybor
 else:
     branza = nawigacja
 
+# --- NADPISANIE WIDOKU (KLUCZ DO DZIAŁANIA REJESTRACJI) ---
+if st.session_state.pokaz_rejestracje:
+    branza = "Rejestracja"
 
-# --- 1. ZINTEGROWANE STYLE CSS ---
+
+# --- STYLE CSS (BEZ ZMIAN) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-
-    /* 1. Globalne */
     html, body, [class*="st-"] { font-family: 'Inter', sans-serif !important; }
     .stApp { background-color: #FFFFFF !important; color: #1E1E1E !important; }
-
-    /* Fix na systemowe punktory */
     li::before { content: none !important; display: none !important; }
-    [data-testid="stMarkdownContainer"] ul, [data-testid="stMarkdownContainer"] li {
-        list-style-type: none !important;
-        padding-left: 0px !important;
-        margin-left: 0px !important;
-    }
-    [data-testid="stMarkdownContainer"] li::before {
-        content: none !important;
-        display: none !important;
-    }
-
-    /* 2. UNIWERSALNY KAFELEK */
-    .custom-card {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E9ECEF !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
-        margin-bottom: 15px !important;
-        
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important; 
-        justify-content: flex-start !important; 
-        text-align: center !important;
-        
-        gap: 12px !important; 
-        height: 100% !important; 
-        min-height: 240px !important;
-        transition: 0.3s;
-    }
-    .custom-card:hover {
-        transform: translateY(-5px) !important;
-        border-color: #00D395 !important;
-        box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.1) !important;
-    }
-
-    .card-title {
-        color: #00D395 !important;
-        font-size: 18px !important;
-        font-weight: 800 !important;
-        text-transform: uppercase !important;
-        margin: 0 !important; 
-        padding: 0 !important;
-    }
-
-    .card-text {
-        color: #6C757D !important;
-        font-size: 14px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1.4 !important;
-    }
-
-    /* POPRAWIONA LISTA W KAFELKACH */
-    .card-list {
-        display: block !important; 
-        text-align: center !important; 
-        padding: 0 !important;
-        margin: 0 auto !important; 
-        border: none !important;
-        width: 100% !important;
-    }
-
-    .card-list li {
-        font-size: 13px !important;
-        color: #495057 !important;
-        margin-bottom: 6px !important; 
-        display: block !important;
-        font-weight: 600 !important;
-        text-align: center !important;
-    }
-
-    .card-list li::before {
-        content: "✔ " !important; 
-        color: #00D395 !important;
-        font-weight: bold !important;
-        margin-right: 5px !important;
-    }
-
-    /* 3. STYLE DLA CENNIKA */
-    .pricing-card {
-        background-color: #FFFFFF;
-        border: 2px solid #E9ECEF;
-        border-radius: 15px;
-        padding: 30px 20px;
-        text-align: center;
-        height: 100%;
-        transition: 0.3s;
-        position: relative;
-    }
-    .pricing-pro {
-        border-color: #00D395;
-        background-color: #F0FFF4;
-        box-shadow: 0px 10px 30px rgba(0, 211, 149, 0.15);
-    }
-    .pricing-badge {
-        position: absolute;
-        top: -15px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #00D395;
-        color: white;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-    .pricing-price {
-        font-size: 42px;
-        font-weight: 800;
-        color: #1E1E1E;
-        margin: 15px 0 5px 0;
-    }
-    .pricing-sub {
-        font-size: 13px;
-        color: #6C757D;
-        margin-bottom: 20px;
-        min-height: 35px; /* Wyśrodkowuje tekst jeśli w innej karcie są dwie linijki */
-    }
-
-    /* 4. FAQ i Przyciski */
+    [data-testid="stMarkdownContainer"] ul, [data-testid="stMarkdownContainer"] li { list-style-type: none !important; padding-left: 0px !important; margin-left: 0px !important; }
+    .custom-card { background-color: #FFFFFF !important; border: 1px solid #E9ECEF !important; border-radius: 12px !important; padding: 20px !important; margin-bottom: 15px !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; text-align: center !important; gap: 12px !important; height: 100% !important; min-height: 240px !important; transition: 0.3s; }
+    .custom-card:hover { transform: translateY(-5px) !important; border-color: #00D395 !important; box-shadow: 0px 8px 20px rgba(0, 211, 149, 0.1) !important; }
+    .card-title { color: #00D395 !important; font-size: 18px !important; font-weight: 800 !important; text-transform: uppercase !important; margin: 0 !important; padding: 0 !important; }
+    .card-text { color: #6C757D !important; font-size: 14px !important; margin: 0 !important; padding: 0 !important; line-height: 1.4 !important; }
+    .card-list { display: block !important; text-align: center !important; padding: 0 !important; margin: 0 auto !important; border: none !important; width: 100% !important; }
+    .card-list li { font-size: 13px !important; color: #495057 !important; margin-bottom: 6px !important; display: block !important; font-weight: 600 !important; text-align: center !important; }
+    .card-list li::before { content: "✔ " !important; color: #00D395 !important; font-weight: bold !important; margin-right: 5px !important; }
+    .pricing-card { background-color: #FFFFFF; border: 2px solid #E9ECEF; border-radius: 15px; padding: 30px 20px; text-align: center; height: 100%; transition: 0.3s; position: relative; }
+    .pricing-pro { border-color: #00D395; background-color: #F0FFF4; box-shadow: 0px 10px 30px rgba(0, 211, 149, 0.15); }
+    .pricing-badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background-color: #00D395; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+    .pricing-price { font-size: 42px; font-weight: 800; color: #1E1E1E; margin: 15px 0 5px 0; }
+    .pricing-sub { font-size: 13px; color: #6C757D; margin-bottom: 20px; min-height: 35px; }
     .faq-card-question { background: #FFF; border: 2px solid #00D395; border-radius: 15px 15px 0 0; padding: 20px; font-weight: 800; text-align: center; margin-top: 20px;}
-    .faq-card-answer { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
-    .faq-card-answer-blue { background: #0E172B; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
-
-    div.stButton > button {
-        background-color: #00D395 !important;
-        color: white !important;
-        font-weight: 800 !important;
-        height: 60px !important;
-        border-radius: 15px !important;
-        width: 100%;
-    }
+    .faq-card-answer, .faq-card-answer-blue { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
+    .faq-card-answer-blue { background: #0E172B; }
+    div.stButton > button { background-color: #00D395 !important; color: white !important; font-weight: 800 !important; height: 60px !important; border-radius: 15px !important; width: 100%; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- STAN APLIKACJI ---
-if 'pokoje_pro' not in st.session_state: st.session_state.pokoje_pro = []
-if 'pokoje' not in st.session_state: st.session_state.pokoje = []
 
-# --- MENU BOCZNE ---
+# ==========================================
+# GŁÓWNA LOGIKA WYŚWIETLANIA (IF / ELIF)
+# ==========================================
 
 if branza == "Start":
-    # Nagłówki główne
+    # ---------------- EKRAN STARTOWY ----------------
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0; font-weight: 800;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; font-size: 26px; margin-bottom: 50px; color: #495057;'>Twój Cyfrowy Kosztorysant Wykończeniowy</h3>", unsafe_allow_html=True)
     
-    # 2. Kontener centralny (Dla kogo jest ProCalc)
     col_c1, col_center, col_c2 = st.columns([1, 4, 1])
-    
     with col_center:
         st.markdown("<h2 style='text-align: center; color: #000000; margin-bottom: 40px; font-weight: 800;'>Dla kogo jest ProCalc?</h2>", unsafe_allow_html=True)
         
@@ -216,27 +104,16 @@ if branza == "Start":
         cols_ben = st.columns(3)
         for i, (tytul, tekst) in enumerate(benefity):
             with cols_ben[i]:
-                st.markdown(f"""
-                <div class="custom-card">
-                    <div class="card-title">{tytul}</div>
-                    <div class="card-text">{tekst}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div class="custom-card"><div class="card-title">{tytul}</div><div class="card-text">{tekst}</div></div>', unsafe_allow_html=True)
         
         st.markdown("<div style='text-align: center; margin-top: 20px;'>", unsafe_allow_html=True)
         _, col_btn_top, _ = st.columns([1, 2, 1])
         with col_btn_top:
             if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
-                st.session_state.branza = "Rejestracja"
+                st.session_state.pokaz_rejestracje = True
                 st.rerun()
 
-        st.markdown("""
-            <div style='text-align: center; width: 100%; margin-top: 15px;'>
-                <p style='font-size: 15px; color: #6c757d; font-weight: 600;'>
-                    ✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; width: 100%; margin-top: 15px;'><p style='font-size: 15px; color: #6c757d; font-weight: 600;'>✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.</p></div>", unsafe_allow_html=True)
 
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Co oferują nasze kalkulatory?</h2>", unsafe_allow_html=True)
     
@@ -256,34 +133,12 @@ if branza == "Start":
     for i, item in enumerate(oferta):
         with cols_oferta[i % 3]:
             style_extra = "border: 2px solid #00D395; background-color: #F0FFF4 !important;" if item[0] == "Premium PRO" else ""
-            
             lista_html = "".join([f"<li>{punkt}</li>" for punkt in item[2]])
-            
-            st.markdown(f"""
-            <div class="custom-card" style="{style_extra}">
-                <div class="card-title">{item[0]}</div>
-                <div class="card-text" style="margin-bottom: 10px !important;">{item[1]}</div>
-                <ul class="card-list">
-                    {lista_html}
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="custom-card" style="{style_extra}"><div class="card-title">{item[0]}</div><div class="card-text" style="margin-bottom: 10px !important;">{item[1]}</div><ul class="card-list">{lista_html}</ul></div>', unsafe_allow_html=True)
 
-    
-    st.markdown("""
-        <div style='text-align: center; width: 100%; padding: 20px;'>
-            <p style='font-size: 26px; font-weight: 800; color: #1E1E1E; margin-bottom: 10px;'>
-                GOTOWY DO WYCENY?
-            </p>
-            <p style='font-size: 20px; color: #00D395; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>
-                Wybierz sekcję z menu bocznego i zacznij liczyć!
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; width: 100%; padding: 20px;'><p style='font-size: 26px; font-weight: 800; color: #1E1E1E; margin-bottom: 10px;'>GOTOWY DO WYCENY?</p><p style='font-size: 20px; color: #00D395; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Wybierz sekcję z menu bocznego i zacznij liczyć!</p></div>", unsafe_allow_html=True)
 
-    # --- SEKCJA ZAUFANIA ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Dlaczego warto nam zaufać?</h2><br>", unsafe_allow_html=True)
-    
     zalety = [
         ["NORMY", "Algorytmy oparte na realnych normach zużycia materiałów z kart technicznych."],
         ["DOŚWIADCZENIE", "Aplikacja stworzona przy współpracy z wieloletnimi wykonawcami."],
@@ -292,24 +147,13 @@ if branza == "Start":
         ["LISTY ZAKUPÓW", "Gotowe raporty dla sklepów oszczędzają Twój czas."],
         ["NIEZALEŻNOŚĆ", "Nie jesteśmy sponsorowani - dobierasz producenta sam."]
     ]
-
     _, col_main, _ = st.columns([1, 4, 1])
-
     with col_main:
         sub_l, sub_m, sub_r = st.columns(3) 
         kolumny = [sub_l, sub_m, sub_r, sub_l, sub_m, sub_r]
-        
         for i, (tytul, opis) in enumerate(zalety):
             with kolumny[i]:
-                st.markdown(f"""
-                <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 30px; padding: 0 10px;">
-                    <div style="color: #00D395; font-size: 28px; margin-bottom: 10px; font-weight: bold; line-height: 1;">✔</div>
-                    <div style="font-size: 15px; color: #495057; line-height: 1.4;">
-                        <b style="color: #1E1E1E; font-size: 16px; display: block; margin-bottom: 5px; text-transform: uppercase;">{tytul}</b>
-                        <span style="display: block; opacity: 0.8;">{opis}</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 30px; padding: 0 10px;"><div style="color: #00D395; font-size: 28px; margin-bottom: 10px; font-weight: bold; line-height: 1;">✔</div><div style="font-size: 15px; color: #495057; line-height: 1.4;"><b style="color: #1E1E1E; font-size: 16px; display: block; margin-bottom: 5px; text-transform: uppercase;">{tytul}</b><span style="display: block; opacity: 0.8;">{opis}</span></div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
         
@@ -321,139 +165,52 @@ if branza == "Start":
 
     st.markdown("<p style='text-align: center; font-size: 14px; color: gray; margin-top: 5px;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
-    # --- ZAKTUALIZOWANA SEKCJA: 3 PAKIETY CENNIKA ---
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Wybierz pakiet dla siebie</h2>", unsafe_allow_html=True)
-    
-    # 3 równe kolumny, lekko zwężone na brzegach by karty wyglądały zgrabnie
     _, col_p1, col_p2, col_p3, _ = st.columns([0.5, 3, 3, 3, 0.5])
-
     with col_p1:
-        st.markdown("""
-        <div class="pricing-card">
-            <h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">Podstawowy</h3>
-            <div class="pricing-price">0 zł</div>
-            <div class="pricing-sub">Zawsze za darmo</div>
-            <ul class="card-list" style="margin-top: 10px !important;">
-                <li>Dostęp do Szybkich Wycen</li>
-                <li>Podstawowe algorytmy zużycia</li>
-                <li>Brak możliwości zapisu projektów</li>
-                <li>Brak generatora ofert PDF</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown('<div class="pricing-card"><h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">Podstawowy</h3><div class="pricing-price">0 zł</div><div class="pricing-sub">Zawsze za darmo</div><ul class="card-list" style="margin-top: 10px !important;"><li>Dostęp do Szybkich Wycen</li><li>Podstawowe algorytmy zużycia</li><li>Brak możliwości zapisu projektów</li><li>Brak generatora ofert PDF</li></ul></div>', unsafe_allow_html=True)
     with col_p2:
-        st.markdown("""
-        <div class="pricing-card">
-            <h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">PRO (Miesiąc)</h3>
-            <div class="pricing-price">19 zł <span style="font-size: 20px; color: #6C757D;">/ mc</span></div>
-            <div class="pricing-sub">Elastyczna subskrypcja z możliwością rezygnacji</div>
-            <ul class="card-list" style="margin-top: 10px !important;">
-                <li><b>Wszystko z wersji Podstawowej</b></li>
-                <li>Precyzyjne listy zakupowe PRO</li>
-                <li>Nielimitowane generowanie PDF</li>
-                <li>Zapisywanie i edycja kosztorysów</li>
-                <li>Zaawansowany kalkulator (ROI)</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown('<div class="pricing-card"><h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">PRO (Miesiąc)</h3><div class="pricing-price">19 zł <span style="font-size: 20px; color: #6C757D;">/ mc</span></div><div class="pricing-sub">Elastyczna subskrypcja z możliwością rezygnacji</div><ul class="card-list" style="margin-top: 10px !important;"><li><b>Wszystko z wersji Podstawowej</b></li><li>Precyzyjne listy zakupowe PRO</li><li>Nielimitowane generowanie PDF</li><li>Zapisywanie i edycja kosztorysów</li><li>Zaawansowany kalkulator (ROI)</li></ul></div>', unsafe_allow_html=True)
     with col_p3:
-        st.markdown("""
-        <div class="pricing-card pricing-pro">
-            <div class="pricing-badge">NAJLEPSZY WYBÓR</div>
-            <h3 style="color: #00D395; font-weight: 800; margin-bottom: 0;">PRO (Rok)</h3>
-            <div class="pricing-price">190 zł <span style="font-size: 20px; color: #6C757D;">/ rok</span></div>
-            <div class="pricing-sub"><b>Oszczędzasz 38 zł</b><br>(2 miesiące całkowicie GRATIS!)</div>
-            <ul class="card-list" style="margin-top: 10px !important;">
-                <li><b>Wszystko to, co w pakiecie Miesiąc</b></li>
-                <li>Gwarancja stałej, niższej ceny</li>
-                <li>Priorytetowe wsparcie mailowe</li>
-                <li>Wcześniejszy dostęp do nowości</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="pricing-card pricing-pro"><div class="pricing-badge">NAJLEPSZY WYBÓR</div><h3 style="color: #00D395; font-weight: 800; margin-bottom: 0;">PRO (Rok)</h3><div class="pricing-price">190 zł <span style="font-size: 20px; color: #6C757D;">/ rok</span></div><div class="pricing-sub"><b>Oszczędzasz 38 zł</b><br>(2 miesiące całkowicie GRATIS!)</div><ul class="card-list" style="margin-top: 10px !important;"><li><b>Wszystko to, co w pakiecie Miesiąc</b></li><li>Gwarancja stałej, niższej ceny</li><li>Priorytetowe wsparcie mailowe</li><li>Wcześniejszy dostęp do nowości</li></ul></div>', unsafe_allow_html=True)
 
-
-    # --- SEKCJA FAQ ---
     st.markdown("<br><br><h2 style='text-align: center;'>Często Zadawane Pytania</h2>", unsafe_allow_html=True)
-    
     col_f1, col_faq, col_f2 = st.columns([1, 2.5, 1])
-    
     with col_faq:
-        st.markdown("""
-            <div class="faq-card-question">Czy wyceny materiałów są aktualne?</div>
-            <div class="faq-card-answer">Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen rynkowych z największych marketów i hurtowni.</div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="faq-card-question">Czy wyceny materiałów są aktualne?</div><div class="faq-card-answer">Tak. Nasze bazy cenowe są aktualizowane raz w miesiącu na podstawie średnich cen rynkowych z największych marketów i hurtowni.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="faq-card-question">Czy mogę zapisać swój kosztorys?</div><div class="faq-card-answer-blue">Funkcja zapisywania i edycji wielu projektów jest dostępna dla zalogowanych użytkowników w wersji <b>Premium PRO</b>.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="faq-card-question">Jak dokładne są listy zakupowe?</div><div class="faq-card-answer">Algorytmy uwzględniają oficjalne normy zużycia producentów oraz standardowy naddatek 10% na odpady i docięcia.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="faq-card-question">Czy format płytek wpływa na wycenę?</div><div class="faq-card-answer-blue">Oczywiście. W sekcji Łazienka możesz wybrać format (np. 120x60), a system automatycznie podniesie stawkę za robociznę i zużycie kleju.</div>', unsafe_allow_html=True)
 
-        st.markdown("""
-            <div class="faq-card-question">Czy mogę zapisać swój kosztorys?</div>
-            <div class="faq-card-answer-blue">Funkcja zapisywania i edycji wielu projektów jest dostępna dla zalogowanych użytkowników w wersji <b>Premium PRO</b>.</div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-            <div class="faq-card-question">Jak dokładne są listy zakupowe?</div>
-            <div class="faq-card-answer">Algorytmy uwzględniają oficjalne normy zużycia producentów oraz standardowy naddatek 10% na odpady i docięcia.</div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("""
-            <div class="faq-card-question">Czy format płytek wpływa na wycenę?</div>
-            <div class="faq-card-answer-blue">Oczywiście. W sekcji Łazienka możesz wybrać format (np. 120x60), a system automatycznie podniesie stawkę za robociznę i zużycie kleju.</div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-            <div class="faq-card-question">Czy kalkulator uwzględnia tzw. drobnicę?</div>
-            <div class="faq-card-answer">Tak. System dolicza szacunkowe koszty folii, taśm, kołków czy gruntów, o których inwestorzy często zapominają przy planowaniu budżetu.</div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-            <div class="faq-card-question">Czy otrzymam listę zakupów do sklepu?</div>
-            <div class="faq-card-answer-blue">Tak. Po zakończeniu obliczeń możesz wygenerować gotowy raport z listą materiałów, którą wystarczy pokazać sprzedawcy w hurtowni.</div>
-        """, unsafe_allow_html=True)
-
-        # --- SEKCJA ROZWOJU PROJEKTU (ROADMAP) ---
         st.markdown("---")
         st.header("Plan Rozwoju Aplikacji (Roadmap)")
-        st.write("Budujemy najbardziej kompletne narzędzie dla nowoczesnych wykonawców. Sprawdź, nad czym obecnie pracujemy:")
-        
         col_dev1, col_dev2 = st.columns(2)
-        
         with col_dev1:
             st.markdown("#### W TRAKCIE (Koncept/Dev)")
-            st.info("**Live Progress (CRM)**\n\nInteraktywna checklista etapów prac. Zamykasz etap jednym kliknięciem, a system przelicza % zaawansowania dla inwestora.")
-            st.info("**Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy przypisanych do konkretnych etapów – pełna przejrzystość.")
-            st.info("**Kalkulator Łazienki PRO**\n\nKompleksowe wyliczanie hydroizolacji, taśm narożnikowych i tynków pod glazurę.")
-        
+            st.info("**Live Progress (CRM)**\n\nInteraktywna checklista etapów prac.")
+            st.info("**Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy.")
         with col_dev2:
             st.markdown("#### DO ZROBIENIA (Plany)")
-            st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk, trawertyn.")
-            st.success("**System Linków** – Unikalny adres budowy dla inwestora.")
+            st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk.")
             st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
-            st.success("**Panel Marży** – Ukryte ustawienia cen i narzutów.")
-        
-        st.markdown("""
-        <div style="background-color:#f0f2f6; padding:15px; border-radius:10px; border-left: 5px solid #ff4b4b;">
-            <strong>Masz pomysł na ulepszenie?</strong><br>
-            Napisz do nas! Rozwijamy ten projekt razem z wykonawcami, aby ułatwić codzienną pracę na budowie.
-        </div>
-        """, unsafe_allow_html=True) 
-        
+
 elif branza == "Kontakt":
+    # ---------------- EKRAN KONTAKTU ----------------
     st.markdown("<h1 style='text-align: center; color: #00D395;'>Kontakt</h1>", unsafe_allow_html=True)
-    st.markdown("""
-    <div class="custom-card" style="text-align: center;">
-        <p class="card-text">Masz pytania? Napisz do nas!</p>
-        <h3 style="color: #0E172B;">biuro@procalc.pl</h3>
-        <p class="card-text">Infolinia: +48 123 456 789</p>
-    </div>
-    """, unsafe_allow_html=True)
+    _, col_k, _ = st.columns([1, 2, 1])
+    with col_k:
+        st.markdown("""
+        <div class="custom-card" style="text-align: center;">
+            <p class="card-text">Masz pytania lub propozycję współpracy? Napisz do nas!</p>
+            <h3 style="color: #0E172B; font-weight: 800; margin: 20px 0;">biuro@procalc.pl</h3>
+            <p class="card-text">Infolinia (Pn-Pt 8:00-16:00): <b>+48 123 456 789</b></p>
+        </div>
+        """, unsafe_allow_html=True)
 
 elif branza == "Rejestracja":
+    # ---------------- EKRAN REJESTRACJI ----------------
     st.markdown("<br><br>", unsafe_allow_html=True)
-    
-    # Wąska kolumna na środku, żeby formularz wyglądał zgrabnie
     _, col_log, _ = st.columns([1, 1.5, 1])
-
     with col_log:
         st.markdown("""
         <div style="background-color: #FFFFFF; border: 1px solid #E9ECEF; border-radius: 15px; padding: 40px; box-shadow: 0px 10px 30px rgba(0,0,0,0.05);">
@@ -475,16 +232,15 @@ elif branza == "Rejestracja":
         </div>
         """, unsafe_allow_html=True)
         
-        # Standardowe pola wejściowe Streamlit (poza blokiem HTML)
         email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
         haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
-        
         st.markdown("<br>", unsafe_allow_html=True)
         
         if st.button("ZALOGUJ SIĘ / ZAREJESTRUJ", use_container_width=True):
-            st.info("Połączenie z bazą danych w trakcie konfiguracji... Wróć tu niebawem!")
+            st.info("Logowanie w trakcie konfiguracji. Podłączanie zewnętrznej bazy danych wkrótce!")
             
         st.markdown("<p style='text-align: center; color: #6C757D; font-size: 12px; margin-top: 20px;'>Logując się, akceptujesz Regulamin oraz Politykę Prywatności ProCalc.</p>", unsafe_allow_html=True)
+
 
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
