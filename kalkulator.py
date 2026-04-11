@@ -3,14 +3,6 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
-# --- FUNKCJE NAWIGACJI (NAPRAWA PRZYCISKÓW) ---
-def zresetuj_rejestracje():
-    # Kiedy ktoś klika inne zakładki w menu, wyłączamy widok rejestracji
-    st.session_state.pokaz_rejestracje = False
-
-if 'pokaz_rejestracje' not in st.session_state:
-    st.session_state.pokaz_rejestracje = False
-
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
 
@@ -22,13 +14,13 @@ with col_logo:
 
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
+    # ZMIANA: Dodano "Logowanie" na stałe do głównego menu!
     nawigacja = st.pills(
         "", 
-        ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt"],
+        ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"],
         selection_mode="single",
         default="Start",
-        key="main_nav",
-        on_change=zresetuj_rejestracje  # Funkcja zamykająca rejestrację
+        key="main_nav"
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -37,24 +29,18 @@ if nawigacja == "Kalkulatory":
     st.markdown("<br>", unsafe_allow_html=True)
     sub_nav_col = st.columns([1])[0]
     with sub_nav_col:
-        branza_wybor = st.pills(
+        branza = st.pills(
             "Wybierz branżę:", 
             ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Łazienka", "Podłogi", "Drzwi"],
             selection_mode="single",
             default="Malowanie",
-            key="sub_nav",
-            on_change=zresetuj_rejestracje
+            key="sub_nav"
         )
-        branza = branza_wybor
 else:
     branza = nawigacja
 
-# --- NADPISANIE WIDOKU (KLUCZ DO DZIAŁANIA REJESTRACJI) ---
-if st.session_state.pokaz_rejestracje:
-    branza = "Rejestracja"
 
-
-# --- STYLE CSS (BEZ ZMIAN) ---
+# --- STYLE CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -110,8 +96,8 @@ if branza == "Start":
         _, col_btn_top, _ = st.columns([1, 2, 1])
         with col_btn_top:
             if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
-                st.session_state.pokaz_rejestracje = True
-                st.rerun()
+                # Prosta i jasna instrukcja dla użytkownika
+                st.info("👆 Aby założyć konto, wybierz zakładkę 'Logowanie' z menu na samej górze strony!")
 
         st.markdown("<div style='text-align: center; width: 100%; margin-top: 15px;'><p style='font-size: 15px; color: #6c757d; font-weight: 600;'>✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.</p></div>", unsafe_allow_html=True)
 
@@ -160,8 +146,8 @@ if branza == "Start":
     _, col_demo, _ = st.columns([1, 1.5, 1])
     with col_demo:
         if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True, key="btn_demo_main"):
-            st.session_state.branza = "Malowanie"
-            st.rerun()
+            # Informacja dla użytkownika jak przejść do kalkulatorów
+            st.info("👆 Wybierz zakładkę 'Kalkulatory' na górze, a następnie 'Malowanie'!")
 
     st.markdown("<p style='text-align: center; font-size: 14px; color: gray; margin-top: 5px;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
 
@@ -207,8 +193,8 @@ elif branza == "Kontakt":
         </div>
         """, unsafe_allow_html=True)
 
-elif branza == "Rejestracja":
-    # ---------------- EKRAN REJESTRACJI ----------------
+elif branza == "Logowanie":
+    # ---------------- EKRAN REJESTRACJI / LOGOWANIA ----------------
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_log, _ = st.columns([1, 1.5, 1])
     with col_log:
@@ -237,10 +223,9 @@ elif branza == "Rejestracja":
         st.markdown("<br>", unsafe_allow_html=True)
         
         if st.button("ZALOGUJ SIĘ / ZAREJESTRUJ", use_container_width=True):
-            st.info("Logowanie w trakcie konfiguracji. Podłączanie zewnętrznej bazy danych wkrótce!")
+            st.info("System rejestracji jest w trakcie podłączania do bezpiecznej bazy danych. Wróć tu wkrótce!")
             
         st.markdown("<p style='text-align: center; color: #6C757D; font-size: 12px; margin-top: 20px;'>Logując się, akceptujesz Regulamin oraz Politykę Prywatności ProCalc.</p>", unsafe_allow_html=True)
-
 
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
