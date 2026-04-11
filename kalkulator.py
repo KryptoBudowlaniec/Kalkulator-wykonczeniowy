@@ -813,7 +813,6 @@ elif branza == "Szpachlowanie":
                 podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
 
         # --- C. WYNIKI (Wykonują się RAZ na samym końcu) ---
-        # --- C. WYNIKI (Wykonują się RAZ na samym końcu) ---
         if m2_total > 0:
             # 1. Obliczenia materiałowe (Wyciągnięte na wierzch, by działały w UI i PDF)
             kg_gladzi = m2_total * norma_g * l_warstw
@@ -859,7 +858,7 @@ elif branza == "Szpachlowanie":
             c_pdf1, c_pdf2 = st.columns(2)
                 
             with c_pdf1:
-                if st.button("Wyczyść wszystko", use_container_width=True):
+                if st.button("Wyczyść wszystko", use_container_width=True, key="btn_wyczysc_szpachlowanie_pro"):
                     st.session_state.pokoje_szp = []
                     st.rerun()
                         
