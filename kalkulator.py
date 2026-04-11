@@ -3,20 +3,13 @@ import streamlit as st
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(page_title="Ekspert Wykończeń", layout="wide")
 
-# --- STAN APLIKACJI ---
-if 'pokaz_rejestracje' not in st.session_state:
-    st.session_state.pokaz_rejestracje = False
-
+# --- STAN APLIKACJI (INICJALIZACJA) ---
 if 'zalogowany' not in st.session_state:
     st.session_state.zalogowany = False
-
 if 'pakiet' not in st.session_state:
     st.session_state.pakiet = "Podstawowy"
-
-# TUTAJ WKLEJASZ TĘ LINIJKĘ (To jest klucz do naprawy błędu):
-if 'nawigacja_stan' not in st.session_state:
-    st.session_state.nawigacja_stan = "Start"
-
+if 'pokaz_rejestracje' not in st.session_state:
+    st.session_state.pokaz_rejestracje = False
 
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
@@ -30,31 +23,24 @@ with col_logo:
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     
-    opcje_menu = ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"]
-    
-    # 1. Zabezpieczenie: Sprawdzamy, czy nasz stan jest na liście (na wszelki wypadek)
-    if st.session_state.nawigacja_stan not in opcje_menu:
-        st.session_state.nawigacja_stan = "Start"
-    
-    # 2. Obliczamy numer pozycji (0 dla Start, 1 dla Kalkulatory itd.)
-    pozycja = opcje_menu.index(st.session_state.nawigacja_stan)
-    
-    # 3. Wywołujemy pills używając TYLKO parametru 'selection_mode' i 'index'
+    # Najprostsze wywołanie bez żadnych indexów i dodatków
     nawigacja = st.pills(
-        label="Nawigacja", # Możesz zostawić "" jeśli chcesz ukryć
-        options=opcje_menu,
+        "", 
+        ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"],
         selection_mode="single",
-        index=pozycja,
-        key="main_nav_widget",
-        label_visibility="collapsed" # To ukryje napis "Nawigacja" zachowując czysty wygląd
+        default="Start",
+        key="main_nav"
     )
-    
-    # 4. Jeśli użytkownik kliknął coś innego, aktualizujemy stan
-    if nawigacja and nawigacja != st.session_state.nawigacja_stan:
-        st.session_state.nawigacja_stan = nawigacja
-        st.rerun()
-
     st.markdown('</div>', unsafe_allow_html=True)
+
+# --- LOGIKA PRZEKIEROWANIA (Klucz do naprawy) ---
+# Jeśli przycisk w Drzwiach ustawił tę zmienną, nadpisujemy wybór menu
+if 'przekierowanie' in st.session_state and st.session_state.przekierowanie:
+    branza = "Logowanie"
+    # Czyścimy flagę, żeby nie utknąć w pętli
+    st.session_state.przekierowanie = False
+else:
+    branza = nawigacja
 
 # --- PODMENU ---
 if nawigacja == "Kalkulatory":
