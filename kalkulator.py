@@ -1323,6 +1323,7 @@ elif branza == "Tynkowanie":
             lista_zakupow.extend(zbrojenie_lista)
 
         # --- LOGIKA STOLARKI (OBLICZENIA) ---
+        # --- LOGIKA STOLARKI (OBLICZENIA) ---
         total_mb_naroznikow = 0.0
         total_m2_folii = 0.0
         total_mb_tasmy = 0.0
@@ -1332,10 +1333,17 @@ elif branza == "Tynkowanie":
             w = o["wys"] / 100
             szt = o["szt"]
             
-            total_mb_naroznikow += (2 * w + s) * szt
-            total_m2_folii += (s * w * szt) * 1.1
-            total_mb_tasmy += (2 * s + 2 * w) * szt
+            # Obwód do obróbki narożnikiem: 2x piony + 1x góra (dół to parapet)
+            mb_na_okno = (2 * w) + s
+            
+            # DODANO: 30% zapasu. Sztukowanie narożników to grzech, zostaje dużo ścinków!
+            total_mb_naroznikow += (mb_na_okno * 1.30) * szt
+            
+            # Folia i taśma ochronna na całe okno
+            total_m2_folii += (s * w * szt) * 1.15 # 15% zapasu na zakładki
+            total_mb_tasmy += ((2 * s + 2 * w) * 1.10) * szt # 10% zapasu taśmy
 
+        # Przeliczenie na opakowania
         szt_naroznik_3m = int(total_mb_naroznikow / 3 + 0.99)
         rolki_tasmy_50m = int(total_mb_tasmy / 50 + 0.99)
         szt_folii_op = int(total_m2_folii / 20 + 0.99)
@@ -1344,7 +1352,7 @@ elif branza == "Tynkowanie":
 
         if total_mb_naroznikow > 0:
             lista_zakupow.append(("Narożniki aluminiowe (3m)", f"{szt_naroznik_3m} szt."))
-            lista_zakupow.append(("Taśma tynkarska (50m)", f"{rolki_tasmy_50m} rolka/i"))
+            lista_zakupow.append(("Taśma do oklejania okien (50m)", f"{rolki_tasmy_50m} rolka/i"))
             lista_zakupow.append(("Folia ochronna", f"{szt_folii_op} op."))
 
         # Podsumowanie kosztów
