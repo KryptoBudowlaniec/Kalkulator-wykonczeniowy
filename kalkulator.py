@@ -7,7 +7,7 @@ from supabase import create_client, Client
 try:
     url: str = st.secrets["SUPABASE_URL"]
     key: str = st.secrets["SUPABASE_KEY"]
-    supabase: Client = create_client(url, key)
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 except Exception as e:
     st.error("Błąd połączenia z bazą danych. Sprawdź Secrets!")
 
