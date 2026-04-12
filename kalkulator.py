@@ -2,16 +2,28 @@ import streamlit as st
 
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(
-    page_title="ProCalc - Ekspert Wykończeń", 
-    page_icon="🏗️", # Ikona, która pojawi się na karcie przeglądarki
+    page_title="ProCalc - Ekspert Wykończeń",
+    page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="collapsed",
-    # To poniżej odpowiada za wygląd linku w sieci (Open Graph)
     menu_items={
-        'Get Help': 'https://procalc.pl/kontakt',
-        'Report a bug': "mailto:biuro@procalc.pl",
-        'About': "# ProCalc: Twój Cyfrowy Kosztorysant. Precyzyjne wyceny remontów w 2 minuty!"
+        'Get Help': 'mailto:biuro@procalc.pl',
+        'About': "# ProCalc\nTwoje profesjonalne narzędzie do kosztorysowania remontów. Oblicz materiały i robociznę w 2 minuty!"
     }
+)
+
+# --- KLUCZOWE METADANE DLA SMS / SOCIAL MEDIA ---
+# To sprawia, że link wygląda profesjonalnie po wysłaniu komuś przez telefon
+st.markdown(
+    f"""
+    <head>
+        <meta property="og:title" content="ProCalc - Kalkulator Budowlany PRO">
+        <meta property="og:description" content="Precyzyjne wyceny remontów, dokładne listy zakupów i profesjonalne raporty PDF dla Inwestorów i Wykonawców.">
+        <meta property="og:image" content="https://raw.githubusercontent.com/KryptoBudowlaniec/Kalkulator-wykonczeniowy/refs/heads/main/logo.png">
+        <meta name="twitter:card" content="summary_large_image">
+    </head>
+    """,
+    unsafe_allow_html=True
 )
 
 # --- STAN APLIKACJI (INICJALIZACJA) ---
