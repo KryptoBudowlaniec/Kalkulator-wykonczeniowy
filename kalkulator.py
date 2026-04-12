@@ -1038,192 +1038,185 @@ elif branza == "Podłogi":
         c_f1.metric("Szacowana Robocizna", f"{round(k_rob_fast)} PLN")
         c_f2.metric("Szacowana Chemia/Dodatki", f"{round(k_mat_fast)} PLN")
         
-        st.info("Przejdź do zakładki Kosztorys PRO, aby wyliczyć zapasy, wybrać konkretny klej (np. Geoflex, Kerakoll) i wygenerować PDF.")
+        st.info("Przejdź do zakładki Kosztorys PRO, aby wyliczyć zapasy, wybrać konkretny klej i wygenerować raport PDF.")
 
     # ==========================================
     # TAB 2: KOSZTORYS PRO
     # ==========================================
     with tab_p2:
-        col_p1, col_p2 = st.columns([1, 1.2])
-        
-        with col_p1:
-            st.subheader("Konfiguracja posadzki")
-            m2_p = st.number_input("Dokładny metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m_pro")
+        # --- BLOKADA PRO ---
+        if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
+            st.error("🔒 **Dostęp zablokowany**")
+            st.warning("Zaawansowane wyliczenia zużycia klejów, systemów poziomujących oraz generowanie PDF dostępne są w wersji PRO.")
             
-            system_montazu = st.radio("System montażu:", 
-                                     ["Pływający (Na podkładzie)", 
-                                      "Klejony (Deska na kleju)", 
-                                      "Płytki / Gres (System poziomujący)"])
-            
-            if system_montazu == "Płytki / Gres (System poziomujący)":
-                st.markdown("---")
-                st.write("**Parametry płytek i chemia**")
-                c_pl1, c_pl2 = st.columns(2)
-                dl_p = c_pl1.number_input("Długość płytki (cm):", 10, 200, 60)
-                sz_p = c_pl2.number_input("Szerokość płytki (cm):", 10, 200, 60)
-                typ_ukladania = "Płytki (10% zapasu)"
-                m2_paczka = st.number_input("M2 w paczce płytek:", min_value=0.1, value=1.44, step=0.01)
-                wybrany_klej_plytki = st.selectbox("Wybierz klej do gresu:", list(baza_kleje_plytki.keys()))
-            else:
-                st.markdown("---")
-                st.write("**Parametry deski/paneli**")
-                typ_ukladania = st.selectbox("Sposób układania:", ["Zwykły panel (7% zapasu)", "Jodełka (20% zapasu)"])
-                m2_paczka = st.number_input("M2 w paczce paneli/desek:", min_value=0.1, value=2.22, step=0.01)
-            
-            st.markdown("---")
-            domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
-            stawka_podl = st.number_input("Stawka za m2 montażu (zł):", 1, 300, domyslna_stawka)
-
-        # --- LOGIKA OBLICZEŃ ---
-        if "Płytki" in system_montazu:
-            zapas = 0.10
+            _, col_k, _ = st.columns([1, 2, 1])
+            with col_k:
+                if st.button("Odblokuj dostęp (Logowanie)", use_container_width=True, key="btn_odblokuj_podlogi"):
+                    st.session_state.przekierowanie = True  
+                    st.rerun()  
         else:
-            zapas = 0.07 if "Zwykły" in typ_ukladania else 0.20
+            # --- TYLKO DLA ZALOGOWANYCH PRO ---
+            col_p1, col_p2 = st.columns([1, 1.2])
             
-        m2_z_zapasem = m2_p * (1 + zapas)
-        paczki_szt = int(m2_z_zapasem / m2_paczka + 0.99)
-        
-        info_zakup = [] 
-        koszt_akc = 0
+            with col_p1:
+                st.subheader("Konfiguracja posadzki")
+                m2_p = st.number_input("Dokładny metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m_pro")
+                
+                system_montazu = st.radio("System montażu:", 
+                                         ["Pływający (Na podkładzie)", 
+                                          "Klejony (Deska na kleju)", 
+                                          "Płytki / Gres (System poziomujący)"])
+                
+                if system_montazu == "Płytki / Gres (System poziomujący)":
+                    st.markdown("---")
+                    st.write("**Parametry płytek i chemia**")
+                    c_pl1, c_pl2 = st.columns(2)
+                    dl_p = c_pl1.number_input("Długość płytki (cm):", 10, 200, 60)
+                    sz_p = c_pl2.number_input("Szerokość płytki (cm):", 10, 200, 60)
+                    typ_ukladania = "Płytki (10% zapasu)"
+                    m2_paczka = st.number_input("M2 w paczce płytek:", min_value=0.1, value=1.44, step=0.01)
+                    wybrany_klej_plytki = st.selectbox("Wybierz klej do gresu:", list(baza_kleje_plytki.keys()))
+                else:
+                    st.markdown("---")
+                    st.write("**Parametry deski/paneli**")
+                    typ_ukladania = st.selectbox("Sposób układania:", ["Zwykły panel (7% zapasu)", "Jodełka (20% zapasu)"])
+                    m2_paczka = st.number_input("M2 w paczce paneli/desek:", min_value=0.1, value=2.22, step=0.01)
+                
+                st.markdown("---")
+                domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
+                stawka_podl = st.number_input("Stawka za m2 montażu (zł):", 1, 300, domyslna_stawka)
 
-        if system_montazu == "Pływający (Na podkładzie)":
-            wybrany_mat = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)", "Standard (Pianka 10m2)"])
-            wydajnosci = {"Premium (Rolka 8m2)": 8, "Ecopor (Paczka 7m2)": 7, "Standard (Pianka 10m2)": 10}
-            ceny_p = {"Premium (Rolka 8m2)": 180, "Ecopor (Paczka 7m2)": 55, "Standard (Pianka 10m2)": 35}
-            szt_podkladu = int(m2_p / wydajnosci[wybrany_mat] + 0.99)
-            koszt_akc = szt_podkladu * ceny_p[wybrany_mat]
-            info_zakup.append((f"Podkład {wybrany_mat}", f"{szt_podkladu} szt."))
-
-        elif system_montazu == "Klejony (Deska na kleju)":
-            wiader_kleju = int(m2_p / 12 + 0.99) 
-            baniek_gruntu = int(m2_p / 30 + 0.99) 
-            koszt_akc = (wiader_kleju * 280) + (baniek_gruntu * 60) 
-            info_zakup.append(("Klej poliuretanowy do podłóg (15kg)", f"{wiader_kleju} wiader"))
-            info_zakup.append(("Grunt podkładowy (5L)", f"{baniek_gruntu} baniek"))
-
-        else: # Płytki / Gres
-            zuzycie_m2 = (1 / ((dl_p/100) * (sz_p/100))) * 4
-            suma_klipsow = int(zuzycie_m2 * m2_p * 1.1)
-            op_klipsy = int(suma_klipsow / 100 + 0.99)
-            
-            kg_kleju_gres = m2_p * 5.0
-            worki_kleju = int(kg_kleju_gres / 25 + 0.99)
-            
-            cena_wybranego_kleju = baza_kleje_plytki[wybrany_klej_plytki]
-            koszt_akc = (op_klipsy * 40) + (worki_kleju * cena_wybranego_kleju)
-            info_zakup.append(("System poziomujący (klipsy)", f"{op_klipsy} op. (po 100 szt.)"))
-            info_zakup.append((f"{wybrany_klej_plytki}", f"{worki_kleju} worków"))
-
-        k_robocizna = m2_p * stawka_podl
-        usluga_plus_chemia = k_robocizna + koszt_akc 
-
-        with col_p2:
-            st.subheader("Podsumowanie Kosztorysu")
-            
-            st.success(f"### KOSZT REALIZACJI: **{round(usluga_plus_chemia)} PLN**")
-            st.caption("Cena obejmuje robociznę oraz niezbędną chemię/systemy montażowe. Nie zawiera ceny zakupu samej okładziny.")
-
-            c1, c2 = st.columns(2)
-            c1.metric("Robocizna", f"{round(k_robocizna)} PLN")
-            c2.metric("Chemia / Podkłady", f"{round(koszt_akc)} PLN")
-
-            st.markdown("---")
-            st.subheader("Lista materiałowa do zamówienia")
-            
-            st.write(f"• **Okładzina główna:** {paczki_szt} paczek")
-            st.caption(f"Powierzchnia z uwzględnieniem {int(zapas*100)}% zapasu: {round(m2_z_zapasem, 2)} m2")
-            
-            for nazwa, ilosc in info_zakup:
-                st.write(f"• **{nazwa}:** {ilosc}")
-            
+            # --- LOGIKA OBLICZEŃ ---
             if "Płytki" in system_montazu:
-                st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm (ok. {int(zuzycie_m2)} klipsów na m2). Należy dokupić lub sprawdzić stan klinów wielorazowych.")
+                zapas = 0.10
+            else:
+                zapas = 0.07 if "Zwykły" in typ_ukladania else 0.20
+                
+            m2_z_zapasem = m2_p * (1 + zapas)
+            paczki_szt = int(m2_z_zapasem / m2_paczka + 0.99)
             
-            st.markdown("---")
+            info_zakup = [] 
+            koszt_akc = 0
 
-            # --- GENERATOR PDF (PODŁOGI) ---
-            try:
-                from fpdf import FPDF
-                from datetime import datetime
-                import os
+            if system_montazu == "Pływający (Na podkładzie)":
+                wybrany_mat = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)", "Standard (Pianka 10m2)"])
+                wydajnosci = {"Premium (Rolka 8m2)": 8, "Ecopor (Paczka 7m2)": 7, "Standard (Pianka 10m2)": 10}
+                ceny_p = {"Premium (Rolka 8m2)": 180, "Ecopor (Paczka 7m2)": 55, "Standard (Pianka 10m2)": 35}
+                szt_podkladu = int(m2_p / wydajnosci[wybrany_mat] + 0.99)
+                koszt_akc = szt_podkladu * ceny_p[wybrany_mat]
+                info_zakup.append((f"Podkład {wybrany_mat}", f"{szt_podkladu} szt."))
 
-                if st.button("Generuj Kosztorys PDF", use_container_width=True, key="pod_pdf_btn"):
-                    pdf = FPDF()
-                    pdf.add_page()
-                    
-                    f_path = "Inter-Regular.ttf"
-                    if os.path.exists(f_path):
-                        pdf.add_font("Inter", "", f_path)
-                        pdf.set_font("Inter", size=12)
-                    else:
-                        pdf.set_font("Arial", size=12)
-                    
-                    pdf.set_font(pdf.font_family, size=16)
-                    pdf.cell(0, 15, "KOSZTORYS: PRACE POSADZKOWE", ln=True, align='C')
-                    pdf.ln(5)
+            elif system_montazu == "Klejony (Deska na kleju)":
+                wiader_kleju = int(m2_p / 12 + 0.99) 
+                baniek_gruntu = int(m2_p / 30 + 0.99) 
+                koszt_akc = (wiader_kleju * 280) + (baniek_gruntu * 60) 
+                info_zakup.append(("Klej poliuretanowy do podłóg (15kg)", f"{wiader_kleju} wiader"))
+                info_zakup.append(("Grunt podkładowy (5L)", f"{baniek_gruntu} baniek"))
 
-                    pdf.set_fill_color(245, 245, 245)
-                    pdf.set_font(pdf.font_family, size=12)
-                    
-                    pdf.cell(95, 10, " Metraż całkowity:", 1)
-                    pdf.cell(95, 10, f" {m2_p} m2", 1, 1)
-                    pdf.cell(95, 10, " System montażu:", 1)
-                    pdf.cell(95, 10, f" {system_montazu}", 1, 1)
-                    
-                    if "Płytki" in system_montazu:
-                        pdf.cell(95, 10, " Format płytki:", 1)
-                        pdf.cell(95, 10, f" {dl_p}x{sz_p} cm", 1, 1)
-                        pdf.cell(95, 10, " Wybrany klej:", 1)
-                        pdf.cell(95, 10, f" {wybrany_klej_plytki.split(' -')[0]}", 1, 1)
+            else: # Płytki / Gres
+                zuzycie_m2 = (1 / ((dl_p/100) * (sz_p/100))) * 4
+                suma_klipsow = int(zuzycie_m2 * m2_p * 1.1)
+                op_klipsy = int(suma_klipsow / 100 + 0.99)
+                
+                kg_kleju_gres = m2_p * 5.0
+                worki_kleju = int(kg_kleju_gres / 25 + 0.99)
+                
+                cena_wybranego_kleju = baza_kleje_plytki[wybrany_klej_plytki]
+                koszt_akc = (op_klipsy * 40) + (worki_kleju * cena_wybranego_kleju)
+                info_zakup.append(("System poziomujący (klipsy)", f"{op_klipsy} op. (po 100 szt.)"))
+                info_zakup.append((f"{wybrany_klej_plytki}", f"{worki_kleju} worków"))
 
-                    pdf.ln(10)
+            k_robocizna = m2_p * stawka_podl
+            usluga_plus_chemia = k_robocizna + koszt_akc 
 
-                    pdf.set_font(pdf.font_family, size=12)
-                    pdf.cell(0, 10, "PODSUMOWANIE KOSZTÓW:", ln=True)
-                    pdf.set_font(pdf.font_family, size=10)
-                    
-                    pdf.cell(95, 10, " Robocizna (Montaż):", 1)
-                    pdf.cell(95, 10, f" {round(k_robocizna)} PLN", 1, 1)
-                    
-                    pdf.cell(95, 10, " Chemia i materiały pomocnicze:", 1)
-                    pdf.cell(95, 10, f" {round(koszt_akc)} PLN", 1, 1)
-                    
-                    pdf.set_font(pdf.font_family, size=13)
-                    pdf.cell(95, 12, " ŁĄCZNIE REALIZACJA:", 1, 0, 'L', True)
-                    pdf.cell(95, 12, f" {round(usluga_plus_chemia)} PLN", 1, 1, 'L', True)
-                    
-                    pdf.ln(5)
-                    pdf.set_font(pdf.font_family, size=9)
-                    pdf.set_text_color(100, 100, 100)
-                    pdf.multi_cell(0, 5, txt="Powyższa kwota nie zawiera kosztu zakupu okładziny głównej (paneli/płytek).")
-                    pdf.set_text_color(0, 0, 0)
-                    
-                    pdf.ln(10)
-                    
-                    pdf.set_font(pdf.font_family, size=12)
-                    pdf.cell(0, 10, "LISTA MATERIAŁOWA DO ZAMÓWIENIA:", ln=True)
-                    pdf.set_font(pdf.font_family, size=10)
-                    
-                    pdf.cell(0, 7, f"- Okładzina: {paczki_szt} paczek (zawiera {int(zapas*100)}% zapasu)", ln=True)
-                    for nazwa, ilosc in info_zakup:
-                        pdf.cell(0, 7, f"- {nazwa}: {ilosc}", ln=True)
+            with col_p2:
+                st.subheader("Podsumowanie Kosztorysu")
+                
+                st.success(f"### KOSZT REALIZACJI: **{round(usluga_plus_chemia)} PLN**")
+                st.caption("Cena obejmuje robociznę oraz niezbędną chemię. Nie zawiera ceny okładziny.")
 
-                    pdf_bytes = pdf.output()
-                    
-                    if isinstance(pdf_bytes, (bytearray, bytes)):
-                        safe_bytes = bytes(pdf_bytes)
-                    else:
-                        safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+                c1, c2 = st.columns(2)
+                c1.metric("Robocizna", f"{round(k_robocizna)} PLN")
+                c2.metric("Chemia / Podkłady", f"{round(koszt_akc)} PLN")
 
-                    st.download_button(
-                        label="Pobierz gotowy PDF",
-                        data=safe_bytes,
-                        file_name=f"Kosztorys_Podloga_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
-            except Exception as e:
-                st.error(f"Błąd podczas generowania PDF: {e}")
+                st.markdown("---")
+                st.subheader("Lista materiałowa")
+                
+                st.write(f"• **Okładzina główna:** {paczki_szt} paczek")
+                st.caption(f"Powierzchnia z uwzględnieniem {int(zapas*100)}% zapasu: {round(m2_z_zapasem, 2)} m2")
+                
+                for nazwa, ilosc in info_zakup:
+                    st.write(f"• **{nazwa}:** {ilosc}")
+                
+                if "Płytki" in system_montazu:
+                    st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm.")
+                
+                st.markdown("---")
+
+                # --- GENERATOR PDF (PODŁOGI) ---
+                try:
+                    from fpdf import FPDF
+                    from datetime import datetime
+                    import os
+                    import base64
+
+                    def czysc_tekst(tekst):
+                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                        return tekst.encode('latin-1', 'replace').decode('latin-1')
+
+                    if st.button("Generuj Kosztorys PDF", use_container_width=True, key="pod_pdf_btn"):
+                        pdf = FPDF()
+                        pdf.add_page()
+                        
+                        f_path = "Inter-Regular.ttf"
+                        if os.path.exists(f_path):
+                            pdf.add_font("Inter", "", f_path)
+                            pdf.set_font("Inter", size=12)
+                        else:
+                            pdf.set_font("Arial", size=12)
+                        
+                        pdf.set_font(pdf.font_family, size=16)
+                        pdf.cell(0, 15, "KOSZTORYS: PRACE POSADZKOWE", ln=True, align='C')
+                        pdf.ln(5)
+
+                        pdf.set_fill_color(245, 245, 245)
+                        pdf.set_font(pdf.font_family, size=12)
+                        
+                        pdf.cell(95, 10, " Metraz calkowity:", 1)
+                        pdf.cell(95, 10, f" {m2_p} m2", 1, 1)
+                        pdf.cell(95, 10, " System montazu:", 1)
+                        pdf.cell(95, 10, f" {czysc_tekst(system_montazu)}", 1, 1)
+                        
+                        if "Płytki" in system_montazu:
+                            pdf.cell(95, 10, " Format plytki:", 1)
+                            pdf.cell(95, 10, f" {dl_p}x{sz_p} cm", 1, 1)
+
+                        pdf.ln(10)
+                        pdf.cell(95, 10, " Robocizna (Montaz):", 1)
+                        pdf.cell(95, 10, f" {round(k_robocizna)} PLN", 1, 1)
+                        pdf.cell(95, 10, " Chemia i materialy:", 1)
+                        pdf.cell(95, 10, f" {round(koszt_akc)} PLN", 1, 1)
+                        
+                        pdf.set_font(pdf.font_family, size=13)
+                        pdf.cell(95, 12, " LACZNIE REALIZACJA:", 1, 0, 'L', True)
+                        pdf.cell(95, 12, f" {round(usluga_plus_chemia)} PLN", 1, 1, 'L', True)
+                        
+                        pdf.ln(10)
+                        pdf.set_font(pdf.font_family, size=12)
+                        pdf.cell(0, 10, "LISTA MATERIALOWA DO ZAMOWIENIA:", ln=True)
+                        pdf.set_font(pdf.font_family, size=10)
+                        
+                        pdf.cell(0, 7, f"- Okladzina: {paczki_szt} paczek (zawiera {int(zapas*100)}% zapasu)", ln=True)
+                        for nazwa, ilosc in info_zakup:
+                            pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
+
+                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
+                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
+                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Kosztorys_Podloga.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz Raport PDF</a>'
+                        st.markdown(href, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Błąd PDF: {e}")
                       
 # --- SEKCJA: TYNKOWANIE ---
 elif branza == "Tynkowanie":
@@ -1254,7 +1247,7 @@ elif branza == "Tynkowanie":
     # --- TAB 1: SZYBKA WYCENA ---
     with tab_t1:
         st.subheader("Błyskawiczny szacunek")
-        m2_podl_fast = st.number_input("Metraż mieszkania (podłoga m2):", 1.0, 500.0, 50.0)
+        m2_podl_fast = st.number_input("Metraż mieszkania (podłoga m2):", 1.0, 500.0, 50.0, key="tyn_m_fast")
         
         # Uproszczona logika: Średnio 3x metraż podłogi, średnia cena 85 zł/m2 (robocizna + mat)
         szacunkowy_metraz = m2_podl_fast * 3.0
@@ -1267,250 +1260,231 @@ elif branza == "Tynkowanie":
         st.info("""
         **Co zyskujesz w wersji PRO?**
         * Wybór konkretnych systemów (Gipsowe, Cem-Wap, GK).
-        * Precyzyjne ustawienie grubości tynku i stawek.
-        * Pełna lista zakupów (liczba worków, wiader, płyt, rolek taśm).
-        * Profesjonalny raport PDF dla klienta.
+        * Precyzyjne obliczenia stolarki (okna, narożniki, folie).
+        * Pełna lista zakupów (liczba worków, płyt, rolek taśm).
+        * Profesjonalny raport PDF z normami zużycia.
         """)
 
     # --- TAB 2: DETALE PRO ---
     with tab_t2:
-        col_t1, col_t2 = st.columns([1, 1.2])
-        
-        with col_t1:
-            st.subheader("Konfiguracja")
-            m2_podl_pro = st.number_input("Metraż podłogi (m2):", 1.0, 500.0, 50.0, key="tyn_m_pro")
-            wybrany_tynk = st.selectbox("Wybierz system:", list(baza_tynkow.keys()))
-            dane_t = baza_tynkow[wybrany_tynk]
+        # --- BLOKADA PRO ---
+        if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
+            st.error("🔒 **Dostęp zablokowany**")
+            st.warning("Precyzyjne zestawienie materiałów dla tynków mokrych i suchych dostępne jest tylko dla użytkowników PRO.")
             
-            # Logika powierzchni PRO
-            mnoznik = 3.5 if dane_t["typ"] == "mokry" else 2.5
-            m2_rob_pro = m2_podl_pro * mnoznik
-            st.warning(f"Powierzchnia obliczeniowa: **{round(m2_rob_pro, 1)} m²**")
-
-            if dane_t["typ"] == "drywall":
-                typ_tasmy = st.radio("Rodzaj zbrojenia łączy:", ["Wszystko Tuff-Tape (Pancerne)", "Tuff-Tape + Flizelina"])
-                wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy.keys()))
-                grubosc_t = 0 # Nie dotyczy GK
-            else:
-                wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
-                grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 40, 15)
-            
-            stawka_rob_t = st.number_input("Stawka robocizny (zł/m2):", 10, 200, 50)
-
-            st.markdown("---")
-            st.subheader("Stolarka (Okna i Drzwi)")
-            
-            # 1. Definicja standardowych wymiarów (Szer x Wys w cm)
-            std_okna = {
-                "Własny wymiar": None,
-                "60x60 (Łazienkowe)": (60, 60),
-                "90x120 (Jednoskrzydłowe)": (90, 120),
-                "120x120 (Standard)": (120, 120),
-                "150x150 (Duże)": (150, 150),
-                "90x210 (Balkonowe)": (90, 210),
-                "180x210 (Balkonowe podwójne)": (180, 210),
-                "240x210 (Tarasowe HS)": (240, 210),
-                "100x210 (Drzwi wejściowe)": (100, 210)
-            }
-
-            wybor_okna = st.selectbox("Wybierz typ okna:", list(std_okna.keys()))
-            
-            col_o1, col_o2 = st.columns(2)
-            if wybor_okna == "Własny wymiar":
-                w_szer = col_o1.number_input("Szerokość (cm):", 10, 600, 100)
-                w_wys = col_o2.number_input("Wysokość (cm):", 10, 600, 120)
-            else:
-                w_szer, w_wys = std_okna[wybor_okna]
-                col_o1.info(f"Szer: {w_szer} cm")
-                col_o2.info(f"Wys: {w_wys} cm")
-
-            ile_okien = st.number_input("Liczba takich okien (szt.):", 1, 50, 1)
-
-            if "lista_okien_tyn" not in st.session_state:
-                st.session_state.lista_okien_tyn = []
-
-            if st.button("Dodaj okna do zestawienia", use_container_width=True):
-                st.session_state.lista_okien_tyn.append({
-                    "nazwa": wybor_okna,
-                    "szer": w_szer,
-                    "wys": w_wys,
-                    "szt": ile_okien
-                })
-                st.rerun()
-
-            # Wyświetlanie listy okien
-            if st.session_state.lista_okien_tyn:
-                for i, o in enumerate(st.session_state.lista_okien_tyn):
-                    c_ok1, c_ok2 = st.columns([4, 1])
-                    c_ok1.caption(f"{o['szt']}x {o['nazwa']} ({o['szer']}x{o['wys']})")
-                    if c_ok2.button("Usuń", key=f"del_o_{i}"):
-                        st.session_state.lista_okien_tyn.pop(i)
-                        st.rerun()
-
-        # --- OBLICZENIA PRO ---
-        if dane_t["typ"] == "mokry":
-            kg_na_m2_t = dane_t["norma"] * grubosc_t
-            kg_razem_t = m2_rob_pro * kg_na_m2_t
-            worki_t = int(kg_razem_t / dane_t["waga"] + 0.99)
-            wiadra_gruntu = int((m2_rob_pro * 0.3) / 20 + 0.99)
-            koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_rob_pro * 5)
-            lista_zakupow = [
-                (f"Tynk {wybrany_tynk}", f"{worki_t} worków"),
-                (f"Grunt {wybrany_grunt_t}", f"{wiadra_gruntu} wiader 20kg")
-            ]
+            _, col_k, _ = st.columns([1, 2, 1])
+            with col_k:
+                if st.button("Odblokuj dostęp (Logowanie)", use_container_width=True, key="btn_odblokuj_tynki"):
+                    st.session_state.przekierowanie = True  
+                    st.rerun()  
         else:
-            liczba_plyt = int((m2_rob_pro * 1.1) / 3.12 + 0.99)
-            worki_kleju = int(liczba_plyt / 2.5 + 0.99)
-            worki_masy = int((m2_rob_pro * 0.5) / 25 + 0.99)
+            # --- TYLKO DLA ZALOGOWANYCH PRO ---
+            col_t1, col_t2 = st.columns([1, 1.2])
             
-            # Logika taśm i zbrojenia GK
-            mb_laczen = m2_rob_pro * 1.5
-            if typ_tasmy == "Wszystko Tuff-Tape (Pancerne)":
-                rolki_tuff = int(mb_laczen / 30 + 0.99)
-                cena_tasmy = rolki_tuff * 150
-                zbrojenie_lista = [("Taśma Tuff-Tape (30m)", f"{rolki_tuff} rolka/i")]
-            else:
-                rolki_tuff = int((m2_rob_pro * 0.4) / 30 + 0.99) # Narożniki wewnętrzne
-                rolki_fliz = int((m2_rob_pro * 1.1) / 25 + 0.99) # Łączenia płaskie
-                cena_tasmy = (rolki_tuff * 150) + (rolki_fliz * 20)
-                zbrojenie_lista = [
-                    ("Taśma Tuff-Tape (30m)", f"{rolki_tuff} rolka/i"),
-                    ("Taśma flizelina (25m)", f"{rolki_fliz} rolka/i")
+            with col_t1:
+                st.subheader("Konfiguracja")
+                m2_podl_pro = st.number_input("Metraż podłogi (m2):", 1.0, 500.0, 50.0, key="tyn_m_pro")
+                wybrany_tynk = st.selectbox("Wybierz system:", list(baza_tynkow.keys()))
+                dane_t = baza_tynkow[wybrany_tynk]
+                
+                # Logika powierzchni PRO
+                mnoznik = 3.5 if dane_t["typ"] == "mokry" else 2.5
+                m2_rob_pro = m2_podl_pro * mnoznik
+                st.warning(f"Powierzchnia obliczeniowa: **{round(m2_rob_pro, 1)} m²**")
+
+                if dane_t["typ"] == "drywall":
+                    typ_tasmy = st.radio("Rodzaj zbrojenia łączy:", ["Wszystko Tuff-Tape (Pancerne)", "Tuff-Tape + Flizelina"])
+                    wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy.keys()))
+                    grubosc_t = 0 
+                else:
+                    wybrany_grunt_t = st.selectbox("Wybierz grunt kwarcowy:", list(baza_grunt_kwarc.keys()))
+                    grubosc_t = st.slider("Średnia grubość tynku (mm):", 10, 40, 15)
+                
+                stawka_rob_t = st.number_input("Stawka robocizny (zł/m2):", 10, 200, 50)
+
+                st.markdown("---")
+                st.subheader("Stolarka (Okna i Drzwi)")
+                
+                std_okna = {
+                    "Własny wymiar": None,
+                    "60x60 (Łazienkowe)": (60, 60),
+                    "90x120 (Standard 1)": (90, 120),
+                    "120x120 (Standard 2)": (120, 120),
+                    "150x150 (Duże)": (150, 150),
+                    "90x210 (Balkonowe)": (90, 210),
+                    "240x210 (Tarasowe HS)": (240, 210),
+                    "100x210 (Drzwi wejściowe)": (100, 210)
+                }
+
+                wybor_okna = st.selectbox("Wybierz typ okna:", list(std_okna.keys()))
+                
+                col_o1, col_o2 = st.columns(2)
+                if wybor_okna == "Własny wymiar":
+                    w_szer = col_o1.number_input("Szerokość (cm):", 10, 600, 100, key="w_szer_tyn")
+                    w_wys = col_o2.number_input("Wysokość (cm):", 10, 600, 120, key="w_wys_tyn")
+                else:
+                    w_szer, w_wys = std_okna[wybor_okna]
+                    col_o1.info(f"Szer: {w_szer} cm")
+                    col_o2.info(f"Wys: {w_wys} cm")
+
+                ile_okien = st.number_input("Liczba takich okien (szt.):", 1, 50, 1, key="ile_okien_tyn")
+
+                if "lista_okien_tyn" not in st.session_state:
+                    st.session_state.lista_okien_tyn = []
+
+                if st.button("Dodaj okna do zestawienia", use_container_width=True, key="btn_add_okno_tyn"):
+                    st.session_state.lista_okien_tyn.append({
+                        "nazwa": wybor_okna,
+                        "szer": w_szer,
+                        "wys": w_wys,
+                        "szt": ile_okien
+                    })
+                    st.rerun()
+
+                if st.session_state.lista_okien_tyn:
+                    for i, o in enumerate(st.session_state.lista_okien_tyn):
+                        c_ok1, c_ok2 = st.columns([4, 1])
+                        c_ok1.caption(f"{o['szt']}x {o['nazwa']} ({o['szer']}x{o['wys']})")
+                        if c_ok2.button("Usuń", key=f"del_o_tyn_{i}"):
+                            st.session_state.lista_okien_tyn.pop(i)
+                            st.rerun()
+
+            # --- OBLICZENIA PRO ---
+            lista_zakupow = []
+            if dane_t["typ"] == "mokry":
+                kg_na_m2_t = dane_t["norma"] * grubosc_t
+                kg_razem_t = m2_rob_pro * kg_na_m2_t
+                worki_t = int(kg_razem_t / dane_t["waga"] + 0.99)
+                wiadra_gruntu = int((m2_rob_pro * 0.3) / 20 + 0.99)
+                koszt_mat_t = (worki_t * dane_t["cena"]) + (wiadra_gruntu * baza_grunt_kwarc[wybrany_grunt_t]) + (m2_rob_pro * 5)
+                lista_zakupow = [
+                    (f"Tynk {wybrany_tynk}", f"{worki_t} worków"),
+                    (f"Grunt kwarcowy {wybrany_grunt_t}", f"{wiadra_gruntu} wiader 20kg")
                 ]
+            else:
+                liczba_plyt = int((m2_rob_pro * 1.1) / 3.12 + 0.99)
+                worki_kleju = int(liczba_plyt / 2.5 + 0.99)
+                worki_masy = int((m2_rob_pro * 0.5) / 25 + 0.99)
+                
+                mb_laczen = m2_rob_pro * 1.5
+                if typ_tasmy == "Wszystko Tuff-Tape (Pancerne)":
+                    rolki_tuff = int(mb_laczen / 30 + 0.99)
+                    cena_tasmy = rolki_tuff * 150
+                    zbrojenie_lista = [("Taśma Tuff-Tape (30m)", f"{rolki_tuff} rolka/i")]
+                else:
+                    rolki_tuff = int((m2_rob_pro * 0.4) / 30 + 0.99)
+                    rolki_fliz = int((m2_rob_pro * 1.1) / 25 + 0.99)
+                    cena_tasmy = (rolki_tuff * 150) + (rolki_fliz * 20)
+                    zbrojenie_lista = [
+                        ("Taśma Tuff-Tape (30m)", f"{rolki_tuff} rolka/i"),
+                        ("Taśma flizelina (25m)", f"{rolki_fliz} rolka/i")
+                    ]
 
-            koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + \
-                          (worki_masy * baza_masy[wybrana_masa]) + cena_tasmy + (m2_rob_pro * 2)
-            
-            lista_zakupow = [
-                ("Płyty GK (1.2x2.6m)", f"{liczba_plyt} szt."),
-                ("Klej Perlfix", f"{worki_kleju} worków"),
-                (f"Masa {wybrana_masa}", f"{worki_masy} szt.")
-            ]
-            lista_zakupow.extend(zbrojenie_lista)
+                koszt_mat_t = (liczba_plyt * dane_t["cena_plyta"]) + (worki_kleju * dane_t["cena_klej"]) + \
+                              (worki_masy * baza_masy[wybrana_masa]) + cena_tasmy + (m2_rob_pro * 2)
+                
+                lista_zakupow = [
+                    ("Płyty GK (1.2x2.6m)", f"{liczba_plyt} szt."),
+                    ("Klej gipsowy do płyt", f"{worki_kleju} worków"),
+                    (f"Masa spoinowa {wybrana_masa}", f"{worki_masy} szt.")
+                ]
+                lista_zakupow.extend(zbrojenie_lista)
 
-        # --- LOGIKA STOLARKI (OBLICZENIA) ---
-        # --- LOGIKA STOLARKI (OBLICZENIA) ---
-        total_mb_naroznikow = 0.0
-        total_m2_folii = 0.0
-        total_mb_tasmy = 0.0
+            # --- LOGIKA STOLARKI ---
+            total_mb_naroznikow = 0.0
+            total_m2_folii = 0.0
+            total_mb_tasmy = 0.0
 
-        for o in st.session_state.get("lista_okien_tyn", []):
-            s = o["szer"] / 100 
-            w = o["wys"] / 100
-            szt = o["szt"]
-            
-            # Obwód do obróbki narożnikiem: 2x piony + 1x góra (dół to parapet)
-            mb_na_okno = (2 * w) + s
-            
-            # DODANO: 30% zapasu. Sztukowanie narożników to grzech, zostaje dużo ścinków!
-            total_mb_naroznikow += (mb_na_okno * 1.30) * szt
-            
-            # Folia i taśma ochronna na całe okno
-            total_m2_folii += (s * w * szt) * 1.15 # 15% zapasu na zakładki
-            total_mb_tasmy += ((2 * s + 2 * w) * 1.10) * szt # 10% zapasu taśmy
+            for o in st.session_state.get("lista_okien_tyn", []):
+                s = o["szer"] / 100 
+                w = o["wys"] / 100
+                szt = o["szt"]
+                mb_na_okno = (2 * w) + s
+                total_mb_naroznikow += (mb_na_okno * 1.30) * szt
+                total_m2_folii += (s * w * szt) * 1.15
+                total_mb_tasmy += ((2 * s + 2 * w) * 1.10) * szt
 
-        # Przeliczenie na opakowania
-        szt_naroznik_3m = int(total_mb_naroznikow / 3 + 0.99)
-        rolki_tasmy_50m = int(total_mb_tasmy / 50 + 0.99)
-        szt_folii_op = int(total_m2_folii / 20 + 0.99)
+            szt_naroznik_3m = int(total_mb_naroznikow / 3 + 0.99)
+            rolki_tasmy_50m = int(total_mb_tasmy / 50 + 0.99)
+            szt_folii_op = int(total_m2_folii / 20 + 0.99)
 
-        koszt_stolarki = (szt_naroznik_3m * 8) + (rolki_tasmy_50m * 25) + (szt_folii_op * 15)
+            koszt_stolarki = (szt_naroznik_3m * 8) + (rolki_tasmy_50m * 25) + (szt_folii_op * 15)
 
-        if total_mb_naroznikow > 0:
-            lista_zakupow.append(("Narożniki aluminiowe (3m)", f"{szt_naroznik_3m} szt."))
-            lista_zakupow.append(("Taśma do oklejania okien (50m)", f"{rolki_tasmy_50m} rolka/i"))
-            lista_zakupow.append(("Folia ochronna", f"{szt_folii_op} op."))
+            if total_mb_naroznikow > 0:
+                lista_zakupow.append(("Narożniki aluminiowe (3m)", f"{szt_naroznik_3m} szt."))
+                lista_zakupow.append(("Taśma malarska (50m)", f"{rolki_tasmy_50m} rolka/i"))
+                lista_zakupow.append(("Folia ochronna okienna", f"{szt_folii_op} op."))
 
-        # Podsumowanie kosztów
-        koszt_mat_t += koszt_stolarki
-        koszt_rob_t = m2_rob_pro * stawka_rob_t
-        suma_tynki = koszt_mat_t + koszt_rob_t
+            koszt_mat_t += koszt_stolarki
+            koszt_rob_t = m2_rob_pro * stawka_rob_t
+            suma_tynki = koszt_mat_t + koszt_rob_t
 
-        with col_t2:
-            st.subheader("Wynik PRO")
-            st.success(f"### RAZEM: **{round(suma_tynki)} PLN**")
-            
-            c1, c2 = st.columns(2)
-            c1.metric("Robocizna", f"{round(koszt_rob_t)} zł")
-            c2.metric("Materiały", f"{round(koszt_mat_t)} zł")
+            with col_t2:
+                st.subheader("Wynik PRO")
+                st.success(f"### RAZEM: **{round(suma_tynki)} PLN**")
+                
+                c1, c2 = st.columns(2)
+                c1.metric("Robocizna", f"{round(koszt_rob_t)} zł")
+                c2.metric("Materiały", f"{round(koszt_mat_t)} zł")
 
-            st.markdown("---")
-            st.subheader("Lista materiałowa")
-            for przedmiot, ilosc in lista_zakupow:
-                st.write(f"• **{przedmiot}:** {ilosc}")
-            
-            st.markdown("---")
-            # --- GENERATOR PDF TYNKI ---
-            try:
-                from fpdf import FPDF
-                from datetime import datetime
-                import os
+                st.markdown("---")
+                st.subheader("Zestawienie materiałowe")
+                for przedmiot, ilosc in lista_zakupow:
+                    st.write(f"• **{przedmiot}:** {ilosc}")
 
-                if st.button("Generuj Raport PDF", use_container_width=True):
-                    pdf = FPDF()
-                    pdf.add_page()
-                    
-                    # Czcionka (zakładając Inter lub Arial)
-                    f_path = "Inter-Regular.ttf"
-                    if os.path.exists(f_path):
-                        pdf.add_font("Inter", "", f_path)
-                        pdf.set_font("Inter", size=12)
-                    else:
-                        pdf.set_font("Arial", size=12)
+                # --- GENERATOR PDF ---
+                try:
+                    from fpdf import FPDF
+                    from datetime import datetime
+                    import base64
+                    import os
 
-                    # Nagłówek
-                    pdf.set_font(pdf.font_family, size=16)
-                    pdf.cell(0, 15, "OFERTA: TYNKOWANIE / SUCHY TYNK", ln=True, align='C')
-                    pdf.ln(5)
+                    def czysc_tekst(tekst):
+                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                        return tekst.encode('latin-1', 'replace').decode('latin-1')
 
-                    # Tabela podsumowania
-                    pdf.set_fill_color(245, 245, 245)
-                    pdf.set_font(pdf.font_family, size=12)
-                    pdf.cell(95, 10, " Kategoria", 1, 0, 'L', True)
-                    pdf.cell(95, 10, " Koszt", 1, 1, 'L', True)
-                    
-                    pdf.cell(95, 10, " Robocizna:", 1)
-                    pdf.cell(95, 10, f" {round(koszt_rob_t)} PLN", 1, 1)
-                    pdf.cell(95, 10, " Materialy:", 1)
-                    pdf.cell(95, 10, f" {round(koszt_mat_t)} PLN", 1, 1)
-                    pdf.set_font(pdf.font_family, size=13)
-                    pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
-                    pdf.cell(95, 12, f" {round(suma_tynki)} PLN", 1, 1, 'L', True)
+                    if st.button("Generuj Raport PDF", use_container_width=True, key="btn_pdf_tyn"):
+                        pdf = FPDF()
+                        pdf.add_page()
+                        
+                        f_path = "Inter-Regular.ttf"
+                        if os.path.exists(f_path):
+                            pdf.add_font("Inter", "", f_path)
+                            pdf.set_font("Inter", size=12)
+                        else:
+                            pdf.set_font("Arial", size=12)
 
-                    # Szczegóły
-                    pdf.ln(10)
-                    pdf.set_font(pdf.font_family, size=12)
-                    pdf.cell(0, 10, "SZCZEGOLY TECHNICZNE:", ln=True)
-                    pdf.set_font(pdf.font_family, size=10)
-                    pdf.cell(0, 7, f"- System: {wybrany_tynk}", ln=True)
-                    pdf.cell(0, 7, f"- Powierzchnia prac: {round(m2_rob_pro, 1)} m2", ln=True)
-                    if grubosc_t > 0:
-                        pdf.cell(0, 7, f"- Srednia grubosc: {grubosc_t} mm", ln=True)
+                        pdf.set_font(pdf.font_family, size=16)
+                        pdf.cell(0, 15, "OFERTA: TYNKOWANIE / SUCHY TYNK", ln=True, align='C')
+                        pdf.ln(5)
 
-                    # Lista zakupów w PDF
-                    pdf.ln(5)
-                    pdf.set_font(pdf.font_family, size=12)
-                    pdf.cell(0, 10, "LISTA MATERIALOW:", ln=True)
-                    pdf.set_font(pdf.font_family, size=10)
-                    for przedmiot, ilosc in lista_zakupow:
-                        pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
+                        pdf.set_fill_color(245, 245, 245)
+                        pdf.set_font(pdf.font_family, size=12)
+                        
+                        pdf.cell(95, 10, " Powierzchnia prac:", 1)
+                        pdf.cell(95, 10, f" {round(m2_rob_pro, 1)} m2", 1, 1)
+                        pdf.cell(95, 10, " Robocizna:", 1)
+                        pdf.cell(95, 10, f" {round(koszt_rob_t)} PLN", 1, 1)
+                        pdf.cell(95, 10, " Materialy:", 1)
+                        pdf.cell(95, 10, f" {round(koszt_mat_t)} PLN", 1, 1)
+                        pdf.set_font(pdf.font_family, size=13)
+                        pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
+                        pdf.cell(95, 12, f" {round(suma_tynki)} PLN", 1, 1, 'L', True)
 
-                    pdf_bytes = pdf.output()
-                    
-                    if isinstance(pdf_bytes, (bytearray, bytes)):
-                        safe_bytes = bytes(pdf_bytes)
-                    else:
-                        safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+                        pdf.ln(10)
+                        pdf.set_font(pdf.font_family, size=12)
+                        pdf.cell(0, 10, "LISTA MATERIALOW:", ln=True)
+                        pdf.set_font(pdf.font_family, size=10)
+                        for przedmiot, ilosc in lista_zakupow:
+                            pdf.cell(0, 7, f"- {czysc_tekst(przedmiot)}: {czysc_tekst(ilosc)}", ln=True)
 
-                    st.download_button(
-                        label="Pobierz gotowy PDF",
-                        data=safe_bytes,
-                        file_name=f"Oferta_Tynki_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
-            except Exception as e:
-                st.error(f"Problem z PDF: {e}")
+                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
+                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
+                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Oferta_Tynki.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz Raport PDF</a>'
+                        st.markdown(href, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Problem z PDF: {e}")
                     
 # --- SEKCJA: SUCHA ZABUDOWA ---
 elif branza == "Sucha Zabudowa":
@@ -1556,287 +1530,224 @@ elif branza == "Sucha Zabudowa":
         st.subheader("Blyskawiczny szacunek kosztow")
         m2_fast = st.number_input("Przyblizony metraz zabudowy (m2):", min_value=1.0, value=20.0, key="gk_fast_m2")
         
-        koszt_rob_fast = m2_fast * 120
-        koszt_mat_fast = m2_fast * 75
-        total_fast = koszt_rob_fast + koszt_mat_fast
+        # Uśrednione stawki: robota 120, materiał 75
+        k_rob_fast = m2_fast * 120
+        k_mat_fast = m2_fast * 75
+        total_fast = k_rob_fast + k_mat_fast
         
         st.success(f"### Szacowany koszt calkowity: ok. {round(total_fast)} PLN")
         
         c_f1, c_f2 = st.columns(2)
-        c_f1.metric("Szacowana Robocizna", f"{round(koszt_rob_fast)} PLN")
-        c_f2.metric("Szacowane Materialy", f"{round(koszt_mat_fast)} PLN")
+        c_f1.metric("Szacowana Robocizna", f"{round(k_rob_fast)} PLN")
+        c_f2.metric("Szacowane Materialy", f"{round(k_mat_fast)} PLN")
         
-        st.info("Powyzsza wycena jest usredniona. Przejdz do zakladki Kosztorys PRO, aby dodawac konkretne pomieszczenia i wygenerowac dokladna liste zakupow.")
+        st.info("Powyzsza wycena jest usredniona. Przejdz do zakladki Kosztorys PRO, aby wyliczyc systemy CD/UD lub CW/UW i pobrac liste zakupow.")
 
     # ==========================================
     # TAB 2: KOSZTORYS PRO
     # ==========================================
     with tab_gk2:
-        # --- ZMIENNE BAZOWE (Zawsze dostępne) ---
-        m2_gk = 0.0
-        robocizna = 0
-        total_material = 0
-        szer_profilu = 60
-        laczniki_cd1 = laczniki_cd2 = laczniki_krzyzowe = 0
-        szt_cd = szt_ud = szt_wieszaki = 0
-        szt_cw = szt_uw = szt_ua = 0
-        grubosc_welny = None
-        izolacja_gk = False
-        plytowanie = "1xGK (Jednostronnie)"
-        lista_z = []
-        
-        col_g1, col_g2 = st.columns([1, 1.2])
-
-        with col_g1:
-            st.subheader("Konfiguracja konstrukcji")
-            rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Sciana Dzialowa"], key="gk_type")
-            dl_profilu_cd = 3.0
+        # --- BLOKADA PRO ---
+        if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
+            st.error("🔒 **Dostęp zablokowany**")
+            st.warning("Zaawansowane wyliczenia konstrukcji szkieletowych, wieszaków i izolacji dostępne są w wersji PRO.")
             
-            if rodzaj_gk == "Sufit Podwieszany":
-                st.markdown("---")
-                st.write("**Dodaj pomieszczenia do zabudowy sufitu:**")
-                c1, c2, c3 = st.columns([2,1,1])
-                nazwa_suf = c1.text_input("Pomieszczenie:", placeholder="np. Salon", key="suf_n")
-                dl_suf = c2.number_input("Dl. (m):", min_value=0.1, value=5.0, key="suf_d")
-                sz_suf = c3.number_input("Szer. (m):", min_value=0.1, value=4.0, key="suf_s")
-                typ_stelaza_suf = st.radio("Rodzaj stelaza dla tego pokoju:", ["Pojedynczy", "Krzyzowy"], horizontal=True)
+            _, col_k, _ = st.columns([1, 2, 1])
+            with col_k:
+                if st.button("Odblokuj dostęp (Logowanie)", use_container_width=True, key="btn_odblokuj_gk"):
+                    st.session_state.przekierowanie = True  
+                    st.rerun()  
+        else:
+            # --- TYLKO DLA ZALOGOWANYCH PRO ---
+            m2_gk = 0.0
+            robocizna = 0
+            total_material = 0
+            szer_profilu = 60
+            laczniki_cd1 = laczniki_cd2 = laczniki_krzyzowe = 0
+            szt_cd = szt_ud = szt_wieszaki = 0
+            szt_cw = szt_uw = szt_ua = 0
+            grubosc_welny = None
+            izolacja_gk = False
+            plytowanie = "1xGK (Jednostronnie)"
+            lista_z = []
+            
+            col_g1, col_g2 = st.columns([1, 1.2])
 
-                if st.button("Dodaj sufit do listy", use_container_width=True):
-                    st.session_state.pokoje_sufit.append({
-                        "nazwa": nazwa_suf if nazwa_suf else f"Pokoj {len(st.session_state.pokoje_sufit)+1}",
-                        "dl": dl_suf,
-                        "sz": sz_suf,
-                        "typ": typ_stelaza_suf
-                    })
-                    st.rerun()
-
-                # Lista dodanych sufitów i logika zliczania
-                if st.session_state.pokoje_sufit:
-                    st.write("**Dodane sufity:**")
-                    for i, p in enumerate(st.session_state.pokoje_sufit):
-                        cc1, cc2 = st.columns([4, 1])
-                        pow_p = p['dl'] * p['sz']
-                        cc1.caption(f"{p['nazwa']} ({p['dl']}x{p['sz']}m) - {round(pow_p, 1)} m2 [{p['typ']}]")
-                        if cc2.button("Usun", key=f"del_suf_{i}"):
-                            st.session_state.pokoje_sufit.pop(i)
-                            st.rerun()
-                    
-                    # Sumowanie materiałów ze wszystkich pokoi
-                    for p in st.session_state.pokoje_sufit:
-                        p_dl = p['dl']
-                        p_sz = p['sz']
-                        p_m2 = p_dl * p_sz
-                        m2_gk += p_m2
-                        
-                        szt_ud += int(((p_dl + p_sz) * 2 * 1.1) / 3) + 1
-                        szt_wieszaki += int(p_m2 / 0.7) + 1
-                        
-                        rozstaw_cd1 = 0.40 if p['typ'] == "Pojedynczy" else 1.10
-                        liczba_cd1 = int(p_sz / rozstaw_cd1) + 1
-                        odcinki_cd1 = int(p_dl / dl_profilu_cd)
-                        reszta_cd1 = p_dl % dl_profilu_cd
-                        
-                        szt_cd += liczba_cd1 * (odcinki_cd1 + (1 if reszta_cd1 > 0 else 0))
-                        laczniki_cd1 += odcinki_cd1 * liczba_cd1
-
-                        if p['typ'] == "Krzyzowy":
-                            rozstaw_cd2 = 0.40
-                            liczba_cd2 = int(p_dl / rozstaw_cd2) + 1
-                            odcinki_cd2 = int(p_sz / dl_profilu_cd)
-                            reszta_cd2 = p_sz % dl_profilu_cd
-                            
-                            szt_cd += liczba_cd2 * (odcinki_cd2 + (1 if reszta_cd2 > 0 else 0))
-                            laczniki_cd2 += odcinki_cd2 * liczba_cd2
-                            laczniki_krzyzowe += (liczba_cd1 * liczba_cd2)
-
-            else: # Ściana Działowa
-                c1, c2 = st.columns(2)
-                szer_sciany = c1.number_input("Dlugosc scianki (m):", min_value=0.1, value=4.0)
-                wys_sciany = c2.number_input("Wysokosc scianki (m):", min_value=0.1, value=2.6)
-                m2_gk = szer_sciany * wys_sciany
-                szer_profilu = st.selectbox("Profil scianki (CW/UW):", [50, 75, 100], format_func=lambda x: f"{x} mm")
-                plytowanie = st.radio("Plytowanie:", ["1xGK (Jednostronnie)", "2xGK (Dwustronnie)", "2xGK (Z obu stron - 4 warstwy)"])
-                n_drzwi = st.number_input("Otwory drzwiowe (Wymaga profilu UA):", min_value=0, value=0)
+            with col_g1:
+                st.subheader("Konfiguracja konstrukcji")
+                rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Sciana Dzialowa"], key="gk_type_pro")
+                dl_profilu_cd = 3.0
                 
-                szt_uw = int((szer_sciany * 2 * 1.1) / 3) + 1
-                szt_cw = int((szer_sciany / 0.6) * (wys_sciany / 3) + 1)
-                szt_ua = n_drzwi * 2
+                if rodzaj_gk == "Sufit Podwieszany":
+                    st.markdown("---")
+                    st.write("**Dodaj pomieszczenia do zabudowy sufitu:**")
+                    c1, c2, c3 = st.columns([2,1,1])
+                    nazwa_suf = c1.text_input("Pomieszczenie:", placeholder="np. Salon", key="suf_n_pro")
+                    dl_suf = c2.number_input("Dl. (m):", min_value=0.1, value=5.0, key="suf_d_pro")
+                    sz_suf = c3.number_input("Szer. (m):", min_value=0.1, value=4.0, key="suf_s_pro")
+                    typ_stelaza_suf = st.radio("Rodzaj stelaza dla tego pokoju:", ["Pojedynczy", "Krzyzowy"], horizontal=True, key="suf_typ_pro")
 
-            st.markdown("---")
-            st.subheader("Izolacja i Wykonczenie")
-            
-            izolacja_gk = st.checkbox("Wypelnienie welna akustyczna/termiczna")
-            if izolacja_gk:
-                opcje_welny = [50, 75, 100, 150]
-                domyslny_indeks = opcje_welny.index(szer_profilu) if szer_profilu in opcje_welny else 0
-                grubosc_welny = st.selectbox("Grubosc welny:", opcje_welny, index=domyslny_indeks, format_func=lambda x: f"{x} mm")
+                    if st.button("Dodaj sufit do listy", use_container_width=True, key="btn_add_suf_pro"):
+                        st.session_state.pokoje_sufit.append({
+                            "nazwa": nazwa_suf if nazwa_suf else f"Pokoj {len(st.session_state.pokoje_sufit)+1}",
+                            "dl": dl_suf,
+                            "sz": sz_suf,
+                            "typ": typ_stelaza_suf
+                        })
+                        st.rerun()
 
-            typ_tasmy = st.radio("Zbrojenie laczy (System):", ["Tuff-Tape (Calosc - pancerne)", "Flizelina (Plaskie) + Tuff-Tape (Narozniki)"])
-            wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()))
-            stawka_gk = st.number_input("Stawka za robocizne (zl/m2):", 1, 300, 110)
+                    if st.session_state.pokoje_sufit:
+                        for i, p in enumerate(st.session_state.pokoje_sufit):
+                            cc1, cc2 = st.columns([4, 1])
+                            pow_p = p['dl'] * p['sz']
+                            cc1.caption(f"{p['nazwa']} ({p['dl']}x{p['sz']}m) - {round(pow_p, 1)} m2 [{p['typ']}]")
+                            if cc2.button("Usun", key=f"del_suf_pro_{i}"):
+                                st.session_state.pokoje_sufit.pop(i)
+                                st.rerun()
+                        
+                        # Sumowanie
+                        for p in st.session_state.pokoje_sufit:
+                            p_dl, p_sz = p['dl'], p['sz']
+                            p_m2 = p_dl * p_sz
+                            m2_gk += p_m2
+                            szt_ud += int(((p_dl + p_sz) * 2 * 1.1) / 3) + 1
+                            szt_wieszaki += int(p_m2 / 0.7) + 1
+                            rozstaw_cd1 = 0.40 if p['typ'] == "Pojedynczy" else 1.10
+                            liczba_cd1 = int(p_sz / rozstaw_cd1) + 1
+                            odcinki_cd1 = int(p_dl / dl_profilu_cd)
+                            szt_cd += liczba_cd1 * (odcinki_cd1 + (1 if p_dl % dl_profilu_cd > 0 else 0))
+                            laczniki_cd1 += odcinki_cd1 * liczba_cd1
 
-        # --- LOGIKA MATERIAŁOWA (Wykona się tylko gdy jest metraż) ---
-        if m2_gk > 0:
-            naddatek = 1.10
-            
-            mnoznik_plyt = 1
-            if "Dwustronnie" in plytowanie: mnoznik_plyt = 2
-            elif "4 warstwy" in plytowanie: mnoznik_plyt = 4
-            
-            szt_plyt = int(((m2_gk * mnoznik_plyt) * naddatek) / 3.12) + 1
-            wkret_25 = int(m2_gk * 20 * mnoznik_plyt * naddatek)
-            szt_pchelki = int(m2_gk * 12) if rodzaj_gk == "Sufit Podwieszany" else int(m2_gk * 5)
+                            if p['typ'] == "Krzyzowy":
+                                liczba_cd2 = int(p_dl / 0.40) + 1
+                                odcinki_cd2 = int(p_sz / dl_profilu_cd)
+                                szt_cd += liczba_cd2 * (odcinki_cd2 + (1 if p_sz % dl_profilu_cd > 0 else 0))
+                                laczniki_cd2 += odcinki_cd2 * liczba_cd2
+                                laczniki_krzyzowe += (liczba_cd1 * liczba_cd2)
+                else:
+                    # Ściana Działowa
+                    c1, c2 = st.columns(2)
+                    szer_sciany = c1.number_input("Dlugosc scianki (m):", min_value=0.1, value=4.0, key="wall_l_gk")
+                    wys_sciany = c2.number_input("Wysokosc scianki (m):", min_value=0.1, value=2.6, key="wall_h_gk")
+                    m2_gk = szer_sciany * wys_sciany
+                    szer_profilu = st.selectbox("Profil scianki (CW/UW):", [50, 75, 100], format_func=lambda x: f"{x} mm", key="wall_prof_gk")
+                    plytowanie = st.radio("Plytowanie:", ["1xGK (Jednostronnie)", "2xGK (Dwustronnie)", "2xGK (Z obu stron - 4 warstwy)"], key="wall_ply_gk")
+                    n_drzwi = st.number_input("Otwory drzwiowe (Profil UA):", min_value=0, value=0, key="wall_d_gk")
+                    szt_uw = int((szer_sciany * 2 * 1.1) / 3) + 1
+                    szt_cw = int((szer_sciany / 0.6) * (wys_sciany / 3) + 1)
+                    szt_ua = n_drzwi * 2
 
-            if "Calosc" in typ_tasmy:
-                mb_tuff = (m2_gk * mnoznik_plyt) * 1.5
-                mb_fliz = 0
-            else:
-                mb_tuff = (m2_gk * mnoznik_plyt) * 0.4
-                mb_fliz = (m2_gk * mnoznik_plyt) * 1.1
-            
-            rolki_tuff = int(mb_tuff / 30) + (1 if mb_tuff > 0 else 0)
-            rolki_fliz = int(mb_fliz / 25) + (1 if mb_fliz > 0 else 0)
-            koszt_tasm = (rolki_tuff * 150) + (rolki_fliz * 20)
-            worki_masy = int((m2_gk * 0.5 * mnoznik_plyt) / 25 + 0.99)
+                st.markdown("---")
+                st.subheader("Izolacja i Wykonczenie")
+                izolacja_gk = st.checkbox("Wypelnienie welna akustyczna", key="gk_izol_pro")
+                if izolacja_gk:
+                    opcje_welny = [50, 75, 100, 150]
+                    idx = opcje_welny.index(szer_profilu) if szer_profilu in opcje_welny else 0
+                    grubosc_welny = st.selectbox("Grubosc welny:", opcje_welny, index=idx, format_func=lambda x: f"{x} mm")
 
-            koszt_plyt = szt_plyt * baza_mat_gk["Plyta GK 12.5mm (szt)"]
-            koszt_profile = (szt_cd * baza_mat_gk["Profil CD60 (3mb)"]) + (szt_ud * baza_mat_gk["Profil UD27 (3mb)"]) + \
-                            (szt_cw * baza_mat_gk.get(f"Profil CW{szer_profilu} (3mb)", 0)) + \
-                            (szt_uw * baza_mat_gk.get(f"Profil UW{szer_profilu} (3mb)", 0)) + \
-                            (szt_ua * baza_mat_gk.get(f"Profil UA{szer_profilu} (3mb)", 0))
-            
-            koszt_akcesoria = (szt_wieszaki * baza_mat_gk["Wieszak ES / Obrotowy (szt)"])
-            koszt_welny = (m2_gk * baza_mat_gk["Welna (m2)"]) if izolacja_gk else 0
-            koszt_masy = worki_masy * baza_masy_gk[wybrana_masa]
-            
-            koszt_pchelki = (int(szt_pchelki/1000)+1) * 45.0
-            koszt_wkrety = (int(wkret_25/1000)+1) * baza_mat_gk["Wkrety TN25 (1000szt)"]
-            koszt_laczniki = (laczniki_cd1 + laczniki_cd2) * 1.50
-            
-            total_material = koszt_plyt + koszt_profile + koszt_akcesoria + koszt_welny + koszt_masy + koszt_pchelki + koszt_wkrety + koszt_tasm + koszt_laczniki
-            robocizna = m2_gk * stawka_gk
+                typ_tasmy = st.radio("Zbrojenie laczy:", ["Tuff-Tape (Calosc)", "Flizelina + Tuff-Tape"], key="gk_tasma_pro")
+                wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()), key="gk_masa_pro")
+                stawka_gk = st.number_input("Stawka robocizny (zl/m2):", 1, 300, 110, key="gk_rob_pro")
 
-            # Tworzenie zbiorczej listy zakupów
-            if rodzaj_gk == "Sufit Podwieszany":
-                lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
-                lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
-                lista_z.append(("Wieszaki ES/Obrotowe", f"{szt_wieszaki} szt."))
-                if laczniki_krzyzowe > 0: 
-                    lista_z.append(("Laczniki krzyzowe", f"{laczniki_krzyzowe} szt."))
-                if laczniki_cd1 + laczniki_cd2 > 0:
-                    lista_z.append(("Laczniki wzdluzne", f"{laczniki_cd1 + laczniki_cd2} szt."))
-            else:
-                lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
-                lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
-                if szt_ua > 0:
-                    lista_z.append((f"Profile wzmocnione UA{szer_profilu} (3m)", f"{szt_ua} szt."))
-                    lista_z.append(("Katowniki do profilu UA", f"{szt_ua * 2} szt."))
-            
-            lista_z.append(("Plyty G-K 12.5mm (1.2x2.6m)", f"{szt_plyt} szt."))
-            lista_z.append(("Wkrety TN25 (1000szt)", f"{int(wkret_25/1000)+1} op."))
-            lista_z.append(("Wkrety Pchelki LN (1000szt)", f"{int(szt_pchelki/1000)+1} op."))
-            
-            if mb_tuff > 0: lista_z.append(("Tasma Tuff-Tape (30m)", f"{rolki_tuff} rolka/i"))
-            if mb_fliz > 0: lista_z.append(("Tasma Flizelina (25m)", f"{rolki_fliz} rolka/i"))
-            
-            lista_z.append((f"Masa do spoinowania ({wybrana_masa})", f"{worki_masy} worki/wiadra"))
-            if izolacja_gk: lista_z.append((f"Welna izolacyjna {grubosc_welny}mm", f"{round(m2_gk * 1.1, 1)} m2"))
-
-        # --- WYŚWIETLANIE (PRAWA KOLUMNA - TERAZ ZAWSZE WIDOCZNA) ---
-        with col_g2:
-            st.subheader("Podsumowanie")
-            st.success(f"### RAZEM: **{round(total_material + robocizna)} PLN**")
-            
-            c_r1, c_r2 = st.columns(2)
-            c_r1.metric("Robocizna", f"{round(robocizna)} PLN")
-            c_r2.metric("Materialy", f"{round(total_material)} PLN")
-            
-            st.markdown("---")
-            st.subheader("Lista zakupow (Zbiorcza)")
+            # --- LOGIKA MATERIAŁOWA ---
             if m2_gk > 0:
-                for poz, ilosc in lista_z:
-                    st.write(f"• **{poz}:** {ilosc}")
-            else:
-                st.info("Dodaj pomieszczenie lub parametry sciany, aby wygenerowac liste zakupow.")
-            
-            st.markdown("---")
-            
-            # --- GENERATOR PDF GK ---
-            try:
-                from fpdf import FPDF
-                from datetime import datetime
-                import os
+                nad = 1.10
+                mnoz_p = 2 if "Dwustronnie" in plytowanie else (4 if "4 warstwy" in plytowanie else 1)
+                szt_plyt = int(((m2_gk * mnoz_p) * nad) / 3.12) + 1
+                wkret_25 = int(m2_gk * 20 * mnoz_p * nad)
+                szt_pchelki = int(m2_gk * 12) if rodzaj_gk == "Sufit Podwieszany" else int(m2_gk * 5)
 
-                if st.button("Generuj Kosztorys PDF", use_container_width=True, key="gk_pdf_btn"):
-                    if m2_gk == 0:
-                        st.warning("Nie mozna wygenerowac PDF dla zerowego metrazu.")
-                    else:
-                        pdf = FPDF()
-                        pdf.add_page()
-                        
-                        f_path = "Inter-Regular.ttf"
-                        if os.path.exists(f_path):
-                            pdf.add_font("Inter", "", f_path)
-                            pdf.set_font("Inter", size=12)
-                        else:
-                            pdf.set_font("Arial", size=12)
+                if "Calosc" in typ_tasmy:
+                    mb_tuff, mb_fliz = (m2_gk * mnoz_p * 1.5), 0
+                else:
+                    mb_tuff, mb_fliz = (m2_gk * mnoz_p * 0.4), (m2_gk * mnoz_p * 1.1)
+                
+                rolki_tuff = int(mb_tuff / 30) + (1 if mb_tuff > 0 else 0)
+                rolki_fliz = int(mb_fliz / 25) + (1 if mb_fliz > 0 else 0)
+                worki_masy = int((m2_gk * 0.5 * mnoz_p) / 25 + 0.99)
 
-                        pdf.set_font(pdf.font_family, size=16)
-                        pdf.cell(0, 15, "KOSZTORYS: SYSTEMY G-K (SUCHA ZABUDOWA)", ln=True, align='C')
-                        pdf.ln(5)
+                koszt_plyt = szt_plyt * baza_mat_gk["Plyta GK 12.5mm (szt)"]
+                koszt_profile = (szt_cd * baza_mat_gk["Profil CD60 (3mb)"]) + (szt_ud * baza_mat_gk["Profil UD27 (3mb)"]) + \
+                                (szt_cw * baza_mat_gk.get(f"Profil CW{szer_profilu} (3mb)", 0)) + \
+                                (szt_uw * baza_mat_gk.get(f"Profil UW{szer_profilu} (3mb)", 0)) + \
+                                (szt_ua * baza_mat_gk.get(f"Profil UA{szer_profilu} (3mb)", 0))
+                
+                total_material = koszt_plyt + koszt_profile + (szt_wieszaki * 1.5) + (m2_gk * 16 if izolacja_gk else 0) + \
+                                 (worki_masy * baza_masy_gk[wybrana_masa]) + (rolki_tuff * 150) + (rolki_fliz * 20) + (m2_gk * 15)
+                robocizna = m2_gk * stawka_gk
 
-                        pdf.set_fill_color(245, 245, 245)
-                        pdf.set_font(pdf.font_family, size=12)
-                        pdf.cell(95, 10, " Kategoria", 1, 0, 'L', True)
-                        pdf.cell(95, 10, " Koszt", 1, 1, 'L', True)
-                        
-                        pdf.cell(95, 10, " Robocizna:", 1)
-                        pdf.cell(95, 10, f" {round(robocizna)} PLN", 1, 1)
-                        pdf.cell(95, 10, " Materialy:", 1)
-                        pdf.cell(95, 10, f" {round(total_material)} PLN", 1, 1)
-                        pdf.set_font(pdf.font_family, size=13)
-                        pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
-                        pdf.cell(95, 12, f" {round(total_material + robocizna)} PLN", 1, 1, 'L', True)
+                # Lista zakupów
+                if rodzaj_gk == "Sufit Podwieszany":
+                    lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
+                    lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
+                    lista_z.append(("Wieszaki ES/Obrotowe", f"{szt_wieszaki} szt."))
+                else:
+                    lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
+                    lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
+                
+                lista_z.append(("Plyty G-K 12.5mm", f"{szt_plyt} szt."))
+                lista_z.append(("Wkrety TN25", f"{int(wkret_25/1000)+1} op."))
+                lista_z.append((f"Masa ({wybrana_masa})", f"{worki_masy} szt."))
 
-                        pdf.ln(10)
-                        pdf.set_font(pdf.font_family, size=12)
-                        pdf.cell(0, 10, "SZCZEGOLY PROJEKTU:", ln=True)
-                        pdf.set_font(pdf.font_family, size=10)
-                        pdf.cell(0, 7, f"- Typ zabudowy: {rodzaj_gk}", ln=True)
-                        pdf.cell(0, 7, f"- Laczna powierzchnia: {round(m2_gk, 1)} m2", ln=True)
-                        if rodzaj_gk == "Sciana Dzialowa":
-                            pdf.cell(0, 7, f"- Konstrukcja poszycia: {plytowanie}", ln=True)
-                        
-                        # Zestawienie pokoi w PDF (jeśli dodano)
-                        if rodzaj_gk == "Sufit Podwieszany" and st.session_state.pokoje_sufit:
-                            pdf.ln(3)
-                            pdf.cell(0, 7, "Wykaz pomieszczen:", ln=True)
-                            for p in st.session_state.pokoje_sufit:
-                                pdf.cell(0, 7, f"  * {p['nazwa']}: {p['dl']}m x {p['sz']}m", ln=True)
+            with col_g2:
+                st.subheader("Podsumowanie")
+                st.success(f"### RAZEM: **{round(total_material + robocizna)} PLN**")
+                c_r1, c_r2 = st.columns(2)
+                c_r1.metric("Robocizna", f"{round(robocizna)} PLN")
+                c_r2.metric("Materialy", f"{round(total_material)} PLN")
+                
+                st.markdown("---")
+                st.subheader("Lista zakupow")
+                if m2_gk > 0:
+                    for poz, ilosc in lista_z:
+                        st.write(f"• **{poz}:** {ilosc}")
+                else:
+                    st.info("Dodaj metraz, aby wygenerowac zestawienie.")
+                
+                # --- GENERATOR PDF ---
+                try:
+                    from fpdf import FPDF
+                    from datetime import datetime
+                    import base64
+                    import os
 
-                        pdf.ln(5)
-                        pdf.set_font(pdf.font_family, size=12)
-                        pdf.cell(0, 10, "ZBIORCZA LISTA MATERIALOW:", ln=True)
-                        pdf.set_font(pdf.font_family, size=10)
-                        for poz, ilosc in lista_z:
-                            pdf.cell(0, 7, f"- {poz}: {ilosc}", ln=True)
+                    def czysc_tekst(tekst):
+                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                        return tekst.encode('latin-1', 'replace').decode('latin-1')
 
-                        pdf_bytes = pdf.output()
-                        
-                        if isinstance(pdf_bytes, (bytearray, bytes)):
-                            safe_bytes = bytes(pdf_bytes)
-                        else:
-                            safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+                    if st.button("Generuj Kosztorys PDF", use_container_width=True, key="gk_pdf_btn_pro"):
+                        if m2_gk > 0:
+                            pdf = FPDF()
+                            pdf.add_page()
+                            f_path = "Inter-Regular.ttf"
+                            if os.path.exists(f_path):
+                                pdf.add_font("Inter", "", f_path)
+                                pdf.set_font("Inter", size=12)
+                            else:
+                                pdf.set_font("Arial", size=12)
+                            
+                            pdf.set_font(pdf.font_family, size=16)
+                            pdf.cell(0, 15, "OFERTA: SYSTEMY G-K (PRO)", ln=True, align='C')
+                            pdf.ln(5)
+                            pdf.set_fill_color(245, 245, 245)
+                            pdf.cell(95, 10, " Metraz calkowity:", 1)
+                            pdf.cell(95, 10, f" {round(m2_gk, 1)} m2", 1, 1)
+                            pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
+                            pdf.cell(95, 12, f" {round(total_material + robocizna)} PLN", 1, 1, 'L', True)
+                            pdf.ln(10)
+                            pdf.set_font(pdf.font_family, size=12)
+                            pdf.cell(0, 10, "LISTA MATERIALOWA:", ln=True)
+                            pdf.set_font(pdf.font_family, size=10)
+                            for poz, ilosc in lista_z:
+                                pdf.cell(0, 7, f"- {czysc_tekst(poz)}: {czysc_tekst(ilosc)}", ln=True)
 
-                        st.download_button(
-                            label="Pobierz gotowy PDF",
-                            data=safe_bytes,
-                            file_name=f"Kosztorys_GK_{datetime.now().strftime('%Y%m%d')}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-            except Exception as e:
-                st.error(f"Problem z generowaniem PDF: {e}")
+                            pdf_bytes = pdf.output(dest="S").encode('latin-1')
+                            pdf_b64 = base64.b64encode(pdf_bytes).decode()
+                            href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Oferta_GK.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz Raport PDF</a>'
+                            st.markdown(href, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Problem z PDF: {e}")
             
 # --- SEKCJA: ELEKTRYKA ---
 elif branza == "Elektryka":
