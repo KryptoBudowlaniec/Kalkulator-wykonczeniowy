@@ -2731,10 +2731,3 @@ st.markdown("""
     <br><br>
 """, unsafe_allow_html=True)
 
-# Tekst praw autorskich pod logo (Zostaje na samym dole)
-st.markdown("""
-    <p style='text-align: center; color: #BDC3C7; font-size: 14px; margin-top: 10px;'>
-        © 2024 ProCalc. Wszelkie prawa zastrzeżone.
-    </p>
-    <br><br>
-""", unsafe_allow_html=True)
