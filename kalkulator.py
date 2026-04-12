@@ -314,7 +314,7 @@ if 'pokoje_pro' not in st.session_state:
 # --- SEKCJA: MALOWANIE ---
 if branza == "Malowanie":
     st.subheader("Kalkulator Malarski")
-    tab_fast, tab_pro = st.tabs(["⚡ Szybka Wycena", "💎 Kosztorys PRO"])
+    tab_fast, tab_pro = st.tabs([" Szybka Wycena", " Kosztorys PRO"])
 
     # --- BAZA WIEDZY (Ceny rynkowe zaktualizowane: za 1 Litr / 1 Sztukę) ---
     baza_biale = {
@@ -351,7 +351,7 @@ if branza == "Malowanie":
     }
     
     with tab_fast:
-        st.header("⚡ Błyskawiczny szacunek kosztów")
+        st.header(" Błyskawiczny szacunek kosztów")
         st.info("Pełne możliwości, dokładne pomiary i wybór konkretnych marek farb znajdziesz w zakładce Kosztorys PRO.")
         
         col_input, col_spacer = st.columns([1, 1])
@@ -383,7 +383,7 @@ if branza == "Malowanie":
             # Adnotacja o wersji PRO
             st.markdown("""
             ---
-            ### 💎 Chcesz większej precyzji?
+            ###  Chcesz większej precyzji?
             Przejdź do zakładki **Kosztorys PRO**, aby uzyskać dostęp do:
             * **Pełnej bazy materiałów:** Wybór konkretnych marek farb (kolor/biała), gruntów i taśm.
             * **Precyzyjnego planowania:** Możliwość dodawania każdej ściany z osobna (szerokość x wysokość).
@@ -392,10 +392,10 @@ if branza == "Malowanie":
             """)
 
     with tab_pro:
-        st.header("💎 Profesjonalny Arkusz Kalkulacyjny")
+        st.header("Profesjonalny Arkusz Kalkulacyjny")
         
         # --- SEKCJA 1: SZYBKI SZACUNEK (Otwarty) ---
-        st.subheader("⚡ Szybki szacunek materiałów i robocizny")
+        st.subheader(" Szybki szacunek materiałów i robocizny")
         col_f1, col_f2 = st.columns([1, 1.2])
 
         with col_f1:
@@ -645,7 +645,7 @@ elif branza == "Szpachlowanie":
     if 'pokoje_szp' not in st.session_state:
         st.session_state.pokoje_szp = []
 
-    tab_s1, tab_s2 = st.tabs(["⚡ Szybka Wycena", "💎 Detale PRO"])
+    tab_s1, tab_s2 = st.tabs([" Szybka Wycena", " Detale PRO"])
 
     # ==========================================
     # ZAKŁADKA 1: SZYBKA WYCENA (MINIMALISTYCZNA)
@@ -793,7 +793,7 @@ elif branza == "Szpachlowanie":
             
             # --- NOWOŚĆ: LISTA ZAKUPÓW NA WIERZCHU ---
             st.markdown("---")
-            st.subheader("📦 Lista Zakupów")
+            st.subheader(" Lista Zakupów")
             c_zak1, c_zak2 = st.columns(2)
             
             with c_zak1:
@@ -802,8 +802,8 @@ elif branza == "Szpachlowanie":
                 st.write(f"🔹 **Grunt ({wybrany_grunt}):** {szt_gruntu} baniek (5L)")
             with c_zak2:
                 st.warning("**MATERIAŁY ZUŻYWALNE**")
-                st.write(f"🔸 **Krążki ścierne P180:** {szt_krazkow} szt.")
-                st.write(f"🔸 **Narożniki / Akcesoria:** wliczono ryczałt (~{round(koszt_m_dodatki)} zł)")
+                st.write(f" **Krążki ścierne P180:** {szt_krazkow} szt.")
+                st.write(f" **Narożniki / Akcesoria:** wliczono ryczałt (~{round(koszt_m_dodatki)} zł)")
 
             # --- GENEROWANIE PDF ---
             st.markdown("---")
