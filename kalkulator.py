@@ -2496,13 +2496,31 @@ elif branza == "Drzwi":
 elif branza == "Efekty Dekoracyjne":
     st.header("Kalkulator Efektów Dekoracyjnych")
     
-    # Baza cenowa efektów (domyślny materiał i robocizna za m2)
-    baza_dekoracji = {
-        "Beton architektoniczny": {"mat": 60.0, "rob": 150.0},
-        "Stiuk wenecki": {"mat": 80.0, "rob": 200.0},
-        "Trawertyn": {"mat": 70.0, "rob": 180.0},
-        "Efekt rdzy": {"mat": 90.0, "rob": 160.0},
-        "Farba strukturalna": {"mat": 40.0, "rob": 100.0}
+    # Baza cenowa PRO (Podział na Efekt -> Marka/Półka cenowa)
+    baza_dekoracji_pro = {
+        "Beton architektoniczny": {
+            "Jeger (Market - 1 warstwa)": {"mat": 50.0, "rob": 130.0},
+            "Fox Dekorator (Profesjonalny - 2 warstwy)": {"mat": 85.0, "rob": 160.0},
+            "Oikos (Premium Włoski)": {"mat": 140.0, "rob": 200.0}
+        },
+        "Stiuk wenecki": {
+            "Magnat Style (Akrylowy)": {"mat": 60.0, "rob": 160.0},
+            "Fox Dekorator (Wapienny Klasyczny)": {"mat": 95.0, "rob": 200.0},
+            "San Marco (Premium - Prawdziwy marmur)": {"mat": 160.0, "rob": 250.0}
+        },
+        "Trawertyn": {
+            "Primacol (Ekonomiczny)": {"mat": 55.0, "rob": 150.0},
+            "Fox Dekorator (Profesjonalny)": {"mat": 80.0, "rob": 180.0},
+            "Novacolor (Premium Włoski)": {"mat": 130.0, "rob": 220.0}
+        },
+        "Efekt rdzy": {
+            "Jeger (Szybka rdza akrylowa)": {"mat": 70.0, "rob": 140.0},
+            "Fox Dekorator (Prawdziwa rdza z aktywatorem)": {"mat": 110.0, "rob": 180.0}
+        },
+        "Farba strukturalna": {
+            "Dekoral / Śnieżka (Market)": {"mat": 30.0, "rob": 80.0},
+            "Fox Dekorator (Relief z piaskiem)": {"mat": 50.0, "rob": 120.0}
+        }
     }
 
     tab_deko1, tab_deko2 = st.tabs(["Szybka Wycena", "Kosztorys PRO"])
@@ -2515,22 +2533,26 @@ elif branza == "Efekty Dekoracyjne":
         
         c_fast1, c_fast2 = st.columns(2)
         with c_fast1:
-            typ_fast = st.selectbox("Rodzaj efektu (Szybka wycena):", list(baza_dekoracji.keys()), key="deko_typ_fast")
+            typ_fast = st.selectbox("Rodzaj efektu (Szybka wycena):", list(baza_dekoracji_pro.keys()), key="deko_typ_fast")
             m2_fast = st.number_input("Powierzchnia ściany (m2):", min_value=1.0, value=12.0, step=0.5, key="deko_m2_fast")
             
-        # Uproszczone stawki oparte na słowniku
-        k_mat_fast = m2_fast * baza_dekoracji[typ_fast]["mat"]
-        k_rob_fast = m2_fast * baza_dekoracji[typ_fast]["rob"]
+        # Szybka wycena bierze ŚREDNIĄ z dostępnych systemów dla danego efektu
+        dostepne_systemy = baza_dekoracji_pro[typ_fast]
+        srednia_mat = sum(sys["mat"] for sys in dostepne_systemy.values()) / len(dostepne_systemy)
+        srednia_rob = sum(sys["rob"] for sys in dostepne_systemy.values()) / len(dostepne_systemy)
+        
+        k_mat_fast = m2_fast * srednia_mat
+        k_rob_fast = m2_fast * srednia_rob
         total_fast = k_mat_fast + k_rob_fast
         
         st.success(f"### Szacowany całkowity koszt inwestycji: ok. {round(total_fast)} PLN")
-        st.caption("Cena zawiera uśredniony koszt zakupu systemu dekoracyjnego (grunt, masa, lakier) oraz robociznę.")
+        st.caption("Cena wyliczona na podstawie średniej rynkowej dla wybranego efektu (zawiera materiał i robociznę).")
         
         c_f1, c_f2 = st.columns(2)
-        c_f1.metric("Szacowany Materiał", f"{round(k_mat_fast)} PLN")
-        c_f2.metric("Szacowana Robocizna", f"{round(k_rob_fast)} PLN")
+        c_f1.metric("Szacowany Materiał (Średnia)", f"{round(k_mat_fast)} PLN")
+        c_f2.metric("Szacowana Robocizna (Średnia)", f"{round(k_rob_fast)} PLN")
         
-        st.info("Przejdź do zakładki Kosztorys PRO, aby zobaczyć dokładne normy zużycia, dostosować stawki i wygenerować PDF.")
+        st.info("Przejdź do zakładki Kosztorys PRO, aby wybrać konkretnego producenta (np. Fox, Oikos) i wygenerować PDF.")
 
     # ==========================================
     # TAB 2: KOSZTORYS PRO
@@ -2538,13 +2560,11 @@ elif branza == "Efekty Dekoracyjne":
     with tab_deko2:
         if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
             st.error("🔒 **Dostęp zablokowany**")
-            
             _, col_k, _ = st.columns([1, 2, 1])
             with col_k:
                 if st.button("Odblokuj dostęp (Przejdź do logowania)", use_container_width=True, key="btn_odblokuj_deko"):
                     st.session_state.przekierowanie = True  
                     st.rerun()  
-        
         else:
             # --- TYLKO DLA ZALOGOWANYCH ---
             col_d1, col_d2 = st.columns([1, 1.2])
@@ -2554,16 +2574,23 @@ elif branza == "Efekty Dekoracyjne":
                 m2_pro = st.number_input("Dokładna powierzchnia (m2):", min_value=1.0, value=12.0, step=0.1, key="deko_m2_pro")
                 
                 wybrany_efekt = st.selectbox(
-                    "Wybierz system dekoracyjny:", 
-                    options=list(baza_dekoracji.keys()),
+                    "1. Wybierz rodzaj efektu:", 
+                    options=list(baza_dekoracji_pro.keys()),
                     key="deko_typ_pro"
+                )
+                
+                # Zależny dropdown - pokazuje marki tylko dla wybranego efektu
+                wybrana_marka = st.selectbox(
+                    "2. System / Producent:", 
+                    options=list(baza_dekoracji_pro[wybrany_efekt].keys()),
+                    key="deko_marka_pro"
                 )
                 
                 st.markdown("---")
                 st.write("**Stawki (PLN/m2)**")
-                # Dynamicznie zaciągamy domyślne stawki z naszej bazy
-                cena_mat_m2 = st.number_input("Koszt materiału za m2 (zł):", min_value=10.0, value=baza_dekoracji[wybrany_efekt]["mat"])
-                cena_rob_m2 = st.number_input("Stawka za wykonanie 1 m2 (zł):", min_value=50.0, value=baza_dekoracji[wybrany_efekt]["rob"])
+                # Zaciągamy stawki dla KONKRETNEJ marki
+                cena_mat_m2 = st.number_input("Koszt materiału za m2 (zł):", min_value=10.0, value=baza_dekoracji_pro[wybrany_efekt][wybrana_marka]["mat"])
+                cena_rob_m2 = st.number_input("Stawka za wykonanie 1 m2 (zł):", min_value=50.0, value=baza_dekoracji_pro[wybrany_efekt][wybrana_marka]["rob"])
 
                 st.markdown("---")
                 st.write("**Usługi dodatkowe**")
@@ -2578,57 +2605,60 @@ elif branza == "Efekty Dekoracyjne":
             doplata_rob_dodatki = 0
             
             if przygotowanie:
-                doplata_mat_dodatki += (m2_pro * 15) # Klej i siatka
+                doplata_mat_dodatki += (m2_pro * 15) 
                 doplata_rob_dodatki += (m2_pro * 30)
                 
             if zabezpieczenie:
-                doplata_mat_dodatki += (m2_pro * 10) # Lakier/wosk
+                doplata_mat_dodatki += (m2_pro * 10) 
                 doplata_rob_dodatki += (m2_pro * 20)
 
             total_materialy = koszt_bazowy_mat + doplata_mat_dodatki
             total_robocizna = koszt_bazowy_rob + doplata_rob_dodatki
             suma_calkowita = total_materialy + total_robocizna
 
+            # Wyciągamy samą nazwę producenta do wydruku (np. z "Fox Dekorator (Profesjonalny)" robi "Fox Dekorator")
+            krotka_nazwa_systemu = wybrana_marka.split(" (")[0]
+
             # --- GENEROWANIE LISTY ZAKUPÓW NA PODSTAWIE NORM ---
             lista_zakupow = []
             if wybrany_efekt == "Beton architektoniczny":
                 lista_zakupow = [
-                    (f"Tynk mineralny (zużycie 2.0 kg/m2)", f"{round(m2_pro * 2.0, 1)} kg"),
+                    (f"Tynk mineralny beton ({krotka_nazwa_systemu})", f"{round(m2_pro * 2.0, 1)} kg"),
                     (f"Grunt kwarcowy podkładowy", f"{round(m2_pro * 0.2, 1)} L"),
                     (f"Lakier zabezpieczający matowy", f"{round(m2_pro * 0.15, 1)} L")
                 ]
             elif wybrany_efekt == "Stiuk wenecki":
                 lista_zakupow = [
-                    (f"Masa stiukowa (3 warstwy, zużycie 1.0 kg/m2)", f"{round(m2_pro * 1.0, 1)} kg"),
+                    (f"Masa stiukowa ({krotka_nazwa_systemu})", f"{round(m2_pro * 1.0, 1)} kg"),
                     (f"Grunt sczepny / podkład", f"{round(m2_pro * 0.15, 1)} L"),
                     (f"Wosk polerski impregnujący", f"{round(m2_pro * 0.05, 1)} kg")
                 ]
             elif wybrany_efekt == "Trawertyn":
                 lista_zakupow = [
-                    (f"Tynk trawertyn w proszku (zużycie 1.5 kg/m2)", f"{round(m2_pro * 1.5, 1)} kg"),
+                    (f"Tynk trawertyn w proszku ({krotka_nazwa_systemu})", f"{round(m2_pro * 1.5, 1)} kg"),
                     (f"Grunt z piaskiem kwarcowym", f"{round(m2_pro * 0.2, 1)} L"),
-                    (f"Lakier dekoracyjny / Przecierka koloryzująca", f"{round(m2_pro * 0.15, 1)} L")
+                    (f"Przecierka koloryzująca / Lakier", f"{round(m2_pro * 0.15, 1)} L")
                 ]
             elif wybrany_efekt == "Efekt rdzy":
                 lista_zakupow = [
-                    (f"Farba podkładowa z opiłkami żelaza", f"{round(m2_pro * 0.3, 1)} L"),
+                    (f"Farba podkładowa z opiłkami żelaza ({krotka_nazwa_systemu})", f"{round(m2_pro * 0.3, 1)} L"),
                     (f"Aktywator rdzy (spray/pędzel)", f"{round(m2_pro * 0.2, 1)} L"),
-                    (f"Lakier odcinający reakcję chemiczną", f"{round(m2_pro * 0.15, 1)} L")
+                    (f"Lakier odcinający reakcję", f"{round(m2_pro * 0.15, 1)} L")
                 ]
             else:
                 lista_zakupow = [
-                    (f"Farba strukturalna (drobne ziarno)", f"{round(m2_pro * 0.4, 1)} L"),
-                    (f"Grunt szczepny zabarwiony pod kolor", f"{round(m2_pro * 0.2, 1)} L")
+                    (f"Farba strukturalna ({krotka_nazwa_systemu})", f"{round(m2_pro * 0.4, 1)} L"),
+                    (f"Grunt szczepny pod kolor", f"{round(m2_pro * 0.2, 1)} L")
                 ]
                 
-            if przygotowanie: lista_zakupow.append(("Klej elastyczny + siatka z włókna szklanego", f"{round(m2_pro)} m2"))
-            if zabezpieczenie: lista_zakupow.append(("Dodatkowa warstwa wosku/lakieru", f"{round(m2_pro * 0.1, 1)} L"))
+            if przygotowanie: lista_zakupow.append(("Klej elastyczny + siatka z włókna", f"{round(m2_pro)} m2"))
+            if zabezpieczenie: lista_zakupow.append(("Dodatkowa warstwa ochronna (wosk/lakier)", f"{round(m2_pro * 0.1, 1)} L"))
 
             with col_d2:
                 st.subheader("Podsumowanie Kosztorysu")
                 
                 st.success(f"### KOSZT CAŁKOWITY: **{round(suma_calkowita)} PLN**")
-                st.caption("Cena obejmuje wycenę chemii i struktury oraz wybraną stawkę za wykonanie.")
+                st.caption(f"Wycena dla systemu: **{wybrana_marka}**")
 
                 c1, c2 = st.columns(2)
                 c1.metric("Materiał (System + Grunt)", f"{round(total_materialy)} PLN")
@@ -2664,8 +2694,15 @@ elif branza == "Efekty Dekoracyjne":
                         pdf.set_fill_color(245, 245, 245)
                         pdf.set_font(pdf.font_family, size=12)
                         
+                        def czysc_tekst(tekst):
+                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                            return tekst.encode('latin-1', 'replace').decode('latin-1')
+
                         pdf.cell(95, 10, " Wybrany system:", 1)
-                        pdf.cell(95, 10, f" {wybrany_efekt}", 1, 1)
+                        pdf.cell(95, 10, f" {czysc_tekst(wybrany_efekt)}", 1, 1)
+                        pdf.cell(95, 10, " Producent / Klasa:", 1)
+                        pdf.cell(95, 10, f" {czysc_tekst(wybrana_marka)}", 1, 1)
                         pdf.cell(95, 10, " Powierzchnia sciany:", 1)
                         pdf.cell(95, 10, f" {m2_pro} m2", 1, 1)
 
@@ -2681,14 +2718,9 @@ elif branza == "Efekty Dekoracyjne":
                         
                         pdf.ln(10)
                         pdf.set_font(pdf.font_family, size=12)
-                        pdf.cell(0, 10, "LISTA ZAKUPOW (Normy Zuzycia):", ln=True)
+                        pdf.cell(0, 10, "LISTA ZAKUPOW (Normy producenta):", ln=True)
                         pdf.set_font(pdf.font_family, size=10)
                         
-                        def czysc_tekst(tekst):
-                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
-                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                            return tekst.encode('latin-1', 'replace').decode('latin-1')
-
                         for nazwa, ilosc in lista_zakupow:
                             pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
 
@@ -2701,40 +2733,15 @@ elif branza == "Efekty Dekoracyjne":
                     st.error(f"Błąd podczas generowania PDF: {e}")
 
                 st.markdown("---")
-                st.subheader(" Zapisz Kosztorys w Chmurze")
+                st.subheader("💾 Zapisz Kosztorys w Chmurze")
                 st.caption("Zapisz ten projekt, aby pobrać go później w Panelu Inwestora.")
                 
-                nazwa_projektu = st.text_input("Nazwa projektu (np. Ściana TV w Salonie):", key="nazwa_proj_deko")
+                nazwa_projektu = st.text_input("Nazwa projektu (np. Ściana TV - Beton Fox):", key="nazwa_proj_deko")
                 
                 if st.button("Zapisz Projekt", use_container_width=True, type="primary", key="btn_zapisz_deko"):
                     if not nazwa_projektu:
                         st.warning("⚠️ Podaj nazwę projektu przed zapisaniem.")
-                    elif 'user_id' not in st.session_state or not st.session_state.user_id:
-                        st.error("❌ Błąd krytyczny: Zgubiłeś sesję! Wyloguj się i zaloguj ponownie.")
-                    else:
-                        try:
-                            # Przerabiamy krotki na listę stringów dla bazy danych JSON
-                            zakupy_do_bazy = [f"{n}: {i}" for n, i in lista_zakupow]
-                            
-                            dane_do_zapisu = {
-                                "typ_efektu": wybrany_efekt,
-                                "powierzchnia_m2": m2_pro,
-                                "koszt_materialow": total_materialy,
-                                "koszt_robocizny": total_robocizna,
-                                "suma_calkowita": suma_calkowita,
-                                "lista_zakupow": {"MATERIALY": zakupy_do_bazy}
-                            }
-                            
-                            supabase.table("projekty").insert({
-                                "user_id": st.session_state.user_id, 
-                                "nazwa_projektu": nazwa_projektu,
-                                "branza": "Efekty Dekoracyjne",
-                                "dane_json": dane_do_zapisu
-                            }).execute()
-                            
-                            st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w chmurze!")
-                        except Exception as e:
-                            st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
+                    elif 'user_id' not in st.session_state or not st.
 
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
