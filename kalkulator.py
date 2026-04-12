@@ -14,7 +14,7 @@ st.markdown(
     <head>
         <meta property="og:title" content="ProCalc | Profesjonalny Kalkulator Inwestora" />
         <meta property="og:description" content="Kompleksowe kosztorysy, analiza ROI i listy zakupów w jednym miejscu." />
-        <meta property="og:image" content="https://raw.githubusercontent.com/TWOJA_NAZWA_UZYTKOWNIKA/TWOJA_NAZWA_REPOZYTORIUM/main/logo.png" />
+        <meta property="og:image" content="https://raw.githubusercontent.com/KryptoBudowlaniec/Kalkulator-wykonczeniowy/main/logo.png" />
         <meta property="og:type" content="website" />
     </head>
     """,
