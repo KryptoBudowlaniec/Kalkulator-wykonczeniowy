@@ -261,8 +261,8 @@ elif branza == "Logowanie":
             try:
                 res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
                 st.session_state.zalogowany = True
-                st.session_state.user_id = res.user.id
-                st.session_state.pakiet = "PRO" # Tutaj potem dodamy sprawdzanie płatności
+                st.session_state.user_id = res.user.id  # <-- TO JEST SUPER WAŻNE!
+                st.session_state.pakiet = "PRO"
                 st.success("Witaj z powrotem!")
                 st.rerun()
             except Exception as e:
