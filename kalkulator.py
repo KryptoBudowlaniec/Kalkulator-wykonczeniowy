@@ -29,10 +29,24 @@ try:
     key: str = st.secrets["SUPABASE_KEY"]
     supabase: Client = create_client(url, key)
     
-    # --- Przywracanie sesji ---
+    # --- Przywracanie i automatyczne odświeżanie sesji ---
     if "access_token" in st.session_state and "refresh_token" in st.session_state:
-        supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
-        
+        try:
+            # Próbujemy przywrócić sesję
+            session_data = supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
+            
+            # BARDZO WAŻNE: Jeśli Supabase odświeżyło token, zapisujemy ten nowy do pamięci Streamlita!
+            if session_data and session_data.user:
+                st.session_state.access_token = session_data.session.access_token
+                st.session_state.refresh_token = session_data.session.refresh_token
+                
+        except Exception as auth_error:
+            # Jeśli token całkowicie wygasł (Already Used), cicho wylogowujemy użytkownika
+            st.session_state.zalogowany = False
+            st.session_state.pop("access_token", None)
+            st.session_state.pop("refresh_token", None)
+            st.session_state.pop("user_id", None)
+            
 except Exception as e:
     st.error(f"Błąd połączenia z bazą danych: {e}")
 
