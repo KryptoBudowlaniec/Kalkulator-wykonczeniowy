@@ -2501,18 +2501,20 @@ elif branza == "Panel Inwestora":
         st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
         st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
     else:
-        # Odpalamy Sidebar (Boczne Menu)
+        # Odpalamy Sidebar (Boczne Menu) JEDEN RAZ!
         with st.sidebar:
             st.title("Panel Zarządzania")
             st.markdown(f"Konto: **{st.session_state.user_email}**")
             
+            # Dodaliśmy 'key', aby wymusić unikalność ID dla Streamlita
             opcja_panelu = st.radio(
                 "Nawigacja",
-                ["Nawigacja Główna", "Mój Profil", "Język i Region"]
+                ["Nawigacja Główna", "Mój Profil", "Język i Region"],
+                key="panel_inwestora_nawigacja" 
             )
             
             st.markdown("---")
-            if st.button("Wyloguj (Panel)"):
+            if st.button("Wyloguj (Panel)", key="btn_wyloguj_panel"):
                 st.session_state.zalogowany = False
                 if supabase: supabase.auth.sign_out()
                 st.rerun()
@@ -2651,7 +2653,7 @@ elif branza == "Panel Inwestora":
                     
                 # ZAPISYWANIE ROI DO BAZY
                 st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Zapisz ten projekt ROI do chmury", use_container_width=True, type="primary"):
+                if st.button("Zapisz ten projekt ROI do chmury", use_container_width=True, type="primary", key="zapisz_roi_btn"):
                     if supabase and st.session_state.user_id:
                         try:
                             dane_roi = {
@@ -2749,7 +2751,7 @@ elif branza == "Panel Inwestora":
             st.markdown("---")
             st.subheader("📥 Eksportuj Listę Zakupów")
             
-            if st.button("Pobierz Listę Zakupów (PDF)", use_container_width=True, type="primary"):
+            if st.button("Pobierz Listę Zakupów (PDF)", use_container_width=True, type="primary", key="pobierz_pdf_btn"):
                 from fpdf import FPDF
                 import base64
                 
@@ -2806,7 +2808,7 @@ elif branza == "Panel Inwestora":
             with c2:
                 st.number_input("Domyślny narzut na materiały (%)", value=10)
                 st.number_input("Twoja stawka za roboczogodzinę (PLN/h)", value=60)
-            if st.button("Zapisz ustawienia profilu"):
+            if st.button("Zapisz ustawienia profilu", key="zapisz_profil_btn"):
                 st.success("Zapisano zmiany!")
                 
         # ==========================================
@@ -2816,7 +2818,7 @@ elif branza == "Panel Inwestora":
             st.header("Ustawienia Regionalne")
             st.selectbox("Wybierz język", ["Polski", "English"])
             st.selectbox("Domyślna waluta", ["PLN", "EUR", "USD"])
-            if st.button("Zapisz region"):
+            if st.button("Zapisz region", key="zapisz_region_btn"):
                 st.success("Zapisano zmiany!")
 # Tekst praw autorskich pod logo (Zostaje na samym dole pliku)
 st.markdown("""
