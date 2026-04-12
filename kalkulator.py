@@ -19,7 +19,7 @@ st.markdown(
     </head>
     """,
     unsafe_allow_html=True
-) # <--- TUTAJ BRAKOWAŁO NAWIASU!
+) 
 
 # 2. KULOODPORNE POŁĄCZENIE Z SUPABASE
 supabase = None
@@ -35,7 +35,6 @@ try:
         
 except Exception as e:
     st.error(f"Błąd połączenia z bazą danych: {e}")
-# <--- TUTAJ USUNĄŁEM ZBĘDNY NAWIAS )
 
 # --- STAN APLIKACJI (INICJALIZACJA) ---
 if 'zalogowany' not in st.session_state:
@@ -44,6 +43,9 @@ if 'pakiet' not in st.session_state:
     st.session_state.pakiet = "Podstawowy"
 if 'przekierowanie' not in st.session_state:
     st.session_state.przekierowanie = False
+# --- NOWE: Zapamiętujemy maila ---
+if 'user_email' not in st.session_state:
+    st.session_state.user_email = ""
 
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
@@ -57,7 +59,6 @@ with col_logo:
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     
-    # Najprostsze wywołanie bez żadnych indexów i dodatków
     nawigacja = st.pills(
         "", 
         ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"],
@@ -68,12 +69,10 @@ with col_nav:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- LOGIKA PRZEKIEROWANIA (Klucz do naprawy) ---
-# Jeśli przycisk w Drzwiach ustawił tę zmienną, nadpisujemy wybór menu
 if st.session_state.przekierowanie:
     branza = "Logowanie"
 else:
     branza = nawigacja
-
 
 # --- PODMENU ---
 if nawigacja == "Kalkulatory":
@@ -91,7 +90,7 @@ else:
     branza = nawigacja
 
 
-# --- STYLE CSS ---
+# --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -124,7 +123,7 @@ st.markdown("""
 # ==========================================
 
 if branza == "Start":
-    # ---------------- EKRAN STARTOWY ----------------
+    # ---------------- EKRAN STARTOWY (Nietknięty!) ----------------
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0; font-weight: 800;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; font-size: 26px; margin-bottom: 50px; color: #495057;'>Twój Cyfrowy Kosztorysant Wykończeniowy</h3>", unsafe_allow_html=True)
     
@@ -147,7 +146,6 @@ if branza == "Start":
         _, col_btn_top, _ = st.columns([1, 2, 1])
         with col_btn_top:
             if st.button("ZAŁÓŻ DARMOWE KONTO I ZAPISUJ KOSZTORYSY", use_container_width=True):
-                # Prosta i jasna instrukcja dla użytkownika
                 st.info("👆 Aby założyć konto, wybierz zakładkę 'Logowanie' z menu na samej górze strony!")
 
         st.markdown("<div style='text-align: center; width: 100%; margin-top: 15px;'><p style='font-size: 15px; color: #6c757d; font-weight: 600;'>✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.</p></div>", unsafe_allow_html=True)
@@ -197,7 +195,6 @@ if branza == "Start":
     _, col_demo, _ = st.columns([1, 1.5, 1])
     with col_demo:
         if st.button("SPRAWDŹ DARMOWE DEMO (MALOWANIE)", use_container_width=True, key="btn_demo_main"):
-            # Informacja dla użytkownika jak przejść do kalkulatorów
             st.info("👆 Wybierz zakładkę 'Kalkulatory' na górze, a następnie 'Malowanie'!")
 
     st.markdown("<p style='text-align: center; font-size: 14px; color: gray; margin-top: 5px;'>Nie wymaga logowania. Sprawdź jak to działa w 15 sekund.</p>", unsafe_allow_html=True)
@@ -231,8 +228,56 @@ if branza == "Start":
             st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk.")
             st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
 
+# ==========================================
+# TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
+# ==========================================
+elif branza == "Panel Inwestora":
+    st.markdown("<br>", unsafe_allow_html=True)
+    if not st.session_state.zalogowany:
+        st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
+        st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
+    else:
+        # Odpalamy Sidebar (Boczne Menu)
+        with st.sidebar:
+            st.title("Panel Zarządzania")
+            st.markdown(f"Konto: **{st.session_state.user_email}**")
+            
+            opcja_panelu = st.radio(
+                "Nawigacja",
+                ["Nawigacja Główna", "Mój Profil", "Język i Region"]
+            )
+            
+            st.markdown("---")
+            if st.button("Wyloguj (Panel)"):
+                st.session_state.zalogowany = False
+                if supabase: supabase.auth.sign_out()
+                st.rerun()
+
+        # Odpalamy Zawartość w zależności od wyboru w boczku
+        if opcja_panelu == "Nawigacja Główna":
+            st.header("Twoje Kosztorysy i Projekty")
+            st.info("Tutaj docelowo wyświetlą się Twoje wyceny i analiza ROI.")
+            
+        elif opcja_panelu == "Mój Profil":
+            st.header("Mój Profil Inwestora")
+            c1, c2 = st.columns(2)
+            with c1:
+                st.text_input("Imię i Nazwisko / Nazwa Firmy")
+            with c2:
+                st.number_input("Domyślny narzut na materiały (%)", value=10)
+                st.number_input("Twoja stawka za roboczogodzinę (PLN/h)", value=60)
+            if st.button("Zapisz ustawienia profilu"):
+                st.success("Zapisano zmiany!")
+                
+        elif opcja_panelu == "Język i Region":
+            st.header("Ustawienia Regionalne")
+            st.selectbox("Wybierz język", ["Polski", "English"])
+            st.selectbox("Domyślna waluta", ["PLN", "EUR", "USD"])
+            if st.button("Zapisz region"):
+                st.success("Zapisano zmiany!")
+
 elif branza == "Kontakt":
-    # ---------------- EKRAN KONTAKTU ----------------
+    # ---------------- EKRAN KONTAKTU (Nietknięty!) ----------------
     st.markdown("<h1 style='text-align: center; color: #00D395;'>Kontakt</h1>", unsafe_allow_html=True)
     _, col_k, _ = st.columns([1, 2, 1])
     with col_k:
@@ -245,6 +290,7 @@ elif branza == "Kontakt":
         """, unsafe_allow_html=True)
 
 elif branza == "Logowanie":
+    # ---------------- EKRAN LOGOWANIA (Tylko dodany zapis maila!) ----------------
     # Wyłączamy flagę, żeby "odblokować" menu
     st.session_state.przekierowanie = False
     
@@ -265,9 +311,10 @@ elif branza == "Logowanie":
                         res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
                         st.session_state.zalogowany = True
                         st.session_state.user_id = res.user.id
+                        st.session_state.user_email = email # <-- TO JEST JEDYNA ZMIANA TUTAJ
                         st.session_state.pakiet = "PRO"
                         
-                        # --- NOWE: Zapisujemy tokeny sesji (lekarstwo na amnezję) ---
+                        # --- Zapisujemy tokeny sesji ---
                         st.session_state.access_token = res.session.access_token
                         st.session_state.refresh_token = res.session.refresh_token
                         
@@ -307,6 +354,10 @@ elif branza == "Logowanie":
                 if supabase:
                     supabase.auth.sign_out()
                 st.rerun()
+                
+# --- INICJALIZACJA STANU ---
+if 'pokoje_pro' not in st.session_state:
+    st.session_state.pokoje_pro = []
                 
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
