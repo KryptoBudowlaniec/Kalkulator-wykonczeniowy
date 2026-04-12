@@ -2,10 +2,14 @@ import streamlit as st
 
 from supabase import create_client, Client
 
-# Inicjalizacja połączenia z Supabase
-url: str = st.secrets["SUPABASE_URL"]
-key: str = st.secrets["SUPABASE_KEY"]
-supabase: Client = create_client(url, key)
+# --- POŁĄCZENIE Z SUPABASE ---
+# Streamlit automatycznie pobierze to z Twoich "Secrets"
+try:
+    url: str = st.secrets["SUPABASE_URL"]
+    key: str = st.secrets["SUPABASE_KEY"]
+    supabase: Client = create_client(url, key)
+except Exception as e:
+    st.error("Błąd połączenia z bazą danych. Sprawdź Secrets!")
 
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(
@@ -246,29 +250,31 @@ elif branza == "Logowanie":
     
     # 2. Reszta Twojego kodu logowania (ten z przyciskiem Google)
     st.markdown("<br><br>", unsafe_allow_html=True)
-    _, col_log, _ = st.columns([1, 1.5, 1])
-    
-    with col_log:
-        # Tutaj wklejasz tę długą linijkę html_code, którą robiliśmy wcześniej
-        html_code = "<style>...</style><div>...</div>" 
-        st.markdown(html_code, unsafe_allow_html=True)
-        
-        email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
+    email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
         haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Logika przycisku logowania
-        if not st.session_state.zalogowany:
-            if st.button("ZALOGUJ SIĘ / ZAREJESTRUJ (Tryb Testowy)", use_container_width=True):
-                st.session_state.zalogowany = True
-                st.session_state.pakiet = "PRO"
-                st.rerun()
-        else:
-            st.success("Jesteś zalogowany! Twój aktywny pakiet: Premium PRO")
-            if st.button("WYLOGUJ SIĘ", use_container_width=True):
-                st.session_state.zalogowany = False
-                st.session_state.pakiet = "Podstawowy"
-                st.rerun()
+        col_auth1, col_auth2 = st.columns(2)
+        
+        with col_auth1:
+            if st.button("ZALOGUJ SIĘ", use_container_width=True):
+                try:
+                    res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
+                    st.session_state.zalogowany = True
+                    st.session_state.user_id = res.user.id
+                    st.session_state.pakiet = "PRO" # Tutaj potem dodamy sprawdzanie płatności
+                    st.success("Witaj z powrotem!")
+                    st.rerun()
+                except Exception as e:
+                    st.error("Błąd logowania. Sprawdź dane.")
+
+        with col_auth2:
+            if st.button("REJESTRACJA", use_container_width=True):
+                try:
+                    res = supabase.auth.sign_up({"email": email, "password": haslo})
+                    st.info("Sprawdź e-mail, aby potwierdzić konto!")
+                except Exception as e:
+                    st.error("Błąd rejestracji. Hasło min. 6 znaków.")
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
     st.session_state.pokoje_pro = []
