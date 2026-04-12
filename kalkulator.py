@@ -256,27 +256,27 @@ elif branza == "Logowanie":
         
     col_auth1, col_auth2 = st.columns(2)
         
-        with col_auth1:
-            if st.button("ZALOGUJ SIĘ", use_container_width=True):
-                try:
-                    res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
-                    st.session_state.zalogowany = True
-                    st.session_state.user_id = res.user.id
-                    st.session_state.pakiet = "PRO"
-                    st.success("Witaj z powrotem!")
-                    st.rerun()
-                except Exception as e:
-                    # Teraz zobaczymy prawdziwy powód!
-                    st.error(f"Odmowa dostępu: {e}")
+    with col_auth1:
+        if st.button("ZALOGUJ SIĘ", use_container_width=True):
+            try:
+                res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
+                st.session_state.zalogowany = True
+                st.session_state.user_id = res.user.id
+                st.session_state.pakiet = "PRO"
+                st.success("Witaj z powrotem!")
+                st.rerun()
+            except Exception as e:
+                # Teraz zobaczymy prawdziwy powód!
+                st.error(f"Odmowa dostępu: {e}")
 
-        with col_auth2:
-            if st.button("REJESTRACJA", use_container_width=True):
-                try:
-                    res = supabase.auth.sign_up({"email": email, "password": haslo})
-                    st.success("Konto założone pomyślnie! Kliknij teraz 'ZALOGUJ SIĘ'.")
-                except Exception as e:
-                    # Wyświetla prawdziwy błąd (np. czy hasło jest za słabe)
-                    st.error(f"Błąd bazy: {e}")
+    with col_auth2:
+        if st.button("REJESTRACJA", use_container_width=True):
+            try:
+                res = supabase.auth.sign_up({"email": email, "password": haslo})
+                st.success("Konto założone pomyślnie! Kliknij teraz 'ZALOGUJ SIĘ'.")
+            except Exception as e:
+                # Wyświetla prawdziwy błąd (np. czy hasło jest za słabe)
+                st.error(f"Błąd bazy: {e}")
                 
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
