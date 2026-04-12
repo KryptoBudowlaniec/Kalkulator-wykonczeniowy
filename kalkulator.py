@@ -2418,9 +2418,13 @@ elif branza == "Drzwi":
                 if st.button("Zapisz Projekt", use_container_width=True, type="primary"):
                     if not nazwa_projektu:
                         st.warning("⚠️ Podaj nazwę projektu przed zapisaniem.")
+                    # --- DODANE ZABEZPIECZENIE ---
+                    elif 'user_id' not in st.session_state or not st.session_state.user_id:
+                        st.error("❌ Błąd krytyczny: Zgubiłeś sesję! Wyloguj się i zaloguj ponownie.")
+                    # ---------------------------
                     else:
                         try:
-                            # 1. Pakujemy wszystkie ważne dane z kalkulatora w jeden słownik (JSON)
+                            # 1. Pakujemy wszystkie ważne dane
                             dane_do_zapisu = {
                                 "szt_drzwi": szt_drzwi,
                                 "wybrany_model": wybrany_model,
@@ -2433,7 +2437,6 @@ elif branza == "Drzwi":
                             }
                             
                             # 2. Wysyłamy paczkę do bazy Supabase
-                            # Używamy st.session_state.user_id, które zdobyliśmy podczas logowania!
                             response = supabase.table("projekty").insert({
                                 "user_id": st.session_state.user_id, 
                                 "nazwa_projektu": nazwa_projektu,
@@ -2441,7 +2444,7 @@ elif branza == "Drzwi":
                                 "dane_json": dane_do_zapisu
                             }).execute()
                             
-                            st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w Twoim panelu!")
+                            st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w chmurze!")
                         except Exception as e:
                             st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
 
