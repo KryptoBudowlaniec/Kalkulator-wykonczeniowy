@@ -1,5 +1,12 @@
 import streamlit as st
 
+from supabase import create_client, Client
+
+# Inicjalizacja połączenia z Supabase
+url: str = st.secrets["SUPABASE_URL"]
+key: str = st.secrets["SUPABASE_KEY"]
+supabase: Client = create_client(url, key)
+
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(
     page_title="ProCalc - Ekspert Wykończeń",
