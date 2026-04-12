@@ -3,7 +3,7 @@ from supabase import create_client, Client
 
 # 1. KONFIGURACJA GŁÓWNA (Musi być absolutnie pierwsza!)
 st.set_page_config(
-    page_title="ProCalc | Inwestuj i Buduj z Głową",
+    page_title="ProCalc | Profesjonalny kalkulator remontowy",
     page_icon="logo2.png", 
     layout="wide"
 )
