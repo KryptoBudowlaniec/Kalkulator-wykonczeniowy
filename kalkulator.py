@@ -4,7 +4,7 @@ from supabase import create_client, Client
 # 1. KONFIGURACJA GŁÓWNA (Musi być absolutnie pierwsza!)
 st.set_page_config(
     page_title="ProCalc | Inwestuj i Buduj z Głową",
-    page_icon="logo.png", # To wstawi logo w zakładkę przeglądarki
+    page_icon="logo2.png", # To wstawi logo w zakładkę przeglądarki
     layout="wide"
 )
 
