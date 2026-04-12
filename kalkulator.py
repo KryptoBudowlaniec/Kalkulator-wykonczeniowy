@@ -4,12 +4,11 @@ from supabase import create_client, Client
 # 1. KONFIGURACJA GŁÓWNA (Musi być absolutnie pierwsza!)
 st.set_page_config(
     page_title="ProCalc | Inwestuj i Buduj z Głową",
-    page_icon="logo2.png", # To wstawi logo w zakładkę przeglądarki
+    page_icon="logo2.png", 
     layout="wide"
 )
 
 # --- TRICK DLA SMS/WHATSAPP (OPEN GRAPH) ---
-# Streamlit nie wspiera natywnie meta-tagów obrazu, więc wstrzykujemy je "po cichu"
 st.markdown(
     f"""
     <head>
@@ -19,10 +18,10 @@ st.markdown(
         <meta property="og:type" content="website" />
     </head>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
+) # <--- TUTAJ BRAKOWAŁO NAWIASU!
 
 # 2. KULOODPORNE POŁĄCZENIE Z SUPABASE
-# Tworzymy zmienną na start, żeby Python jej nie szukał po omacku
 supabase = None
 
 try:
@@ -30,13 +29,13 @@ try:
     key: str = st.secrets["SUPABASE_KEY"]
     supabase: Client = create_client(url, key)
     
-    # --- NOWE: Przywracanie sesji po odświeżeniu strony ---
+    # --- Przywracanie sesji ---
     if "access_token" in st.session_state and "refresh_token" in st.session_state:
         supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
         
 except Exception as e:
     st.error(f"Błąd połączenia z bazą danych: {e}")
-)
+# <--- TUTAJ USUNĄŁEM ZBĘDNY NAWIAS )
 
 # --- STAN APLIKACJI (INICJALIZACJA) ---
 if 'zalogowany' not in st.session_state:
