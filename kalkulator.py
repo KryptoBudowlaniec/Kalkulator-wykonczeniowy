@@ -247,42 +247,64 @@ elif branza == "Kontakt":
         """, unsafe_allow_html=True)
 
 elif branza == "Logowanie":
-    # 1. To jest najważniejsze: Wyłączamy flagę, żeby "odblokować" menu
+    # Wyłączamy flagę, żeby "odblokować" menu
     st.session_state.przekierowanie = False
     
-    # 2. Reszta Twojego kodu logowania (ten z przyciskiem Google)
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
-    haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
-    st.markdown("<br>", unsafe_allow_html=True)
-        
-    col_auth1, col_auth2 = st.columns(2)
-        
-    with col_auth1:
-        if st.button("ZALOGUJ SIĘ", use_container_width=True):
-            if supabase: # ZABEZPIECZENIE: Uruchom tylko jeśli jest baza
-                try:
-                    res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
-                    st.session_state.zalogowany = True
-                    st.session_state.user_id = res.user.id
-                    st.session_state.pakiet = "PRO"
-                    st.success("Witaj z powrotem!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Odmowa dostępu: {e}")
-            else:
-                st.error("Błąd: Brak połączenia z chmurą Supabase.")
+    # 1. SPRAWDZAMY CZY UŻYTKOWNIK JEST JUŻ ZALOGOWANY
+    if not st.session_state.zalogowany:
+        # WIDOK DLA NIEZALOGOWANYCH (Formularz)
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
+        haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
+        st.markdown("<br>", unsafe_allow_html=True)
+            
+        col_auth1, col_auth2 = st.columns(2)
+            
+        with col_auth1:
+            if st.button("ZALOGUJ SIĘ", use_container_width=True):
+                if supabase: 
+                    try:
+                        res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
+                        st.session_state.zalogowany = True
+                        st.session_state.user_id = res.user.id
+                        st.session_state.pakiet = "PRO"
+                        # Przeładowujemy stronę, żeby wyświetlić widok profilu!
+                        st.rerun() 
+                    except Exception as e:
+                        st.error("Odmowa dostępu: Sprawdź poprawność maila i hasła.")
+                else:
+                    st.error("Błąd: Brak połączenia z chmurą Supabase.")
 
-    with col_auth2:
-        if st.button("REJESTRACJA", use_container_width=True):
-            if supabase: # ZABEZPIECZENIE: Uruchom tylko jeśli jest baza
-                try:
-                    res = supabase.auth.sign_up({"email": email, "password": haslo})
-                    st.success("Konto założone pomyślnie! Kliknij teraz 'ZALOGUJ SIĘ'.")
-                except Exception as e:
-                    st.error(f"Błąd rejestracji: {e}")
-            else:
-                st.error("Błąd: Brak połączenia z chmurą Supabase.")
+        with col_auth2:
+            if st.button("REJESTRACJA", use_container_width=True):
+                if supabase: 
+                    try:
+                        res = supabase.auth.sign_up({"email": email, "password": haslo})
+                        st.success("Konto założone pomyślnie! Kliknij teraz 'ZALOGUJ SIĘ'.")
+                    except Exception as e:
+                        st.error(f"Błąd rejestracji: {e}")
+                else:
+                    st.error("Błąd: Brak połączenia z chmurą Supabase.")
+                    
+    else:
+        # 2. WIDOK PO POMYŚLNYM ZALOGOWANIU
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.success("✅ Jesteś pomyślnie zalogowany!")
+        st.info("Twój aktywny pakiet: **Premium PRO** 💎")
+        
+        st.markdown("<p style='text-align: center; color: #6C757D;'>Możesz teraz przejść do Kalkulatorów, korzystać z zaawansowanych opcji i zapisywać swoje projekty w chmurze.</p>", unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        _, col_logout, _ = st.columns([1, 1, 1])
+        with col_logout:
+            if st.button("WYLOGUJ SIĘ", use_container_width=True, type="secondary"):
+                # Czyścimy dane sesji
+                st.session_state.zalogowany = False
+                st.session_state.pakiet = "Podstawowy"
+                # Wylogowujemy z bazy danych
+                if supabase:
+                    supabase.auth.sign_out()
+                st.rerun()
                 
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
