@@ -2586,8 +2586,8 @@ elif branza == "Panel Inwestora":
                                         
                         st.markdown("<hr style='margin: 0px; opacity: 0.2;'>", unsafe_allow_html=True)
                             
-                except Exception as e:
-                    st.error(f"Wystąpił błąd podczas pobierania danych: {e}")
+            except Exception as e:
+                st.error(f"Wystąpił błąd podczas pobierania danych: {e}")
             else:
                 st.error("Brak połączenia z chmurą bazy danych.")
                 
