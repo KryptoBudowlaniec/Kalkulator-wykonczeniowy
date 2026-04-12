@@ -251,30 +251,31 @@ elif branza == "Logowanie":
     # 2. Reszta Twojego kodu logowania (ten z przyciskiem Google)
     st.markdown("<br><br>", unsafe_allow_html=True)
     email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
-        haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
-        st.markdown("<br>", unsafe_allow_html=True)
+    haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
+    st.markdown("<br>", unsafe_allow_html=True)
         
-        col_auth1, col_auth2 = st.columns(2)
+    col_auth1, col_auth2 = st.columns(2)
         
-        with col_auth1:
-            if st.button("ZALOGUJ SIĘ", use_container_width=True):
-                try:
-                    res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
-                    st.session_state.zalogowany = True
-                    st.session_state.user_id = res.user.id
-                    st.session_state.pakiet = "PRO" # Tutaj potem dodamy sprawdzanie płatności
-                    st.success("Witaj z powrotem!")
-                    st.rerun()
-                except Exception as e:
-                    st.error("Błąd logowania. Sprawdź dane.")
-
-        with col_auth2:
-            if st.button("REJESTRACJA", use_container_width=True):
-                try:
-                    res = supabase.auth.sign_up({"email": email, "password": haslo})
-                    st.info("Sprawdź e-mail, aby potwierdzić konto!")
-                except Exception as e:
-                    st.error("Błąd rejestracji. Hasło min. 6 znaków.")
+    with col_auth1:
+        if st.button("ZALOGUJ SIĘ", use_container_width=True):
+            try:
+                res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
+                st.session_state.zalogowany = True
+                st.session_state.user_id = res.user.id
+                st.session_state.pakiet = "PRO" # Tutaj potem dodamy sprawdzanie płatności
+                st.success("Witaj z powrotem!")
+                st.rerun()
+            except Exception as e:
+                st.error("Błąd logowania. Sprawdź dane.")
+                
+    with col_auth2:
+        if st.button("REJESTRACJA", use_container_width=True):
+            try:
+                res = supabase.auth.sign_up({"email": email, "password": haslo})
+                st.info("Sprawdź e-mail, aby potwierdzić konto!")
+            except Exception as e:
+                st.error("Błąd rejestracji. Hasło min. 6 znaków.")
+                
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
     st.session_state.pokoje_pro = []
