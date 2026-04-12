@@ -20,7 +20,6 @@ st.markdown(
     </head>
     """,
     unsafe_allow_html=True,
-)
 
 # 2. KULOODPORNE POŁĄCZENIE Z SUPABASE
 # Tworzymy zmienną na start, żeby Python jej nie szukał po omacku
