@@ -376,6 +376,9 @@ if 'pokoje_pro' not in st.session_state:
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
     st.session_state.pokoje_pro = []
+
+
+
 # --- SEKCJA: MALOWANIE ---
 if branza == "Malowanie":
     st.subheader("Kalkulator Malarski")
@@ -456,229 +459,254 @@ if branza == "Malowanie":
             * **Listy zakupowej:** Gotowe zestawienie ile dokładnie litrów farby i sztuk akcesoriów musisz kupić.
             """)
 
+    # ==========================================
+    # TAB 2: KOSZTORYS PRO
+    # ==========================================
     with tab_pro:
-        st.header("Profesjonalny Arkusz Kalkulacyjny")
-        
-        # --- SEKCJA 1: SZYBKI SZACUNEK (Otwarty) ---
-        st.subheader(" Szybki szacunek materiałów i robocizny")
-        col_f1, col_f2 = st.columns([1, 1.2])
+        # --- BLOKADA PRO ---
+        if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
+            st.error("🔒 **Dostęp zablokowany**")
+            st.warning("Ta sekcja dostępna jest wyłącznie dla użytkowników z pakietem Premium PRO.")
+            
+            _, col_k, _ = st.columns([1, 2, 1])
+            with col_k:
+                if st.button("Odblokuj dostęp (Przejdź do logowania)", use_container_width=True, key="btn_odblokuj_malowanie"):
+                    st.session_state.przekierowanie = True  
+                    st.rerun()  
+        else:
+            # --- TYLKO DLA ZALOGOWANYCH PRO ---
+            st.header("Profesjonalny Arkusz Kalkulacyjny")
+            
+            # --- SEKCJA 1: SZYBKI SZACUNEK (Otwarty wewnątrz PRO) ---
+            st.subheader(" Szybki szacunek materiałów i robocizny")
+            col_f1, col_f2 = st.columns([1, 1.2])
 
-        with col_f1:
-            m_uzytkowy = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="pro_m_fast")
-            stan_f = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="pro_s_fast")
-            
-            st.markdown("**Wybór Produktów**")
-            f_biala = st.selectbox("Farba BIAŁA (Sufity):", list(baza_biale.keys()), key="pro_fb")
-            f_kolor = st.selectbox("Farba KOLOR (Ściany):", list(baza_kolory.keys()), key="pro_fk")
-            f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()), key="pro_fg")
-            f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()), key="pro_ft")
-            
-            stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 100, 35, key="pro_r_fast")
-
-            st.markdown("---")
-            st.subheader("Sztukateria")
-            mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0, key="pro_sz_fast")
-            typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"], key="pro_tsz_fast")
-
-        # --- LOGIKA OBLICZEŃ (Stała) ---
-        m2_sufit = m_uzytkowy * 1.0
-        m2_sciany = m_uzytkowy * 2.5
-        m2_razem = m2_sufit + m2_sciany
-        mnoznik = 1.0 if stan_f == "Deweloperski" else 1.3
-
-        l_biala = (m2_sufit / 10) * 2
-        l_kolor = (m2_sciany / 10) * 2
-        l_grunt = m2_razem * 0.15
-        szt_akryl = m_uzytkowy / 12
-        szt_tasma = (m_uzytkowy / 15) * mnoznik
-        
-        stawki_szt = {"Styropianowe (Eko)": 25, "Poliuretanowe (Twarde)": 45, "Gipsowe (Premium)": 65}
-        koszt_rob_sztukateria = mb_sztukaterii * stawki_szt[typ_sztukaterii]
-        koszt_mat_sztukateria = (mb_sztukaterii / 8 + 0.4) * 25
-            
-        k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
-                       (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + \
-                       koszt_mat_sztukateria + 150 
-        
-        k_rob_total = (m2_razem * stawka) + koszt_rob_sztukateria
-
-        with col_f2:
-            st.subheader("Wyniki i Lista zakupów")
-            
-            # Obliczenia końcowe
-            total_pro = k_mat_sredni + k_rob_total
-            
-            # --- PANEL FINANSOWY ---
-            st.success(f"### RAZEM: **{round(total_pro)} zł**")
-            
-            c_money1, c_money2 = st.columns(2)
-            with c_money1:
-                st.metric("Twoja Robocizna", f"{round(k_rob_total)} zł")
-            with c_money2: 
-                st.metric("Materiały (ok.)", f"{round(k_mat_sredni)} zł")
-            
-            st.markdown("---")
-
-            # --- LISTA ZAKUPÓW (Widoczna na wierzchu) ---
-            st.markdown("### Twoja lista zakupów")
-            
-            st.write(f"**Farby i Grunt:**")
-            st.write(f"- Biała ({f_biala}): **{round(l_biala, 1)}L**")
-            st.write(f"- Kolor ({f_kolor}): **{round(l_kolor, 1)}L**")
-            st.write(f"- Grunt ({f_grunt}): **{round(l_grunt, 1)}L**")
-            
-            st.write(f"**Akcesoria:**")
-            st.write(f"- Taśma ({f_tasma}): **{round(szt_tasma + 0.5)} szt.**")
-            st.write(f"- Akryl szpachlowy: **{round(szt_akryl + 0.5)} szt.**")
-            
-            if mb_sztukaterii > 0:
-                st.write(f"**Sztukateria:**")
-                st.write(f"- Robocizna (montaż): **{round(koszt_rob_sztukateria)} zł**")
-                st.write(f"- Klej: **Bostik Mamut** ({int(mb_sztukaterii/8 + 1)} szt.)")
-            
-            st.info("Kwoty materiałów zawierają doliczony margines bezpieczeństwa (10%) oraz 150 zł na folie i wałki.")
-
-        st.markdown("---")
-
-        # --- SEKCJA 2: DODAWANIE ŚCIAN (Na wierzchu, bez expandera) ---
-        st.subheader("➕ Dodaj konkretną ścianę do projektu")
-        c1, c2, c3 = st.columns([2, 1, 1])
-        nazwa_p = c1.text_input("Nazwa / Pomieszczenie:", "Salon - Ściana TV", key="wall_name")
-        szer = c2.number_input("Szerokość (m):", min_value=0.1, value=4.0, step=0.1, key="wall_w")
-        wys = c3.number_input("Wysokość (m):", min_value=0.1, value=2.6, step=0.1, key="wall_h")
-        
-        kolor_hex = st.color_picker("Kolor tej ściany:", "#D3D3D3", key="wall_c")
-        
-        if st.button("ZATWIERDŹ I DODAJ ŚCIANĘ", use_container_width=True):
-            st.session_state.pokoje_pro.append({
-                "pokoj": nazwa_p, "szer": szer, "wys": wys, "kolor": kolor_hex
-            })
-            st.rerun()
-
-        # --- WYKAZ DODANYCH ELEMENTÓW ---
-        if st.session_state.pokoje_pro:
-            st.markdown("### Zestawienie szczegółowe")
-            total_m2_walls = 0
-            for i, s in enumerate(st.session_state.pokoje_pro):
-                p_m2 = s['szer'] * s['wys']
-                total_m2_walls += p_m2
-                st.write(f"{i+1}. **{s['pokoj']}**: {s['szer']}m x {s['wys']}m = **{round(p_m2, 2)} m²**")
-            
-            st.info(f"Łączna powierzchnia dodanych ścian: **{round(total_m2_walls, 1)} m²**")
-            
-            if st.button("WYCZYŚĆ LISTĘ ŚCIAN"):
-                st.session_state.pokoje_pro = []
-                st.rerun()
+            with col_f1:
+                m_uzytkowy = st.number_input("Metraż mieszkania (podłoga m2):", min_value=1.0, value=50.0, key="pro_m_fast")
+                stan_f = st.selectbox("Stan lokalu:", ["Deweloperski", "Zamieszkały (meble)"], key="pro_s_fast")
                 
-        st.markdown("---")
-        
-        st.subheader("Zarządzanie Projektem")
-        
-        c_btn1, c_btn2 = st.columns(2)
-
-        with c_btn1:
-            if st.button("Wyczyść projekt PRO", use_container_width=True):
-                st.session_state.pokoje_pro = []
-                st.rerun()
-
-        with c_btn2:
-            try:
-                from fpdf import FPDF
-                import os
-                from datetime import datetime
-
-                # 1. Inicjalizacja PDF
-                pdf = FPDF()
-                pdf.add_page()
-
-                # 2. KONFIGURACJA CZCIONKI INTER
-                font_path = "Inter-Regular.ttf"
-                if os.path.exists(font_path):
-                    pdf.add_font("Inter", "", font_path)
-                    pdf.set_font("Inter", size=12)
-                    font_exists = True
-                else:
-                    pdf.set_font("Arial", size=12)
-                    font_exists = False
-
-                # --- NAGŁÓWEK ---
-                if os.path.exists("logo.png"):
-                    pdf.image("logo.png", x=10, y=8, w=35)
+                st.markdown("**Wybór Produktów**")
+                f_biala = st.selectbox("Farba BIAŁA (Sufity):", list(baza_biale.keys()), key="pro_fb")
+                f_kolor = st.selectbox("Farba KOLOR (Ściany):", list(baza_kolory.keys()), key="pro_fk")
+                f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()), key="pro_fg")
+                f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()), key="pro_ft")
                 
-                pdf.set_font("Inter" if font_exists else "Arial", size=18)
-                pdf.cell(0, 15, "PROCALC - RAPORT KOSZTORYSOWY", ln=True, align='C')
-                pdf.ln(10)
+                stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 100, 35, key="pro_r_fast")
 
-                # --- LINIA SEPARATORA ---
-                pdf.set_draw_color(0, 0, 0)
-                pdf.line(10, 35, 200, 35)
-                pdf.ln(5)
+                st.markdown("---")
+                st.subheader("Sztukateria")
+                mb_sztukaterii = st.number_input("Łączna długość listew (mb):", min_value=0.0, value=0.0, step=1.0, key="pro_sz_fast")
+                typ_sztukaterii = st.selectbox("Rodzaj listew:", ["Styropianowe (Eko)", "Poliuretanowe (Twarde)", "Gipsowe (Premium)"], key="pro_tsz_fast")
 
-                # --- DANE PROJEKTU ---
-                pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
-                pdf.cell(0, 8, f"Data: {data_str} | Metraz: {m_uzytkowy} m2", ln=True)
-                pdf.ln(5)
+            # --- LOGIKA OBLICZEŃ (Stała) ---
+            m2_sufit = m_uzytkowy * 1.0
+            m2_sciany = m_uzytkowy * 2.5
+            m2_razem = m2_sufit + m2_sciany
+            mnoznik = 1.0 if stan_f == "Deweloperski" else 1.3
 
-                # --- SEKCJA 1: FINANSE (Tabela) ---
-                pdf.set_fill_color(230, 230, 230)
-                pdf.set_font("Inter" if font_exists else "Arial", size=12)
-                pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
+            l_biala = (m2_sufit / 10) * 2
+            l_kolor = (m2_sciany / 10) * 2
+            l_grunt = m2_razem * 0.15
+            szt_akryl = m_uzytkowy / 12
+            szt_tasma = (m_uzytkowy / 15) * mnoznik
+            
+            stawki_szt = {"Styropianowe (Eko)": 25, "Poliuretanowe (Twarde)": 45, "Gipsowe (Premium)": 65}
+            koszt_rob_sztukateria = mb_sztukaterii * stawki_szt[typ_sztukaterii]
+            koszt_mat_sztukateria = (mb_sztukaterii / 8 + 0.4) * 25
                 
-                pdf.set_font("Inter" if font_exists else "Arial", size=11)
-                pdf.cell(95, 10, " Twoja Robocizna:", 1)
-                pdf.cell(95, 10, f" {round(k_rob_total)} PLN", 1, ln=True)
-                
-                pdf.cell(95, 10, " Szacowane Materialy:", 1)
-                pdf.cell(95, 10, f" {round(k_mat_sredni)} PLN", 1, ln=True)
-                
-                pdf.set_font("Inter" if font_exists else "Arial", size=13)
-                pdf.cell(95, 12, " SUMA CALKOWITA:", 1)
-                pdf.cell(95, 12, f" {round(total_pro)} PLN", 1, ln=True)
-                pdf.ln(10)
+            k_mat_sredni = (l_biala * baza_biale[f_biala]) + (l_kolor * baza_kolory[f_kolor]) + \
+                           (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + \
+                           koszt_mat_sztukateria + 150 
+            
+            k_rob_total = (m2_razem * stawka) + koszt_rob_sztukateria
 
-                # --- SEKCJA 2: LISTA ZAKUPOWA ---
-                pdf.set_font("Inter" if font_exists else "Arial", size=12)
-                pdf.cell(0, 10, " 2. SZCZEGOLOWA LISTA ZAKUPOW", ln=True, fill=True)
-                pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                pdf.ln(2)
+            with col_f2:
+                st.subheader("Wyniki i Lista zakupów")
+                
+                # Obliczenia końcowe
+                total_pro = k_mat_sredni + k_rob_total
+                
+                # --- PANEL FINANSOWY ---
+                st.success(f"### RAZEM: **{round(total_pro)} zł**")
+                
+                c_money1, c_money2 = st.columns(2)
+                with c_money1:
+                    st.metric("Twoja Robocizna", f"{round(k_rob_total)} zł")
+                with c_money2: 
+                    st.metric("Materiały (ok.)", f"{round(k_mat_sredni)} zł")
+                
+                st.markdown("---")
 
-                lista_pdf = {
-                    "Farba Biała (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
-                    "Farba Kolor (Ściany)": f"{round(l_kolor, 1)}L ({f_kolor})",
-                    "Grunt głęboko penetrujący": f"{round(l_grunt, 1)}L ({f_grunt})",
-                    "Taśma malarska": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
-                    "Akryl szpachlowy": f"{round(szt_akryl + 0.5)} szt."
-                }
+                # --- LISTA ZAKUPÓW (Widoczna na wierzchu) ---
+                st.markdown("### Twoja lista zakupów")
+                
+                st.write(f"**Farby i Grunt:**")
+                st.write(f"- Biała ({f_biala}): **{round(l_biala, 1)}L**")
+                st.write(f"- Kolor ({f_kolor}): **{round(l_kolor, 1)}L**")
+                st.write(f"- Grunt ({f_grunt}): **{round(l_grunt, 1)}L**")
+                
+                st.write(f"**Akcesoria:**")
+                st.write(f"- Taśma ({f_tasma}): **{round(szt_tasma + 0.5)} szt.**")
+                st.write(f"- Akryl szpachlowy: **{round(szt_akryl + 0.5)} szt.**")
                 
                 if mb_sztukaterii > 0:
-                    lista_pdf["Klej do listew"] = f"Bostik Mamut ({int(mb_sztukaterii/8 + 1)} szt.)"
-
-                for produkt, opis in lista_pdf.items():
-                    pdf.cell(0, 8, f"- {produkt}: {opis}", ln=True)
-
-                # --- STOPKA ---
-                pdf.set_y(-25)
-                pdf.set_font("Inter" if font_exists else "Arial", size=8)
-                pdf.set_text_color(100, 100, 100)
-                pdf.cell(0, 10, "Wygenerowano automatycznie przez proCalc. Kosztorys nie stanowi oferty handlowej.", 0, 0, 'C')
-
-                pdf_output = pdf.output()
+                    st.write(f"**Sztukateria:**")
+                    st.write(f"- Robocizna (montaż): **{round(koszt_rob_sztukateria)} zł**")
+                    st.write(f"- Klej: **Bostik Mamut** ({int(mb_sztukaterii/8 + 1)} szt.)")
                 
-                if isinstance(pdf_output, (bytearray, bytes)):
-                    safe_bytes = bytes(pdf_output)
-                else:
-                    safe_bytes = pdf_output.encode('latin-1', 'replace')
+                st.info("Kwoty materiałów zawierają doliczony margines bezpieczeństwa (10%) oraz 150 zł na folie i wałki.")
+
+            st.markdown("---")
+
+            # --- SEKCJA 2: DODAWANIE ŚCIAN (Na wierzchu, bez expandera) ---
+            st.subheader("➕ Dodaj konkretną ścianę do projektu")
+            c1, c2, c3 = st.columns([2, 1, 1])
+            nazwa_p = c1.text_input("Nazwa / Pomieszczenie:", "Salon - Ściana TV", key="wall_name")
+            szer = c2.number_input("Szerokość (m):", min_value=0.1, value=4.0, step=0.1, key="wall_w")
+            wys = c3.number_input("Wysokość (m):", min_value=0.1, value=2.6, step=0.1, key="wall_h")
+            
+            kolor_hex = st.color_picker("Kolor tej ściany:", "#D3D3D3", key="wall_c")
+            
+            if st.button("ZATWIERDŹ I DODAJ ŚCIANĘ", use_container_width=True):
+                st.session_state.pokoje_pro.append({
+                    "pokoj": nazwa_p, "szer": szer, "wys": wys, "kolor": kolor_hex
+                })
+                st.rerun()
+
+            # --- WYKAZ DODANYCH ELEMENTÓW ---
+            if st.session_state.pokoje_pro:
+                st.markdown("### Zestawienie szczegółowe")
+                total_m2_walls = 0
+                for i, s in enumerate(st.session_state.pokoje_pro):
+                    p_m2 = s['szer'] * s['wys']
+                    total_m2_walls += p_m2
+                    st.write(f"{i+1}. **{s['pokoj']}**: {s['szer']}m x {s['wys']}m = **{round(p_m2, 2)} m²**")
                 
-                st.download_button(
-                    label="Pobierz Raport PDF (Inter)",
-                    data=safe_bytes,
-                    file_name=f"Kosztorys_Malowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
-            except Exception as e:
-                st.error(f"Błąd PDF: {e}")
+                st.info(f"Łączna powierzchnia dodanych ścian: **{round(total_m2_walls, 1)} m²**")
+                
+                if st.button("WYCZYŚĆ LISTĘ ŚCIAN"):
+                    st.session_state.pokoje_pro = []
+                    st.rerun()
+                    
+            st.markdown("---")
+            
+            st.subheader("Zarządzanie Projektem")
+            
+            c_btn1, c_btn2 = st.columns(2)
+
+            with c_btn1:
+                if st.button("Wyczyść projekt PRO", use_container_width=True):
+                    st.session_state.pokoje_pro = []
+                    st.rerun()
+
+            with c_btn2:
+                try:
+                    from fpdf import FPDF
+                    import os
+                    from datetime import datetime
+
+                    # 1. Inicjalizacja PDF
+                    pdf = FPDF()
+                    pdf.add_page()
+
+                    # 2. KONFIGURACJA CZCIONKI INTER
+                    font_path = "Inter-Regular.ttf"
+                    if os.path.exists(font_path):
+                        pdf.add_font("Inter", "", font_path)
+                        pdf.set_font("Inter", size=12)
+                        font_exists = True
+                    else:
+                        pdf.set_font("Arial", size=12)
+                        font_exists = False
+
+                    # --- NAGŁÓWEK ---
+                    if os.path.exists("logo.png"):
+                        pdf.image("logo.png", x=10, y=8, w=35)
+                    
+                    pdf.set_font("Inter" if font_exists else "Arial", size=18)
+                    pdf.cell(0, 15, "PROCALC - RAPORT KOSZTORYSOWY", ln=True, align='C')
+                    pdf.ln(10)
+
+                    # --- LINIA SEPARATORA ---
+                    pdf.set_draw_color(0, 0, 0)
+                    pdf.line(10, 35, 200, 35)
+                    pdf.ln(5)
+
+                    # --- DANE PROJEKTU ---
+                    pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                    data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                    pdf.cell(0, 8, f"Data: {data_str} | Metraz: {m_uzytkowy} m2", ln=True)
+                    pdf.ln(5)
+
+                    # --- SEKCJA 1: FINANSE (Tabela) ---
+                    pdf.set_fill_color(230, 230, 230)
+                    pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                    pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
+                    
+                    pdf.set_font("Inter" if font_exists else "Arial", size=11)
+                    pdf.cell(95, 10, " Twoja Robocizna:", 1)
+                    pdf.cell(95, 10, f" {round(k_rob_total)} PLN", 1, ln=True)
+                    
+                    pdf.cell(95, 10, " Szacowane Materialy:", 1)
+                    pdf.cell(95, 10, f" {round(k_mat_sredni)} PLN", 1, ln=True)
+                    
+                    pdf.set_font("Inter" if font_exists else "Arial", size=13)
+                    pdf.cell(95, 12, " SUMA CALKOWITA:", 1)
+                    pdf.cell(95, 12, f" {round(total_pro)} PLN", 1, ln=True)
+                    pdf.ln(10)
+
+                    # --- SEKCJA 2: LISTA ZAKUPOWA ---
+                    pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                    pdf.cell(0, 10, " 2. SZCZEGOLOWA LISTA ZAKUPOW", ln=True, fill=True)
+                    pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                    pdf.ln(2)
+
+                    lista_pdf = {
+                        "Farba Biała (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
+                        "Farba Kolor (Ściany)": f"{round(l_kolor, 1)}L ({f_kolor})",
+                        "Grunt głęboko penetrujący": f"{round(l_grunt, 1)}L ({f_grunt})",
+                        "Taśma malarska": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
+                        "Akryl szpachlowy": f"{round(szt_akryl + 0.5)} szt."
+                    }
+                    
+                    if mb_sztukaterii > 0:
+                        lista_pdf["Klej do listew"] = f"Bostik Mamut ({int(mb_sztukaterii/8 + 1)} szt.)"
+
+                    def czysc_tekst(tekst):
+                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                        return tekst.encode('latin-1', 'replace').decode('latin-1')
+
+                    for produkt, opis in lista_pdf.items():
+                        pdf.cell(0, 8, f"- {czysc_tekst(produkt)}: {czysc_tekst(opis)}", ln=True)
+
+                    # --- STOPKA ---
+                    pdf.set_y(-25)
+                    pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                    pdf.set_text_color(100, 100, 100)
+                    pdf.cell(0, 10, "Wygenerowano automatycznie przez proCalc. Kosztorys nie stanowi oferty handlowej.", 0, 0, 'C')
+
+                    pdf_output = pdf.output(dest="S")
+                    
+                    if isinstance(pdf_output, str):
+                        safe_bytes = pdf_output.encode('latin-1', 'replace')
+                    else:
+                        safe_bytes = bytes(pdf_output)
+                    
+                    st.download_button(
+                        label="Pobierz Raport PDF",
+                        data=safe_bytes,
+                        file_name=f"Kosztorys_Malowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"Błąd PDF: {e}")
+
+
+
+
+
 elif branza == "Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
 
