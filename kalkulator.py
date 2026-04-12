@@ -775,211 +775,227 @@ elif branza == "Szpachlowanie":
         st.info("💡 **Jak to policzyliśmy?** Przyjęto średnio 3.5 m² ścian na każdy metr podłogi. "
                 f"Obecna stawka ryczałtowa to **{cena_za_m2_fast} zł/m²** (robocizna + materiał) za {l_warstw_fast} warstwy.")
         st.caption("Aby wybrać konkretny rodzaj gładzi (gotowa/sypka), ustawić własne stawki lub dodać precyzyjnie wymiary pomieszczeń, przejdź do zakładki **Detale PRO**.")
+
     # ==========================================
     # ZAKŁADKA 2: DETALE PRO
     # ==========================================
     with tab_s2:
-        st.subheader("Konfiguracja Wykonania (PRO)")
-        
-        # --- A. WYBÓR MATERIAŁÓW I STAWEK ---
-        col_c1, col_c2 = st.columns(2)
-        
-        with col_c1:
-            typ_g_pro = st.radio("Rodzaj gładzi:", ["Gotowa (Wiadro)", "Sypka (Worek)"], horizontal=True, key="p_typ")
-            if typ_g_pro == "Sypka (Worek)":
-                wybrana_g = st.selectbox("Wybierz produkt:", list(baza_sypkie.keys()), key="p_syp")
-                dane_g = baza_sypkie[wybrana_g]
-                norma_g = 1.2
-            else:
-                wybrana_g = st.selectbox("Wybierz produkt:", list(baza_gotowe.keys()), key="p_got")
-                dane_g = baza_gotowe[wybrana_g]
-                norma_g = 1.8
+        # --- BLOKADA PRO ---
+        if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
+            st.error("🔒 **Dostęp zablokowany**")
+            st.warning("Ta sekcja dostępna jest wyłącznie dla użytkowników z pakietem Premium PRO.")
             
-            wybrany_grunt = st.selectbox("Wybierz Grunt:", list(baza_grunty_szp.keys()), key="p_gru")
-
-        with col_c2:
-            l_warstw = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="p_war")
-            stawka_szp = st.number_input("Twoja stawka za m2 (robocizna):", 1, 300, 50, key="p_sta")
-
-        st.markdown("---")
-        
-        # --- B. DODAWANIE POMIESZCZEŃ (TERAZ ZAWSZE WIDOCZNE) ---
-# --- B. WYBÓR METODY POMIARU ---
-        st.subheader("📏 Metraż prac")
-        metoda_pomiaru = st.radio(
-            "Wybierz sposób podania metrażu:",
-            ["Wpisz ogólny metraż ścian (Szybko)", "Dodaj konkretne pomieszczenia (Dokładnie)"],
-            horizontal=True,
-            key="metoda_szp"
-        )
-
-        m2_total = 0.0
-        podl_total = 0.0
-
-        if metoda_pomiaru == "Wpisz ogólny metraż ścian (Szybko)":
-            # Opcja 1: Suwak
-            m2_total = st.slider("Podaj łączny metraż ścian i sufitów (m2):", 5, 1000, 150, step=5)
-            podl_total = m2_total / 3.5  # Szacunek podłogi pod dodatki (narożniki itp.)
-            st.info(f"Przyjęto łączny metraż: {m2_total} m²")
-
+            _, col_k, _ = st.columns([1, 2, 1])
+            with col_k:
+                if st.button("Odblokuj dostęp (Przejdź do logowania)", use_container_width=True, key="btn_odblokuj_szpachlowanie"):
+                    st.session_state.przekierowanie = True  
+                    st.rerun()  
         else:
-            # Opcja 2: Dodawanie pomieszczeń
-            cp1, cp2 = st.columns(2)
-            with cp1:
-                naz_p = st.text_input("Nazwa pomieszczenia:", placeholder="np. Kuchnia", key="p_naz")
-                dl_p = st.number_input("Długość (m):", 0.0, 50.0, 4.0, key="p_dl")
-                sz_p = st.number_input("Szerokość (m):", 0.0, 50.0, 3.0, key="p_sz")
-            with cp2:
-                wy_p = st.number_input("Wysokość (m):", 0.0, 10.0, 2.6, key="p_wy")
-                suf_p = st.checkbox("Szpachlować sufit?", value=True, key="p_suf_check")
-                ok_drz = st.number_input("Odliczenia okna/drzwi (m2):", 0.0, 50.0, 3.5, key="p_odlicz")
+            # --- TYLKO DLA ZALOGOWANYCH PRO ---
+            st.subheader("Konfiguracja Wykonania (PRO)")
+            
+            # --- A. WYBÓR MATERIAŁÓW I STAWEK ---
+            col_c1, col_c2 = st.columns(2)
+            
+            with col_c1:
+                typ_g_pro = st.radio("Rodzaj gładzi:", ["Gotowa (Wiadro)", "Sypka (Worek)"], horizontal=True, key="p_typ")
+                if typ_g_pro == "Sypka (Worek)":
+                    wybrana_g = st.selectbox("Wybierz produkt:", list(baza_sypkie.keys()), key="p_syp")
+                    dane_g = baza_sypkie[wybrana_g]
+                    norma_g = 1.2
+                else:
+                    wybrana_g = st.selectbox("Wybierz produkt:", list(baza_gotowe.keys()), key="p_got")
+                    dane_g = baza_gotowe[wybrana_g]
+                    norma_g = 1.8
+                
+                wybrany_grunt = st.selectbox("Wybierz Grunt:", list(baza_grunty_szp.keys()), key="p_gru")
 
-            if st.button("Zapisz i dodaj do listy", use_container_width=True):
-                p_netto = (((dl_p + sz_p) * 2 * wy_p) + (dl_p * sz_p if suf_p else 0)) - ok_drz
-                if p_netto > 0:
-                    st.session_state.pokoje_szp.append({
-                        "nazwa": naz_p or f"Pokój {len(st.session_state.pokoje_szp)+1}",
-                        "netto": p_netto,
-                        "podloga": dl_p * sz_p
-                    })
-                    st.rerun()
+            with col_c2:
+                l_warstw = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="p_war")
+                stawka_szp = st.number_input("Twoja stawka za m2 (robocizna):", 1, 300, 50, key="p_sta")
 
-            # Wyświetlanie listy pokoi i sumowanie metrażu
-            if st.session_state.pokoje_szp:
-                st.markdown("---")
-                for i, p in enumerate(st.session_state.pokoje_szp):
-                    c_l, c_b = st.columns([5, 1])
-                    c_l.info(f"**{p['nazwa']}**: {round(p['netto'], 1)} m²")
-                    if c_b.button("Usuń", key=f"del_p_{i}"):
-                        st.session_state.pokoje_szp.pop(i)
+            st.markdown("---")
+            
+            # --- B. WYBÓR METODY POMIARU ---
+            st.subheader("📏 Metraż prac")
+            metoda_pomiaru = st.radio(
+                "Wybierz sposób podania metrażu:",
+                ["Wpisz ogólny metraż ścian (Szybko)", "Dodaj konkretne pomieszczenia (Dokładnie)"],
+                horizontal=True,
+                key="metoda_szp"
+            )
+
+            m2_total = 0.0
+            podl_total = 0.0
+
+            if metoda_pomiaru == "Wpisz ogólny metraż ścian (Szybko)":
+                # Opcja 1: Suwak
+                m2_total = st.slider("Podaj łączny metraż ścian i sufitów (m2):", 5, 1000, 150, step=5)
+                podl_total = m2_total / 3.5  # Szacunek podłogi pod dodatki (narożniki itp.)
+                st.info(f"Przyjęto łączny metraż: {m2_total} m²")
+
+            else:
+                # Opcja 2: Dodawanie pomieszczeń
+                cp1, cp2 = st.columns(2)
+                with cp1:
+                    naz_p = st.text_input("Nazwa pomieszczenia:", placeholder="np. Kuchnia", key="p_naz")
+                    dl_p = st.number_input("Długość (m):", 0.0, 50.0, 4.0, key="p_dl")
+                    sz_p = st.number_input("Szerokość (m):", 0.0, 50.0, 3.0, key="p_sz")
+                with cp2:
+                    wy_p = st.number_input("Wysokość (m):", 0.0, 10.0, 2.6, key="p_wy")
+                    suf_p = st.checkbox("Szpachlować sufit?", value=True, key="p_suf_check")
+                    ok_drz = st.number_input("Odliczenia okna/drzwi (m2):", 0.0, 50.0, 3.5, key="p_odlicz")
+
+                if st.button("Zapisz i dodaj do listy", use_container_width=True):
+                    p_netto = (((dl_p + sz_p) * 2 * wy_p) + (dl_p * sz_p if suf_p else 0)) - ok_drz
+                    if p_netto > 0:
+                        st.session_state.pokoje_szp.append({
+                            "nazwa": naz_p or f"Pokój {len(st.session_state.pokoje_szp)+1}",
+                            "netto": p_netto,
+                            "podloga": dl_p * sz_p
+                        })
                         st.rerun()
-                
-                m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
-                podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
 
-        # --- C. WYNIKI (Wykonują się RAZ na samym końcu) ---
-        if m2_total > 0:
-            # 1. Obliczenia materiałowe (Wyciągnięte na wierzch, by działały w UI i PDF)
-            kg_gladzi = m2_total * norma_g * l_warstw
-            szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
-            szt_gruntu = int(m2_total * 0.2 / 5 + 0.99) # Wyliczamy bańki (5L)
-            szt_krazkow = max(int(podl_total / 10), 5) # 1 krążek na 10m2 podłogi (min. 5 szt.)
-            
-            # Obliczenia kosztów
-            koszt_m_gladzi = szt_gladzi * dane_g["cena"]
-            # Zakładamy, że w słowniku masz cenę za 1L, więc bańka 5L to cena * 5
-            koszt_m_grunt = szt_gruntu * (baza_grunty_szp[wybrany_grunt] * 5) 
-            koszt_m_dodatki = podl_total * 15 
-            
-            # Sumy końcowe
-            robocizna_total = m2_total * stawka_szp
-            materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
-            suma_total = robocizna_total + materiały_total
-            
-            # 2. Wyświetlanie wyników na stronie
-            st.markdown("---")
-            st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
-            
-            res1, res2 = st.columns(2)
-            res1.metric("Twoja Robocizna", f"{round(robocizna_total)} PLN")
-            res2.metric("Materiały", f"{round(materiały_total)} PLN")
-            
-            # --- NOWOŚĆ: LISTA ZAKUPÓW NA WIERZCHU ---
-            st.markdown("---")
-            st.subheader(" Lista Zakupów")
-            c_zak1, c_zak2 = st.columns(2)
-            
-            with c_zak1:
-                st.info("**MATERIAŁY GŁÓWNE**")
-                st.write(f"🔹 **Gładź ({wybrana_g}):** {szt_gladzi} szt.")
-                st.write(f"🔹 **Grunt ({wybrany_grunt}):** {szt_gruntu} baniek (5L)")
-            with c_zak2:
-                st.warning("**MATERIAŁY ZUŻYWALNE**")
-                st.write(f" **Krążki ścierne P180:** {szt_krazkow} szt.")
-                st.write(f" **Narożniki / Akcesoria:** wliczono ryczałt (~{round(koszt_m_dodatki)} zł)")
-
-            # --- GENEROWANIE PDF ---
-            st.markdown("---")
-            c_pdf1, c_pdf2 = st.columns(2)
-                
-            with c_pdf1:
-                if st.button("Wyczyść wszystko", use_container_width=True, key="btn_wyczysc_szpachlowanie_pro"):
-                    st.session_state.pokoje_szp = []
-                    st.rerun()
-                        
-            with c_pdf2:
-                try:
-                    from fpdf import FPDF
-                    import os
-                    from datetime import datetime
-
-                    pdf = FPDF()
-                    pdf.add_page()
-                        
-                    # Czcionka Inter
-                    f_path = "Inter-Regular.ttf"
-                    if os.path.exists(f_path):
-                        pdf.add_font("Inter", "", f_path)
-                        pdf.set_font("Inter", size=12)
-                        font_ok = True
-                    else:
-                        pdf.set_font("Arial", size=12)
-                        font_ok = False
-
-                    # Logo i Nagłówek
-                    if os.path.exists("logo.png"):
-                        pdf.image("logo.png", x=10, y=8, w=35)
-                        
-                    pdf.set_font("Inter" if font_ok else "Arial", size=16)
-                    pdf.cell(0, 15, "RAPORT SZPACHLOWANIA - PROCALC", ln=True, align='C')
-                    pdf.ln(5)
-                    pdf.line(10, 35, 200, 35)
-                    pdf.ln(10)
-
-                    # Treść PDF
-                    pdf.set_fill_color(240, 240, 240)
-                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
-                    pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
-                        
-                    pdf.set_font("Inter" if font_ok else "Arial", size=11)
-                    pdf.cell(95, 10, " Robocizna:", 1)
-                    pdf.cell(95, 10, f" {round(robocizna_total)} PLN", 1, ln=True)
-                    pdf.cell(95, 10, " Materialy:", 1)
-                    pdf.cell(95, 10, f" {round(materiały_total)} PLN", 1, ln=True)
-                        
-                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
-                    pdf.cell(95, 12, " RAZEM:", 1)
-                    pdf.cell(95, 12, f" {round(suma_total)} PLN", 1, ln=True)
-                        
-                    pdf.ln(10)
-                    pdf.set_font("Inter" if font_ok else "Arial", size=12)
-                    pdf.cell(0, 10, " 2. SZCZEGOLY ZAMOWIENIA", ln=True, fill=True)
-                    pdf.set_font("Inter" if font_ok else "Arial", size=10)
-                        
-                    # Zmienne szt_gruntu i szt_gladzi są już pobierane z góry!
-                    pdf.cell(0, 8, f"- Gladz: {wybrana_g} ({szt_gladzi} szt.)", ln=True)
-                    pdf.cell(0, 8, f"- Grunt: {wybrany_grunt} ({szt_gruntu} baniek 5L)", ln=True)
-                    pdf.cell(0, 8, f"- Krazki scierne (zyrafa): {szt_krazkow} szt.", ln=True)
-                    pdf.cell(0, 8, f"- Liczba warstw: {l_warstw}", ln=True)
-                    pdf.cell(0, 8, f"- Calkowita pow. netto: {round(m2_total, 1)} m2", ln=True)
-
-                    pdf_bytes = pdf.output()
+                # Wyświetlanie listy pokoi i sumowanie metrażu
+                if st.session_state.pokoje_szp:
+                    st.markdown("---")
+                    for i, p in enumerate(st.session_state.pokoje_szp):
+                        c_l, c_b = st.columns([5, 1])
+                        c_l.info(f"**{p['nazwa']}**: {round(p['netto'], 1)} m²")
+                        if c_b.button("Usuń", key=f"del_p_{i}"):
+                            st.session_state.pokoje_szp.pop(i)
+                            st.rerun()
                     
-                    # Konwersja do bezpiecznego formatu dla Streamlit
-                    if isinstance(pdf_bytes, (bytearray, bytes)):
-                        safe_bytes = bytes(pdf_bytes)
-                    else:
-                        safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+                    m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
+                    podl_total = sum(p["podloga"] for p in st.session_state.pokoje_szp)
 
-                    st.download_button(
-                        label="Pobierz PDF (PRO)",
-                        data=safe_bytes,
-                        file_name=f"Szpachlowanie_Raport_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
-                except Exception as e:
-                    st.error(f"Błąd PDF: {e}")
+            # --- C. WYNIKI (Wykonują się RAZ na samym końcu) ---
+            if m2_total > 0:
+                # 1. Obliczenia materiałowe
+                kg_gladzi = m2_total * norma_g * l_warstw
+                szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
+                szt_gruntu = int(m2_total * 0.2 / 5 + 0.99) # Wyliczamy bańki (5L)
+                szt_krazkow = max(int(podl_total / 10), 5) # 1 krążek na 10m2 podłogi (min. 5 szt.)
+                
+                # Obliczenia kosztów
+                koszt_m_gladzi = szt_gladzi * dane_g["cena"]
+                koszt_m_grunt = szt_gruntu * (baza_grunty_szp[wybrany_grunt] * 5) 
+                koszt_m_dodatki = podl_total * 15 
+                
+                # Sumy końcowe
+                robocizna_total = m2_total * stawka_szp
+                materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
+                suma_total = robocizna_total + materiały_total
+                
+                # 2. Wyświetlanie wyników na stronie
+                st.markdown("---")
+                st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(suma_total)} PLN**")
+                
+                res1, res2 = st.columns(2)
+                res1.metric("Twoja Robocizna", f"{round(robocizna_total)} PLN")
+                res2.metric("Materiały", f"{round(materiały_total)} PLN")
+                
+                # --- LISTA ZAKUPÓW NA WIERZCHU ---
+                st.markdown("---")
+                st.subheader(" Lista Zakupów")
+                c_zak1, c_zak2 = st.columns(2)
+                
+                with c_zak1:
+                    st.info("**MATERIAŁY GŁÓWNE**")
+                    st.write(f"🔹 **Gładź ({wybrana_g}):** {szt_gladzi} szt.")
+                    st.write(f"🔹 **Grunt ({wybrany_grunt}):** {szt_gruntu} baniek (5L)")
+                with c_zak2:
+                    st.warning("**MATERIAŁY ZUŻYWALNE**")
+                    st.write(f" **Krążki ścierne P180:** {szt_krazkow} szt.")
+                    st.write(f" **Narożniki / Akcesoria:** wliczono ryczałt (~{round(koszt_m_dodatki)} zł)")
+
+                # --- GENEROWANIE PDF ---
+                st.markdown("---")
+                c_pdf1, c_pdf2 = st.columns(2)
+                    
+                with c_pdf1:
+                    if st.button("Wyczyść wszystko", use_container_width=True, key="btn_wyczysc_szpachlowanie_pro"):
+                        st.session_state.pokoje_szp = []
+                        st.rerun()
+                        
+                with c_pdf2:
+                    try:
+                        from fpdf import FPDF
+                        import os
+                        from datetime import datetime
+
+                        pdf = FPDF()
+                        pdf.add_page()
+                            
+                        # Czcionka Inter
+                        f_path = "Inter-Regular.ttf"
+                        if os.path.exists(f_path):
+                            pdf.add_font("Inter", "", f_path)
+                            pdf.set_font("Inter", size=12)
+                            font_ok = True
+                        else:
+                            pdf.set_font("Arial", size=12)
+                            font_ok = False
+
+                        # Logo i Nagłówek
+                        if os.path.exists("logo.png"):
+                            pdf.image("logo.png", x=10, y=8, w=35)
+                            
+                        pdf.set_font("Inter" if font_ok else "Arial", size=16)
+                        pdf.cell(0, 15, "RAPORT SZPACHLOWANIA - PROCALC", ln=True, align='C')
+                        pdf.ln(5)
+                        pdf.line(10, 35, 200, 35)
+                        pdf.ln(10)
+
+                        # Treść PDF
+                        pdf.set_fill_color(240, 240, 240)
+                        pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                        pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
+                            
+                        pdf.set_font("Inter" if font_ok else "Arial", size=11)
+                        pdf.cell(95, 10, " Robocizna:", 1)
+                        pdf.cell(95, 10, f" {round(robocizna_total)} PLN", 1, ln=True)
+                        pdf.cell(95, 10, " Materialy:", 1)
+                        pdf.cell(95, 10, f" {round(materiały_total)} PLN", 1, ln=True)
+                            
+                        pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                        pdf.cell(95, 12, " RAZEM:", 1)
+                        pdf.cell(95, 12, f" {round(suma_total)} PLN", 1, ln=True)
+                            
+                        pdf.ln(10)
+                        pdf.set_font("Inter" if font_ok else "Arial", size=12)
+                        pdf.cell(0, 10, " 2. SZCZEGOLY ZAMOWIENIA", ln=True, fill=True)
+                        pdf.set_font("Inter" if font_ok else "Arial", size=10)
+                            
+                        # Funkcja do czyszczenia polskich znaków w PDF
+                        def czysc_tekst(tekst):
+                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                            return tekst.encode('latin-1', 'replace').decode('latin-1')
+                            
+                        pdf.cell(0, 8, f"- Gladz: {czysc_tekst(wybrana_g)} ({szt_gladzi} szt.)", ln=True)
+                        pdf.cell(0, 8, f"- Grunt: {czysc_tekst(wybrany_grunt)} ({szt_gruntu} baniek 5L)", ln=True)
+                        pdf.cell(0, 8, f"- Krazki scierne (zyrafa): {szt_krazkow} szt.", ln=True)
+                        pdf.cell(0, 8, f"- Liczba warstw: {l_warstw}", ln=True)
+                        pdf.cell(0, 8, f"- Calkowita pow. netto: {round(m2_total, 1)} m2", ln=True)
+
+                        pdf_bytes = pdf.output(dest="S")
+                        
+                        # Konwersja do bezpiecznego formatu dla Streamlit
+                        if isinstance(pdf_bytes, str):
+                            safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+                        else:
+                            safe_bytes = bytes(pdf_bytes)
+
+                        st.download_button(
+                            label="Pobierz PDF (PRO)",
+                            data=safe_bytes,
+                            file_name=f"Szpachlowanie_Raport_{datetime.now().strftime('%Y%m%d')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error(f"Błąd PDF: {e}")
            
 
 # --- SEKCJA: PODŁOGI ---
