@@ -1,17 +1,7 @@
 import streamlit as st
-
 from supabase import create_client, Client
 
-# --- POŁĄCZENIE Z SUPABASE ---
-# Streamlit automatycznie pobierze to z Twoich "Secrets"
-try:
-    url: str = st.secrets["SUPABASE_URL"]
-    key: str = st.secrets["SUPABASE_KEY"]
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-except Exception as e:
-    st.error("Błąd połączenia z bazą danych. Sprawdź Secrets!")
-
-# 1. KONFIGURACJA GŁÓWNA
+# 1. KONFIGURACJA GŁÓWNA (Musi być absolutnie pierwsza!)
 st.set_page_config(
     page_title="ProCalc - Ekspert Wykończeń",
     page_icon="🏗️",
@@ -19,9 +9,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
     menu_items={
         'Get Help': 'mailto:biuro@procalc.pl',
-        'About': "# ProCalc\nTwoje profesjonalne narzędzie do kosztorysowania remontów. Oblicz materiały i robociznę w 2 minuty!"
+        'About': "# ProCalc\nTwoje profesjonalne narzędzie do kosztorysowania remontów."
     }
 )
+
+# 2. KULOODPORNE POŁĄCZENIE Z SUPABASE
+# Tworzymy zmienną na start, żeby Python jej nie szukał po omacku
+supabase = None
+
+try:
+    url: str = st.secrets["SUPABASE_URL"]
+    key: str = st.secrets["SUPABASE_KEY"]
+    # BŁĄD BYŁ TUTAJ: Używamy małych liter url i key!
+    supabase: Client = create_client(url, key)
+except Exception as e:
+    st.error(f"Błąd połączenia z bazą danych: {e}")
 
 # --- KLUCZOWE METADANE DLA SMS / SOCIAL MEDIA ---
 # To sprawia, że link wygląda profesjonalnie po wysłaniu komuś przez telefon
@@ -258,25 +260,29 @@ elif branza == "Logowanie":
         
     with col_auth1:
         if st.button("ZALOGUJ SIĘ", use_container_width=True):
-            try:
-                res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
-                st.session_state.zalogowany = True
-                st.session_state.user_id = res.user.id
-                st.session_state.pakiet = "PRO"
-                st.success("Witaj z powrotem!")
-                st.rerun()
-            except Exception as e:
-                # Teraz zobaczymy prawdziwy powód!
-                st.error(f"Odmowa dostępu: {e}")
+            if supabase: # ZABEZPIECZENIE: Uruchom tylko jeśli jest baza
+                try:
+                    res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
+                    st.session_state.zalogowany = True
+                    st.session_state.user_id = res.user.id
+                    st.session_state.pakiet = "PRO"
+                    st.success("Witaj z powrotem!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Odmowa dostępu: {e}")
+            else:
+                st.error("Błąd: Brak połączenia z chmurą Supabase.")
 
     with col_auth2:
         if st.button("REJESTRACJA", use_container_width=True):
-            try:
-                res = supabase.auth.sign_up({"email": email, "password": haslo})
-                st.success("Konto założone pomyślnie! Kliknij teraz 'ZALOGUJ SIĘ'.")
-            except Exception as e:
-                # Wyświetla prawdziwy błąd (np. czy hasło jest za słabe)
-                st.error(f"Błąd bazy: {e}")
+            if supabase: # ZABEZPIECZENIE: Uruchom tylko jeśli jest baza
+                try:
+                    res = supabase.auth.sign_up({"email": email, "password": haslo})
+                    st.success("Konto założone pomyślnie! Kliknij teraz 'ZALOGUJ SIĘ'.")
+                except Exception as e:
+                    st.error(f"Błąd rejestracji: {e}")
+            else:
+                st.error("Błąd: Brak połączenia z chmurą Supabase.")
                 
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
