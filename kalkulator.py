@@ -2741,8 +2741,32 @@ elif branza == "Efekty Dekoracyjne":
                 if st.button("Zapisz Projekt", use_container_width=True, type="primary", key="btn_zapisz_deko"):
                     if not nazwa_projektu:
                         st.warning("⚠️ Podaj nazwę projektu przed zapisaniem.")
-                    elif 'user_id' not in st.session_state or not st.
-
+                    elif 'user_id' not in st.session_state or not st.session_state.user_id:
+                        st.error("❌ Błąd krytyczny: Zgubiłeś sesję! Wyloguj się i zaloguj ponownie.")
+                    else:
+                        try:
+                            zakupy_do_bazy = [f"{n}: {i}" for n, i in lista_zakupow]
+                            
+                            dane_do_zapisu = {
+                                "typ_efektu": wybrany_efekt,
+                                "producent": wybrana_marka,
+                                "powierzchnia_m2": m2_pro,
+                                "koszt_materialow": total_materialy,
+                                "koszt_robocizny": total_robocizna,
+                                "suma_calkowita": suma_calkowita,
+                                "lista_zakupow": {"MATERIAŁY (SYSTEM)": zakupy_do_bazy}
+                            }
+                            
+                            supabase.table("projekty").insert({
+                                "user_id": st.session_state.user_id, 
+                                "nazwa_projektu": nazwa_projektu,
+                                "branza": "Efekty Dekoracyjne",
+                                "dane_json": dane_do_zapisu
+                            }).execute()
+                            
+                            st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w chmurze!")
+                        except Exception as e:
+                            st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
 # ==========================================
