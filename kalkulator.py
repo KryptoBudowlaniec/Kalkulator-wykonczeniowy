@@ -2465,13 +2465,12 @@ elif branza == "Panel Inwestora":
                 
     # --- 2. WIDOK DLA ZALOGOWANYCH INWESTORÓW ---
     else:
-        # A. SEKCJA CHMURY: POBIERANIE ZAPISANYCH PROJEKTÓW
+        # ==========================================
+        # A. SEKCJA CHMURY: TWOJE PROJEKTY
+        # ==========================================
         st.subheader("Twoje Zapisane Kosztorysy")
         if supabase:
             try:
-                # Debugowanie: Sprawdzamy, z jakim ID odpytujemy bazę
-                st.caption(f"Status połączenia: Aktywne. Twoje ID: {st.session_state.user_id}")
-                
                 response = supabase.table("projekty").select("*").eq("user_id", st.session_state.user_id).order("data_stworzenia", desc=True).execute()
                 zapisane_projekty = response.data
                 
@@ -2484,23 +2483,50 @@ elif branza == "Panel Inwestora":
                         branza_proj = projekt['branza']
                         dane = projekt['dane_json']
                         
-                        with st.expander(f"{nazwa} | Branża: {branza_proj} | Data: {data_utworzenia}"):
-                            c1, c2, c3 = st.columns(3)
-                            # Zabezpieczamy metodą .get() by unikać błędów
-                            c1.metric("Łączny Koszt", f"{round(dane.get('suma_calkowita', 0))} PLN")
-                            c2.metric("Materiały", f"{round(dane.get('koszt_materialow', 0))} PLN")
-                            c3.metric("Robocizna", f"{round(dane.get('koszt_robocizny', 0))} PLN")
+                        with st.expander(f"📁 {nazwa} | Branża: {branza_proj} | Data: {data_utworzenia}"):
+                            # 1. WYGLĄD DLA ZAPISANEJ ANALIZY ROI
+                            if branza_proj == "Analiza ROI":
+                                c1, c2, c3 = st.columns(3)
+                                c1.metric("Zysk Brutto", f"{round(dane.get('zysk', 0)):,} PLN".replace(",", " "))
+                                c2.metric("ROI", f"{round(dane.get('roi', 0), 1)} %")
+                                c3.metric("Koszt Inwestycji", f"{round(dane.get('suma_calkowita', 0)):,} PLN".replace(",", " "))
+                                st.write(f"- Szacowany koszt remontu: **{round(dane.get('koszt_materialow', 0)):,} PLN**".replace(",", " "))
                             
-                            st.markdown("**Szczegóły zapisane w bazie:**")
-                            st.write(dane) # Pokażemy tu cały "surowy" JSON z bazy
+                            # 2. WYGLĄD DLA ZAPISANYCH DRZWI (i innych)
+                            else:
+                                c1, c2, c3 = st.columns(3)
+                                c1.metric("Łączny Koszt", f"{round(dane.get('suma_calkowita', 0))} PLN")
+                                c2.metric("Materiały", f"{round(dane.get('koszt_materialow', 0))} PLN")
+                                c3.metric("Robocizna", f"{round(dane.get('koszt_robocizny', 0))} PLN")
+                                st.write(f"- Ilość: {dane.get('szt_drzwi', 0)} kpl.")
+                                st.write(f"- Model: {dane.get('wybrany_model', 'Brak')}")
             except Exception as e:
-                st.error(f"Wystąpił błąd podczas pobierania danych z bazy: {e}")
+                st.error(f"Wystąpił błąd podczas pobierania danych: {e}")
         else:
             st.error("Brak połączenia z chmurą bazy danych.")
 
         st.markdown("---")
 
-        # B. SEKCJA ANALITYCZNA: PARAMETRY I ROI
+        # ==========================================
+        # B. SEKCJA ANALITYCZNA: CHECKLISTA
+        # ==========================================
+        st.subheader("Checklista Przedzakupowa")
+        c_ch1, c_ch2, c_ch3 = st.columns(3)
+        with c_ch1:
+            st.checkbox("Piony wod-kan (stan żeliwa/plastiku)", key="ch_piony")
+            st.checkbox("Okna (szczelność/wiek/pakiet szyb)", key="ch_okna")
+        with c_ch2:
+            st.checkbox("Instalacja elek. (miedź vs alu)", key="ch_elek")
+            st.checkbox("Możliwość wydzielenia pokoju", key="ch_pokoje")
+        with c_ch3:
+            st.checkbox("KW czysta (Dział III i IV)", key="ch_kw")
+            st.checkbox("Przynależność piwnicy", key="ch_piwnica")
+
+        st.markdown("---")
+
+        # ==========================================
+        # C. PARAMETRY I ANALIZA ROI
+        # ==========================================
         col_params, col_roi = st.columns([1, 1.2])
 
         with col_params:
@@ -2509,9 +2535,17 @@ elif branza == "Panel Inwestora":
             m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
             cena_zakupu = st.number_input("Cena zakupu lokalu (PLN):", value=350000, step=5000)
             cena_sprzedazy = st.number_input("Przewidywana cena sprzedaży (PLN):", value=550000, step=5000)
+            standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
+            stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
 
+        # NAPRAWIONY BŁĄD (Zmienne globalne dla list zakupów)
+        pow_scian = m2_total * 3.5
+        mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
         koszt_transakcyjny = (cena_zakupu * 0.02) + 4500 
-        bazowy_remont = (m2_total * 1200)
+        
+        bazowy_remont = (m2_total * 1200 * mnoznik_std) 
+        if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont *= 1.25
+        
         calkowity_koszt_inwestycji = cena_zakupu + koszt_transakcyjny + bazowy_remont
         zysk_brutto = cena_sprzedazy - calkowity_koszt_inwestycji
         roi = (zysk_brutto / calkowity_koszt_inwestycji) * 100 if calkowity_koszt_inwestycji > 0 else 0
@@ -2524,7 +2558,17 @@ elif branza == "Panel Inwestora":
             r1.metric("ZYSK BRUTTO", f"{round(zysk_brutto):,} zł".replace(",", " "))
             r2.metric("ROI %", f"{round(roi, 1)} %")
             
-            # --- EKSPERYMENT: ZAPISYWANIE PROSTO Z PANELU INWESTORA ---
+            st.write(f"W tym szacowany remont: {round(bazowy_remont):,} zł")
+            st.write(f"Koszty transakcyjne: {round(koszt_transakcyjny):,} zł")
+            
+            if roi < 12:
+                st.error("Słabe ROI! Negocjuj cenę zakupu.")
+            elif roi < 20:
+                st.warning("Przeciętny deal. Pilnuj kosztów ekipy.")
+            else:
+                st.success("Świetny deal! Można wchodzić.")
+                
+            # ZAPISYWANIE ROI DO BAZY
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("Zapisz ten projekt ROI do chmury", use_container_width=True, type="primary"):
                 if supabase and st.session_state.user_id:
@@ -2536,8 +2580,7 @@ elif branza == "Panel Inwestora":
                             "zysk": zysk_brutto,
                             "roi": roi
                         }
-                        # WYSYŁAMY DO BAZY
-                        response = supabase.table("projekty").insert({
+                        supabase.table("projekty").insert({
                             "user_id": st.session_state.user_id, 
                             "nazwa_projektu": nazwa_inwestycji,
                             "branza": "Analiza ROI",
@@ -2545,21 +2588,13 @@ elif branza == "Panel Inwestora":
                         }).execute()
                         st.success("✅ Wysłano do bazy pomyślnie! Odśwież stronę, by zobaczyć to na górze.")
                     except Exception as e:
-                        # TO NAM POKAŻE PRAWDĘ, JEŚLI BAZA TO ODRZUCI
                         st.error(f"❌ Odrzucono przez bazę Supabase: {e}")
-                else:
-                    st.error("❌ Problem z sesją. Wyloguj i zaloguj ponownie.")
-            
-            if roi < 12:
-                st.error("Słabe ROI! Negocjuj cenę zakupu.")
-            elif roi < 20:
-                st.warning("Przeciętny deal. Pilnuj kosztów ekipy.")
-            else:
-                st.success("Świetny deal! Można wchodzić.")
 
         st.markdown("---")
 
-        # --- ZAKRES PRAC I DOKŁADNA LISTA ZAKUPÓW ---
+        # ==========================================
+        # D. ZAKRES PRAC I LISTA ZAKUPÓW
+        # ==========================================
         st.subheader("Zakres prac i Lista Zakupów")
         
         c_work1, c_work2, c_work3 = st.columns(3)
@@ -2631,7 +2666,9 @@ elif branza == "Panel Inwestora":
                     for item in items:
                         st.write(f"- {item}")
 
-# --- GENERATOR PDF (LISTA ZAKUPÓW) ---
+        # ==========================================
+        # E. GENERATOR PDF (NAPRAWIONY BŁĄD ZNAKÓW)
+        # ==========================================
         st.markdown("---")
         st.subheader("📥 Eksportuj Listę Zakupów")
         
@@ -2639,7 +2676,6 @@ elif branza == "Panel Inwestora":
             from fpdf import FPDF
             import base64
             
-            # KULOODPORNA funkcja czyszcząca tekst z polskich i nietypowych znaków
             def czysc_tekst(tekst):
                 pl_znaki = {
                     'ą':'a', 'ć':'c', 'ę':'e', 'ł':'l', 'ń':'n', 'ó':'o', 'ś':'s', 'ź':'z', 'ż':'z',
@@ -2647,8 +2683,6 @@ elif branza == "Panel Inwestora":
                 }
                 for pl, ang in pl_znaki.items():
                     tekst = tekst.replace(pl, ang)
-                
-                # Zmuszamy tekst do formatu latin-1. Zastąpi on wszelkie dziwne myślniki/kropki znakiem zapytania
                 return tekst.encode('latin-1', 'replace').decode('latin-1')
 
             try:
@@ -2656,7 +2690,7 @@ elif branza == "Panel Inwestora":
                 pdf.add_page()
                 pdf.set_font("Arial", size=12)
                 
-                pdf.set_text_color(0, 211, 149) # Kolor ProCalc (Zielony)
+                pdf.set_text_color(0, 211, 149) 
                 pdf.cell(200, 10, txt="PROCALC - LISTA ZAKUPOWA (PANEL INWESTORA)", ln=True, align='C')
                 pdf.ln(10)
                 
@@ -2673,10 +2707,7 @@ elif branza == "Panel Inwestora":
                             pdf.cell(200, 8, txt=f"* {item_safe}", ln=True)
                         pdf.ln(5)
                         
-                # Eksport PDF 
                 pdf_bytes = pdf.output(dest="S")
-                
-                # Upewniamy się, że mamy format bajtów przed zakodowaniem (dla zgodności z różnymi wersjami FPDF)
                 if isinstance(pdf_bytes, str):
                     pdf_bytes = pdf_bytes.encode('latin-1')
                     
@@ -2686,6 +2717,14 @@ elif branza == "Panel Inwestora":
                 
             except Exception as e:
                 st.error(f"Wystąpił błąd podczas generowania PDF: {e}")
+
+# Tekst praw autorskich pod logo (Zostaje na samym dole pliku)
+st.markdown("""
+    <p style='text-align: center; color: #BDC3C7; font-size: 14px; margin-top: 10px;'>
+        © 2024 ProCalc. Wszelkie prawa zastrzeżone.
+    </p>
+    <br><br>
+""", unsafe_allow_html=True)
 
 # Tekst praw autorskich pod logo (Zostaje na samym dole)
 st.markdown("""
