@@ -2371,6 +2371,42 @@ elif branza == "Drzwi":
                 except Exception as e:
                     st.error(f"Błąd podczas generowania PDF: {e}")
 
+                st.markdown("---")
+                st.subheader("💾 Zapisz Kosztorys w Chmurze")
+                st.caption("Zapisz ten projekt, aby mieć do niego dostęp z dowolnego urządzenia.")
+                
+                nazwa_projektu = st.text_input("Nazwa projektu (np. Mieszkanie na Złotej 44):", key="nazwa_proj_drzwi")
+                
+                if st.button("Zapisz Projekt", use_container_width=True, type="primary"):
+                    if not nazwa_projektu:
+                        st.warning("⚠️ Podaj nazwę projektu przed zapisaniem.")
+                    else:
+                        try:
+                            # 1. Pakujemy wszystkie ważne dane z kalkulatora w jeden słownik (JSON)
+                            dane_do_zapisu = {
+                                "szt_drzwi": szt_drzwi,
+                                "wybrany_model": wybrany_model,
+                                "szerokosc_muru": szerokosc_muru,
+                                "podciecie": podciecie,
+                                "demontaz": demontaz,
+                                "koszt_materialow": total_materialy,
+                                "koszt_robocizny": total_robocizna,
+                                "suma_calkowita": suma_calkowita
+                            }
+                            
+                            # 2. Wysyłamy paczkę do bazy Supabase
+                            # Używamy st.session_state.user_id, które zdobyliśmy podczas logowania!
+                            response = supabase.table("projekty").insert({
+                                "user_id": st.session_state.user_id, 
+                                "nazwa_projektu": nazwa_projektu,
+                                "branza": "Drzwi",
+                                "dane_json": dane_do_zapisu
+                            }).execute()
+                            
+                            st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w Twoim panelu!")
+                        except Exception as e:
+                            st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
+
 elif branza == "Panel Inwestora":
     st.title("Panel Inwestora - Kompleksowy Kosztorys i Logistyka")
 
