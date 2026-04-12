@@ -2519,12 +2519,12 @@ elif branza == "Panel Inwestora":
                 if supabase: supabase.auth.sign_out()
                 st.rerun()
 
-        # ==========================================
+# ==========================================
         # 1. ZAWARTOSC: NAWIGACJA GŁÓWNA (TWOJA LOGIKA)
         # ==========================================
         if opcja_panelu == "Nawigacja Główna":
             
-            # --- A. SEKCJA CHMURY: TWOJE PROJEKTY (PŁASKA LISTA + USUWANIE) ---
+            # --- A. SEKCJA CHMURY: TWOJE PROJEKTY ---
             st.header("Twoje Zapisane Kosztorysy")
             if supabase:
                 try:
@@ -2534,7 +2534,6 @@ elif branza == "Panel Inwestora":
                     if not zapisane_projekty:
                         st.info("Nie masz jeszcze żadnych zapisanych projektów w chmurze.")
                     else:
-                        # Nagłówek Tabeli (4 kolumny)
                         st.markdown("---")
                         col_nazwa, col_data, col_pobierz, col_usun = st.columns([3.5, 1.5, 1, 1])
                         col_nazwa.markdown("**Nazwa projektu / Kategoria**")
@@ -2543,7 +2542,6 @@ elif branza == "Panel Inwestora":
                         col_usun.markdown("**Akcja**")
                         st.markdown("---")
                         
-                        # Generowanie wierszy z bazy
                         for projekt in zapisane_projekty:
                             data_utworzenia = projekt['data_stworzenia'][:10] 
                             nazwa = projekt['nazwa_projektu']
@@ -2551,22 +2549,31 @@ elif branza == "Panel Inwestora":
                             dane = projekt['dane_json']
                             id_projektu = projekt['id']
                             
-                            # Generujemy tekst z danymi projektu do pobrania
-                            dane_txt = f"PROJEKT: {nazwa}\nDATA ZAPISU: {data_utworzenia}\nKATEGORIA: {branza_proj}\n\nSZCZEGÓŁY:\n"
-                            for klucz, wartosc in dane.items():
-                                dane_txt += f"- {klucz}: {wartosc}\n"
+                            # --- NOWOŚĆ: Piękne formatowanie pobieranego pliku z listą materiałów ---
+                            dane_txt = f"=== PROJEKT: {nazwa.upper()} ===\n"
+                            dane_txt += f"DATA ZAPISU: {data_utworzenia}\nKATEGORIA: {branza_proj}\n\n"
+                            dane_txt += "--- PARAMETRY FINANSOWE ---\n"
                             
-                            # Wiersz tabeli
+                            for klucz, wartosc in dane.items():
+                                if klucz == "lista_zakupow":
+                                    dane_txt += "\n--- WYGENEROWANA LISTA MATERIAŁÓW ---\n"
+                                    for kategoria, lista_itemow in wartosc.items():
+                                        if lista_itemow:
+                                            dane_txt += f"\n[{kategoria}]\n"
+                                            for item in lista_itemow:
+                                                dane_txt += f" - {item}\n"
+                                else:
+                                    # Formatowanie kluczy na bardziej czytelne
+                                    czysty_klucz = klucz.replace("_", " ").title()
+                                    dane_txt += f"{czysty_klucz}: {wartosc}\n"
+                            
                             c1, c2, c3, c4 = st.columns([3.5, 1.5, 1, 1])
                             
                             with c1:
                                 st.markdown(f"<p style='margin-top: 10px; font-weight: 600;'>{nazwa} <br><span style='color: #00D395; font-size: 12px; font-weight: normal;'>({branza_proj})</span></p>", unsafe_allow_html=True)
-                            
                             with c2:
                                 st.markdown(f"<p style='margin-top: 10px; color: #6C757D;'>{data_utworzenia}</p>", unsafe_allow_html=True)
-                            
                             with c3:
-                                # Przycisk pobierania
                                 st.download_button(
                                     label="Pobierz",
                                     data=dane_txt,
@@ -2574,17 +2581,13 @@ elif branza == "Panel Inwestora":
                                     mime="text/plain",
                                     key=f"dl_btn_{id_projektu}"
                                 )
-                                
                             with c4:
-                                # Przycisk usuwania
                                 if st.button("Usuń", type="primary", key=f"del_btn_{id_projektu}"):
                                     try:
-                                        # Komenda do Supabase usuwająca wiersz po jego unikalnym ID
                                         supabase.table("projekty").delete().eq("id", id_projektu).execute()
-                                        st.success("Projekt został usunięty!")
-                                        st.rerun() # Odświeża stronę natychmiast po usunięciu
+                                        st.rerun() 
                                     except Exception as e:
-                                        st.error(f"Nie udało się usunąć projektu: {e}")
+                                        st.error(f"Błąd usuwania: {e}")
                                         
                             st.markdown("<hr style='margin: 0px; opacity: 0.2;'>", unsafe_allow_html=True)
                             
@@ -2650,28 +2653,6 @@ elif branza == "Panel Inwestora":
                     st.warning("Przeciętny deal. Pilnuj kosztów ekipy.")
                 else:
                     st.success("Świetny deal! Można wchodzić.")
-                    
-                # ZAPISYWANIE ROI DO BAZY
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Zapisz ten projekt ROI do chmury", use_container_width=True, type="primary", key="zapisz_roi_btn"):
-                    if supabase and st.session_state.user_id:
-                        try:
-                            dane_roi = {
-                                "suma_calkowita": calkowity_koszt_inwestycji,
-                                "koszt_materialow": bazowy_remont,
-                                "koszt_robocizny": 0,
-                                "zysk": zysk_brutto,
-                                "roi": roi
-                            }
-                            supabase.table("projekty").insert({
-                                "user_id": st.session_state.user_id, 
-                                "nazwa_projektu": nazwa_inwestycji,
-                                "branza": "Analiza ROI",
-                                "dane_json": dane_roi
-                            }).execute()
-                            st.success("✅ Wysłano do bazy pomyślnie! Odśwież stronę, by zobaczyć to na górze.")
-                        except Exception as e:
-                            st.error(f"❌ Odrzucono przez bazę Supabase: {e}")
 
             st.markdown("---")
 
@@ -2723,19 +2704,15 @@ elif branza == "Panel Inwestora":
                     "Wkręty GK 3.5x25 (1000szt) + Pchełki (250szt)",
                     "Taśma TUFF-TAPE + Flizelina + Gips Uniflott"
                 ])
-                if szerokosc_pom > 4: zakupy["G-K / SUFITY"].append(f"Łączniki wzdłużne CD60: {int(m2_total/2)} szt.")
 
             if do_malowanie or do_szpachlowanie:
                 if do_szpachlowanie:
                     zakupy["ŚCIANY / PODŁOGI"].append(f"Gładź szpachlowa: {int(pow_scian*1.5/20)+1} wiader")
-                    zakupy["ŚCIANY / PODŁOGI"].append(f"Krążki ścierne P180: {max(int(m2_total/10), 5)} szt.")
                 if do_malowanie:
                     zakupy["ŚCIANY / PODŁOGI"].extend([
                         f"Farba Biała: {int(pow_scian*0.4/8)+1} L",
                         f"Farba Kolor: {int(pow_scian*0.6/9)+1} L",
-                        f"Grunt głęboki: {int(pow_scian/50)+1} baniek (5L)",
-                        f"Taśma BLUE: {int(pow_scian/25)+2} rolek",
-                        "Akryl malarski: 4 szt."
+                        f"Grunt: {int(pow_scian/50)+1} baniek (5L)"
                     ])
 
             buy_col1, buy_col2 = st.columns(2)
@@ -2747,79 +2724,65 @@ elif branza == "Panel Inwestora":
                         for item in items:
                             st.write(f"- {item}")
 
-            # --- E. GENERATOR PDF ---
+            # --- E. PODSUMOWANIE (ZAPIS DO BAZY I GENERATOR PDF) ---
             st.markdown("---")
-            st.subheader("📥 Eksportuj Listę Zakupów")
+            st.subheader("💾 Zapis i Eksport")
             
-            if st.button("Pobierz Listę Zakupów (PDF)", use_container_width=True, type="primary", key="pobierz_pdf_btn"):
-                from fpdf import FPDF
-                import base64
-                
-                def czysc_tekst(tekst):
-                    pl_znaki = {
-                        'ą':'a', 'ć':'c', 'ę':'e', 'ł':'l', 'ń':'n', 'ó':'o', 'ś':'s', 'ź':'z', 'ż':'z',
-                        'Ą':'A', 'Ć':'C', 'Ę':'E', 'Ł':'L', 'Ń':'N', 'Ó':'O', 'Ś':'S', 'Ź':'Z', 'Ż':'Z'
-                    }
-                    for pl, ang in pl_znaki.items():
-                        tekst = tekst.replace(pl, ang)
-                    return tekst.encode('latin-1', 'replace').decode('latin-1')
+            col_save, col_pdf = st.columns(2)
+            
+            # NOWOŚĆ: Przycisk Zapisu widzi teraz listę 'zakupy' i wysyła ją do bazy!
+            with col_save:
+                if st.button("Zapisz projekt do chmury", use_container_width=True, type="primary", key="zapisz_roi_btn"):
+                    if supabase and st.session_state.user_id:
+                        try:
+                            dane_roi = {
+                                "suma_calkowita": round(calkowity_koszt_inwestycji),
+                                "koszt_materialow": round(bazowy_remont),
+                                "zysk_brutto": round(zysk_brutto),
+                                "roi_procent": round(roi, 1),
+                                "lista_zakupow": zakupy # <--- LISTA MATERIAŁÓW LECI DO BAZY!
+                            }
+                            supabase.table("projekty").insert({
+                                "user_id": st.session_state.user_id, 
+                                "nazwa_projektu": nazwa_inwestycji,
+                                "branza": "Analiza ROI z Materiałami",
+                                "dane_json": dane_roi
+                            }).execute()
+                            st.success("✅ Zapisano! Odśwież widok by zobaczyć na liście.")
+                        except Exception as e:
+                            st.error(f"Błąd zapisu: {e}")
 
-                try:
-                    pdf = FPDF()
-                    pdf.add_page()
-                    pdf.set_font("Arial", size=12)
-                    
-                    pdf.set_text_color(0, 211, 149) 
-                    pdf.cell(200, 10, txt="PROCALC - LISTA ZAKUPOWA (PANEL INWESTORA)", ln=True, align='C')
-                    pdf.ln(10)
-                    
-                    pdf.set_text_color(30, 30, 30)
-                    for cat, items in zakupy.items():
-                        if items:
-                            pdf.set_font("Arial", style="B", size=12)
-                            cat_safe = czysc_tekst(cat)
-                            pdf.cell(200, 10, txt=f"--- {cat_safe} ---", ln=True)
-                            
-                            pdf.set_font("Arial", size=11)
-                            for item in items:
-                                item_safe = czysc_tekst(item)
-                                pdf.cell(200, 8, txt=f"* {item_safe}", ln=True)
-                            pdf.ln(5)
-                            
-                    pdf_bytes = pdf.output(dest="S")
-                    if isinstance(pdf_bytes, str):
-                        pdf_bytes = pdf_bytes.encode('latin-1')
-                        
-                    pdf_b64 = base64.b64encode(pdf_bytes).decode()
-                    href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="ProCalc_Zakupy.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz plik PDF na swoje urządzenie</a>'
-                    st.markdown(href, unsafe_allow_html=True)
-                    
-                except Exception as e:
-                    st.error(f"Wystąpił błąd podczas generowania PDF: {e}")
-
-        # ==========================================
-        # 2. ZAWARTOSC: MÓJ PROFIL
-        # ==========================================
-        elif opcja_panelu == "Mój Profil":
-            st.header("Mój Profil Inwestora")
-            c1, c2 = st.columns(2)
-            with c1:
-                st.text_input("Imię i Nazwisko / Nazwa Firmy")
-            with c2:
-                st.number_input("Domyślny narzut na materiały (%)", value=10)
-                st.number_input("Twoja stawka za roboczogodzinę (PLN/h)", value=60)
-            if st.button("Zapisz ustawienia profilu", key="zapisz_profil_btn"):
-                st.success("Zapisano zmiany!")
-                
-        # ==========================================
-        # 3. ZAWARTOSC: JĘZYK I REGION
-        # ==========================================
-        elif opcja_panelu == "Język i Region":
-            st.header("Ustawienia Regionalne")
-            st.selectbox("Wybierz język", ["Polski", "English"])
-            st.selectbox("Domyślna waluta", ["PLN", "EUR", "USD"])
-            if st.button("Zapisz region", key="zapisz_region_btn"):
-                st.success("Zapisano zmiany!")
+            # Eksport PDF
+            with col_pdf:
+                if st.button("Pobierz Listę Zakupów (PDF)", use_container_width=True, key="pobierz_pdf_btn"):
+                    from fpdf import FPDF
+                    import base64
+                    def czysc_tekst(tekst):
+                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                        return tekst.encode('latin-1', 'replace').decode('latin-1')
+                    try:
+                        pdf = FPDF()
+                        pdf.add_page()
+                        pdf.set_font("Arial", size=12)
+                        pdf.set_text_color(0, 211, 149) 
+                        pdf.cell(200, 10, txt="PROCALC - LISTA ZAKUPOWA (PANEL INWESTORA)", ln=True, align='C')
+                        pdf.ln(10)
+                        pdf.set_text_color(30, 30, 30)
+                        for cat, items in zakupy.items():
+                            if items:
+                                pdf.set_font("Arial", style="B", size=12)
+                                pdf.cell(200, 10, txt=f"--- {czysc_tekst(cat)} ---", ln=True)
+                                pdf.set_font("Arial", size=11)
+                                for item in items:
+                                    pdf.cell(200, 8, txt=f"* {czysc_tekst(item)}", ln=True)
+                                pdf.ln(5)
+                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
+                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
+                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="ProCalc_{nazwa_inwestycji}.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz PDF</a>'
+                        st.markdown(href, unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Błąd PDF: {e}")
 # Tekst praw autorskich pod logo (Zostaje na samym dole pliku)
 st.markdown("""
     <p style='text-align: center; color: #BDC3C7; font-size: 14px; margin-top: 10px;'>
