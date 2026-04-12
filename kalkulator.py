@@ -2517,74 +2517,74 @@ elif branza == "Panel Inwestora":
                 if supabase: supabase.auth.sign_out()
                 st.rerun()
 
-       # ==========================================
+        # ==========================================
         # 1. ZAWARTOSC: NAWIGACJA GŁÓWNA (TWOJA LOGIKA)
         # ==========================================
-        if opcja_panelu == "Nawigacja Główna":
+    if opcja_panelu == "Nawigacja Główna":
             
             # --- A. SEKCJA CHMURY: TWOJE PROJEKTY (PŁASKA LISTA + USUWANIE) ---
-            st.header("Twoje Zapisane Kosztorysy")
-            if supabase:
-                try:
-                    response = supabase.table("projekty").select("*").eq("user_id", st.session_state.user_id).order("data_stworzenia", desc=True).execute()
-                    zapisane_projekty = response.data
+        st.header("Twoje Zapisane Kosztorysy")
+        if supabase:
+            try:
+                response = supabase.table("projekty").select("*").eq("user_id", st.session_state.user_id).order("data_stworzenia", desc=True).execute()
+                zapisane_projekty = response.data
                     
-                    if not zapisane_projekty:
-                        st.info("Nie masz jeszcze żadnych zapisanych projektów w chmurze.")
-                    else:
+                if not zapisane_projekty:
+                    st.info("Nie masz jeszcze żadnych zapisanych projektów w chmurze.")
+                else:
                         # Nagłówek Tabeli (4 kolumny)
-                        st.markdown("---")
-                        col_nazwa, col_data, col_pobierz, col_usun = st.columns([3.5, 1.5, 1, 1])
-                        col_nazwa.markdown("**Nazwa projektu / Kategoria**")
-                        col_data.markdown("**Data utworzenia**")
-                        col_pobierz.markdown("**Pobierz**")
-                        col_usun.markdown("**Akcja**")
-                        st.markdown("---")
+                    st.markdown("---")
+                    col_nazwa, col_data, col_pobierz, col_usun = st.columns([3.5, 1.5, 1, 1])
+                    col_nazwa.markdown("**Nazwa projektu / Kategoria**")
+                    col_data.markdown("**Data utworzenia**")
+                    col_pobierz.markdown("**Pobierz**")
+                    col_usun.markdown("**Akcja**")
+                    st.markdown("---")
                         
                         # Generowanie wierszy z bazy
-                        for projekt in zapisane_projekty:
-                            data_utworzenia = projekt['data_stworzenia'][:10] 
-                            nazwa = projekt['nazwa_projektu']
-                            branza_proj = projekt['branza']
-                            dane = projekt['dane_json']
-                            id_projektu = projekt['id']
+                    for projekt in zapisane_projekty:
+                        data_utworzenia = projekt['data_stworzenia'][:10] 
+                        nazwa = projekt['nazwa_projektu']
+                        branza_proj = projekt['branza']
+                        dane = projekt['dane_json']
+                        id_projektu = projekt['id']
                             
                             # Generujemy tekst z danymi projektu do pobrania
-                            dane_txt = f"PROJEKT: {nazwa}\nDATA ZAPISU: {data_utworzenia}\nKATEGORIA: {branza_proj}\n\nSZCZEGÓŁY:\n"
-                            for klucz, wartosc in dane.items():
-                                dane_txt += f"- {klucz}: {wartosc}\n"
+                        dane_txt = f"PROJEKT: {nazwa}\nDATA ZAPISU: {data_utworzenia}\nKATEGORIA: {branza_proj}\n\nSZCZEGÓŁY:\n"
+                        for klucz, wartosc in dane.items():
+                            dane_txt += f"- {klucz}: {wartosc}\n"
                             
                             # Wiersz tabeli
-                            c1, c2, c3, c4 = st.columns([3.5, 1.5, 1, 1])
+                        c1, c2, c3, c4 = st.columns([3.5, 1.5, 1, 1])
                             
-                            with c1:
-                                st.markdown(f"<p style='margin-top: 10px; font-weight: 600;'>{nazwa} <br><span style='color: #00D395; font-size: 12px; font-weight: normal;'>({branza_proj})</span></p>", unsafe_allow_html=True)
+                        with c1:
+                            st.markdown(f"<p style='margin-top: 10px; font-weight: 600;'>{nazwa} <br><span style='color: #00D395; font-size: 12px; font-weight: normal;'>({branza_proj})</span></p>", unsafe_allow_html=True)
                             
-                            with c2:
-                                st.markdown(f"<p style='margin-top: 10px; color: #6C757D;'>{data_utworzenia}</p>", unsafe_allow_html=True)
+                        with c2:
+                            st.markdown(f"<p style='margin-top: 10px; color: #6C757D;'>{data_utworzenia}</p>", unsafe_allow_html=True)
                             
-                            with c3:
+                        with c3:
                                 # Przycisk pobierania
-                                st.download_button(
-                                    label="Pobierz",
-                                    data=dane_txt,
-                                    file_name=f"{nazwa}.txt",
-                                    mime="text/plain",
-                                    key=f"dl_btn_{id_projektu}"
-                                )
+                            st.download_button(
+                                label="Pobierz",
+                                data=dane_txt,
+                                file_name=f"{nazwa}.txt",
+                                mime="text/plain",
+                                key=f"dl_btn_{id_projektu}"
+                            )
                                 
-                            with c4:
+                        with c4:
                                 # Przycisk usuwania
-                                if st.button("Usuń", type="primary", key=f"del_btn_{id_projektu}"):
-                                    try:
+                            if st.button("Usuń", type="primary", key=f"del_btn_{id_projektu}"):
+                                try:
                                         # Komenda do Supabase usuwająca wiersz po jego unikalnym ID
-                                        supabase.table("projekty").delete().eq("id", id_projektu).execute()
-                                        st.success("Projekt został usunięty!")
-                                        st.rerun() # Odświeża stronę natychmiast po usunięciu
-                                    except Exception as e:
-                                        st.error(f"Nie udało się usunąć projektu: {e}")
+                                    supabase.table("projekty").delete().eq("id", id_projektu).execute()
+                                    st.success("Projekt został usunięty!")
+                                    st.rerun() # Odświeża stronę natychmiast po usunięciu
+                                except Exception as e:
+                                    st.error(f"Nie udało się usunąć projektu: {e}")
                                         
-                            st.markdown("<hr style='margin: 0px; opacity: 0.2;'>", unsafe_allow_html=True)
+                        st.markdown("<hr style='margin: 0px; opacity: 0.2;'>", unsafe_allow_html=True)
                             
                 except Exception as e:
                     st.error(f"Wystąpił błąd podczas pobierania danych: {e}")
@@ -2594,8 +2594,7 @@ elif branza == "Panel Inwestora":
             st.markdown("<br><br>", unsafe_allow_html=True)
 
             # --- DALSZA CZĘŚĆ (CHECKLISTA I ROI) ZOSTAJE BEZ ZMIAN ---
-            # Tutaj znajduje się reszta logiki z "Checklista Przedzakupowa", "Parametry Lokalu" itd...
-
+            # Tutaj znajduje się reszta logiki z "Checklista Przedzakupowa", "Parametry Lokalu" itd...       
             # --- B. SEKCJA ANALITYCZNA: CHECKLISTA ---
             st.subheader("Checklista Przedzakupowa")
             c_ch1, c_ch2, c_ch3 = st.columns(3)
