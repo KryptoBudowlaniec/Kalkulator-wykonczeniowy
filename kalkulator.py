@@ -2483,7 +2483,12 @@ elif branza == "Panel Inwestora":
                         branza_proj = projekt['branza']
                         dane = projekt['dane_json']
                         
-                        with st.expander(f"📁 {nazwa} | Branża: {branza_proj} | Data: {data_utworzenia}"):
+                        # --- TUTAJ POPRAWKA: Krótki tytuł, tekst nie wchodzi na strzałkę! ---
+                        with st.expander(f"📁 {nazwa}"):
+                            # Przenosimy szczegóły do środka karty (ładny, szary tekst)
+                            st.caption(f"📅 Data zapisu: {data_utworzenia} | 🏷️ Kategoria: {branza_proj}")
+                            st.markdown("---")
+                            
                             # 1. WYGLĄD DLA ZAPISANEJ ANALIZY ROI
                             if branza_proj == "Analiza ROI":
                                 c1, c2, c3 = st.columns(3)
@@ -2504,7 +2509,7 @@ elif branza == "Panel Inwestora":
                 st.error(f"Wystąpił błąd podczas pobierania danych: {e}")
         else:
             st.error("Brak połączenia z chmurą bazy danych.")
-
+            
         st.markdown("---")
 
         # ==========================================
