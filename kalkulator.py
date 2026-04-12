@@ -20,8 +20,12 @@ supabase = None
 try:
     url: str = st.secrets["SUPABASE_URL"]
     key: str = st.secrets["SUPABASE_KEY"]
-    # BŁĄD BYŁ TUTAJ: Używamy małych liter url i key!
     supabase: Client = create_client(url, key)
+    
+    # --- NOWE: Przywracanie sesji po odświeżeniu strony ---
+    if "access_token" in st.session_state and "refresh_token" in st.session_state:
+        supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
+        
 except Exception as e:
     st.error(f"Błąd połączenia z bazą danych: {e}")
 
@@ -268,7 +272,11 @@ elif branza == "Logowanie":
                         st.session_state.zalogowany = True
                         st.session_state.user_id = res.user.id
                         st.session_state.pakiet = "PRO"
-                        # Przeładowujemy stronę, żeby wyświetlić widok profilu!
+                        
+                        # --- NOWE: Zapisujemy tokeny sesji (lekarstwo na amnezję) ---
+                        st.session_state.access_token = res.session.access_token
+                        st.session_state.refresh_token = res.session.refresh_token
+                        
                         st.rerun() 
                     except Exception as e:
                         st.error("Odmowa dostępu: Sprawdź poprawność maila i hasła.")
@@ -2615,6 +2623,40 @@ elif branza == "Panel Inwestora":
                     st.info(f"**{cat}**")
                     for item in items:
                         st.write(f"- {item}")
+
+# --- GENERATOR PDF (LISTA ZAKUPÓW) ---
+        st.markdown("---")
+        st.subheader("📥 Eksportuj Listę Zakupów")
+        
+        if st.button("Pobierz Listę Zakupów (PDF)", use_container_width=True, type="primary"):
+            from fpdf import FPDF
+            import base64
+            
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            
+            pdf.set_text_color(0, 211, 149) # Kolor ProCalc (Zielony)
+            pdf.cell(200, 10, txt="PROCALC - LISTA ZAKUPOWA (PANEL INWESTORA)", ln=True, align='C')
+            pdf.ln(10)
+            
+            pdf.set_text_color(30, 30, 30)
+            for cat, items in zakupy.items():
+                if items:
+                    pdf.set_font("Arial", style="B", size=12)
+                    # Zamiana PL znaków dla standardowej czcionki Arial
+                    cat_safe = cat.replace("Ł", "L").replace("Ś", "S")
+                    pdf.cell(200, 10, txt=f"--- {cat_safe} ---", ln=True)
+                    
+                    pdf.set_font("Arial", size=11)
+                    for item in items:
+                        item_safe = item.replace("ł", "l").replace("ś", "s").replace("ż", "z").replace("ą", "a").replace("ę", "e").replace("ó", "o").replace("ć", "c").replace("ń", "n").replace("ź", "z")
+                        pdf.cell(200, 8, txt=f"* {item_safe}", ln=True)
+                    pdf.ln(5)
+                    
+            pdf_b64 = base64.b64encode(pdf.output(dest="S").encode("latin-1")).decode()
+            href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="ProCalc_Zakupy.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px;">Pobierz plik PDF na swoje urządzenie</a>'
+            st.markdown(href, unsafe_allow_html=True)
 
 # Tekst praw autorskich pod logo (Zostaje na samym dole)
 st.markdown("""
