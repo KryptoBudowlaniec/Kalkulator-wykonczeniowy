@@ -3,14 +3,23 @@ from supabase import create_client, Client
 
 # 1. KONFIGURACJA GŁÓWNA (Musi być absolutnie pierwsza!)
 st.set_page_config(
-    page_title="ProCalc - Ekspert Wykończeń",
-    page_icon="🏗️",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-    menu_items={
-        'Get Help': 'mailto:biuro@procalc.pl',
-        'About': "# ProCalc\nTwoje profesjonalne narzędzie do kosztorysowania remontów."
-    }
+    page_title="ProCalc | Inwestuj i Buduj z Głową",
+    page_icon="logo.png", # To wstawi logo w zakładkę przeglądarki
+    layout="centered"
+)
+
+# --- TRICK DLA SMS/WHATSAPP (OPEN GRAPH) ---
+# Streamlit nie wspiera natywnie meta-tagów obrazu, więc wstrzykujemy je "po cichu"
+st.markdown(
+    f"""
+    <head>
+        <meta property="og:title" content="ProCalc | Profesjonalny Kalkulator Inwestora" />
+        <meta property="og:description" content="Kompleksowe kosztorysy, analiza ROI i listy zakupów w jednym miejscu." />
+        <meta property="og:image" content="https://raw.githubusercontent.com/TWOJA_NAZWA_UZYTKOWNIKA/TWOJA_NAZWA_REPOZYTORIUM/main/logo.png" />
+        <meta property="og:type" content="website" />
+    </head>
+    """,
+    unsafe_allow_html=True,
 )
 
 # 2. KULOODPORNE POŁĄCZENIE Z SUPABASE
