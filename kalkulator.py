@@ -5,7 +5,7 @@ from supabase import create_client, Client
 st.set_page_config(
     page_title="ProCalc | Inwestuj i Buduj z Głową",
     page_icon="logo.png", # To wstawi logo w zakładkę przeglądarki
-    layout="centered"
+    layout="wide"
 )
 
 # --- TRICK DLA SMS/WHATSAPP (OPEN GRAPH) ---
