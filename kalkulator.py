@@ -7,7 +7,32 @@ st.set_page_config(
     page_icon="logo2.png", 
     layout="wide"
 )
+# ==========================================
+# BANER COOKIES I PRYWATNOŚCI
+# ==========================================
+# Inicjalizacja stanu dla ciasteczek
+if "cookies_accepted" not in st.session_state:
+    st.session_state.cookies_accepted = False
 
+# Wyświetlanie banera, dopóki użytkownik nie kliknie akceptacji
+if not st.session_state.cookies_accepted:
+    # Tworzymy ładny, wyróżniony kontener na samej górze
+    with st.container(border=True):
+        st.markdown("### 🍪 Szanujemy Twoją prywatność")
+        st.write("""
+        Serwis ProCalc wykorzystuje pliki cookies niezbędne do prawidłowego działania aplikacji (utrzymywanie sesji logowania, zapisywanie projektów) oraz w celach analitycznych. 
+        Dalsze korzystanie z serwisu oznacza akceptację naszej [Polityki Prywatności](#).
+        """)
+        
+        # Przycisk akceptacji
+        col_btn, col_puste = st.columns([1, 3])
+        with col_btn:
+            if st.button("Zrozumiałem i Akceptuję ✅", type="primary", use_container_width=True, key="btn_cookies"):
+                st.session_state.cookies_accepted = True
+                st.rerun() # Przeładowuje stronę, aby baner natychmiast zniknął
+    
+    # Dodajemy delikatną linię oddzielającą baner od reszty aplikacji
+    st.markdown("---")
 # --- TRICK DLA SMS/WHATSAPP (OPEN GRAPH) ---
 st.markdown(
     f"""
