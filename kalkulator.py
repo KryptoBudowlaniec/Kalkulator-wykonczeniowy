@@ -3035,11 +3035,11 @@ def create_pdf_link(file_path, link_name):
     try:
         with open(file_path, "rb") as f:
             base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-        # target="_blank" wymusza otwarcie w nowej karcie
-        return f'<a href="data:application/pdf;base64,{base64_pdf}" target="_blank" style="text-decoration:none; color:#6C757D;">{link_name}</a>'
+        # Dodany atrybut download wymusza bezpieczne zapisanie pliku
+        return f'<a href="data:application/pdf;base64,{base64_pdf}" download="{file_path}" style="text-decoration:none; color:#6C757D;">{link_name}</a>'
     except Exception:
         return f'<span style="color:#e74c3c;">{link_name} (Brak pliku)</span>'
-
+        
 # Przygotowanie linków
 link_reg = create_pdf_link("Regulamin_ProCalc_v1.pdf", "Regulamin serwisu")
 link_rodo = create_pdf_link("Polityka_Prywatnosci_ProCalc_v2.pdf", "Polityka prywatności (RODO)")
