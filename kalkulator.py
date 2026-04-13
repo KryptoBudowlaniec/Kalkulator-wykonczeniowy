@@ -3028,45 +3028,31 @@ elif branza == "Panel Inwestora":
                     except Exception as e:
                         st.error(f"Błąd PDF: {e}")
 
-# ==========================================
-# GLOBALNA STOPKA APLIKACJI (FOOTER)
-# ==========================================
-st.markdown("""
-    <style>
-        .procalc-footer {
-            width: 100%;
-            text-align: center;
-            padding: 30px 0 20px 0;
-            margin-top: 60px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #6C757D;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-        }
-        .procalc-footer a {
-            color: #6C757D;
-            text-decoration: none;
-            margin: 0 10px;
-            font-weight: 500;
-            transition: all 0.3s ease-in-out;
-        }
-        .procalc-footer a:hover {
-            color: #00D395;
-            text-decoration: underline;
-        }
-        .procalc-footer p {
-            margin-bottom: 10px;
-            font-size: 13px;
-        }
-    </style>
+import base64
 
-    <div class="procalc-footer">
-        <p>&copy; 2026 ProCalc. Wszelkie prawa zastrzeżone.</p>
-        <div>
-            <a href="#" target="_self">Regulamin serwisu</a> |
-            <a href="#" target="_self">Polityka prywatności</a> |
-            <a href="#" target="_self">Kontakt</a>
-        </div>
+# Funkcja generująca link do PDF w formacie Base64
+def create_pdf_link(file_path, link_name):
+    try:
+        with open(file_path, "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+        # target="_blank" wymusza otwarcie w nowej karcie
+        return f'<a href="data:application/pdf;base64,{base64_pdf}" target="_blank" style="text-decoration:none; color:#6C757D;">{link_name}</a>'
+    except Exception:
+        return f'<span style="color:#e74c3c;">{link_name} (Brak pliku)</span>'
+
+# Przygotowanie linków
+link_reg = create_pdf_link("Regulamin_ProCalc_v1.pdf", "Regulamin serwisu")
+link_rodo = create_pdf_link("Polityka_Prywatnosci_ProCalc_v2.pdf", "Polityka prywatności (RODO)")
+
+# Wyświetlenie stopki
+st.markdown(f"""
+    <hr style="border:0; height:1px; background-image:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.1), rgba(255,255,255,0)); margin-top:50px;">
+    <div style="text-align:center; padding:20px; color:#6C757D; font-family:sans-serif; font-size:14px;">
+        <p>© 2026 ProCalc. Wszystkie prawa zastrzeżone.</p>
+        <p>
+            {link_reg} &nbsp; | &nbsp; {link_rodo} &nbsp; | &nbsp; 
+            <a href="mailto:biuro@procalc.pl" style="text-decoration:none; color:#6C757D;">Kontakt</a>
+        </p>
     </div>
 """, unsafe_allow_html=True)
 
