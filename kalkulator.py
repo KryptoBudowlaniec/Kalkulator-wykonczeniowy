@@ -3027,6 +3027,49 @@ elif branza == "Panel Inwestora":
                         st.markdown(href, unsafe_allow_html=True)
                     except Exception as e:
                         st.error(f"Błąd PDF: {e}")
+
+# ==========================================
+# GLOBALNA STOPKA APLIKACJI (FOOTER)
+# ==========================================
+st.markdown("""
+    <style>
+        .procalc-footer {
+            width: 100%;
+            text-align: center;
+            padding: 30px 0 20px 0;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #6C757D;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+        .procalc-footer a {
+            color: #6C757D;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+            transition: all 0.3s ease-in-out;
+        }
+        .procalc-footer a:hover {
+            color: #00D395;
+            text-decoration: underline;
+        }
+        .procalc-footer p {
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+    </style>
+
+    <div class="procalc-footer">
+        <p>&copy; 2026 ProCalc. Wszelkie prawa zastrzeżone.</p>
+        <div>
+            <a href="#" target="_self">Regulamin serwisu</a> |
+            <a href="#" target="_self">Polityka prywatności</a> |
+            <a href="#" target="_self">Kontakt</a>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
 # Tekst praw autorskich pod logo (Zostaje na samym dole pliku)
 st.markdown("""
     <p style='text-align: center; color: #BDC3C7; font-size: 14px; margin-top: 10px;'>
