@@ -794,6 +794,9 @@ elif branza == "Szpachlowanie":
 
     tab_s1, tab_s2 = st.tabs([" Szybka Wycena", " Detale PRO"])
 
+    # ==========================================
+    # ZAKŁADKA 1: SZYBKA WYCENA
+    # ==========================================
     with tab_s1:
         st.subheader("Błyskawiczny szacunek kosztów")
         c_fast1, c_fast2 = st.columns(2)
@@ -809,6 +812,9 @@ elif branza == "Szpachlowanie":
         st.success(f"### Szacowany koszt całkowity: **ok. {round(szacunek_total):,} PLN**".replace(",", " "))
         st.info(f"Przyjęto {m2_scian_fast} m² ścian. Stawka: {cena_za_m2_fast} zł/m².")
 
+    # ==========================================
+    # ZAKŁADKA 2: DETALE PRO
+    # ==========================================
     with tab_s2:
         if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
             st.error("🔒 Sekcja dostępna dla pakietu PRO")
@@ -842,7 +848,6 @@ elif branza == "Szpachlowanie":
                 m2_total = p_m2 * 3.5
                 st.info(f"Przeliczono na **{round(m2_total, 1)} m²** ścian/sufitów.")
             else:
-                # Logika dodawania pomieszczeń (identyczna jak wcześniej)
                 cp1, cp2 = st.columns(2)
                 with cp1:
                     naz_p = st.text_input("Nazwa:", key="p_naz")
@@ -859,15 +864,21 @@ elif branza == "Szpachlowanie":
                     st.rerun()
                 
                 for i, p in enumerate(st.session_state.pokoje_szp):
-                    st.info(f"{p['nazwa']}: {round(p['netto'],1)} m2")
+                    c_l, c_b = st.columns([5, 1])
+                    c_l.info(f"{p['nazwa']}: {round(p['netto'],1)} m2")
+                    if c_b.button("Usuń", key=f"del_p_{i}"):
+                        st.session_state.pokoje_szp.pop(i)
+                        st.rerun()
                 m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
 
+            # ==========================================
+            # WYNIKI I LISTA ZAKUPÓW
+            # ==========================================
             if m2_total > 0:
-                # OBLICZENIA ZGODNIE Z TWOIMI WYTYCZNYMI
-                norma_g = 1.2 # Twoja nowa norma
+                norma_g = 1.2
                 szt_gipsu = 0
                 if system_szpachlowania == "Mocny start (Gips + Gładź)":
-                    kg_gips = m2_total * 1.2 # Twoja nowa norma gipsu
+                    kg_gips = m2_total * 1.2 
                     szt_gipsu = int((kg_gips / dane_gips["waga"]) + 0.99)
                     warstwy_finisz = l_warstw - 1
                 else:
@@ -877,74 +888,139 @@ elif branza == "Szpachlowanie":
                 szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
                 
                 szt_gruntu = int(m2_total * 0.2 / 5 + 0.99)
-                szt_krazkow = int((m2_total / 40) + 0.99) # Twoja nowa norma krążków
+                szt_krazkow = int((m2_total / 40) + 0.99) 
+                koszt_m_dodatki = m2_total * 4.5
 
-                koszt_m = (szt_gladzi * dane_g["cena"]) + (szt_gipsu * (dane_gips["cena"] if szt_gipsu > 0 else 0)) + (szt_gruntu * baza_grunty_szp[wybrany_grunt] * 5) + (m2_total * 4.5) # Ryczałt akcesoria zmniejszony
+                koszt_m = (szt_gladzi * dane_g["cena"]) + (szt_gipsu * (dane_gips["cena"] if szt_gipsu > 0 else 0)) + (szt_gruntu * baza_grunty_szp[wybrany_grunt] * 5) + koszt_m_dodatki
                 robocizna = m2_total * stawka_szp
                 
-                st.success(f"### RAZEM: {round(koszt_m + robocizna)} PLN")
+                st.markdown("---")
+                st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(koszt_m + robocizna)} PLN**")
                 
-                # --- GENEROWANIE PDF (NOWA STRUKTURA) ---
-                if st.button("Pobierz Raport PDF (Roadmap)"):
+                res1, res2 = st.columns(2)
+                res1.metric("Twoja Robocizna", f"{round(robocizna)} PLN")
+                res2.metric("Materiały", f"{round(koszt_m)} PLN")
+                
+                # --- PRZYWRÓCONA LISTA ZAKUPÓW NA STRONIE ---
+                st.markdown("---")
+                st.subheader("Lista Zakupów")
+                c_zak1, c_zak2 = st.columns(2)
+                
+                with c_zak1:
+                    st.info("**MATERIAŁY GŁÓWNE**")
+                    if system_szpachlowania == "Mocny start (Gips + Gładź)":
+                        st.write(f"🔹 **Gips startowy ({wybrany_gips}):** {szt_gipsu} szt.")
+                    st.write(f"🔹 **Gładź finiszowa ({wybrana_g}):** {szt_gladzi} szt.")
+                    st.write(f"🔹 **Grunt ({wybrany_grunt}):** {szt_gruntu} baniek (5L)")
+                with c_zak2:
+                    st.warning("**MATERIAŁY ZUŻYWALNE**")
+                    st.write(f"🔸 **Krążki ścierne P180:** {szt_krazkow} szt.")
+                    st.write(f"🔸 **Akcesoria (narożniki, taśmy, folie itp.):** szacunkowo ~{round(koszt_m_dodatki)} zł")
+
+                # ==========================================
+                # PDF GENERATION
+                # ==========================================
+                st.markdown("---")
+                c_pdf1, c_pdf2 = st.columns(2)
+                
+                with c_pdf1:
+                    if st.button("Wyczyść wszystko", use_container_width=True, key="btn_wyczysc_szp"):
+                        st.session_state.pokoje_szp = []
+                        st.rerun()
+
+                with c_pdf2:
                     try:
                         from fpdf import FPDF
                         from datetime import datetime
+                        import os
+
                         pdf = FPDF()
                         pdf.add_page()
-                        pdf.set_font("Arial", "B", 16)
-                        pdf.cell(0, 10, "PROCALC - KOSZTORYS SZPACHLOWANIA", ln=True, align='C')
+                        
+                        f_path = "Inter-Regular.ttf"
+                        if os.path.exists(f_path):
+                            pdf.add_font("Inter", "", f_path)
+                            pdf.set_font("Inter", size=12)
+                            font_ok = True
+                        else:
+                            pdf.set_font("Arial", size=12)
+                            font_ok = False
+                            
+                        # Logo
+                        if os.path.exists("logo.png"):
+                            pdf.image("logo.png", x=10, y=8, w=35)
+                            
+                        pdf.set_font("Inter" if font_ok else "Arial", "B", 16)
+                        pdf.cell(0, 15, "PROCALC - KOSZTORYS SZPACHLOWANIA", ln=True, align='C')
+                        pdf.ln(5)
+                        pdf.line(10, 35, 200, 35)
                         
                         # PKT 1. PODSUMOWANIE
-                        pdf.set_font("Arial", "B", 12)
                         pdf.ln(10)
-                        pdf.cell(0, 10, "1. PODSUMOWANIE FINANSOWE", ln=True)
-                        pdf.set_font("Arial", "", 10)
-                        pdf.cell(0, 8, f"Suma calkowita: {round(koszt_m + robocizna)} PLN", ln=True)
-                        pdf.cell(0, 8, f"W tym robocizna: {round(robocizna)} PLN", ln=True)
+                        pdf.set_font("Inter" if font_ok else "Arial", "B", 12)
+                        pdf.set_fill_color(240, 240, 240)
+                        pdf.cell(0, 10, " 1. PODSUMOWANIE FINANSOWE", ln=True, fill=True)
+                        pdf.set_font("Inter" if font_ok else "Arial", "", 10)
+                        pdf.cell(0, 8, f" Suma calkowita: {round(koszt_m + robocizna)} PLN", ln=True)
+                        pdf.cell(0, 8, f" W tym robocizna: {round(robocizna)} PLN | Materialy: {round(koszt_m)} PLN", ln=True)
 
                         # PKT 2. SZCZEGÓLY WYKONANIA
                         pdf.ln(5)
-                        pdf.set_font("Arial", "B", 12)
-                        pdf.cell(0, 10, "2. SZCZEGOLY WYKONANIA", ln=True)
-                        pdf.set_font("Arial", "", 10)
-                        pdf.cell(0, 8, f"- Calkowity metraz prac: {round(m2_total, 1)} m2", ln=True)
-                        pdf.cell(0, 8, f"- Liczba warstw: {l_warstw}", ln=True)
-                        pdf.cell(0, 8, f"- System: {system_szpachlowania}", ln=True)
+                        pdf.set_font("Inter" if font_ok else "Arial", "B", 12)
+                        pdf.cell(0, 10, " 2. SZCZEGOLY WYKONANIA", ln=True, fill=True)
+                        pdf.set_font("Inter" if font_ok else "Arial", "", 10)
+                        
+                        def czysc_tekst(tekst):
+                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                            return tekst.encode('latin-1', 'replace').decode('latin-1')
 
-                        # PKT 3. LISTA MATERIALOW (TABELA / ROADMAP)
+                        pdf.cell(0, 8, f" - Calkowity metraz prac: {round(m2_total, 1)} m2", ln=True)
+                        pdf.cell(0, 8, f" - Liczba warstw: {l_warstw}", ln=True)
+                        pdf.cell(0, 8, f" - System: {czysc_tekst(system_szpachlowania)}", ln=True)
+
+                        # PKT 3. LISTA MATERIALOW (TABELA)
                         pdf.ln(5)
-                        pdf.set_font("Arial", "B", 12)
-                        pdf.cell(0, 10, "3. LISTA MATERIALOW (DO ODHACZENIA)", ln=True)
+                        pdf.set_font("Inter" if font_ok else "Arial", "B", 12)
+                        pdf.cell(0, 10, " 3. LISTA MATERIALOW (DO ODHACZENIA)", ln=True, fill=True)
                         
                         # Nagłówek Tabeli
-                        pdf.set_font("Arial", "B", 10)
-                        pdf.cell(10, 10, "OK", 1, 0, 'C')
-                        pdf.cell(130, 10, " Nazwa materialu", 1, 0)
+                        pdf.set_font("Inter" if font_ok else "Arial", "B", 10)
+                        pdf.cell(15, 10, " OK", 1, 0, 'C')
+                        pdf.cell(135, 10, " Nazwa materialu", 1, 0)
                         pdf.cell(40, 10, " Ilosc", 1, 1, 'C')
                         
-                        pdf.set_font("Arial", "", 10)
-                        # Wiersze tabeli
+                        pdf.set_font("Inter" if font_ok else "Arial", "", 10)
                         materialy_lista = [
-                            (f"Gladz: {wybrana_g}", f"{szt_gladzi} szt."),
-                            (f"Grunt: {wybrany_grunt}", f"{szt_gruntu} szt. (5L)"),
-                            (f"Krazki scierne P180", f"{szt_krazkow} szt.")
+                            (f"Gladz: {czysc_tekst(wybrana_g)}", f"{szt_gladzi} szt."),
+                            (f"Grunt: {czysc_tekst(wybrany_grunt)}", f"{szt_gruntu} szt. (5L)"),
+                            (f"Krazki scierne P180", f"{szt_krazkow} szt."),
+                            (f"Akcesoria (narozniki, tasmy itp.)", f"~ {round(koszt_m_dodatki)} PLN")
                         ]
                         if szt_gipsu > 0:
-                            materialy_lista.insert(0, (f"Gips start: {wybrany_gips}", f"{szt_gipsu} szt."))
+                            materialy_lista.insert(0, (f"Gips start: {czysc_tekst(wybrany_gips)}", f"{szt_gipsu} szt."))
                         
                         for mat, ilosc in materialy_lista:
-                            pdf.cell(10, 10, "[ ]", 1, 0, 'C')
-                            pdf.cell(130, 10, f" {mat}", 1, 0)
-                            pdf.cell(40, 10, ilosc, 1, 1, 'C')
+                            pdf.cell(15, 10, "[   ]", 1, 0, 'C')
+                            pdf.cell(135, 10, f" {mat}", 1, 0)
+                            pdf.cell(40, 10, f" {ilosc}", 1, 1, 'C')
 
                         pdf.ln(10)
-                        pdf.set_font("Arial", "I", 8)
-                        pdf.cell(0, 10, f"Wygenerowano: {datetime.now().strftime('%Y-%m-%d %H:%M')}", align='R')
+                        pdf.set_font("Inter" if font_ok else "Arial", "I", 8)
+                        pdf.cell(0, 10, f"Wygenerowano: {datetime.now().strftime('%Y-%m-%d %H:%M')} | ProCalc", align='R')
                         
-                        st.download_button("Pobierz gotowy PDF", data=bytes(pdf.output(dest="S")), file_name="Kosztorys_Szpachlowanie.pdf")
+                        pdf_bytes = pdf.output(dest="S")
+                        safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+
+                        st.download_button(
+                            label="Pobierz Raport PDF",
+                            data=safe_bytes,
+                            file_name=f"Szpachlowanie_Raport_{datetime.now().strftime('%Y%m%d')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
                     except Exception as e:
                         st.error(f"Błąd PDF: {e}")
-           
 
 # --- SEKCJA: PODŁOGI ---
 # --- SEKCJA: PODŁOGI ---
