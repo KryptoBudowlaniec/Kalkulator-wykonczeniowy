@@ -109,6 +109,21 @@ if 'przekierowanie' not in st.session_state:
 if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 
+# =======================================================
+# 🟢 WYKRYWACZ POWROTU Z GOOGLE (Wklej to dokładnie tutaj) 🟢
+# =======================================================
+if supabase:
+    try:
+        user_response = supabase.auth.get_user()
+        if user_response and user_response.user:
+            # Nadpisujemy stan aplikacji na "zalogowany"
+            st.session_state.zalogowany = True
+            st.session_state.user_email = user_response.user.email
+            st.session_state.pakiet = "PRO"
+    except Exception:
+        pass
+# =======================================================
+
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
 
