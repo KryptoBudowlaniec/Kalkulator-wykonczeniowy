@@ -357,42 +357,67 @@ elif branza == "Logowanie":
     
     # 1. SPRAWDZAMY CZY UŻYTKOWNIK JEST JUŻ ZALOGOWANY
     if not st.session_state.zalogowany:
-        # WIDOK DLA NIEZALOGOWANYCH
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.subheader("Witaj w ProCalc")
         st.write("Zaloguj się, aby odblokować pakiet PRO, zapisywać projekty i pobierać raporty PDF.")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # PRZYCISK LOGOWANIA PRZEZ GOOGLE
-        if st.button("🔴 ZALOGUJ PRZEZ GOOGLE", use_container_width=True, type="primary"):
-            if supabase:
-                try:
-                    # Wywołujemy logowanie przez Google
-                    # Supabase wygeneruje specjalny link do ekranu wyboru konta Google
-                    res = supabase.auth.sign_in_with_oauth({
-                        "provider": "google",
-                        "options": {
-                            "redirect_to": "https://procalc.pl" 
-                        }
-                    })
-                    
-                    # Jeśli link został wygenerowany, przekierowujemy użytkownika
-                    if res.url:
-                        st.markdown(f'<meta http-equiv="refresh" content="0;url={res.url}">', unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"Wystąpił błąd podczas łączenia z Google: {e}")
-            else:
-                st.error("Błąd: Brak połączenia z chmurą Supabase.")
+        # --- STYLIZOWANY PRZYCISK GOOGLE ---
+        # Tworzymy kolumny, żeby przycisk nie był rozciągnięty na całą szerokość ekranu
+        _, col_btn, _ = st.columns([1, 2, 1])
         
-        st.caption("Klikając przycisk powyżej, zostaniesz bezpiecznie przekierowany do autoryzacji Google.")
+        with col_btn:
+            # HTML + CSS dla ładnego przycisku Google
+            google_btn_html = """
+            <a href="#" id="google-login-btn" style="
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: white;
+                color: #757575;
+                border-radius: 4px;
+                border: 1px solid #dadce0;
+                padding: 10px 24px;
+                font-family: 'Roboto', arial, sans-serif;
+                font-weight: 500;
+                cursor: pointer;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                transition: background-color .2s;
+            ">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_\"G\"_logo.svg" style="width: 18px; margin-right: 10px;">
+                Zaloguj przez Google
+            </a>
+            """
+            
+            # Ponieważ st.markdown z HTML nie obsłuży akcji Pythonowej bezpośrednio, 
+            # używamy standardowego przycisku Streamlit, ale z ikonką wewnątrz tekstu:
+            if st.button("🌐 Zaloguj przez Google", use_container_width=True):
+                if supabase:
+                    try:
+                        res = supabase.auth.sign_in_with_oauth({
+                            "provider": "google",
+                            "options": {
+                                "redirect_to": "https://procalc.pl" 
+                            }
+                        })
+                        if res.url:
+                            st.markdown(f'<meta http-equiv="refresh" content="0;url={res.url}">', unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Błąd połączenia: {e}")
+                else:
+                    st.error("Brak połączenia z Supabase.")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.caption("<center>Twoje dane są chronione przez Google Auth</center>", unsafe_allow_html=True)
 
     else:
         # 2. WIDOK PO POMYŚLNYM ZALOGOWANIU
         st.markdown("<br><br>", unsafe_allow_html=True)
-        st.success(f"✅ Witaj z powrotem! Jesteś zalogowany.")
+        st.success("✅ Witaj z powrotem! Jesteś zalogowany.")
         
-        # Pobieramy e-mail zalogowanego użytkownika (jeśli go jeszcze nie mamy w sesji)
+        # Pobieranie maila z sesji bazy danych
         if not st.session_state.get('user_email'):
             try:
                 user_info = supabase.auth.get_user()
@@ -408,11 +433,9 @@ elif branza == "Logowanie":
         _, col_logout, _ = st.columns([1, 1, 1])
         with col_logout:
             if st.button("WYLOGUJ SIĘ", use_container_width=True, type="secondary"):
-                # Czyścimy dane sesji
                 st.session_state.zalogowany = False
                 st.session_state.pakiet = "Podstawowy"
                 st.session_state.user_email = ""
-                # Wylogowujemy z bazy danych
                 if supabase:
                     supabase.auth.sign_out()
                 st.rerun()
