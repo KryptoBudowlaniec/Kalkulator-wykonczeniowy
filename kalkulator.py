@@ -928,7 +928,7 @@ elif branza == "Szpachlowanie":
                         st.session_state.pokoje_szp = []
                         st.rerun()
 
-                with c_pdf2:
+with c_pdf2:
                     try:
                         from fpdf import FPDF
                         from datetime import datetime
@@ -937,38 +937,29 @@ elif branza == "Szpachlowanie":
                         pdf = FPDF()
                         pdf.add_page()
                         
-                        f_path = "Inter-Regular.ttf"
-                        if os.path.exists(f_path):
-                            pdf.add_font("Inter", "", f_path)
-                            pdf.set_font("Inter", size=12)
-                            font_ok = True
-                        else:
-                            pdf.set_font("Arial", size=12)
-                            font_ok = False
-                            
-                        # Logo
+                        # Używamy wbudowanego fontu Arial, który bez problemu obsługuje pogrubienie ("B")
                         if os.path.exists("logo.png"):
                             pdf.image("logo.png", x=10, y=8, w=35)
                             
-                        pdf.set_font("Inter" if font_ok else "Arial", "B", 16)
+                        pdf.set_font("Arial", "B", 16)
                         pdf.cell(0, 15, "PROCALC - KOSZTORYS SZPACHLOWANIA", ln=True, align='C')
                         pdf.ln(5)
                         pdf.line(10, 35, 200, 35)
                         
                         # PKT 1. PODSUMOWANIE
                         pdf.ln(10)
-                        pdf.set_font("Inter" if font_ok else "Arial", "B", 12)
+                        pdf.set_font("Arial", "B", 12)
                         pdf.set_fill_color(240, 240, 240)
                         pdf.cell(0, 10, " 1. PODSUMOWANIE FINANSOWE", ln=True, fill=True)
-                        pdf.set_font("Inter" if font_ok else "Arial", "", 10)
+                        pdf.set_font("Arial", "", 10)
                         pdf.cell(0, 8, f" Suma calkowita: {round(koszt_m + robocizna)} PLN", ln=True)
                         pdf.cell(0, 8, f" W tym robocizna: {round(robocizna)} PLN | Materialy: {round(koszt_m)} PLN", ln=True)
 
                         # PKT 2. SZCZEGÓLY WYKONANIA
                         pdf.ln(5)
-                        pdf.set_font("Inter" if font_ok else "Arial", "B", 12)
+                        pdf.set_font("Arial", "B", 12)
                         pdf.cell(0, 10, " 2. SZCZEGOLY WYKONANIA", ln=True, fill=True)
-                        pdf.set_font("Inter" if font_ok else "Arial", "", 10)
+                        pdf.set_font("Arial", "", 10)
                         
                         def czysc_tekst(tekst):
                             pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
@@ -981,16 +972,16 @@ elif branza == "Szpachlowanie":
 
                         # PKT 3. LISTA MATERIALOW (TABELA)
                         pdf.ln(5)
-                        pdf.set_font("Inter" if font_ok else "Arial", "B", 12)
+                        pdf.set_font("Arial", "B", 12)
                         pdf.cell(0, 10, " 3. LISTA MATERIALOW (DO ODHACZENIA)", ln=True, fill=True)
                         
                         # Nagłówek Tabeli
-                        pdf.set_font("Inter" if font_ok else "Arial", "B", 10)
+                        pdf.set_font("Arial", "B", 10)
                         pdf.cell(15, 10, " OK", 1, 0, 'C')
                         pdf.cell(135, 10, " Nazwa materialu", 1, 0)
                         pdf.cell(40, 10, " Ilosc", 1, 1, 'C')
                         
-                        pdf.set_font("Inter" if font_ok else "Arial", "", 10)
+                        pdf.set_font("Arial", "", 10)
                         materialy_lista = [
                             (f"Gladz: {czysc_tekst(wybrana_g)}", f"{szt_gladzi} szt."),
                             (f"Grunt: {czysc_tekst(wybrany_grunt)}", f"{szt_gruntu} szt. (5L)"),
@@ -1006,7 +997,7 @@ elif branza == "Szpachlowanie":
                             pdf.cell(40, 10, f" {ilosc}", 1, 1, 'C')
 
                         pdf.ln(10)
-                        pdf.set_font("Inter" if font_ok else "Arial", "I", 8)
+                        pdf.set_font("Arial", "I", 8)
                         pdf.cell(0, 10, f"Wygenerowano: {datetime.now().strftime('%Y-%m-%d %H:%M')} | ProCalc", align='R')
                         
                         pdf_bytes = pdf.output(dest="S")
