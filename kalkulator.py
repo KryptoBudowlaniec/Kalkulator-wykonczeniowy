@@ -62,7 +62,7 @@ if not url or not key:
         url = st.secrets.get("SUPABASE_URL")
         key = st.secrets.get("SUPABASE_KEY")
     except Exception:
-        pass # Ignorujemy błąd braku pliku secrets.toml, żeby nie zepsuć aplikacji
+        pass 
 
 # --- KULOODPORNE CZYSZCZENIE ZNAKÓW ---
 if url: 
