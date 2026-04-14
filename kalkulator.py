@@ -49,9 +49,18 @@ st.markdown(
 # 2. KULOODPORNE POŁĄCZENIE Z SUPABASE
 supabase = None
 
+import os
+
 try:
-    url: str = st.secrets["SUPABASE_URL"]
-    key: str = st.secrets["SUPABASE_KEY"]
+    # Serwer (Render) wymusza bezpośrednie pobranie kluczy, omijając fochy Streamlita
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_KEY")
+    
+    # Zabezpieczenie: Jeśli nie znajdzie ich na Renderze, spróbuje użyć st.secrets
+    if not url or not key:
+        url = st.secrets["SUPABASE_URL"]
+        key = st.secrets["SUPABASE_KEY"]
+        
     supabase: Client = create_client(url, key)
     
     # --- Przywracanie i automatyczne odświeżanie sesji ---
