@@ -64,6 +64,12 @@ if not url or not key:
     except Exception:
         pass # Ignorujemy błąd braku pliku secrets.toml, żeby nie zepsuć aplikacji
 
+# --- KULOODPORNE CZYSZCZENIE ZNAKÓW ---
+if url: 
+    url = url.strip().replace('"', '').replace("'", "")
+if key: 
+    key = key.strip().replace('"', '').replace("'", "")
+    
 # Inicjalizacja połączenia z bazą
 if url and key:
     try:
