@@ -352,58 +352,57 @@ elif branza == "Kontakt":
         """, unsafe_allow_html=True)
 
 elif branza == "Logowanie":
-    # ---------------- EKRAN LOGOWANIA (Tylko dodany zapis maila!) ----------------
     # Wyłączamy flagę, żeby "odblokować" menu
     st.session_state.przekierowanie = False
     
     # 1. SPRAWDZAMY CZY UŻYTKOWNIK JEST JUŻ ZALOGOWANY
     if not st.session_state.zalogowany:
-        # WIDOK DLA NIEZALOGOWANYCH (Formularz)
+        # WIDOK DLA NIEZALOGOWANYCH
         st.markdown("<br><br>", unsafe_allow_html=True)
-        email = st.text_input("Adres e-mail", placeholder="jan.kowalski@budowa.pl")
-        haslo = st.text_input("Hasło", type="password", placeholder="••••••••")
+        st.subheader("Witaj w ProCalc")
+        st.write("Zaloguj się, aby odblokować pakiet PRO, zapisywać projekty i pobierać raporty PDF.")
+        
         st.markdown("<br>", unsafe_allow_html=True)
-            
-        col_auth1, col_auth2 = st.columns(2)
-            
-        with col_auth1:
-            if st.button("ZALOGUJ SIĘ", use_container_width=True):
-                if supabase: 
-                    try:
-                        res = supabase.auth.sign_in_with_password({"email": email, "password": haslo})
-                        st.session_state.zalogowany = True
-                        st.session_state.user_id = res.user.id
-                        st.session_state.user_email = email # <-- TO JEST JEDYNA ZMIANA TUTAJ
-                        st.session_state.pakiet = "PRO"
-                        
-                        # --- Zapisujemy tokeny sesji ---
-                        st.session_state.access_token = res.session.access_token
-                        st.session_state.refresh_token = res.session.refresh_token
-                        
-                        st.rerun() 
-                    except Exception as e:
-                        st.error("Odmowa dostępu: Sprawdź poprawność maila i hasła.")
-                else:
-                    st.error("Błąd: Brak połączenia z chmurą Supabase.")
-
-        with col_auth2:
-            if st.button("REJESTRACJA", use_container_width=True):
-                if supabase: 
-                    try:
-                        res = supabase.auth.sign_up({"email": email, "password": haslo})
-                        st.success("Konto założone pomyślnie! Kliknij teraz 'ZALOGUJ SIĘ'.")
-                    except Exception as e:
-                        st.error(f"Błąd rejestracji: {e}")
-                else:
-                    st.error("Błąd: Brak połączenia z chmurą Supabase.")
+        
+        # PRZYCISK LOGOWANIA PRZEZ GOOGLE
+        if st.button("🔴 ZALOGUJ PRZEZ GOOGLE", use_container_width=True, type="primary"):
+            if supabase:
+                try:
+                    # Wywołujemy logowanie przez Google
+                    # Supabase wygeneruje specjalny link do ekranu wyboru konta Google
+                    res = supabase.auth.sign_in_with_oauth({
+                        "provider": "google",
+                        "options": {
+                            "redirect_to": "https://procalc.pl" 
+                        }
+                    })
                     
+                    # Jeśli link został wygenerowany, przekierowujemy użytkownika
+                    if res.url:
+                        st.markdown(f'<meta http-equiv="refresh" content="0;url={res.url}">', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Wystąpił błąd podczas łączenia z Google: {e}")
+            else:
+                st.error("Błąd: Brak połączenia z chmurą Supabase.")
+        
+        st.caption("Klikając przycisk powyżej, zostaniesz bezpiecznie przekierowany do autoryzacji Google.")
+
     else:
         # 2. WIDOK PO POMYŚLNYM ZALOGOWANIU
         st.markdown("<br><br>", unsafe_allow_html=True)
-        st.success("✅ Jesteś pomyślnie zalogowany!")
-        st.info("Twój aktywny pakiet: **Premium PRO** 💎")
+        st.success(f"✅ Witaj z powrotem! Jesteś zalogowany.")
         
-        st.markdown("<p style='text-align: center; color: #6C757D;'>Możesz teraz przejść do Kalkulatorów, korzystać z zaawansowanych opcji i zapisywać swoje projekty w chmurze.</p>", unsafe_allow_html=True)
+        # Pobieramy e-mail zalogowanego użytkownika (jeśli go jeszcze nie mamy w sesji)
+        if not st.session_state.get('user_email'):
+            try:
+                user_info = supabase.auth.get_user()
+                if user_info and user_info.user:
+                    st.session_state.user_email = user_info.user.email
+            except:
+                pass
+
+        st.info(f"Zalogowano jako: **{st.session_state.get('user_email', 'Użytkownik ProCalc')}**")
+        st.write("Twój aktywny pakiet: **Premium PRO 💎**")
         
         st.markdown("<br>", unsafe_allow_html=True)
         _, col_logout, _ = st.columns([1, 1, 1])
@@ -412,6 +411,7 @@ elif branza == "Logowanie":
                 # Czyścimy dane sesji
                 st.session_state.zalogowany = False
                 st.session_state.pakiet = "Podstawowy"
+                st.session_state.user_email = ""
                 # Wylogowujemy z bazy danych
                 if supabase:
                     supabase.auth.sign_out()
