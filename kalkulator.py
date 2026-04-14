@@ -775,6 +775,13 @@ elif branza == "Szpachlowanie":
         "Atlas GTA (18kg)": {"cena": 70, "waga": 18},
         "Atlas GTA (25kg)": {"cena": 90, "waga": 25}
     }
+
+    # NOWOŚĆ: Baza gipsów startowych
+    baza_gipsow = {
+        "FransPol GS-100 (20kg)": {"cena": 45, "waga": 20},
+        "Nida Start (20kg)": {"cena": 40, "waga": 20},
+        "Knauf Fugenfuller (25kg)": {"cena": 55, "waga": 25}
+    }
     
     baza_grunty_szp = {
         "Atlas Unigrunt (Standard)": 8,        # ok. 40 zł za 5L
@@ -822,7 +829,7 @@ elif branza == "Szpachlowanie":
         
         st.info("💡 **Jak to policzyliśmy?** Przyjęto średnio 3.5 m² ścian na każdy metr podłogi. "
                 f"Obecna stawka ryczałtowa to **{cena_za_m2_fast} zł/m²** (robocizna + materiał) za {l_warstw_fast} warstwy.")
-        st.caption("Aby wybrać konkretny rodzaj gładzi (gotowa/sypka), ustawić własne stawki lub dodać precyzyjnie wymiary pomieszczeń, przejdź do zakładki **Detale PRO**.")
+        st.caption("Aby wybrać konkretny rodzaj gładzi (gotowa/sypka), system z gipsem startowym, lub dodać precyzyjnie wymiary pomieszczeń, przejdź do zakładki **Detale PRO**.")
 
     # ==========================================
     # ZAKŁADKA 2: DETALE PRO
@@ -843,24 +850,41 @@ elif branza == "Szpachlowanie":
             st.subheader("Konfiguracja Wykonania (PRO)")
             
             # --- A. WYBÓR MATERIAŁÓW I STAWEK ---
+            st.markdown("##### System szpachlowania")
+            system_szpachlowania = st.radio(
+                "Wybierz wariant wykonania:",
+                ["Standardowy (tylko gładź finiszowa)", "Mocny start (1 warstwa gipsu na start + gładź finiszowa)"],
+                horizontal=True,
+                help="Opcja 'Mocny start' jest idealna na stare, bardzo nierówne ściany (np. w starych blokach)."
+            )
+
+            st.markdown("##### Wybór produktów")
             col_c1, col_c2 = st.columns(2)
             
             with col_c1:
-                typ_g_pro = st.radio("Rodzaj gładzi:", ["Gotowa (Wiadro)", "Sypka (Worek)"], horizontal=True, key="p_typ")
+                typ_g_pro = st.radio("Rodzaj gładzi finiszowej:", ["Gotowa (Wiadro)", "Sypka (Worek)"], horizontal=True, key="p_typ")
                 if typ_g_pro == "Sypka (Worek)":
-                    wybrana_g = st.selectbox("Wybierz produkt:", list(baza_sypkie.keys()), key="p_syp")
+                    wybrana_g = st.selectbox("Wybierz gładź finiszową:", list(baza_sypkie.keys()), key="p_syp")
                     dane_g = baza_sypkie[wybrana_g]
                     norma_g = 1.2
                 else:
-                    wybrana_g = st.selectbox("Wybierz produkt:", list(baza_gotowe.keys()), key="p_got")
+                    wybrana_g = st.selectbox("Wybierz gładź finiszową:", list(baza_gotowe.keys()), key="p_got")
                     dane_g = baza_gotowe[wybrana_g]
                     norma_g = 1.8
                 
                 wybrany_grunt = st.selectbox("Wybierz Grunt:", list(baza_grunty_szp.keys()), key="p_gru")
 
             with col_c2:
-                l_warstw = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="p_war")
-                stawka_szp = st.number_input("Twoja stawka za m2 (robocizna):", 1, 300, 50, key="p_sta")
+                if system_szpachlowania == "Mocny start (1 warstwa gipsu na start + gładź finiszowa)":
+                    wybrany_gips = st.selectbox("Wybierz gips startowy (1 warstwa):", list(baza_gipsow.keys()), key="p_gips_start")
+                    dane_gips = baza_gipsow[wybrany_gips]
+                    l_warstw = st.slider("Łączna liczba warstw (gips + gładź):", 2, 4, 2, key="p_war")
+                    st.info(f"System: 1x Gips Startowy + {l_warstw - 1}x Gładź Finiszowa")
+                else:
+                    l_warstw = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="p_war")
+                    st.info(f"System: {l_warstw}x Gładź Finiszowa")
+                
+                stawka_szp = st.number_input("Twoja stawka za m2 (robocizna za całość):", 1, 300, 50, key="p_sta")
 
             st.markdown("---")
             
@@ -920,19 +944,36 @@ elif branza == "Szpachlowanie":
             # --- C. WYNIKI (Wykonują się RAZ na samym końcu) ---
             if m2_total > 0:
                 # 1. Obliczenia materiałowe
-                kg_gladzi = m2_total * norma_g * l_warstw
+                szt_gipsu = 0
+                koszt_m_gipsu = 0
+                
+                # Logika dla systemu mocnego startu (Gips)
+                if system_szpachlowania == "Mocny start (1 warstwa gipsu na start + gładź finiszowa)":
+                    zuzycie_gipsu_m2 = 1.6 # 1.6 kg na m2 dla starych bloków
+                    kg_gipsu = m2_total * zuzycie_gipsu_m2
+                    szt_gipsu = int((kg_gipsu / dane_gips["waga"]) + 0.99)
+                    koszt_m_gipsu = szt_gipsu * dane_gips["cena"]
+                    
+                    # Gładź liczymy dla pozostałych warstw
+                    warstwy_gladzi = l_warstw - 1
+                else:
+                    warstwy_gladzi = l_warstw
+
+                # Logika Gładzi
+                kg_gladzi = m2_total * norma_g * warstwy_gladzi
                 szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
+                koszt_m_gladzi = szt_gladzi * dane_g["cena"]
+                
+                # Dodatki
                 szt_gruntu = int(m2_total * 0.2 / 5 + 0.99) # Wyliczamy bańki (5L)
                 szt_krazkow = max(int(podl_total / 10), 5) # 1 krążek na 10m2 podłogi (min. 5 szt.)
                 
-                # Obliczenia kosztów
-                koszt_m_gladzi = szt_gladzi * dane_g["cena"]
                 koszt_m_grunt = szt_gruntu * (baza_grunty_szp[wybrany_grunt] * 5) 
                 koszt_m_dodatki = podl_total * 15 
                 
                 # Sumy końcowe
                 robocizna_total = m2_total * stawka_szp
-                materiały_total = koszt_m_gladzi + koszt_m_grunt + koszt_m_dodatki
+                materiały_total = koszt_m_gladzi + koszt_m_gipsu + koszt_m_grunt + koszt_m_dodatki
                 suma_total = robocizna_total + materiały_total
                 
                 # 2. Wyświetlanie wyników na stronie
@@ -950,7 +991,9 @@ elif branza == "Szpachlowanie":
                 
                 with c_zak1:
                     st.info("**MATERIAŁY GŁÓWNE**")
-                    st.write(f"🔹 **Gładź ({wybrana_g}):** {szt_gladzi} szt.")
+                    if system_szpachlowania == "Mocny start (1 warstwa gipsu na start + gładź finiszowa)":
+                        st.write(f"🔹 **Gips startowy ({wybrany_gips}):** {szt_gipsu} szt.")
+                    st.write(f"🔹 **Gładź finiszowa ({wybrana_g}):** {szt_gladzi} szt.")
                     st.write(f"🔹 **Grunt ({wybrany_grunt}):** {szt_gruntu} baniek (5L)")
                 with c_zak2:
                     st.warning("**MATERIAŁY ZUŻYWALNE**")
@@ -1021,10 +1064,13 @@ elif branza == "Szpachlowanie":
                             for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
                             return tekst.encode('latin-1', 'replace').decode('latin-1')
                             
-                        pdf.cell(0, 8, f"- Gladz: {czysc_tekst(wybrana_g)} ({szt_gladzi} szt.)", ln=True)
+                        pdf.cell(0, 8, f"- System: {czysc_tekst('Mocny Start' if szt_gipsu > 0 else 'Standard')}", ln=True)
+                        if szt_gipsu > 0:
+                            pdf.cell(0, 8, f"- Gips startowy: {czysc_tekst(wybrany_gips)} ({szt_gipsu} szt.)", ln=True)
+                        pdf.cell(0, 8, f"- Gladz finiszowa: {czysc_tekst(wybrana_g)} ({szt_gladzi} szt.)", ln=True)
                         pdf.cell(0, 8, f"- Grunt: {czysc_tekst(wybrany_grunt)} ({szt_gruntu} baniek 5L)", ln=True)
                         pdf.cell(0, 8, f"- Krazki scierne (zyrafa): {szt_krazkow} szt.", ln=True)
-                        pdf.cell(0, 8, f"- Liczba warstw: {l_warstw}", ln=True)
+                        pdf.cell(0, 8, f"- Liczba warstw lacznie: {l_warstw}", ln=True)
                         pdf.cell(0, 8, f"- Calkowita pow. netto: {round(m2_total, 1)} m2", ln=True)
 
                         pdf_bytes = pdf.output(dest="S")
