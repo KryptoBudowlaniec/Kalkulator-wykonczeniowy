@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from supabase import create_client, Client
 
@@ -7,6 +8,7 @@ st.set_page_config(
     page_icon="logo2.png", 
     layout="wide"
 )
+
 # ==========================================
 # BANER COOKIES I PRYWATNOŚCI
 # ==========================================
@@ -33,6 +35,7 @@ if not st.session_state.cookies_accepted:
     
     # Dodajemy delikatną linię oddzielającą baner od reszty aplikacji
     st.markdown("---")
+
 # --- TRICK DLA SMS/WHATSAPP (OPEN GRAPH) ---
 st.markdown(
     f"""
@@ -49,40 +52,45 @@ st.markdown(
 # 2. KULOODPORNE POŁĄCZENIE Z SUPABASE
 supabase = None
 
-import os
+# Pobieranie kluczy z uwzględnieniem bezpiecznego omijania błędów st.secrets
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
 
-try:
-    # Serwer (Render) wymusza bezpośrednie pobranie kluczy, omijając fochy Streamlita
-    url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_KEY")
-    
-    # Zabezpieczenie: Jeśli nie znajdzie ich na Renderze, spróbuje użyć st.secrets
-    if not url or not key:
-        url = st.secrets["SUPABASE_URL"]
-        key = st.secrets["SUPABASE_KEY"]
+# Jeśli brak na Renderze, próbujemy bezpiecznie pobrać ze Streamlit Secrets (lokalnie)
+if not url or not key:
+    try:
+        url = st.secrets.get("SUPABASE_URL")
+        key = st.secrets.get("SUPABASE_KEY")
+    except Exception:
+        pass # Ignorujemy błąd braku pliku secrets.toml, żeby nie zepsuć aplikacji
+
+# Inicjalizacja połączenia z bazą
+if url and key:
+    try:
+        supabase: Client = create_client(url, key)
         
-    supabase: Client = create_client(url, key)
-    
-    # --- Przywracanie i automatyczne odświeżanie sesji ---
-    if "access_token" in st.session_state and "refresh_token" in st.session_state:
-        try:
-            # Próbujemy przywrócić sesję
-            session_data = supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
-            
-            # BARDZO WAŻNE: Jeśli Supabase odświeżyło token, zapisujemy ten nowy do pamięci Streamlita!
-            if session_data and session_data.user:
-                st.session_state.access_token = session_data.session.access_token
-                st.session_state.refresh_token = session_data.session.refresh_token
+        # --- Przywracanie i automatyczne odświeżanie sesji ---
+        if "access_token" in st.session_state and "refresh_token" in st.session_state:
+            try:
+                # Próbujemy przywrócić sesję
+                session_data = supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
                 
-        except Exception as auth_error:
-            # Jeśli token całkowicie wygasł (Already Used), cicho wylogowujemy użytkownika
-            st.session_state.zalogowany = False
-            st.session_state.pop("access_token", None)
-            st.session_state.pop("refresh_token", None)
-            st.session_state.pop("user_id", None)
-            
-except Exception as e:
-    st.error(f"Błąd połączenia z bazą danych: {e}")
+                # BARDZO WAŻNE: Jeśli Supabase odświeżyło token, zapisujemy ten nowy do pamięci Streamlita!
+                if session_data and session_data.user:
+                    st.session_state.access_token = session_data.session.access_token
+                    st.session_state.refresh_token = session_data.session.refresh_token
+                    
+            except Exception as auth_error:
+                # Jeśli token całkowicie wygasł (Already Used), cicho wylogowujemy użytkownika
+                st.session_state.zalogowany = False
+                st.session_state.pop("access_token", None)
+                st.session_state.pop("refresh_token", None)
+                st.session_state.pop("user_id", None)
+                
+    except Exception as e:
+        st.error(f"Błąd połączenia z bazą danych: {e}")
+else:
+    st.error("Błąd konfiguracji: Nie znaleziono kluczy do bazy danych (SUPABASE_URL lub SUPABASE_KEY). Sprawdź ustawienia na Renderze.")
 
 # --- STAN APLIKACJI (INICJALIZACJA) ---
 if 'zalogowany' not in st.session_state:
