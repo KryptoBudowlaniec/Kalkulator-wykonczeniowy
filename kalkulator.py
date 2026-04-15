@@ -110,16 +110,15 @@ if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 
 # =======================================================
-# 🟢 ZAAWANSOWANY WYKRYWACZ POWROTU Z GOOGLE (I TELEFONÓW) 🟢
+# 🟢 ZAAWANSOWANY WYKRYWACZ POWROTU Z GOOGLE (POPRAWIONY) 🟢
 # =======================================================
 import streamlit.components.v1 as components
 
-# 1. Niewidoczny skrypt JS, który ratuje sytuację na telefonach (zamienia # na ?)
+# 1. Niewidoczny skrypt JS zamieniający # na ? po powrocie z Google
 components.html("""
     <script>
         if (window.parent.location.hash.includes("access_token=")) {
             const hash = window.parent.location.hash.substring(1);
-            // Przekierowujemy błyskawicznie na ten sam adres, ale ze znakiem '?'
             window.parent.location.href = window.parent.location.pathname + "?" + hash;
         }
     </script>
@@ -129,26 +128,34 @@ components.html("""
 if supabase:
     query_params = st.query_params
     
-    # Sytuacja A: Przechwytujemy token z naszego skryptu JS wyżej
+    # Sytuacja A: Mamy token w adresie URL po powrocie
     if "access_token" in query_params and "refresh_token" in query_params:
         try:
-            # Wymuszamy na Supabase zalogowanie tymi tokenami
-            supabase.auth.set_session(query_params["access_token"], query_params["refresh_token"])
+            acc_token = query_params.get("access_token")
+            ref_token = query_params.get("refresh_token")
+            
+            # Wymuszamy logowanie w Supabase
+            supabase.auth.set_session(acc_token, ref_token)
             user_res = supabase.auth.get_user()
             
             if user_res and user_res.user:
                 st.session_state.zalogowany = True
                 st.session_state.user_email = user_res.user.email
                 st.session_state.pakiet = "PRO"
+                
+                # 💥 TO BYŁ BRAKUJĄCY ELEMENT 💥
+                # Musimy zapisać tokeny "do plecaka" Streamlita, inaczej przy restarcie je gubi!
+                st.session_state.access_token = acc_token
+                st.session_state.refresh_token = ref_token
             
-            # Czyścimy pasek adresu, żeby był ładny i odświeżamy aplikację
+            # Czyścimy pasek adresu z brzydkich kodów i odświeżamy
             st.query_params.clear()
             st.rerun()
             
-        except Exception:
+        except Exception as e:
             pass
             
-    # Sytuacja B: Jeśli jesteśmy już zalogowani (standardowe sprawdzenie)
+    # Sytuacja B: Standardowe sprawdzanie czy jesteśmy już zalogowani
     else:
         try:
             user_response = supabase.auth.get_user()
