@@ -357,10 +357,11 @@ elif branza == "Logowanie":
         # --- CZYSTY, PROFESJONALNY PRZYCISK GOOGLE ---
         _, col_btn, _ = st.columns([1, 2, 1])
         with col_btn:
-            # Używamy natywnego st.link_button, które działa znacznie lepiej na telefonach i na Renderze
-            # Pamiętaj, że zmienna URL_TEST jest zdefiniowana u góry Twojego pliku!
-            login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
-            st.link_button("🌐 Zaloguj przez Google", login_url, use_container_width=True)
+            # Używamy standardowego st.button, ale z wymuszonym przeładowaniem w tej samej karcie!
+            if st.button("🌐 Zaloguj przez Google", use_container_width=True):
+                login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
+                # Niewidoczny skrypt JS, który natychmiast przenosi GŁÓWNE okno do Google
+                components.html(f'<script>window.parent.location.href = "{login_url}";</script>', height=0)
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.caption("<center>Wszystkie problemy techniczne zostały zażegnane 🚀</center>", unsafe_allow_html=True)
