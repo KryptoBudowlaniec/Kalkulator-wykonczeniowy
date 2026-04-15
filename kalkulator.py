@@ -20,17 +20,8 @@ KEY_TEST = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 
 supabase: Client = None
 try:
-    # Wymuszamy stworzenie klienta z konkretnymi nagłówkami, żeby wyeliminować problem "Invalid API Key"
-    supabase = create_client(
-        URL_TEST, 
-        KEY_TEST,
-        options={
-            "headers": {
-                "apikey": KEY_TEST,
-                "Authorization": f"Bearer {KEY_TEST}"
-            }
-        }
-    )
+    # Zwykłe, czyste wywołanie (bez problematycznego słownika options)
+    supabase = create_client(URL_TEST, KEY_TEST)
 except Exception as e:
     st.error(f"Błąd inicjalizacji Supabase: {e}")
     st.stop()
