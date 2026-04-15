@@ -29,31 +29,75 @@ except Exception as e:
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA)
 # ==========================================
+# ==========================================
+# 3. STAN APLIKACJI (INICJALIZACJA) - MUSI BYĆ PIERWSZA!
+# ==========================================
 if 'zalogowany' not in st.session_state:
     st.session_state.zalogowany = False
 if 'pakiet' not in st.session_state:
     st.session_state.pakiet = "Podstawowy"
-if 'przekierowanie' not in st.session_state:
-    st.session_state.przekierowanie = False
 if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
+if 'access_token' not in st.session_state:
+    st.session_state.access_token = None
+if 'refresh_token' not in st.session_state:
+    st.session_state.refresh_token = None
+if 'przekierowanie' not in st.session_state:
+    st.session_state.przekierowanie = False
 
 # =======================================================
-# 🟢 AUTOMATYCZNY ŁAPACZ SESJI (WERSJA PRODUKCYJNA) 🟢
+# 4. KULOODPORNY ŁAPACZ SESJI (WERSJA OSTATECZNA)
 # =======================================================
 import streamlit.components.v1 as components
-import time
 
-# 1. Niewidoczny robot, który automatycznie robi "kopiuj-wklej" linku w ułamek sekundy
+# Skrypt JS do zamiany # na ? (niezbędny dla iframe Streamlit)
 components.html("""
     <script>
         if (window.parent.location.hash.includes("access_token=")) {
-            // Zamienia # na ? w adresie i przeładowuje stronę w tle, żeby Python złapał tokeny
             const newUrl = window.parent.location.href.replace("#", "?");
             window.parent.location.replace(newUrl);
         }
     </script>
 """, height=0)
+
+if supabase:
+    # 1. Sprawdzamy, czy wróciliśmy z Google (mamy tokeny w URL)
+    q_params = st.query_params
+    acc_token = q_params.get("access_token")
+    ref_token = q_params.get("refresh_token")
+    
+    if acc_token and ref_token:
+        try:
+            # Rejestrujemy sesję w Supabase
+            supabase.auth.set_session(acc_token, ref_token)
+            user_res = supabase.auth.get_user()
+            
+            if user_res and user_res.user:
+                # WPISUJEMY DANE DO PAMIĘCI SESJI
+                st.session_state.zalogowany = True
+                st.session_state.user_email = user_res.user.email
+                st.session_state.pakiet = "PRO"
+                st.session_state.access_token = acc_token
+                st.session_state.refresh_token = ref_token
+                
+                # Czyścimy URL i odświeżamy, by zatwierdzić status PRO
+                st.query_params.clear()
+                st.rerun()
+        except Exception as e:
+            st.error(f"Błąd logowania Google: {e}")
+
+    # 2. Jeśli nie ma tokenów w URL, sprawdź czy mamy je już w pamięci (podtrzymanie sesji)
+    elif st.session_state.access_token:
+        try:
+            supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
+            # Wymuszamy status PRO, skoro mamy token
+            st.session_state.zalogowany = True
+            st.session_state.pakiet = "PRO"
+        except:
+            # Jeśli token wygasł, czyścimy
+            st.session_state.zalogowany = False
+            st.session_state.pakiet = "Podstawowy"
+            st.session_state.access_token = None
 
 # 2. Python łapie podmienione tokeny
 if supabase:
