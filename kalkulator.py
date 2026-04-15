@@ -3,6 +3,7 @@ import math
 import os
 from supabase import create_client, Client
 import time
+import streamlit.components.v1 as components
 
 # 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(
@@ -12,21 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. SPECJALNA PAMIĘĆ DLA SUPABASE (NAPRAWA PKCE)
-# ==========================================
-# Ta klasa pozwala Supabase zapisać tajne kody Google do pamięci Streamlita, 
-# dzięki czemu przetrwają one przeładowanie strony!
-class StreamlitStorage:
-    def get_item(self, key: str):
-        return st.session_state.get(key)
-    def set_item(self, key: str, value: str):
-        st.session_state[key] = value
-    def remove_item(self, key: str):
-        if key in st.session_state:
-            del st.session_state[key]
-
-# ==========================================
-# 3. POŁĄCZENIE Z BAZĄ DANYCH
+# 2. POŁĄCZENIE Z BAZĄ DANYCH
 # ==========================================
 # !!! WKLEJ TUTAJ SWOJE KLUCZE NA SZTYWNO !!!
 URL_TEST = "https://pkfuzakuzobwtpvxoscx.supabase.co"
@@ -35,16 +22,12 @@ KEY_TEST = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 supabase: Client = None
 try:
     supabase = create_client(URL_TEST, KEY_TEST)
-    
-    # 💥 BARDZO WAŻNE: Podmieniamy "zapominalską" pamięć Supabase na naszego pancernego plecaka! 💥
-    supabase.auth._storage = StreamlitStorage()
-    
 except Exception as e:
     st.error(f"Błąd inicjalizacji Supabase: {e}")
     st.stop()
 
 # ==========================================
-# 4. STAN APLIKACJI (INICJALIZACJA)
+# 3. STAN APLIKACJI (INICJALIZACJA)
 # ==========================================
 if 'zalogowany' not in st.session_state:
     st.session_state.zalogowany = False
@@ -56,35 +39,48 @@ if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 
 # =======================================================
-# 🟢 KULOODPORNY WYKRYWACZ POWROTU Z GOOGLE (PKCE CODE) 🟢
+# 🟢 KULOODPORNY WYKRYWACZ POWROTU (BEZ PKCE) 🟢
 # =======================================================
+# Niewidoczny skrypt zamienia # na ? w adresie, żeby Python to zobaczył
+components.html("""
+    <script>
+        if (window.parent.location.hash.includes("access_token=")) {
+            const hash = window.parent.location.hash.substring(1);
+            window.parent.location.href = window.parent.location.pathname + "?" + hash;
+        }
+    </script>
+""", height=0)
+
 if supabase:
-    # Łapiemy kod z adresu URL
+    # Łapiemy bezpośrednie tokeny z adresu
     if hasattr(st, "query_params"):
         q_params = st.query_params
-        code = q_params.get("code")
+        acc_token = q_params.get("access_token")
+        ref_token = q_params.get("refresh_token")
     else:
         q_params = st.experimental_get_query_params()
-        code = q_params.get("code", [None])[0]
+        acc_token = q_params.get("access_token", [None])[0]
+        ref_token = q_params.get("refresh_token", [None])[0]
     
-    # Sytuacja A: Otrzymaliśmy bezpieczny KOD od Google/Supabase
-    if code:
-        st.warning("🔄 Weryfikacja Google... Wymieniam kody bezpieczeństwa.")
+    # Sytuacja A: Łapiemy gotowe tokeny!
+    if acc_token and ref_token:
+        st.warning("🔄 Przetwarzam logowanie... Proszę czekać.")
         try:
-            # Wymiana kodu - TERAZ ZADZIAŁA, BO SUPABASE PAMIĘTA WERYFIKATOR!
-            session_data = supabase.auth.exchange_code_for_session({"auth_code": code})
+            # Ustawiamy sesję od razu za pomocą gotowych tokenów (omijamy wymianę PKCE!)
+            supabase.auth.set_session(acc_token, ref_token)
+            user_res = supabase.auth.get_user()
             
-            if session_data and session_data.user:
+            if user_res and user_res.user:
                 st.session_state.zalogowany = True
-                st.session_state.user_email = session_data.user.email
+                st.session_state.user_email = user_res.user.email
                 st.session_state.pakiet = "PRO"
-                st.session_state.access_token = session_data.session.access_token
-                st.session_state.refresh_token = session_data.session.refresh_token
+                st.session_state.access_token = acc_token
+                st.session_state.refresh_token = ref_token
                 
                 st.success("✅ Logowanie pomyślne! Witaj w pakiecie PRO.")
                 time.sleep(1)
                 
-                # Czyścimy pasek adresu z kodów
+                # Czyścimy pasek adresu z tokenów
                 if hasattr(st, "query_params"):
                     st.query_params.clear()
                 else:
@@ -92,13 +88,12 @@ if supabase:
                 st.rerun()
                 
         except Exception as e:
-            st.error(f"❌ SZCZEGÓŁOWY BŁĄD WYMIANY KODU: {e}")
+            st.error(f"❌ BŁĄD SESJI: {e}")
             st.stop()
             
     # Sytuacja B: Standardowe sprawdzanie aktywnej sesji
     else:
         try:
-            # Jeśli mamy zapisane tokeny w plecaku, używamy ich
             if st.session_state.get("access_token") and st.session_state.get("refresh_token"):
                 supabase.auth.set_session(st.session_state["access_token"], st.session_state["refresh_token"])
             
@@ -110,11 +105,6 @@ if supabase:
         except Exception:
             pass
 
-# ==========================================
-# BANER COOKIES I PRYWATNOŚCI
-# ==========================================
-# (tutaj zostaw całą resztę aplikacji jak była)
-# ==========================================
 # BANER COOKIES I PRYWATNOŚCI
 # ==========================================
 # (i tutaj leci dalej Twój baner cookies i reszta aplikacji)
