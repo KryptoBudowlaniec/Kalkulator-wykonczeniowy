@@ -111,35 +111,36 @@ with col_logo:
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     
+    # INTELIGENTNY WYBÓR DOMYŚLNEJ STRONY
+    # Jeśli użytkownik właśnie się zalogował, menu powinno pokazać "Logowanie"
+    domyslna_strona = "Logowanie" if st.session_state.zalogowany else "Start"
+    
     nawigacja = st.pills(
         "", 
         ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"],
         selection_mode="single",
-        default="Start",
+        default=domyslna_strona, # <-- ZMIANA TUTAJ
         key="main_nav"
     )
     st.markdown('</div>', unsafe_allow_html=True)
-
-# --- LOGIKA PRZEKIEROWANIA (Klucz do naprawy) ---
+# --- LOGIKA NAWIGACJI ---
 if st.session_state.przekierowanie:
     branza = "Logowanie"
 else:
     branza = nawigacja
 
-# --- PODMENU ---
+# --- OBSŁUGA PODMENU KALKULATORY ---
 if nawigacja == "Kalkulatory":
     st.markdown("<br>", unsafe_allow_html=True)
-    sub_nav_col = st.columns([1])[0]
-    with sub_nav_col:
-        branza = st.pills(
-            "Wybierz branżę:", 
-            ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Łazienka", "Podłogi", "Drzwi", "Efekty Dekoracyjne"],
-            selection_mode="single",
-            default="Malowanie",
-            key="sub_nav"
-        )
-else:
-    branza = nawigacja
+    # Wyświetlamy pillsy tylko w sekcji kalkulatorów
+    wybor_kalkulatora = st.pills(
+        "Wybierz branżę:", 
+        ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Łazienka", "Podłogi", "Drzwi", "Efekty Dekoracyjne"],
+        selection_mode="single",
+        default="Malowanie",
+        key="sub_nav"
+    )
+    branza = wybor_kalkulatora
 
 
 # --- STYLE CSS (Twoje, nietknięte!) ---
@@ -385,10 +386,7 @@ elif branza == "Logowanie":
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
     st.session_state.pokoje_pro = []
-                
-# --- INICJALIZACJA STANU ---
-if 'pokoje_pro' not in st.session_state:
-    st.session_state.pokoje_pro = []
+            
 
 
 
