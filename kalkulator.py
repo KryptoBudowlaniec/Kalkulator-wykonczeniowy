@@ -395,20 +395,15 @@ elif branza == "Logowanie":
             # Ponieważ st.markdown z HTML nie obsłuży akcji Pythonowej bezpośrednio, 
             # używamy standardowego przycisku Streamlit, ale z ikonką wewnątrz tekstu:
             if st.button("🌐 Zaloguj przez Google", use_container_width=True):
-                if supabase:
-                    try:
-                        res = supabase.auth.sign_in_with_oauth({
-                            "provider": "google",
-                            "options": {
-                                "redirect_to": "https://procalc.pl" 
-                            }
-                        })
-                        if res.url:
-                            st.markdown(f'<meta http-equiv="refresh" content="0;url={res.url}">', unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(f"Błąd połączenia: {e}")
-                else:
-                    st.error("Brak połączenia z Supabase.")
+                try:
+                    # 💥 TRICK: Budujemy link logowania ręcznie, wymuszając tryb bezpośredni (Implicit Flow)
+                    # Zmienna URL_TEST jest pobierana z początku Twojego pliku
+                    login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
+                    
+                    # Wypuszczamy użytkownika do Google
+                    st.markdown(f'<meta http-equiv="refresh" content="0;url={login_url}">', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Błąd przygotowania logowania: {e}")
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.caption("<center>Twoje dane są chronione przez Google Auth</center>", unsafe_allow_html=True)
