@@ -39,9 +39,12 @@ if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 
 # =======================================================
-# 🟢 KULOODPORNY WYKRYWACZ POWROTU (BEZ PKCE) 🟢
+# 🟢 OSTATECZNY WYKRYWACZ POWROTU (BEZ PKCE) 🟢
 # =======================================================
-# Niewidoczny skrypt zamienia # na ? w adresie, żeby Python to zobaczył
+import streamlit.components.v1 as components
+from urllib.parse import parse_qs, urlparse
+
+# 1. Niewidoczny skrypt JS
 components.html("""
     <script>
         if (window.parent.location.hash.includes("access_token=")) {
@@ -52,21 +55,18 @@ components.html("""
 """, height=0)
 
 if supabase:
-    # Łapiemy bezpośrednie tokeny z adresu
-    if hasattr(st, "query_params"):
-        q_params = st.query_params
-        acc_token = q_params.get("access_token")
-        ref_token = q_params.get("refresh_token")
-    else:
-        q_params = st.experimental_get_query_params()
-        acc_token = q_params.get("access_token", [None])[0]
-        ref_token = q_params.get("refresh_token", [None])[0]
+    # Używamy st.query_params z nowego API Streamlit
+    query_params = st.query_params
+    
+    # Łapiemy bezpośrednie tokeny
+    acc_token = query_params.get("access_token")
+    ref_token = query_params.get("refresh_token")
     
     # Sytuacja A: Łapiemy gotowe tokeny!
     if acc_token and ref_token:
         st.warning("🔄 Przetwarzam logowanie... Proszę czekać.")
         try:
-            # Ustawiamy sesję od razu za pomocą gotowych tokenów (omijamy wymianę PKCE!)
+            # Ustawiamy sesję od razu za pomocą gotowych tokenów
             supabase.auth.set_session(acc_token, ref_token)
             user_res = supabase.auth.get_user()
             
@@ -80,11 +80,8 @@ if supabase:
                 st.success("✅ Logowanie pomyślne! Witaj w pakiecie PRO.")
                 time.sleep(1)
                 
-                # Czyścimy pasek adresu z tokenów
-                if hasattr(st, "query_params"):
-                    st.query_params.clear()
-                else:
-                    st.experimental_set_query_params()
+                # Czyścimy pasek adresu
+                st.query_params.clear()
                 st.rerun()
                 
         except Exception as e:
