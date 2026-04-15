@@ -1,8 +1,10 @@
-import os
 import streamlit as st
+import math
+import os
 from supabase import create_client, Client
+import time
 
-# 1. KONFIGURACJA GŁÓWNA (Musi być absolutnie pierwsza!)
+# 1. KONFIGURACJA GŁÓWNA
 st.set_page_config(
     page_title="ProCalc | Profesjonalny kalkulator remontowy",
     page_icon="logo2.png", 
@@ -10,110 +12,46 @@ st.set_page_config(
 )
 
 # ==========================================
-# BANER COOKIES I PRYWATNOŚCI
+# 2. OSTATECZNE, TWARDE POŁĄCZENIE Z SUPABASE
 # ==========================================
-# Inicjalizacja stanu dla ciasteczek
-if "cookies_accepted" not in st.session_state:
-    st.session_state.cookies_accepted = False
+# !!! WKLEJ TUTAJ SWOJE KLUCZE NA SZTYWNO !!!
+URL_TEST = "https://pkfuzakuzobwtpvxoscx.supabase.co"
+KEY_TEST = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZnV6YWt1em9id3Rwdnhvc2N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NTQ4NzEsImV4cCI6MjA5MTUzMDg3MX0.qffEeyUoti95qA7rVq6TRPkwOIweQSEfdIen-ZBzDPU"
 
-# Wyświetlanie banera, dopóki użytkownik nie kliknie akceptacji
-if not st.session_state.cookies_accepted:
-    # Tworzymy ładny, wyróżniony kontener na samej górze
-    with st.container(border=True):
-        st.markdown("### 🍪 Szanujemy Twoją prywatność")
-        st.write("""
-        Serwis ProCalc wykorzystuje pliki cookies niezbędne do prawidłowego działania aplikacji (utrzymywanie sesji logowania, zapisywanie projektów) oraz w celach analitycznych. 
-        Dalsze korzystanie z serwisu oznacza akceptację naszej [Polityki Prywatności](#).
-        """)
-        
-        # Przycisk akceptacji
-        col_btn, col_puste = st.columns([1, 3])
-        with col_btn:
-            if st.button("Zrozumiałem i Akceptuję ✅", type="primary", use_container_width=True, key="btn_cookies"):
-                st.session_state.cookies_accepted = True
-                st.rerun() # Przeładowuje stronę, aby baner natychmiast zniknął
-    
-    # Dodajemy delikatną linię oddzielającą baner od reszty aplikacji
-    st.markdown("---")
+supabase: Client = None
+try:
+    # Wymuszamy stworzenie klienta z konkretnymi nagłówkami, żeby wyeliminować problem "Invalid API Key"
+    supabase = create_client(
+        URL_TEST, 
+        KEY_TEST,
+        options={
+            "headers": {
+                "apikey": KEY_TEST,
+                "Authorization": f"Bearer {KEY_TEST}"
+            }
+        }
+    )
+except Exception as e:
+    st.error(f"Błąd inicjalizacji Supabase: {e}")
+    st.stop()
 
-# --- TRICK DLA SMS/WHATSAPP (OPEN GRAPH) ---
-st.markdown(
-    f"""
-    <head>
-        <meta property="og:title" content="ProCalc | Profesjonalny Kalkulator Inwestora" />
-        <meta property="og:description" content="Kompleksowe kosztorysy, analiza ROI i listy zakupów w jednym miejscu." />
-        <meta property="og:image" content="https://raw.githubusercontent.com/KryptoBudowlaniec/Kalkulator-wykonczeniowy/main/logo.png" />
-        <meta property="og:type" content="website" />
-    </head>
-    """,
-    unsafe_allow_html=True
-) 
-
-# 2. KULOODPORNE POŁĄCZENIE Z SUPABASE
-supabase = None
-
-# Pobieranie kluczy z uwzględnieniem bezpiecznego omijania błędów st.secrets
-url = os.environ.get("SUPABASE_URL")
-key = os.environ.get("SUPABASE_KEY")
-
-# Jeśli brak na Renderze, próbujemy bezpiecznie pobrać ze Streamlit Secrets (lokalnie)
-if not url or not key:
-    try:
-        url = st.secrets.get("SUPABASE_URL")
-        key = st.secrets.get("SUPABASE_KEY")
-    except Exception:
-        pass 
-
-# --- KULOODPORNE CZYSZCZENIE ZNAKÓW ---
-if url: 
-    url = url.strip().replace('"', '').replace("'", "")
-if key: 
-    key = key.strip().replace('"', '').replace("'", "")
-    
-# Inicjalizacja połączenia z bazą
-if url and key:
-    try:
-        supabase: Client = create_client(url, key)
-        
-        # --- Przywracanie i automatyczne odświeżanie sesji ---
-        if "access_token" in st.session_state and "refresh_token" in st.session_state:
-            try:
-                # Próbujemy przywrócić sesję
-                session_data = supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
-                
-                # BARDZO WAŻNE: Jeśli Supabase odświeżyło token, zapisujemy ten nowy do pamięci Streamlita!
-                if session_data and session_data.user:
-                    st.session_state.access_token = session_data.session.access_token
-                    st.session_state.refresh_token = session_data.session.refresh_token
-                    
-            except Exception as auth_error:
-                # Jeśli token całkowicie wygasł (Already Used), cicho wylogowujemy użytkownika
-                st.session_state.zalogowany = False
-                st.session_state.pop("access_token", None)
-                st.session_state.pop("refresh_token", None)
-                st.session_state.pop("user_id", None)
-                
-    except Exception as e:
-        st.error(f"Błąd połączenia z bazą danych: {e}")
-else:
-    st.error("Błąd konfiguracji: Nie znaleziono kluczy do bazy danych (SUPABASE_URL lub SUPABASE_KEY). Sprawdź ustawienia na Renderze.")
-
-# --- STAN APLIKACJI (INICJALIZACJA) ---
+# ==========================================
+# 3. STAN APLIKACJI (INICJALIZACJA)
+# ==========================================
 if 'zalogowany' not in st.session_state:
     st.session_state.zalogowany = False
 if 'pakiet' not in st.session_state:
     st.session_state.pakiet = "Podstawowy"
 if 'przekierowanie' not in st.session_state:
     st.session_state.przekierowanie = False
-# --- NOWE: Zapamiętujemy maila ---
 if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 
 # =======================================================
-# 🟢 ZAAWANSOWANY WYKRYWACZ POWROTU (OBSŁUGA PKCE CODE) 🟢
+# 🟢 KULOODPORNY WYKRYWACZ POWROTU Z GOOGLE (PKCE) 🟢
 # =======================================================
 if supabase:
-    # Pobieranie parametrów z paska adresu URL
+    # Łapiemy kod z adresu URL
     if hasattr(st, "query_params"):
         q_params = st.query_params
         code = q_params.get("code")
@@ -123,35 +61,40 @@ if supabase:
     
     # Sytuacja A: Otrzymaliśmy bezpieczny KOD od Google/Supabase
     if code:
-        st.warning("🔄 Autoryzacja Google... Wymieniam kod na sesję PRO.")
+        st.warning("🔄 Przetwarzanie kluczy Google... Proszę czekać.")
         try:
-            # Wymieniamy jednorazowy kod na pełne logowanie
+            # Próbujemy wymienić kod na sesję
             session_data = supabase.auth.exchange_code_for_session({"auth_code": code})
             
             if session_data and session_data.user:
-                # Zapisujemy dane użytkownika do sesji Streamlita
                 st.session_state.zalogowany = True
                 st.session_state.user_email = session_data.user.email
                 st.session_state.pakiet = "PRO"
                 st.session_state.access_token = session_data.session.access_token
                 st.session_state.refresh_token = session_data.session.refresh_token
                 
-                # Czyścimy pasek adresu, żeby zniknął długi kod
+                st.success("✅ Logowanie pomyślne!")
+                time.sleep(1)
+                
+                # Czyścimy pasek adresu
                 if hasattr(st, "query_params"):
                     st.query_params.clear()
                 else:
                     st.experimental_set_query_params()
-                
-                # Odświeżamy stronę, żeby załadować widok dla zalogowanych
                 st.rerun()
                 
         except Exception as e:
-            st.error(f"❌ BŁĄD WYMIANY KODU: {e}")
+            # Ten błąd zobaczymy, jeśli wymiana znów się wywali
+            st.error(f"❌ SZCZEGÓŁOWY BŁĄD WYMIANY KODU: {e}")
             st.stop()
             
-    # Sytuacja B: Standardowe sprawdzanie (gdy odświeżysz stronę będąc już zalogowanym)
+    # Sytuacja B: Standardowe sprawdzanie aktywnej sesji
     else:
         try:
+            # Jeśli mamy zapisane tokeny w sesji, używamy ich
+            if st.session_state.get("access_token") and st.session_state.get("refresh_token"):
+                supabase.auth.set_session(st.session_state["access_token"], st.session_state["refresh_token"])
+            
             user_response = supabase.auth.get_user()
             if user_response and user_response.user:
                 st.session_state.zalogowany = True
@@ -159,6 +102,11 @@ if supabase:
                 st.session_state.pakiet = "PRO"
         except Exception:
             pass
+
+# ==========================================
+# BANER COOKIES I PRYWATNOŚCI
+# ==========================================
+# (i tutaj leci dalej Twój baner cookies i reszta aplikacji)
 # =======================================================
 
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
