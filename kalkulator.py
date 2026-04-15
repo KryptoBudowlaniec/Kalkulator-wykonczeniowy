@@ -15,7 +15,6 @@ st.set_page_config(
 # ==========================================
 # 2. POŁĄCZENIE Z BAZĄ DANYCH
 # ==========================================
-# !!! WKLEJ TUTAJ SWOJE KLUCZE NA SZTYWNO !!!
 URL_TEST = "https://pkfuzakuzobwtpvxoscx.supabase.co"
 KEY_TEST = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZnV6YWt1em9id3Rwdnhvc2N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NTQ4NzEsImV4cCI6MjA5MTUzMDg3MX0.qffEeyUoti95qA7rVq6TRPkwOIweQSEfdIen-ZBzDPU"
 
@@ -26,9 +25,6 @@ except Exception as e:
     st.error(f"Błąd inicjalizacji Supabase: {e}")
     st.stop()
 
-# ==========================================
-# 3. STAN APLIKACJI (INICJALIZACJA)
-# ==========================================
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA) - MUSI BYĆ PIERWSZA!
 # ==========================================
@@ -48,8 +44,6 @@ if 'przekierowanie' not in st.session_state:
 # =======================================================
 # 4. KULOODPORNY ŁAPACZ SESJI (WERSJA OSTATECZNA)
 # =======================================================
-import streamlit.components.v1 as components
-
 # Skrypt JS do zamiany # na ? (niezbędny dla iframe Streamlit)
 components.html("""
     <script>
@@ -62,9 +56,14 @@ components.html("""
 
 if supabase:
     # 1. Sprawdzamy, czy wróciliśmy z Google (mamy tokeny w URL)
-    q_params = st.query_params
-    acc_token = q_params.get("access_token")
-    ref_token = q_params.get("refresh_token")
+    if hasattr(st, "query_params"):
+        q_params = st.query_params
+        acc_token = q_params.get("access_token")
+        ref_token = q_params.get("refresh_token")
+    else:
+        q_params = st.experimental_get_query_params()
+        acc_token = q_params.get("access_token", [None])[0]
+        ref_token = q_params.get("refresh_token", [None])[0]
     
     if acc_token and ref_token:
         try:
@@ -81,7 +80,10 @@ if supabase:
                 st.session_state.refresh_token = ref_token
                 
                 # Czyścimy URL i odświeżamy, by zatwierdzić status PRO
-                st.query_params.clear()
+                if hasattr(st, "query_params"):
+                    st.query_params.clear()
+                else:
+                    st.experimental_set_query_params()
                 st.rerun()
         except Exception as e:
             st.error(f"Błąd logowania Google: {e}")
@@ -98,50 +100,6 @@ if supabase:
             st.session_state.zalogowany = False
             st.session_state.pakiet = "Podstawowy"
             st.session_state.access_token = None
-
-# 2. Python łapie podmienione tokeny
-if supabase:
-    if hasattr(st, "query_params"):
-        acc_token = st.query_params.get("access_token")
-        ref_token = st.query_params.get("refresh_token")
-    else:
-        acc_token = st.experimental_get_query_params().get("access_token", [None])[0]
-        ref_token = st.experimental_get_query_params().get("refresh_token", [None])[0]
-    
-    # Sytuacja A: Skrypt wrzucił tokeny! Logujemy automatycznie!
-    if acc_token and ref_token:
-        st.warning("🔄 Trwa logowanie... Proszę czekać.")
-        try:
-            supabase.auth.set_session(acc_token, ref_token)
-            user_res = supabase.auth.get_user()
-            
-            if user_res and user_res.user:
-                st.session_state.zalogowany = True
-                st.session_state.user_email = user_res.user.email
-                st.session_state.pakiet = "PRO"
-                
-                st.success("✅ Logowanie pomyślne! Witaj w pakiecie PRO.")
-                time.sleep(1)
-                
-                # Czyścimy pasek, żeby nikt nie widział tokenów
-                if hasattr(st, "query_params"):
-                    st.query_params.clear()
-                else:
-                    st.experimental_set_query_params()
-                st.rerun()
-        except Exception:
-            pass
-            
-    # Sytuacja B: Zwykłe utrzymanie sesji dla już zalogowanych
-    else:
-        try:
-            user_response = supabase.auth.get_user()
-            if user_response and user_response.user:
-                st.session_state.zalogowany = True
-                st.session_state.user_email = user_response.user.email
-                st.session_state.pakiet = "PRO"
-        except Exception:
-            pass
 # =======================================================
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
