@@ -39,28 +39,66 @@ if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 
 # =======================================================
-# 🟢 UTRZYMANIE SESJI (BEZ BŁĘDNYCH SKRYPTÓW) 🟢
+# 🟢 AUTOMATYCZNY ŁAPACZ SESJI (WERSJA PRODUKCYJNA) 🟢
 # =======================================================
+import streamlit.components.v1 as components
+import time
+
+# 1. Niewidoczny robot, który automatycznie robi "kopiuj-wklej" linku w ułamek sekundy
+components.html("""
+    <script>
+        if (window.parent.location.hash.includes("access_token=")) {
+            // Zamienia # na ? w adresie i przeładowuje stronę w tle, żeby Python złapał tokeny
+            const newUrl = window.parent.location.href.replace("#", "?");
+            window.parent.location.replace(newUrl);
+        }
+    </script>
+""", height=0)
+
+# 2. Python łapie podmienione tokeny
 if supabase:
-    try:
-        # Jeśli mamy zapisane tokeny w plecaku, odnawiamy je
-        if st.session_state.get("access_token") and st.session_state.get("refresh_token"):
-            supabase.auth.set_session(st.session_state["access_token"], st.session_state["refresh_token"])
-        
-        # Sprawdzamy, czy weryfikacja przeszła
-        user_response = supabase.auth.get_user()
-        if user_response and user_response.user:
-            st.session_state.zalogowany = True
-            st.session_state.user_email = user_response.user.email
-            st.session_state.pakiet = "PRO"
-    except Exception:
-        pass
-
-# BANER COOKIES I PRYWATNOŚCI
-# ==========================================
-# (i tutaj leci dalej Twój baner cookies i reszta aplikacji)
+    if hasattr(st, "query_params"):
+        acc_token = st.query_params.get("access_token")
+        ref_token = st.query_params.get("refresh_token")
+    else:
+        acc_token = st.experimental_get_query_params().get("access_token", [None])[0]
+        ref_token = st.experimental_get_query_params().get("refresh_token", [None])[0]
+    
+    # Sytuacja A: Skrypt wrzucił tokeny! Logujemy automatycznie!
+    if acc_token and ref_token:
+        st.warning("🔄 Trwa logowanie... Proszę czekać.")
+        try:
+            supabase.auth.set_session(acc_token, ref_token)
+            user_res = supabase.auth.get_user()
+            
+            if user_res and user_res.user:
+                st.session_state.zalogowany = True
+                st.session_state.user_email = user_res.user.email
+                st.session_state.pakiet = "PRO"
+                
+                st.success("✅ Logowanie pomyślne! Witaj w pakiecie PRO.")
+                time.sleep(1)
+                
+                # Czyścimy pasek, żeby nikt nie widział tokenów
+                if hasattr(st, "query_params"):
+                    st.query_params.clear()
+                else:
+                    st.experimental_set_query_params()
+                st.rerun()
+        except Exception:
+            pass
+            
+    # Sytuacja B: Zwykłe utrzymanie sesji dla już zalogowanych
+    else:
+        try:
+            user_response = supabase.auth.get_user()
+            if user_response and user_response.user:
+                st.session_state.zalogowany = True
+                st.session_state.user_email = user_response.user.email
+                st.session_state.pakiet = "PRO"
+        except Exception:
+            pass
 # =======================================================
-
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
 
@@ -313,53 +351,16 @@ elif branza == "Logowanie":
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # PRZYCISK GOOGLE
+        # --- CZYSTY, PROFESJONALNY PRZYCISK GOOGLE ---
         _, col_btn, _ = st.columns([1, 2, 1])
         with col_btn:
-            if st.button("🌐 Zaloguj przez Google", use_container_width=True):
-                try:
-                    # Twój adres URL_TEST musi być wpisany na samej górze pliku!
-                    login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
-                    st.markdown(f'<meta http-equiv="refresh" content="0;url={login_url}">', unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"Błąd przygotowania logowania: {e}")
+            # Używamy natywnego st.link_button, które działa znacznie lepiej na telefonach i na Renderze
+            # Pamiętaj, że zmienna URL_TEST jest zdefiniowana u góry Twojego pliku!
+            login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
+            st.link_button("🌐 Zaloguj przez Google", login_url, use_container_width=True)
         
-        # --- BEZPIECZNA BRAMA AWARYJNA ---
-        st.markdown("<br><hr>", unsafe_allow_html=True)
-        st.caption("Google Cię zweryfikowało, ale nadal nie masz dostępu?")
-        
-        # Okienko, do którego wystarczy skopiować długi link z paska adresu
-        pasted_url = st.text_input("🔗 Wklej tutaj cały link z paska adresu (ten z napisem access_token):", type="password")
-        
-        if pasted_url and "access_token" in pasted_url:
-            with st.spinner("Otwieranie wrót do pakietu PRO..."):
-                try:
-                    import urllib.parse
-                    # Magiczne wypakowanie tokenów z wklejonego tekstu
-                    fragment = pasted_url.split("#")[1] if "#" in pasted_url else pasted_url
-                    parsed_params = urllib.parse.parse_qs(fragment)
-                    
-                    if "access_token" in parsed_params and "refresh_token" in parsed_params:
-                        acc_token = parsed_params["access_token"][0]
-                        ref_token = parsed_params["refresh_token"][0]
-                        
-                        # Wpuszczamy Cię do bazy!
-                        supabase.auth.set_session(acc_token, ref_token)
-                        user_res = supabase.auth.get_user()
-                        
-                        if user_res and user_res.user:
-                            # Zapisujemy status na twardo w pamięci Streamlit
-                            st.session_state.zalogowany = True
-                            st.session_state.user_email = user_res.user.email
-                            st.session_state.pakiet = "PRO"
-                            st.session_state.access_token = acc_token
-                            st.session_state.refresh_token = ref_token
-                            
-                            st.success("✅ Kody zatwierdzone! Odświeżam stronę...")
-                            time.sleep(1)
-                            st.rerun()
-                except Exception as e:
-                    st.error("Nie udało się rozpoznać kodu. Upewnij się, że skopiowałeś cały link z góry ekranu.")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.caption("<center>Wszystkie problemy techniczne zostały zażegnane 🚀</center>", unsafe_allow_html=True)
 
     else:
         # WIDOK PO POMYŚLNYM ZALOGOWANIU
