@@ -110,52 +110,46 @@ if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 
 # =======================================================
-# 🟢 ZAAWANSOWANY WYKRYWACZ POWROTU Z GOOGLE (POPRAWIONY) 🟢
+# 🟢 ZAAWANSOWANY WYKRYWACZ POWROTU (OBSŁUGA PKCE CODE) 🟢
 # =======================================================
-import streamlit.components.v1 as components
-
-# 1. Niewidoczny skrypt JS zamieniający # na ? po powrocie z Google
-components.html("""
-    <script>
-        if (window.parent.location.hash.includes("access_token=")) {
-            const hash = window.parent.location.hash.substring(1);
-            window.parent.location.href = window.parent.location.pathname + "?" + hash;
-        }
-    </script>
-""", height=0)
-
-# 2. Logika łapania tokenów przez Pythona
 if supabase:
-    query_params = st.query_params
+    # Pobieranie parametrów z paska adresu URL
+    if hasattr(st, "query_params"):
+        q_params = st.query_params
+        code = q_params.get("code")
+    else:
+        q_params = st.experimental_get_query_params()
+        code = q_params.get("code", [None])[0]
     
-    # Sytuacja A: Mamy token w adresie URL po powrocie
-    if "access_token" in query_params and "refresh_token" in query_params:
+    # Sytuacja A: Otrzymaliśmy bezpieczny KOD od Google/Supabase
+    if code:
+        st.warning("🔄 Autoryzacja Google... Wymieniam kod na sesję PRO.")
         try:
-            acc_token = query_params.get("access_token")
-            ref_token = query_params.get("refresh_token")
+            # Wymieniamy jednorazowy kod na pełne logowanie
+            session_data = supabase.auth.exchange_code_for_session({"auth_code": code})
             
-            # Wymuszamy logowanie w Supabase
-            supabase.auth.set_session(acc_token, ref_token)
-            user_res = supabase.auth.get_user()
-            
-            if user_res and user_res.user:
+            if session_data and session_data.user:
+                # Zapisujemy dane użytkownika do sesji Streamlita
                 st.session_state.zalogowany = True
-                st.session_state.user_email = user_res.user.email
+                st.session_state.user_email = session_data.user.email
                 st.session_state.pakiet = "PRO"
+                st.session_state.access_token = session_data.session.access_token
+                st.session_state.refresh_token = session_data.session.refresh_token
                 
-                # 💥 TO BYŁ BRAKUJĄCY ELEMENT 💥
-                # Musimy zapisać tokeny "do plecaka" Streamlita, inaczej przy restarcie je gubi!
-                st.session_state.access_token = acc_token
-                st.session_state.refresh_token = ref_token
-            
-            # Czyścimy pasek adresu z brzydkich kodów i odświeżamy
-            st.query_params.clear()
-            st.rerun()
-            
+                # Czyścimy pasek adresu, żeby zniknął długi kod
+                if hasattr(st, "query_params"):
+                    st.query_params.clear()
+                else:
+                    st.experimental_set_query_params()
+                
+                # Odświeżamy stronę, żeby załadować widok dla zalogowanych
+                st.rerun()
+                
         except Exception as e:
-            pass
+            st.error(f"❌ BŁĄD WYMIANY KODU: {e}")
+            st.stop()
             
-    # Sytuacja B: Standardowe sprawdzanie czy jesteśmy już zalogowani
+    # Sytuacja B: Standardowe sprawdzanie (gdy odświeżysz stronę będąc już zalogowanym)
     else:
         try:
             user_response = supabase.auth.get_user()
