@@ -110,18 +110,54 @@ if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 
 # =======================================================
-# 🟢 WYKRYWACZ POWROTU Z GOOGLE (Wklej to dokładnie tutaj) 🟢
+# 🟢 ZAAWANSOWANY WYKRYWACZ POWROTU Z GOOGLE (I TELEFONÓW) 🟢
 # =======================================================
+import streamlit.components.v1 as components
+
+# 1. Niewidoczny skrypt JS, który ratuje sytuację na telefonach (zamienia # na ?)
+components.html("""
+    <script>
+        if (window.parent.location.hash.includes("access_token=")) {
+            const hash = window.parent.location.hash.substring(1);
+            // Przekierowujemy błyskawicznie na ten sam adres, ale ze znakiem '?'
+            window.parent.location.href = window.parent.location.pathname + "?" + hash;
+        }
+    </script>
+""", height=0)
+
+# 2. Logika łapania tokenów przez Pythona
 if supabase:
-    try:
-        user_response = supabase.auth.get_user()
-        if user_response and user_response.user:
-            # Nadpisujemy stan aplikacji na "zalogowany"
-            st.session_state.zalogowany = True
-            st.session_state.user_email = user_response.user.email
-            st.session_state.pakiet = "PRO"
-    except Exception:
-        pass
+    query_params = st.query_params
+    
+    # Sytuacja A: Przechwytujemy token z naszego skryptu JS wyżej
+    if "access_token" in query_params and "refresh_token" in query_params:
+        try:
+            # Wymuszamy na Supabase zalogowanie tymi tokenami
+            supabase.auth.set_session(query_params["access_token"], query_params["refresh_token"])
+            user_res = supabase.auth.get_user()
+            
+            if user_res and user_res.user:
+                st.session_state.zalogowany = True
+                st.session_state.user_email = user_res.user.email
+                st.session_state.pakiet = "PRO"
+            
+            # Czyścimy pasek adresu, żeby był ładny i odświeżamy aplikację
+            st.query_params.clear()
+            st.rerun()
+            
+        except Exception:
+            pass
+            
+    # Sytuacja B: Jeśli jesteśmy już zalogowani (standardowe sprawdzenie)
+    else:
+        try:
+            user_response = supabase.auth.get_user()
+            if user_response and user_response.user:
+                st.session_state.zalogowany = True
+                st.session_state.user_email = user_response.user.email
+                st.session_state.pakiet = "PRO"
+        except Exception:
+            pass
 # =======================================================
 
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
