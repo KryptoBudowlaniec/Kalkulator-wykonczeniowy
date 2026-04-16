@@ -810,15 +810,18 @@ elif branza == "Szpachlowanie":
         c_fast1, c_fast2 = st.columns(2)
         with c_fast1:
             m2_podl_fast = st.number_input("Podaj metraż podłogi mieszkania (m2):", min_value=1.0, value=50.0, key="fast_podl")
+            czy_gk_fast = st.checkbox("Powierzchnie z płyt GK? (Mniejsze zużycie)", key="fast_gk")
         with c_fast2:
-            l_warstw_fast = st.slider("Liczba warstw gładzi:", 1, 3, 2, key="fast_warstwy")
+            l_warstw_fast = st.slider("Liczba warstw gładzi:", 1, 3, 1 if czy_gk_fast else 2, key="fast_warstwy")
         
         m2_scian_fast = m2_podl_fast * 3.5
-        cena_za_m2_fast = 20 + (l_warstw_fast * 30)
+        # Redukcja ceny materiału/robocizny przy GK (mniej szlifowania/nakładania)
+        mnoznik_gk = 0.7 if czy_gk_fast else 1.0
+        cena_za_m2_fast = (20 + (l_warstw_fast * 30)) * mnoznik_gk
         szacunek_total = m2_scian_fast * cena_za_m2_fast 
         
         st.success(f"### Szacowany koszt całkowity: **ok. {round(szacunek_total):,} PLN**".replace(",", " "))
-        st.info(f"Przyjęto {m2_scian_fast} m² ścian. Stawka: {cena_za_m2_fast} zł/m².")
+        st.info(f"Przyjęto {m2_scian_fast} m² ścian. Stawka: {round(cena_za_m2_fast, 2)} zł/m².")
 
     # ==========================================
     # ZAKŁADKA 2: DETALE PRO
@@ -828,7 +831,17 @@ elif branza == "Szpachlowanie":
             st.error("🔒 Sekcja dostępna dla pakietu PRO")
         else:
             st.subheader("Konfiguracja Wykonania (PRO)")
-            system_szpachlowania = st.radio("Wariant wykonania:", ["Standardowy", "Mocny start (Gips + Gładź)"], horizontal=True)
+            
+            c_konf1, c_konf2 = st.columns(2)
+            with c_konf1:
+                system_szpachlowania = st.radio("Wariant wykonania:", ["Standardowy", "Mocny start (Gips + Gładź)"], horizontal=True)
+                czy_gk = st.checkbox("Podłoże z płyt GK? (Zmniejsza zużycie gładzi o 40%)")
+            
+            with c_konf2:
+                uzyj_flizeliny = st.checkbox("Zbrojenie narożników/łączeń flizeliną?")
+                if uzyj_flizeliny:
+                    metry_flizeliny_in = st.number_input("Ile mb narożników/łączeń do uzbrojenia?", min_value=0.0, value=20.0)
+                    st.caption("Przelicznik: 2mb taśmy na 1mb narożnika")
 
             col_c1, col_c2 = st.columns(2)
             with col_c1:
@@ -843,8 +856,9 @@ elif branza == "Szpachlowanie":
                 wybrany_grunt = st.selectbox("Wybierz Grunt:", list(baza_grunty_szp.keys()))
 
             with col_c2:
-                l_warstw = st.slider("Łączna liczba warstw:", 1, 4, 2)
-                stawka_szp = st.number_input("Stawka robocizny (zł/m2):", 1, 300, 50)
+                # Jeśli GK, sugerujemy 1 warstwę, jeśli tynk - 2.
+                l_warstw = st.slider("Łączna liczba warstw:", 1, 4, 1 if czy_gk else 2)
+                stawka_szp = st.number_input("Stawka robocizny (zł/m2):", 1, 300, 45 if czy_gk else 55)
 
             st.markdown("---")
             st.subheader("Metraż prac")
@@ -883,8 +897,10 @@ elif branza == "Szpachlowanie":
             # WYNIKI I LISTA ZAKUPÓW
             # ==========================================
             if m2_total > 0:
-                norma_g = 1.2
+                # LOGIKA ZUŻYCIA
+                norma_g = 0.7 if czy_gk else 1.2 # Mniejsze zużycie na równej płycie GK
                 szt_gipsu = 0
+                
                 if system_szpachlowania == "Mocny start (Gips + Gładź)":
                     kg_gips = m2_total * 1.2 
                     szt_gipsu = int((kg_gips / dane_gips["waga"]) + 0.99)
@@ -896,9 +912,18 @@ elif branza == "Szpachlowanie":
                 szt_gladzi = int((kg_gladzi / dane_g["waga"]) + 0.99)
                 
                 szt_gruntu = int(m2_total * 0.2 / 5 + 0.99)
-                szt_krazkow = int((m2_total / 40) + 0.99) 
-                koszt_m_dodatki = m2_total * 4.5
+                szt_krazkow = int((m2_total / 50) + 0.99) if czy_gk else int((m2_total / 35) + 0.99)
+                
+                # Logika Flizeliny (2m na 1mb)
+                mb_flizeliny = 0
+                szt_flizeliny = 0
+                koszt_flizeliny = 0
+                if uzyj_flizeliny:
+                    mb_flizeliny = metry_flizeliny_in * 2
+                    szt_flizeliny = int((mb_flizeliny / 25) + 0.99) # Rolki 25m
+                    koszt_flizeliny = szt_flizeliny * 15 # ok 15 zł za rolkę
 
+                koszt_m_dodatki = (m2_total * 3.5) + koszt_flizeliny
                 koszt_m = (szt_gladzi * dane_g["cena"]) + (szt_gipsu * (dane_gips["cena"] if szt_gipsu > 0 else 0)) + (szt_gruntu * baza_grunty_szp[wybrany_grunt] * 5) + koszt_m_dodatki
                 robocizna = m2_total * stawka_szp
                 
@@ -909,7 +934,6 @@ elif branza == "Szpachlowanie":
                 res1.metric("Twoja Robocizna", f"{round(robocizna)} PLN")
                 res2.metric("Materiały", f"{round(koszt_m)} PLN")
                 
-                # --- PRZYWRÓCONA LISTA ZAKUPÓW NA STRONIE ---
                 st.markdown("---")
                 st.subheader("Lista Zakupów")
                 c_zak1, c_zak2 = st.columns(2)
@@ -920,10 +944,12 @@ elif branza == "Szpachlowanie":
                         st.write(f"🔹 **Gips startowy ({wybrany_gips}):** {szt_gipsu} szt.")
                     st.write(f"🔹 **Gładź finiszowa ({wybrana_g}):** {szt_gladzi} szt.")
                     st.write(f"🔹 **Grunt ({wybrany_grunt}):** {szt_gruntu} baniek (5L)")
+                    if uzyj_flizeliny:
+                        st.write(f"🔹 **Flizelina (Zbrojenie):** {szt_flizeliny} rolek (25m)")
                 with c_zak2:
                     st.warning("**MATERIAŁY ZUŻYWALNE**")
-                    st.write(f"🔸 **Krążki ścierne P180:** {szt_krazkow} szt.")
-                    st.write(f"🔸 **Akcesoria (narożniki, taśmy, folie itp.):** szacunkowo ~{round(koszt_m_dodatki)} zł")
+                    st.write(f"🔸 **Krążki ścierne P180/220:** {szt_krazkow} szt.")
+                    st.write(f"🔸 **Narożniki, folie, akcesoria:** ~{round(koszt_m_dodatki - koszt_flizeliny)} zł")
 
                 # ==========================================
                 # PDF GENERATION
@@ -945,7 +971,6 @@ elif branza == "Szpachlowanie":
                         pdf = FPDF()
                         pdf.add_page()
                         
-                        # Używamy wbudowanego fontu Arial, który bez problemu obsługuje pogrubienie ("B")
                         if os.path.exists("logo.png"):
                             pdf.image("logo.png", x=10, y=8, w=35)
                             
@@ -954,7 +979,6 @@ elif branza == "Szpachlowanie":
                         pdf.ln(5)
                         pdf.line(10, 35, 200, 35)
                         
-                        # PKT 1. PODSUMOWANIE
                         pdf.ln(10)
                         pdf.set_font("Arial", "B", 12)
                         pdf.set_fill_color(240, 240, 240)
@@ -963,7 +987,6 @@ elif branza == "Szpachlowanie":
                         pdf.cell(0, 8, f" Suma calkowita: {round(koszt_m + robocizna)} PLN", ln=True)
                         pdf.cell(0, 8, f" W tym robocizna: {round(robocizna)} PLN | Materialy: {round(koszt_m)} PLN", ln=True)
 
-                        # PKT 2. SZCZEGÓLY WYKONANIA
                         pdf.ln(5)
                         pdf.set_font("Arial", "B", 12)
                         pdf.cell(0, 10, " 2. SZCZEGOLY WYKONANIA", ln=True, fill=True)
@@ -976,14 +999,14 @@ elif branza == "Szpachlowanie":
 
                         pdf.cell(0, 8, f" - Calkowity metraz prac: {round(m2_total, 1)} m2", ln=True)
                         pdf.cell(0, 8, f" - Liczba warstw: {l_warstw}", ln=True)
-                        pdf.cell(0, 8, f" - System: {czysc_tekst(system_szpachlowania)}", ln=True)
+                        pdf.cell(0, 8, f" - Podloze: {'Plyty GK' if czy_gk else 'Tynki/Beton'}", ln=True)
+                        if uzyj_flizeliny:
+                            pdf.cell(0, 8, f" - Zbrojenie flizelina: TAK ({mb_flizeliny} mb tasmy)", ln=True)
 
-                        # PKT 3. LISTA MATERIALOW (TABELA)
                         pdf.ln(5)
                         pdf.set_font("Arial", "B", 12)
-                        pdf.cell(0, 10, " 3. LISTA MATERIALOW (DO ODHACZENIA)", ln=True, fill=True)
+                        pdf.cell(0, 10, " 3. LISTA MATERIALOW", ln=True, fill=True)
                         
-                        # Nagłówek Tabeli
                         pdf.set_font("Arial", "B", 10)
                         pdf.cell(15, 10, " OK", 1, 0, 'C')
                         pdf.cell(135, 10, " Nazwa materialu", 1, 0)
@@ -993,11 +1016,12 @@ elif branza == "Szpachlowanie":
                         materialy_lista = [
                             (f"Gladz: {czysc_tekst(wybrana_g)}", f"{szt_gladzi} szt."),
                             (f"Grunt: {czysc_tekst(wybrany_grunt)}", f"{szt_gruntu} szt. (5L)"),
-                            (f"Krazki scierne P180", f"{szt_krazkow} szt."),
-                            (f"Akcesoria (narozniki, tasmy itp.)", f"~ {round(koszt_m_dodatki)} PLN")
+                            (f"Krazki scierne P180/220", f"{szt_krazkow} szt."),
                         ]
                         if szt_gipsu > 0:
                             materialy_lista.insert(0, (f"Gips start: {czysc_tekst(wybrany_gips)}", f"{szt_gipsu} szt."))
+                        if uzyj_flizeliny:
+                            materialy_lista.append(("Flizelina / Tasma zbrojaca", f"{szt_flizeliny} rolek"))
                         
                         for mat, ilosc in materialy_lista:
                             pdf.cell(15, 10, "[   ]", 1, 0, 'C')
