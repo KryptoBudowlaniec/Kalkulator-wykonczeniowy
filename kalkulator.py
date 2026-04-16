@@ -252,7 +252,7 @@ if branza == "Start":
         <div class="custom-card" style="border-top: 5px solid #00D395; justify-content: center;">
             <h1 style="color: #00D395; font-size: 50px; margin: 0; line-height: 1;">1</h1>
             <h3 style="color: #1E1E1E; margin: 15px 0 10px 0; font-weight: 800;">Wybierz zakres prac</h3>
-            <p class="card-text">Wybierz kalkulator z menu bocznego (np. Szpachlowanie, Łazienka) i określ parametry startowe oraz rodzaj podłoża.</p>
+            <p class="card-text">Wybierz dowolny kalkulator z menu głównego (np. Szpachlowanie, Łazienka) i określ parametry startowe oraz rodzaj podłoża.</p>
         </div>
         """, unsafe_allow_html=True)
         
