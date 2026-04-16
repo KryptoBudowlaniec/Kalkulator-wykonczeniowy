@@ -204,32 +204,29 @@ st.markdown("""
     .faq-card-answer, .faq-card-answer-blue { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
     .faq-card-answer-blue { background: #0E172B; }
     div.stButton > button { background-color: #00D395 !important; color: white !important; font-weight: 800 !important; height: 60px !important; border-radius: 15px !important; width: 100%; }
-    /* CAŁKOWITE WYGASZENIE STRZAŁKI - WERSJA PRO */
+    /* CAŁKOWITE WYCOFANIE STRZAŁEK (CHEVRON) Z KAŻDEGO EXPANDERA */
     [data-testid="stExpander"] svg, 
-    [data-testid="stExpander"] [data-testid="stIcon"],
-    [data-testid="stExpander"] .st-emotion-cache-1p1n4ay, /* Selektor specyficzny dla niektórych wersji */
-    [data-testid="stExpander"] summary span svg {
+    [data-testid="stExpander"] i,
+    [data-testid="stExpander"] span[data-testid="stIcon"],
+    [data-testid="stExpander"] summary::after,
+    [data-testid="stExpander"] summary svg {
         display: none !important;
         visibility: hidden !important;
         width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
 
-    /* Rozciągnięcie napisu na całą szerokość i dodanie łapki */
+    /* Wyprostowanie paska po usunięciu ikony */
     [data-testid="stExpander"] summary {
-        padding-right: 5px !important;
+        list-style: none !important; /* Usuwa domyślne strzałki przeglądarki */
         display: flex !important;
-        justify-content: flex-start !important;
     }
 
-    [data-testid="stExpander"] summary:hover {
-        cursor: pointer !important;
-        background-color: #f8f9fa !important;
-        border-radius: 8px;
-    }
-
-    /* Usunięcie marginesu, który zostaje po ikonie */
-    [data-testid="stExpander"] summary div[data-turnstone-id] {
-        margin-right: 0 !important;
+    /* Usunięcie kropki/strzałki w przeglądarkach Safari/Chrome */
+    [data-testid="stExpander"] summary::-webkit-details-marker {
+        display: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
