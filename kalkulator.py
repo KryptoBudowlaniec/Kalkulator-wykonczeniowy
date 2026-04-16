@@ -204,21 +204,32 @@ st.markdown("""
     .faq-card-answer, .faq-card-answer-blue { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
     .faq-card-answer-blue { background: #0E172B; }
     div.stButton > button { background-color: #00D395 !important; color: white !important; font-weight: 800 !important; height: 60px !important; border-radius: 15px !important; width: 100%; }
-    /* Całkowite ukrycie strzałki w expanderze */
-    [data-testid="stExpander"] svg {
+    /* CAŁKOWITE WYGASZENIE STRZAŁKI - WERSJA PRO */
+    [data-testid="stExpander"] svg, 
+    [data-testid="stExpander"] [data-testid="stIcon"],
+    [data-testid="stExpander"] .st-emotion-cache-1p1n4ay, /* Selektor specyficzny dla niektórych wersji */
+    [data-testid="stExpander"] summary span svg {
         display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
     }
 
-    /* Usunięcie zbędnych odstępów po ukryciu strzałki */
+    /* Rozciągnięcie napisu na całą szerokość i dodanie łapki */
     [data-testid="stExpander"] summary {
-        padding-right: 10px !important;
+        padding-right: 5px !important;
+        display: flex !important;
+        justify-content: flex-start !important;
     }
-    
-    /* Opcjonalnie: zmiana kursora na rączkę, żeby było wiadomo, że można kliknąć */
+
     [data-testid="stExpander"] summary:hover {
         cursor: pointer !important;
-        background-color: #f8f9fa !important; /* Delikatne podświetlenie przy najechaniu */
+        background-color: #f8f9fa !important;
         border-radius: 8px;
+    }
+
+    /* Usunięcie marginesu, który zostaje po ikonie */
+    [data-testid="stExpander"] summary div[data-turnstone-id] {
+        margin-right: 0 !important;
     }
 </style>
 """, unsafe_allow_html=True)
