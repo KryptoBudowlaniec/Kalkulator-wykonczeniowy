@@ -894,16 +894,17 @@ elif branza == "Szpachlowanie":
                         st.rerun()
                 m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
 
-            # ==========================================
+# ==========================================
             # WYNIKI I LISTA ZAKUPÓW
             # ==========================================
             if m2_total > 0:
-                # LOGIKA ZUŻYCIA
-                norma_g = 0.7 if czy_gk else 1.2 # Mniejsze zużycie na równej płycie GK
+                # LOGIKA ZUŻYCIA (Zaktualizowana: 0.5 kg dla szpachlowania łączeń GK)
+                norma_g = 0.5 if czy_gk else 1.2 
                 szt_gipsu = 0
                 
                 if system_szpachlowania == "Mocny start (Gips + Gładź)":
-                    kg_gips = m2_total * 1.2 
+                    # Mniej gipsu startowego na płytach GK (tylko na łączenia/wkręty)
+                    kg_gips = m2_total * 0.8 if czy_gk else m2_total * 1.2 
                     szt_gipsu = int((kg_gips / dane_gips["waga"]) + 0.99)
                     warstwy_finisz = l_warstw - 1
                 else:
