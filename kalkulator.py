@@ -241,7 +241,7 @@ if branza == "Start":
         st.markdown("<div style='text-align: center; width: 100%; margin-top: 15px;'><p style='font-size: 15px; color: #6c757d; font-weight: 600;'>✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.</p></div>", unsafe_allow_html=True)
 
     # ==========================================
-    # SEKCJA: JAK TO DZIAŁA (KOLOROWE KAFELKI)
+    # SEKCJA: JAK TO DZIAŁA (KOLOROWE KAFELKI - KULOODPORNE)
     # ==========================================
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Jak to działa? (3 proste kroki)</h2><br>", unsafe_allow_html=True)
     
@@ -249,28 +249,28 @@ if branza == "Start":
     
     with col_krok1:
         st.markdown("""
-        <div class="custom-card" style="background-color: #00D395 !important; border: none !important; color: white !important; justify-content: center; box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.2) !important;">
-            <h1 style="color: white !important; font-size: 60px; margin: 0; line-height: 1; opacity: 0.5;">1</h1>
-            <h3 style="color: white !important; margin: 10px 0; font-weight: 800; text-transform: uppercase;">Wybierz zakres</h3>
-            <p style="color: white !important; font-size: 14px; line-height: 1.4; margin: 0;">Wybierz kalkulator z menu (np. Szpachlowanie, łazienka) i określ parametry startowe oraz rodzaj podłoża.</p>
+        <div style="background: linear-gradient(135deg, #00D395, #00A876); border-radius: 15px; padding: 30px; text-align: center; color: white; box-shadow: 0 10px 20px rgba(0, 211, 149, 0.2); min-height: 260px; display: flex; flex-direction: column; justify-content: center;">
+            <h1 style="color: rgba(255, 255, 255, 0.4); font-size: 70px; margin: 0; line-height: 1;">1</h1>
+            <h3 style="color: white; margin: 15px 0 10px 0; font-weight: 800; text-transform: uppercase;">Wybierz zakres</h3>
+            <p style="color: white; font-size: 15px; line-height: 1.5; margin: 0;">Wybierz kalkulator z menu (np. Szpachlowanie) i określ parametry startowe oraz rodzaj podłoża.</p>
         </div>
         """, unsafe_allow_html=True)
         
     with col_krok2:
         st.markdown("""
-        <div class="custom-card" style="background-color: #0E172B !important; border: none !important; color: white !important; justify-content: center; box-shadow: 0px 10px 20px rgba(14, 23, 43, 0.2) !important;">
-            <h1 style="color: white !important; font-size: 60px; margin: 0; line-height: 1; opacity: 0.5;">2</h1>
-            <h3 style="color: white !important; margin: 10px 0; font-weight: 800; text-transform: uppercase;">Wpisz wymiary</h3>
-            <p style="color: white !important; font-size: 14px; line-height: 1.4; margin: 0;">Podaj metraż podłogi lub dodaj konkretne pomieszczenia. Wybierz materiały z naszej bazy.</p>
+        <div style="background: linear-gradient(135deg, #0E172B, #1A2540); border-radius: 15px; padding: 30px; text-align: center; color: white; box-shadow: 0 10px 20px rgba(14, 23, 43, 0.2); min-height: 260px; display: flex; flex-direction: column; justify-content: center;">
+            <h1 style="color: rgba(255, 255, 255, 0.2); font-size: 70px; margin: 0; line-height: 1;">2</h1>
+            <h3 style="color: white; margin: 15px 0 10px 0; font-weight: 800; text-transform: uppercase;">Wpisz wymiary</h3>
+            <p style="color: white; font-size: 15px; line-height: 1.5; margin: 0;">Podaj metraż podłogi lub dodaj konkretne pomieszczenia. Wybierz materiały z naszej bazy.</p>
         </div>
         """, unsafe_allow_html=True)
         
     with col_krok3:
         st.markdown("""
-        <div class="custom-card" style="background-color: #00D395 !important; border: none !important; color: white !important; justify-content: center; box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.2) !important;">
-            <h1 style="color: white !important; font-size: 60px; margin: 0; line-height: 1; opacity: 0.5;">3</h1>
-            <h3 style="color: white !important; margin: 10px 0; font-weight: 800; text-transform: uppercase;">Gotowe!</h3>
-            <p style="color: white !important; font-size: 14px; line-height: 1.4; margin: 0;">Odbierz kosztorys z wyliczoną robocizną i wygeneruj listę zakupów PDF co do jednego worka.</p>
+        <div style="background: linear-gradient(135deg, #00D395, #00A876); border-radius: 15px; padding: 30px; text-align: center; color: white; box-shadow: 0 10px 20px rgba(0, 211, 149, 0.2); min-height: 260px; display: flex; flex-direction: column; justify-content: center;">
+            <h1 style="color: rgba(255, 255, 255, 0.4); font-size: 70px; margin: 0; line-height: 1;">3</h1>
+            <h3 style="color: white; margin: 15px 0 10px 0; font-weight: 800; text-transform: uppercase;">Gotowe!</h3>
+            <p style="color: white; font-size: 15px; line-height: 1.5; margin: 0;">Odbierz kosztorys z wyliczoną robocizną i wygeneruj listę zakupów PDF co do jednego worka.</p>
         </div>
         """, unsafe_allow_html=True)
         
