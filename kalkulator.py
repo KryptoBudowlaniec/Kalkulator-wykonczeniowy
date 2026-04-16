@@ -84,7 +84,7 @@ if 'przekierowanie' not in st.session_state:
     st.session_state.przekierowanie = False
 
 # =======================================================
-# 4. KULOODPORNY ŁAPACZ SESJI (WERSJA Z PRIORYTETEM)
+# 4. KULOODPORNY ŁAPACZ SESJI (BEZ WYLOGOWYWANIA)
 # =======================================================
 st.components.v1.html("""
     <script>
@@ -96,41 +96,43 @@ st.components.v1.html("""
     </script>
 """, height=0)
 
-if supabase:
+# Jeśli mamy tokeny w URL (Właśnie wracamy z Google)
+try:
+    q = st.query_params
+    acc_token = q.get("access_token")
+    ref_token = q.get("refresh_token")
+except:
+    q = st.experimental_get_query_params()
+    acc_token = q.get("access_token", [None])[0]
+    ref_token = q.get("refresh_token", [None])[0]
+
+# SYTUACJA A: Logowanie z Google
+if acc_token and ref_token:
     try:
-        q = st.query_params
-        acc_token = q.get("access_token")
-        ref_token = q.get("refresh_token")
-    except:
-        q = st.experimental_get_query_params()
-        acc_token = q.get("access_token", [None])[0]
-        ref_token = q.get("refresh_token", [None])[0]
-    
-    if acc_token and ref_token:
-        try:
+        if supabase:
             supabase.auth.set_session(acc_token, ref_token)
             user_res = supabase.auth.get_user()
-            
             if user_res and user_res.user:
-                st.session_state.zalogowany = True
                 st.session_state.user_email = user_res.user.email
-                st.session_state.pakiet = "PRO"
-                st.session_state.access_token = acc_token
-                st.session_state.refresh_token = ref_token
                 
-                st.query_params.clear()
-                st.success("Autoryzacja udana! Zaraz zobaczysz swój panel PRO...")
-                time.sleep(1)
-                st.rerun()
-                st.stop()
-        except Exception:
-            pass
-
-# 2. PODTRZYMANIE SESJI (Bez obciążania serwera na każdym kliknięciu!)
-    elif st.session_state.get("access_token"):
-        # Skoro mamy token w pamięci, ufamy mu. Nie zrywamy połączenia!
+        # Zapisujemy twardo w pamięci!
         st.session_state.zalogowany = True
         st.session_state.pakiet = "PRO"
+        
+        st.query_params.clear()
+        st.success("Autoryzacja udana! Wczytuję panel PRO...")
+        time.sleep(1)
+        st.rerun()
+        st.stop()
+    except Exception:
+        pass
+
+# SYTUACJA B: PODTRZYMANIE SESJI (Kluczowa zmiana!)
+# Jeśli pamięć Streamlita wie, że jesteś zalogowany, NIE PYTAMY BAZY przy każdej zmianie zakładki.
+elif st.session_state.get("zalogowany") == True:
+    st.session_state.pakiet = "PRO"
+
+# =======================================================
 
 
 # =======================================================
