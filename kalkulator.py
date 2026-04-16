@@ -241,7 +241,7 @@ if branza == "Start":
         st.markdown("<div style='text-align: center; width: 100%; margin-top: 15px;'><p style='font-size: 15px; color: #6c757d; font-weight: 600;'>✅ Rejestracja zajmie Ci 30 sekund. Nie wymaga podpięcia karty płatniczej.</p></div>", unsafe_allow_html=True)
 
     # ==========================================
-    # SEKCJA: JAK TO DZIAŁA (3 KROKI)
+    # SEKCJA: JAK TO DZIAŁA (KOLOROWE KAFELKI)
     # ==========================================
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Jak to działa? (3 proste kroki)</h2><br>", unsafe_allow_html=True)
     
@@ -249,28 +249,28 @@ if branza == "Start":
     
     with col_krok1:
         st.markdown("""
-        <div class="custom-card" style="border-top: 5px solid #00D395; justify-content: center;">
-            <h1 style="color: #00D395; font-size: 50px; margin: 0; line-height: 1;">1</h1>
-            <h3 style="color: #1E1E1E; margin: 15px 0 10px 0; font-weight: 800;">Wybierz zakres prac</h3>
-            <p class="card-text">Wybierz dowolny kalkulator z menu głównego (np. Szpachlowanie, Łazienka) i określ parametry startowe oraz rodzaj podłoża.</p>
+        <div class="custom-card" style="background-color: #00D395 !important; border: none !important; color: white !important; justify-content: center; box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.2) !important;">
+            <h1 style="color: white !important; font-size: 60px; margin: 0; line-height: 1; opacity: 0.5;">1</h1>
+            <h3 style="color: white !important; margin: 10px 0; font-weight: 800; text-transform: uppercase;">Wybierz zakres</h3>
+            <p style="color: white !important; font-size: 14px; line-height: 1.4; margin: 0;">Wybierz kalkulator z menu (np. Szpachlowanie, łazienka) i określ parametry startowe oraz rodzaj podłoża.</p>
         </div>
         """, unsafe_allow_html=True)
         
     with col_krok2:
         st.markdown("""
-        <div class="custom-card" style="border-top: 5px solid #0E172B; justify-content: center;">
-            <h1 style="color: #0E172B; font-size: 50px; margin: 0; line-height: 1;">2</h1>
-            <h3 style="color: #1E1E1E; margin: 15px 0 10px 0; font-weight: 800;">Wpisz wymiary</h3>
-            <p class="card-text">Podaj ogólny metraż podłogi lub dodaj konkretne pomieszczenia. Wybierz preferowane materiały z naszej bazy.</p>
+        <div class="custom-card" style="background-color: #0E172B !important; border: none !important; color: white !important; justify-content: center; box-shadow: 0px 10px 20px rgba(14, 23, 43, 0.2) !important;">
+            <h1 style="color: white !important; font-size: 60px; margin: 0; line-height: 1; opacity: 0.5;">2</h1>
+            <h3 style="color: white !important; margin: 10px 0; font-weight: 800; text-transform: uppercase;">Wpisz wymiary</h3>
+            <p style="color: white !important; font-size: 14px; line-height: 1.4; margin: 0;">Podaj metraż podłogi lub dodaj konkretne pomieszczenia. Wybierz materiały z naszej bazy.</p>
         </div>
         """, unsafe_allow_html=True)
         
     with col_krok3:
         st.markdown("""
-        <div class="custom-card" style="border-top: 5px solid #00D395; justify-content: center;">
-            <h1 style="color: #00D395; font-size: 50px; margin: 0; line-height: 1;">3</h1>
-            <h3 style="color: #1E1E1E; margin: 15px 0 10px 0; font-weight: 800;">Gotowe!</h3>
-            <p class="card-text">Odbierz precyzyjny kosztorys z wyliczoną robocizną i wygeneruj listę zakupów PDF (co do jednego worka!).</p>
+        <div class="custom-card" style="background-color: #00D395 !important; border: none !important; color: white !important; justify-content: center; box-shadow: 0px 10px 20px rgba(0, 211, 149, 0.2) !important;">
+            <h1 style="color: white !important; font-size: 60px; margin: 0; line-height: 1; opacity: 0.5;">3</h1>
+            <h3 style="color: white !important; margin: 10px 0; font-weight: 800; text-transform: uppercase;">Gotowe!</h3>
+            <p style="color: white !important; font-size: 14px; line-height: 1.4; margin: 0;">Odbierz kosztorys z wyliczoną robocizną i wygeneruj listę zakupów PDF co do jednego worka.</p>
         </div>
         """, unsafe_allow_html=True)
         
