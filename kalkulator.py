@@ -344,7 +344,7 @@ if branza == "Start":
 
         st.markdown("---")
 
-    # ==========================================
+# ==========================================
     # SEKCJA: OPINIE (SOCIAL PROOF)
     # ==========================================
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Co mówią fachowcy?</h2><br>", unsafe_allow_html=True)
@@ -352,53 +352,58 @@ if branza == "Start":
     col_op1, col_op2, col_op3 = st.columns(3)
     
     with col_op1:
-        st.markdown("""
-        <div style="background-color: white; border-radius: 15px; padding: 25px; border-left: 5px solid #00D395; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 220px; display: flex; flex-direction: column;">
-            <div style="color: #F5B041; font-size: 20px; margin-bottom: 10px;">⭐⭐⭐⭐⭐</div>
-            <p style="font-style: italic; color: #555; font-size: 14px; flex-grow: 1;">"Koniec z liczeniem worków gładzi na brudnym kartonie. ProCalc na telefonie robi mi listę do hurtowni w 2 minuty. Klient widzi PDF-a i od razu wie, za co płaci. Pełna profeska."</p>
-            <div style="margin-top: 15px;">
-                <strong style="color: #1E1E1E; display: block;">Marcin</strong>
-                <span style="color: #777; font-size: 12px;">Właściciel ekipy wykończeniowej</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            """
+<div style="background-color: white; border-radius: 15px; padding: 25px; border-left: 5px solid #00D395; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 220px; display: flex; flex-direction: column;">
+    <div style="color: #F5B041; font-size: 20px; margin-bottom: 10px;">⭐⭐⭐⭐⭐</div>
+    <p style="font-style: italic; color: #555; font-size: 14px; flex-grow: 1;">"Koniec z liczeniem worków gładzi na brudnym kartonie. ProCalc na telefonie robi mi listę do hurtowni w 2 minuty. Klient widzi PDF-a i od razu wie, za co płaci. Pełna profeska."</p>
+    <div style="margin-top: 15px;">
+        <strong style="color: #1E1E1E; display: block;">Marcin</strong>
+        <span style="color: #777; font-size: 12px;">Właściciel ekipy wykończeniowej</span>
+    </div>
+</div>
+            """, unsafe_allow_html=True)
         
     with col_op2:
-        st.markdown("""
-        <div style="background-color: white; border-radius: 15px; padding: 25px; border-left: 5px solid #0E172B; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 220px; display: flex; flex-direction: column;">
-            <div style="color: #F5B041; font-size: 20px; margin-bottom: 10px;">⭐⭐⭐⭐⭐</div>
-            <p style="font-style: italic; color: #555; font-size: 14px; flex-grow: 1;">"Przelicznik flizeliny uratował mi tyłek przy ostatnim zleceniu z płytami GK. Zawsze kupowałem za dużo albo mi brakowało. Tu wpisuję metry narożników i mam wynik rolek."</p>
-            <div style="margin-top: 15px;">
-                <strong style="color: #1E1E1E; display: block;">Kamil</strong>
-                <span style="color: #777; font-size: 12px;">Majster (Zabudowy GK)</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            """
+<div style="background-color: white; border-radius: 15px; padding: 25px; border-left: 5px solid #0E172B; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 220px; display: flex; flex-direction: column;">
+    <div style="color: #F5B041; font-size: 20px; margin-bottom: 10px;">⭐⭐⭐⭐⭐</div>
+    <p style="font-style: italic; color: #555; font-size: 14px; flex-grow: 1;">"Przelicznik flizeliny uratował mi tyłek przy ostatnim zleceniu z płytami GK. Zawsze kupowałem za dużo albo mi brakowało. Tu wpisuję metry narożników i mam wynik rolek."</p>
+    <div style="margin-top: 15px;">
+        <strong style="color: #1E1E1E; display: block;">Kamil</strong>
+        <span style="color: #777; font-size: 12px;">Majster (Zabudowy GK)</span>
+    </div>
+</div>
+            """, unsafe_allow_html=True)
 
     with col_op3:
-        st.markdown("""
-        <div style="background-color: white; border-radius: 15px; padding: 25px; border-left: 5px solid #00D395; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 220px; display: flex; flex-direction: column;">
-            <div style="color: #F5B041; font-size: 20px; margin-bottom: 10px;">⭐⭐⭐⭐⭐</div>
-            <p style="font-style: italic; color: #555; font-size: 14px; flex-grow: 1;">"Robię flippy i ten kalkulator z kosztorysem materiałowym to dla mnie gamechanger. Wiem, jaki mam budżet na remont mieszkania, zanim w ogóle pojadę do notariusza."</p>
-            <div style="margin-top: 15px;">
-                <strong style="color: #1E1E1E; display: block;">Piotr</strong>
-                <span style="color: #777; font-size: 12px;">Inwestor / Flipper</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            """
+<div style="background-color: white; border-radius: 15px; padding: 25px; border-left: 5px solid #00D395; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 220px; display: flex; flex-direction: column;">
+    <div style="color: #F5B041; font-size: 20px; margin-bottom: 10px;">⭐⭐⭐⭐⭐</div>
+    <p style="font-style: italic; color: #555; font-size: 14px; flex-grow: 1;">"Robię flippy i ten kalkulator z kosztorysem materiałowym to dla mnie gamechanger. Wiem, jaki mam budżet na remont mieszkania, zanim w ogóle pojadę do notariusza."</p>
+    <div style="margin-top: 15px;">
+        <strong style="color: #1E1E1E; display: block;">Piotr</strong>
+        <span style="color: #777; font-size: 12px;">Inwestor / Flipper</span>
+    </div>
+</div>
+            """, unsafe_allow_html=True)
         
     st.markdown("<br><br>", unsafe_allow_html=True)
         
     st.header("Plan Rozwoju Aplikacji (Roadmap)")
-        col_dev1, col_dev2 = st.columns(2)
-            with col_dev1:
-                st.markdown("#### W TRAKCIE (Koncept/Dev)")
-                st.info("**Live Progress (CRM)**\n\nInteraktywna checklista etapów prac.")
-                st.info("**Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy.")
-            with col_dev2:
-                st.markdown("#### DO ZROBIENIA (Plany)")
-                st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk.")
-                st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
+    col_dev1, col_dev2 = st.columns(2)
+    
+    with col_dev1:
+        st.markdown("#### W TRAKCIE (Koncept/Dev)")
+        st.info("**Live Progress (CRM)**\n\nInteraktywna checklista etapów prac.")
+        st.info("**Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy.")
+        
+    with col_dev2:
+        st.markdown("#### DO ZROBIENIA (Plany)")
+        st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk.")
+        st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
 
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
