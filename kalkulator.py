@@ -391,14 +391,14 @@ if branza == "Start":
         
     st.header("Plan Rozwoju Aplikacji (Roadmap)")
         col_dev1, col_dev2 = st.columns(2)
-        with col_dev1:
-            st.markdown("#### W TRAKCIE (Koncept/Dev)")
-            st.info("**Live Progress (CRM)**\n\nInteraktywna checklista etapów prac.")
-            st.info("**Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy.")
-        with col_dev2:
-            st.markdown("#### DO ZROBIENIA (Plany)")
-            st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk.")
-            st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
+            with col_dev1:
+                st.markdown("#### W TRAKCIE (Koncept/Dev)")
+                st.info("**Live Progress (CRM)**\n\nInteraktywna checklista etapów prac.")
+                st.info("**Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy.")
+            with col_dev2:
+                st.markdown("#### DO ZROBIENIA (Plany)")
+                st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk.")
+                st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
 
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
