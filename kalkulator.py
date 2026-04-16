@@ -823,7 +823,10 @@ elif branza == "Szpachlowanie":
     # ZAKŁADKA 2: DETALE PRO
     # ==========================================
     with tab_s2:
-        if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
+        # Pancerne sprawdzenie uprawnień
+        ma_dostep = st.session_state.get("zalogowany", False) and st.session_state.get("pakiet") == "PRO"
+        
+        if not ma_dostep:
             st.error("🔒 Sekcja dostępna dla pakietu PRO")
         else:
             st.subheader("Konfiguracja Wykonania (PRO)")
@@ -1041,7 +1044,7 @@ elif branza == "Szpachlowanie":
                     except Exception as e:
                         st.error(f"Błąd PDF: {e}")
 
-# --- SEKCJA: PODŁOGI ---
+
 # --- SEKCJA: PODŁOGI ---
 elif branza == "Podłogi":
     st.header("Kalkulator Podłóg: Panele, Deska i Płytki")
