@@ -3071,15 +3071,39 @@ def create_pdf_link(file_path, link_name):
 link_reg = create_pdf_link("Regulamin_ProCalc_v1.pdf", "Regulamin serwisu")
 link_rodo = create_pdf_link("Polityka_Prywatnosci_ProCalc_v2.pdf", "Polityka prywatności (RODO)")
 
-# Wyświetlenie stopki
-st.markdown(f"""
-    <hr style="border:0; height:1px; background-image:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.1), rgba(255,255,255,0)); margin-top:50px;">
-    <div style="text-align:center; padding:20px; color:#6C757D; font-family:sans-serif; font-size:14px;">
-        <p>© 2026 ProCalc. Wszystkie prawa zastrzeżone.</p>
-        <p>
-            {link_reg} &nbsp; | &nbsp; {link_rodo} &nbsp; | &nbsp; 
-            <a href="mailto:biuro@procalc.pl" style="text-decoration:none; color:#6C757D;">Kontakt</a>
-        </p>
+# ==========================================
+# ROZSZERZONY FOOTER (STOPKA STRONY)
+# ==========================================
+st.markdown("""
+    <hr style="margin-top: 50px; border-color: #E9ECEF;">
+    <div style="padding: 20px 0; text-align: center; color: #6C757D; font-size: 13px; line-height: 1.6;">
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; text-align: left;">
+            
+            <div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
+                <strong style="color: #1E1E1E; font-size: 18px; color: #00D395;">ProCalc</strong><br>
+                Twój Cyfrowy Kosztorysant<br>
+                <br>
+                © 2026 Wszelkie prawa zastrzeżone.
+            </div>
+            
+            <div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
+                <strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Dane firmy</strong><br>
+                [NAZWA TWOJEJ FIRMY]<br>
+                NIP: [WPISZ_NIP] | REGON: [WPISZ_REGON]<br>
+                [ULICA I NUMER]<br>
+                [KOD POCZTOWY I MIASTO]
+            </div>
+            
+            <div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
+                <strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Kontakt & Pomoc</strong><br>
+                ✉️ biuro@procalc.pl<br>
+                📞 +48 123 456 789<br>
+                <br>
+                <a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Polityka Prywatności</a> | 
+                <a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Regulamin</a>
+            </div>
+            
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
