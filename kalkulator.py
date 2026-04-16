@@ -370,10 +370,17 @@ elif branza == "Logowanie":
         
         _, col_btn, _ = st.columns([1, 2, 1])
         with col_btn:
-            # Używamy standardowego st.button, ale wymuszamy przeładowanie w GŁÓWNYM oknie!
-            if st.button("🌐 Zaloguj przez Google", use_container_width=True):
-                login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
-                components.html(f'<script>window.parent.location.href = "{login_url}";</script>', height=0)
+            # --- OSTATECZNY PRZYCISK: Czysty HTML (Działa natychmiast, w tej samej karcie) ---
+            login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
+            
+            przycisk_html = f"""
+            <a href="{login_url}" target="_self" style="text-decoration: none;">
+                <div style="background-color: #00D395; color: white; padding: 15px; text-align: center; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    🌐 Zaloguj przez Google
+                </div>
+            </a>
+            """
+            st.markdown(przycisk_html, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.caption("<center>Wszystkie problemy techniczne zostały zażegnane 🚀</center>", unsafe_allow_html=True)
