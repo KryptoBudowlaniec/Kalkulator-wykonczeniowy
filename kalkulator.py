@@ -867,8 +867,7 @@ elif branza == "Szpachlowanie":
     # ==========================================
     # WIDGET: SZYBKI PRZELICZNIK (KG <-> LITRY)
     # ==========================================
-    with st.expander("Szybki przelicznik (Kg ↔ Litry) - Przydatne w hurtowni", expanded=False):
-        st.markdown("Producenci różnie podają objętość (szczególnie gładzi gotowych i gruntów). Przelicz to szybko:")
+    with st.expander("🧮 Przelicznik: KG ↔ Litry &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", expanded=False):
         
         # Słownik gęstości (waga 1 litra w kg)
         gestosc = {
