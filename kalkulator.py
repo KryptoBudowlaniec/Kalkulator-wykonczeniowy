@@ -851,6 +851,40 @@ if branza == "Malowanie":
 elif branza == "Szpachlowanie":
     st.header("Kalkulator Gładzi i Przygotowania Ścian")
 
+    # ==========================================
+    # WIDGET: SZYBKI PRZELICZNIK (KG <-> LITRY)
+    # ==========================================
+    with st.expander("Szybki przelicznik (Kg ↔ Litry) - Przydatne w hurtowni", expanded=False):
+        st.markdown("Producenci różnie podają objętość (szczególnie gładzi gotowych i gruntów). Przelicz to szybko:")
+        
+        # Słownik gęstości (waga 1 litra w kg)
+        gestosc = {
+            "Gładź gotowa (wiadro)": 1.7,
+            "Farba lateksowa / gruntująca": 1.4,
+            "Grunt wodny (np. Unigrunt)": 1.05,
+            "Gips startowy (rozrobiony)": 1.1
+        }
+        
+        kol_prz1, kol_prz2 = st.columns(2)
+        with kol_prz1:
+            typ_materialu = st.selectbox("Wybierz rodzaj materiału:", list(gestosc.keys()), key="prz_mat")
+            kierunek = st.radio("Kierunek przeliczenia:", ["Litry ➡️ Kilogramy", "Kilogramy ➡️ Litry"], key="prz_kier")
+            
+        with kol_prz2:
+            wartosc_we = st.number_input("Wpisz wartość:", min_value=0.0, value=15.0, step=1.0, key="prz_wart")
+            wspolczynnik = gestosc[typ_materialu]
+            
+            st.markdown("<br>", unsafe_allow_html=True) # Mały odstęp dla wyrównania
+            
+            if "Litry" in kierunek.split(" ➡️ ")[0]: # Liczymy Litry na KG
+                wynik = wartosc_we * wspolczynnik
+                st.success(f"**{wartosc_we} Litrów** to ok. **{round(wynik, 1)} kg**")
+            else: # Liczymy KG na Litry
+                wynik = wartosc_we / wspolczynnik
+                st.info(f"**{wartosc_we} Kilogramów** to ok. **{round(wynik, 1)} Litrów**")
+                
+            st.caption(f"*Przyjęta gęstość rynkowa: ~{wspolczynnik} kg/L*")
+
     # 1. BAZA DANYCH
     baza_sypkie = {
         "Cekol C-45 (20kg)": {"cena": 65, "waga": 20},
