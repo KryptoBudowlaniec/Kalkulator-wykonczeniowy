@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# BANER COOKIES I PRYWATNOŚCI
+# 🟢 BANER COOKIES I PRYWATNOŚCI (PRZYWRÓCONY)
 # ==========================================
 if "cookies_accepted" not in st.session_state:
     st.session_state.cookies_accepted = False
@@ -25,7 +25,7 @@ if not st.session_state.cookies_accepted:
         Serwis ProCalc wykorzystuje pliki cookies niezbędne do prawidłowego działania aplikacji (utrzymywanie sesji logowania, zapisywanie projektów) oraz w celach analitycznych. 
         Dalsze korzystanie z serwisu oznacza akceptację naszej Polityki Prywatności.
         """)
-        col_btn, col_puste = st.columns([1, 3])
+        col_btn, _ = st.columns([1, 3])
         with col_btn:
             if st.button("Zrozumiałem i Akceptuję ✅", type="primary", use_container_width=True, key="btn_cookies"):
                 st.session_state.cookies_accepted = True
@@ -62,26 +62,27 @@ if 'przekierowanie' not in st.session_state:
     st.session_state.przekierowanie = False
 
 # =======================================================
-# 4. KULOODPORNY ŁAPACZ SESJI (WERSJA OSTATECZNA)
+# 4. KULOODPORNY ŁAPACZ SESJI (WERSJA Z PRIORYTETEM)
 # =======================================================
-components.html("""
+st.components.v1.html("""
     <script>
-        if (window.parent.location.hash.includes("access_token=")) {
-            const newUrl = window.parent.location.href.replace("#", "?");
+        const h = window.parent.location.hash;
+        if (h.includes("access_token=")) {
+            const newUrl = window.parent.location.href.split('#')[0] + "?" + h.substring(1);
             window.parent.location.replace(newUrl);
         }
     </script>
 """, height=0)
 
 if supabase:
-    if hasattr(st, "query_params"):
-        q_params = st.query_params
-        acc_token = q_params.get("access_token")
-        ref_token = q_params.get("refresh_token")
-    else:
-        q_params = st.experimental_get_query_params()
-        acc_token = q_params.get("access_token", [None])[0]
-        ref_token = q_params.get("refresh_token", [None])[0]
+    try:
+        q = st.query_params
+        acc_token = q.get("access_token")
+        ref_token = q.get("refresh_token")
+    except:
+        q = st.experimental_get_query_params()
+        acc_token = q.get("access_token", [None])[0]
+        ref_token = q.get("refresh_token", [None])[0]
     
     if acc_token and ref_token:
         try:
@@ -95,12 +96,12 @@ if supabase:
                 st.session_state.access_token = acc_token
                 st.session_state.refresh_token = ref_token
                 
-                if hasattr(st, "query_params"):
-                    st.query_params.clear()
-                else:
-                    st.experimental_set_query_params()
+                st.query_params.clear()
+                st.success("Autoryzacja udana! Zaraz zobaczysz swój panel PRO...")
+                time.sleep(1)
                 st.rerun()
-        except Exception as e:
+                st.stop()
+        except Exception:
             pass
 
     elif st.session_state.access_token:
@@ -113,7 +114,7 @@ if supabase:
             st.session_state.pakiet = "Podstawowy"
             st.session_state.access_token = None
 
-# =======================================================
+
 # =======================================================
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
