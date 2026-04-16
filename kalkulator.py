@@ -344,7 +344,7 @@ if branza == "Start":
 
         st.markdown("---")
 
-# ==========================================
+    # ==========================================
     # SEKCJA: OPINIE (SOCIAL PROOF)
     # ==========================================
     st.markdown("<br><br><h2 style='text-align: center; font-weight: 800;'>Co mówią fachowcy?</h2><br>", unsafe_allow_html=True)
@@ -389,7 +389,7 @@ if branza == "Start":
         
     st.markdown("<br><br>", unsafe_allow_html=True)
         
-        st.header("Plan Rozwoju Aplikacji (Roadmap)")
+    st.header("Plan Rozwoju Aplikacji (Roadmap)")
         col_dev1, col_dev2 = st.columns(2)
         with col_dev1:
             st.markdown("#### W TRAKCIE (Koncept/Dev)")
