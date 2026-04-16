@@ -49,9 +49,9 @@ except Exception as e:
 # 3. STAN APLIKACJI (INICJALIZACJA)
 # ==========================================
 if 'zalogowany' not in st.session_state:
-    st.session_state.zalogowany = False
+    st.session_state.zalogowany = True
 if 'pakiet' not in st.session_state:
-    st.session_state.pakiet = "Podstawowy"
+    st.session_state.pakiet = "Pro"
 if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 if 'access_token' not in st.session_state:
