@@ -13,6 +13,26 @@ st.set_page_config(
 )
 
 # ==========================================
+# BANER COOKIES I PRYWATNOŚCI
+# ==========================================
+if "cookies_accepted" not in st.session_state:
+    st.session_state.cookies_accepted = False
+
+if not st.session_state.cookies_accepted:
+    with st.container(border=True):
+        st.markdown("### 🍪 Szanujemy Twoją prywatność")
+        st.write("""
+        Serwis ProCalc wykorzystuje pliki cookies niezbędne do prawidłowego działania aplikacji (utrzymywanie sesji logowania, zapisywanie projektów) oraz w celach analitycznych. 
+        Dalsze korzystanie z serwisu oznacza akceptację naszej Polityki Prywatności.
+        """)
+        col_btn, col_puste = st.columns([1, 3])
+        with col_btn:
+            if st.button("Zrozumiałem i Akceptuję ✅", type="primary", use_container_width=True, key="btn_cookies"):
+                st.session_state.cookies_accepted = True
+                st.rerun() 
+    st.markdown("---")
+
+# ==========================================
 # 2. POŁĄCZENIE Z BAZĄ DANYCH
 # ==========================================
 URL_TEST = "https://pkfuzakuzobwtpvxoscx.supabase.co"
@@ -26,7 +46,7 @@ except Exception as e:
     st.stop()
 
 # ==========================================
-# 3. STAN APLIKACJI (INICJALIZACJA) - MUSI BYĆ PIERWSZA!
+# 3. STAN APLIKACJI (INICJALIZACJA)
 # ==========================================
 if 'zalogowany' not in st.session_state:
     st.session_state.zalogowany = False
@@ -44,7 +64,6 @@ if 'przekierowanie' not in st.session_state:
 # =======================================================
 # 4. KULOODPORNY ŁAPACZ SESJI (WERSJA OSTATECZNA)
 # =======================================================
-# Skrypt JS do zamiany # na ? (niezbędny dla iframe Streamlit)
 components.html("""
     <script>
         if (window.parent.location.hash.includes("access_token=")) {
@@ -55,7 +74,6 @@ components.html("""
 """, height=0)
 
 if supabase:
-    # 1. Sprawdzamy, czy wróciliśmy z Google (mamy tokeny w URL)
     if hasattr(st, "query_params"):
         q_params = st.query_params
         acc_token = q_params.get("access_token")
@@ -67,39 +85,35 @@ if supabase:
     
     if acc_token and ref_token:
         try:
-            # Rejestrujemy sesję w Supabase
             supabase.auth.set_session(acc_token, ref_token)
             user_res = supabase.auth.get_user()
             
             if user_res and user_res.user:
-                # WPISUJEMY DANE DO PAMIĘCI SESJI
                 st.session_state.zalogowany = True
                 st.session_state.user_email = user_res.user.email
                 st.session_state.pakiet = "PRO"
                 st.session_state.access_token = acc_token
                 st.session_state.refresh_token = ref_token
                 
-                # Czyścimy URL i odświeżamy, by zatwierdzić status PRO
                 if hasattr(st, "query_params"):
                     st.query_params.clear()
                 else:
                     st.experimental_set_query_params()
                 st.rerun()
         except Exception as e:
-            st.error(f"Błąd logowania Google: {e}")
+            pass
 
-    # 2. Jeśli nie ma tokenów w URL, sprawdź czy mamy je już w pamięci (podtrzymanie sesji)
     elif st.session_state.access_token:
         try:
             supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
-            # Wymuszamy status PRO, skoro mamy token
             st.session_state.zalogowany = True
             st.session_state.pakiet = "PRO"
         except:
-            # Jeśli token wygasł, czyścimy
             st.session_state.zalogowany = False
             st.session_state.pakiet = "Podstawowy"
             st.session_state.access_token = None
+
+# =======================================================
 # =======================================================
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
