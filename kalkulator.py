@@ -3094,7 +3094,7 @@ link_reg = create_pdf_link("Regulamin_ProCalc_v1.pdf", "Regulamin serwisu")
 link_rodo = create_pdf_link("Polityka_Prywatnosci_ProCalc_v2.pdf", "Polityka prywatności (RODO)")
 
 # ==========================================
-# ROZSZERZONY FOOTER (STOPKA STRONY)
+# ROZSZERZONY FOOTER (Z PRZYCISKAMI)
 # ==========================================
 st.markdown(
     """
@@ -3118,10 +3118,13 @@ NIP: [WPISZ_NIP] | REGON: [WPISZ_REGON]<br>
 </div>
         
 <div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
-<strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Kontakt & Pomoc</strong><br>
-✉️ biuro@procalc.pl<br>
-📞 +48 123 456 789<br>
-<br>
+<strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Kontakt & Pomoc</strong><br><br>
+<a href="https://chat.whatsapp.com/TWOJ_LINK" target="_blank" style="text-decoration: none;">
+<div style="background-color: #25D366; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);">🧪 Grupa dla Testerów (WA)</div>
+</a><br>
+<a href="https://wa.me/48123456789" target="_blank" style="text-decoration: none;">
+<div style="background-color: #0E172B; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(14, 23, 43, 0.2);">🤖 Support / Chat AI</div>
+</a><br>
 <a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Polityka Prywatności</a> | 
 <a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Regulamin</a>
 </div>
