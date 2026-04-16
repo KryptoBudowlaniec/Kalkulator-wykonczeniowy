@@ -204,6 +204,19 @@ st.markdown("""
     .faq-card-answer, .faq-card-answer-blue { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
     .faq-card-answer-blue { background: #0E172B; }
     div.stButton > button { background-color: #00D395 !important; color: white !important; font-weight: 800 !important; height: 60px !important; border-radius: 15px !important; width: 100%; }
+    /* FIX DLA EXPANDERA - Odsunięcie tekstu od strzałki */
+    [data-testid="stExpander"] summary {
+        display: flex !important;
+        align-items: center !important;
+        padding-right: 45px !important; /* To stworzy bezpieczną strefę dla strzałki */
+    }
+
+    [data-testid="stExpander"] summary p {
+        margin: 0 !important;
+        white-space: nowrap !important; /* Zapobiega łamaniu linii w dziwnych miejscach */
+        overflow: hidden !important;
+        text-overflow: ellipsis !important; /* Jeśli tekst będzie za długi, doda kropki zamiast wejść pod strzałkę */
+    }
 </style>
 """, unsafe_allow_html=True)
 
