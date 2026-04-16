@@ -5,11 +5,17 @@ from supabase import create_client, Client
 import time
 import streamlit.components.v1 as components
 
-# 1. KONFIGURACJA GŁÓWNA
+# 1. KONFIGURACJA GŁÓWNA (SEO i Favicon)
 st.set_page_config(
-    page_title="ProCalc | Profesjonalny kalkulator remontowy",
-    page_icon="logo2.png", 
-    layout="wide"
+    page_title="ProCalc | Profesjonalny Kalkulator Budowlany",
+    page_icon="logo2.png",  # To ustawi ikonkę na karcie przeglądarki
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'Get Help': 'https://procalc.pl/kontakt',
+        'Report a bug': "mailto:biuro@procalc.pl",
+        'About': "# ProCalc\nTwój cyfrowy kosztorysant wykończeniowy. Oblicz materiały z precyzją fachowca."
+    }
 )
 
 # ==========================================
