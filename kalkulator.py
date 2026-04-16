@@ -368,13 +368,11 @@ elif branza == "Logowanie":
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # --- CZYSTY, PROFESJONALNY PRZYCISK GOOGLE ---
         _, col_btn, _ = st.columns([1, 2, 1])
         with col_btn:
-            # Używamy standardowego st.button, ale z wymuszonym przeładowaniem w tej samej karcie!
+            # Używamy standardowego st.button, ale wymuszamy przeładowanie w GŁÓWNYM oknie!
             if st.button("🌐 Zaloguj przez Google", use_container_width=True):
                 login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
-                # Niewidoczny skrypt JS, który natychmiast przenosi GŁÓWNE okno do Google
                 components.html(f'<script>window.parent.location.href = "{login_url}";</script>', height=0)
         
         st.markdown("<br>", unsafe_allow_html=True)
