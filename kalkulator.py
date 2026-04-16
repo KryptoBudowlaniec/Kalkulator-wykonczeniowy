@@ -126,15 +126,11 @@ if supabase:
         except Exception:
             pass
 
-    elif st.session_state.access_token:
-        try:
-            supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
-            st.session_state.zalogowany = True
-            st.session_state.pakiet = "PRO"
-        except:
-            st.session_state.zalogowany = False
-            st.session_state.pakiet = "Podstawowy"
-            st.session_state.access_token = None
+# 2. PODTRZYMANIE SESJI (Bez obciążania serwera na każdym kliknięciu!)
+    elif st.session_state.get("access_token"):
+        # Skoro mamy token w pamięci, ufamy mu. Nie zrywamy połączenia!
+        st.session_state.zalogowany = True
+        st.session_state.pakiet = "PRO"
 
 
 # =======================================================
