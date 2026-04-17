@@ -172,7 +172,7 @@ if nawigacja == "Kalkulatory":
     # Wyświetlamy pillsy tylko w sekcji kalkulatorów
     wybor_kalkulatora = st.pills(
         "Wybierz branżę:", 
-        ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Łazienka", "Podłogi", "Drzwi", "Efekty Dekoracyjne"],
+        ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Łazienka", "Podłogi", "Drzwi", "Efekty Dekoracyjne","Tapetowanie"],
         selection_mode="single",
         default="Malowanie",
         key="sub_nav"
