@@ -154,7 +154,7 @@ with col_nav:
     
     nawigacja = st.pills(
         "", 
-        ["Start", "Kalkulatory", "Panel Inwestora", "Kontakt", "Logowanie"],
+        ["Start", "Kalkulatory", "Panel Inwestora", "Harmonogram", "Kontakt", "Logowanie"],
         selection_mode="single",
         default=domyslna_strona, # <-- ZMIANA TUTAJ
         key="main_nav"
@@ -540,6 +540,17 @@ elif branza == "Logowanie":
 # --- INICJALIZACJA STANU ---
 if 'pokoje_pro' not in st.session_state:
     st.session_state.pokoje_pro = []
+
+# --- INICJALIZACJA HARMONOGRAMU ---
+if 'etapy_projektu' not in st.session_state:
+    st.session_state.etapy_projektu = [
+        {"Zadanie": "Demontaże i Przygotowanie", "Dni": 4, "Postęp": 100},
+        {"Zadanie": "Instalacje WOD-KAN i ELE", "Dni": 7, "Postęp": 0},
+        {"Zadanie": "Tynki i Wylewki", "Dni": 10, "Postęp": 0},
+        {"Zadanie": "Gładzie i Malowanie", "Dni": 12, "Postęp": 0},
+        {"Zadanie": "Łazienka (Płytki)", "Dni": 14, "Postęp": 0},
+        {"Zadanie": "Montaże końcowe", "Dni": 5, "Postęp": 0}
+    ]
             
 
 
@@ -3558,6 +3569,54 @@ elif branza == "Panel Inwestora":
                         st.markdown(href, unsafe_allow_html=True)
                     except Exception as e:
                         st.error(f"Błąd PDF: {e}")
+
+# ==========================================
+# MODUŁ: HARMONOGRAM (GANTT LIVE)
+# ==========================================
+elif branza == "Harmonogram":
+    st.header("Harmonogram Prac Live PRO ")
+    st.write("Zarządzaj terminami i pokazuj postęp inwestorowi w czasie rzeczywistym.")
+
+    col_h1, col_h2 = st.columns([1, 2])
+
+    with col_h1:
+        st.subheader("Edycja Etapów")
+        suma_dni = 0
+        suma_postepu = 0
+        
+        for i, etap in enumerate(st.session_state.etapy_projektu):
+            with st.expander(f"{etap['Zadanie']}"):
+                etap['Dni'] = st.number_input(f"Dni trwania:", 1, 60, etap['Dni'], key=f"dni_{i}")
+                etap['Postęp'] = st.slider(f"Postęp (%):", 0, 100, etap['Postęp'], key=f"pos_{i}")
+            
+            suma_dni += etap['Dni']
+            suma_postepu += (etap['Postęp'] / 100) * etap['Dni']
+
+        calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
+
+    with col_h2:
+        st.subheader("Wizualizacja Projektu")
+        st.metric("Całkowity czas remontu", f"{suma_dni} dni roboczych")
+        st.progress(calkowity_progres / 100)
+        st.write(f"Ogólny postęp inwestycji: **{round(calkowity_progres, 1)}%**")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        for etap in st.session_state.etapy_projektu:
+            szerokosc = (etap['Dni'] / suma_dni) * 100
+            progres_szerokosc = etap['Postęp']
+            
+            st.markdown(f"""
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 12px; font-weight: bold;">{etap['Zadanie']} ({etap['Dni']} dni)</div>
+                    <div style="background-color: #E9ECEF; border-radius: 5px; width: 100%; height: 20px;">
+                        <div style="background-color: #00D395; height: 20px; border-radius: 5px; width: {progres_szerokosc}%; text-align: center; color: white; font-size: 10px; line-height: 20px;">
+                            {etap['Postęp']}%
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    st.info("💡 **WSKAZÓWKA:** Docelowo w Panelu Inwestora ten widok będzie zamrożony, aby klient mógł tylko śledzić postępy, które Ty tu ustawisz.")
 
 import base64
 
