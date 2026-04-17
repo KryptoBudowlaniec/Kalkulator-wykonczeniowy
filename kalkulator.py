@@ -965,7 +965,7 @@ elif branza == "Szpachlowanie":
         st.success(f"### Szacowany koszt całkowity: **ok. {round(szacunek_total):,} PLN**".replace(",", " "))
         st.info(f"Przyjęto {m2_scian_fast} m² ścian. Stawka: {round(cena_za_m2_fast, 2)} zł/m².")
 
-    # ==========================================
+   # ==========================================
     # ZAKŁADKA 2: DETALE PRO
     # ==========================================
     with tab_s2:
@@ -993,6 +993,13 @@ elif branza == "Szpachlowanie":
                 typ_g_pro = st.radio("Gładź finiszowa:", ["Gotowa (Wiadro)", "Sypka (Worek)"], horizontal=True)
                 wybrana_g = st.selectbox("Wybierz gładź:", list(baza_sypkie.keys()) if typ_g_pro == "Sypka (Worek)" else list(baza_gotowe.keys()))
                 dane_g = baza_sypkie[wybrana_g] if typ_g_pro == "Sypka (Worek)" else baza_gotowe[wybrana_g]
+
+                # --- WYBÓR METODY NAKŁADANIA ---
+                metoda_nakladania = st.radio(
+                    "Metoda nakładania:",
+                    ["Ręczna (Paca)", "Wałek", "Natrysk (Agregat)"],
+                    horizontal=True
+                )
                 
                 if system_szpachlowania == "Mocny start (Gips + Gładź)":
                     wybrany_gips = st.selectbox("Wybierz gips startowy:", list(baza_gipsow.keys()))
@@ -1003,7 +1010,22 @@ elif branza == "Szpachlowanie":
             with col_c2:
                 # Jeśli GK, sugerujemy 1 warstwę, jeśli tynk - 2.
                 l_warstw = st.slider("Łączna liczba warstw:", 1, 4, 1 if czy_gk else 2)
-                stawka_szp = st.number_input("Stawka robocizny (zł/m2):", 1, 300, 45 if czy_gk else 55)
+                
+                # --- LOGIKA CENOWA ZALEŻNA OD METODY ---
+                stawka_bazowa = 45 if czy_gk else 55
+                if metoda_nakladania == "Wałek":
+                    stawka_bazowa -= 2
+                elif metoda_nakladania == "Natrysk (Agregat)":
+                    stawka_bazowa -= 7
+                    
+                stawka_szp = st.number_input("Stawka robocizny (zł/m2):", 1, 300, stawka_bazowa)
+
+            # --- LOGIKA MNOŻNIKA ZUŻYCIA ---
+            mnoznik_zuzycia = 1.0
+            if metoda_nakladania == "Wałek":
+                mnoznik_zuzycia = 1.15
+            elif metoda_nakladania == "Natrysk (Agregat)":
+                mnoznik_zuzycia = 1.25
 
             st.markdown("---")
             st.subheader("Metraż prac")
@@ -1038,17 +1060,16 @@ elif branza == "Szpachlowanie":
                         st.rerun()
                 m2_total = sum(p["netto"] for p in st.session_state.pokoje_szp)
 
-# ==========================================
+            # ==========================================
             # WYNIKI I LISTA ZAKUPÓW
             # ==========================================
             if m2_total > 0:
-                # LOGIKA ZUŻYCIA (Zaktualizowana: 0.5 kg dla szpachlowania łączeń GK)
-                norma_g = 0.5 if czy_gk else 1.2 
+                # LOGIKA ZUŻYCIA Z MNOŻNIKIEM METODY NAKŁADANIA
+                norma_g = (0.5 if czy_gk else 1.2) * mnoznik_zuzycia 
                 szt_gipsu = 0
                 
                 if system_szpachlowania == "Mocny start (Gips + Gładź)":
-                    # Mniej gipsu startowego na płytach GK (tylko na łączenia/wkręty)
-                    kg_gips = m2_total * 0.8 if czy_gk else m2_total * 1.2 
+                    kg_gips = (m2_total * 0.8 if czy_gk else m2_total * 1.2) * mnoznik_zuzycia
                     szt_gipsu = int((kg_gips / dane_gips["waga"]) + 0.99)
                     warstwy_finisz = l_warstw - 1
                 else:
@@ -1060,14 +1081,14 @@ elif branza == "Szpachlowanie":
                 szt_gruntu = int(m2_total * 0.2 / 5 + 0.99)
                 szt_krazkow = int((m2_total / 50) + 0.99) if czy_gk else int((m2_total / 35) + 0.99)
                 
-                # Logika Flizeliny (2m na 1mb)
+                # Logika Flizeliny
                 mb_flizeliny = 0
                 szt_flizeliny = 0
                 koszt_flizeliny = 0
                 if uzyj_flizeliny:
                     mb_flizeliny = metry_flizeliny_in * 2
-                    szt_flizeliny = int((mb_flizeliny / 25) + 0.99) # Rolki 25m
-                    koszt_flizeliny = szt_flizeliny * 15 # ok 15 zł za rolkę
+                    szt_flizeliny = int((mb_flizeliny / 25) + 0.99)
+                    koszt_flizeliny = szt_flizeliny * 15
 
                 koszt_m_dodatki = (m2_total * 3.5) + koszt_flizeliny
                 koszt_m = (szt_gladzi * dane_g["cena"]) + (szt_gipsu * (dane_gips["cena"] if szt_gipsu > 0 else 0)) + (szt_gruntu * baza_grunty_szp[wybrany_grunt] * 5) + koszt_m_dodatki
@@ -1096,7 +1117,7 @@ elif branza == "Szpachlowanie":
                     st.warning("**MATERIAŁY ZUŻYWALNE**")
                     st.write(f"🔸 **Krążki ścierne P180/220:** {szt_krazkow} szt.")
                     st.write(f"🔸 **Narożniki, folie, akcesoria:** ~{round(koszt_m_dodatki - koszt_flizeliny)} zł")
-
+                    
                 # ==========================================
                 # PDF GENERATION
                 # ==========================================
