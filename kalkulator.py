@@ -204,24 +204,27 @@ st.markdown("""
     .faq-card-answer, .faq-card-answer-blue { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
     .faq-card-answer-blue { background: #0E172B; }
     div.stButton > button { background-color: #00D395 !important; color: white !important; font-weight: 800 !important; height: 60px !important; border-radius: 15px !important; width: 100%; }
-    /* CAŁKOWITE WYCOFANIE STRZAŁEK (CHEVRON) Z KAŻDEGO EXPANDERA */
-    [data-testid="stExpander"] svg, 
+    /* CAŁKOWITE WYCOFANIE STRZAŁEK (CHEVRON) I NAPISÓW Z KAŻDEGO EXPANDERA */
+    [data-testid="stExpander"] summary [data-testid="stIconMaterial"],
+    [data-testid="stExpander"] summary [data-testid="stIcon"],
+    [data-testid="stExpander"] summary svg,
     [data-testid="stExpander"] i,
-    [data-testid="stExpander"] span[data-testid="stIcon"],
-    [data-testid="stExpander"] summary::after,
-    [data-testid="stExpander"] summary svg {
+    [data-testid="stExpander"] summary::after {
         display: none !important;
+        font-size: 0px !important; /* To zabija surowy tekst _arrow_right */
+        color: transparent !important; /* To dobija go ostatecznie */
         visibility: hidden !important;
         width: 0 !important;
         height: 0 !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Wyprostowanie paska po usunięciu ikony */
     [data-testid="stExpander"] summary {
-        list-style: none !important; /* Usuwa domyślne strzałki przeglądarki */
+        list-style: none !important; 
         display: flex !important;
+        align-items: center !important;
     }
 
     /* Usunięcie kropki/strzałki w przeglądarkach Safari/Chrome */
