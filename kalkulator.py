@@ -3284,6 +3284,9 @@ elif branza == "Efekty Dekoracyjne":
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
 # ==========================================
+# ==========================================
+# TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
+# ==========================================
 elif branza == "Panel Inwestora":
     st.markdown("<br>", unsafe_allow_html=True)
     if not st.session_state.zalogowany:
@@ -3295,7 +3298,6 @@ elif branza == "Panel Inwestora":
             st.title("Panel Zarządzania")
             st.markdown(f"Konto: **{st.session_state.user_email}**")
             
-            # Dodaliśmy 'key', aby wymusić unikalność ID dla Streamlita
             opcja_panelu = st.radio(
                 "Nawigacja",
                 ["Nawigacja Główna", "Mój Profil", "Język i Region"],
@@ -3308,7 +3310,6 @@ elif branza == "Panel Inwestora":
                 if supabase: supabase.auth.sign_out()
                 st.rerun()
 
-        # Odpalamy Zawartość w zależności od wyboru w boczku
         # ==========================================
         # 1. ZAWARTOSC: NAWIGACJA GŁÓWNA (KOMPLEKSOWY PANEL)
         # ==========================================
@@ -3316,13 +3317,14 @@ elif branza == "Panel Inwestora":
             st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
             st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji.")
             
-            # Główna nawigacja po etapach remontu
-            tab_roi, tab_suche, tab_mokre, tab_inst, tab_podsumowanie = st.tabs([
+            # --- ZAKTUALIZOWANA NAWIGACJA (DODANA STOLARKA) ---
+            tab_roi, tab_suche, tab_mokre, tab_inst, tab_meble, tab_podsumowanie = st.tabs([
                 "1. Parametry & ROI", 
-                "2. Prace Suche (Ściany/Sufity)", 
-                "3. Prace Mokre (Łazienka)", 
-                "4. Instalacje & Podłogi", 
-                "5. Podsumowanie & Harmonogram"
+                "2. Prace Suche", 
+                "3. Prace Mokre", 
+                "4. Podłogi & Drzwi", 
+                "5. Stolarka & Meble",
+                "6. Podsumowanie"
             ])
 
             # --- ZAKŁADKA 1: PARAMETRY I ROI ---
@@ -3346,11 +3348,11 @@ elif branza == "Panel Inwestora":
                     
                     st.markdown("---")
                     st.markdown("##### Budżet na robociznę (Szacunek wstępny)")
-                    standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"], key="inv_standard")
+                    standard = st.select_slider("Standard wykończenia robót:", options=["Ekonomiczny", "Standard", "Premium"], key="inv_standard")
                     mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
                     bazowy_remont_szacunek = (m2_total * 1200 * mnoznik_std) 
                     if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont_szacunek *= 1.25
-                    st.info(f"Szacowany koszt bazowy remontu (Robocizna): **~{round(bazowy_remont_szacunek):,} zł**".replace(",", " "))
+                    st.info(f"Szacowany koszt prac wykończeniowych: **~{round(bazowy_remont_szacunek):,} zł**".replace(",", " "))
 
             # --- ZAKŁADKA 2: PRACE SUCHE ---
             with tab_suche:
@@ -3359,73 +3361,96 @@ elif branza == "Panel Inwestora":
                 do_malowanie = st.checkbox("Wlicz Malowanie całego lokalu", value=True, key="inv_do_mal")
                 do_gk = st.checkbox("Wlicz Sufity Podwieszane GK (cały lokal)", value=False, key="inv_do_gk")
                 
-                st.info("Powyższe opcje automatycznie wygenerują listę materiałów dla całego podanego wcześniej metrażu mieszkania. W finalnej wersji podłączymy tu pełne algorytmy z sekcji Kalkulatory.")
+                st.info("Algorytmy wygenerują listę chemii, farb i płyt na podstawie metrażu.")
 
             # --- ZAKŁADKA 3: PRACE MOKRE (ŁAZIENKA) ---
             with tab_mokre:
                 st.subheader("Konfiguracja Łazienki")
                 do_lazienka = st.checkbox("Remont Łazienki (Aktywuj moduł)", value=True, key="inv_do_laz")
                 if do_lazienka:
-                    st.markdown("##### Szybkie parametry łazienki")
                     c_l1, c_l2 = st.columns(2)
                     m2_lazienka_podloga = c_l1.number_input("Powierzchnia łazienki (m2):", 1.0, 50.0, 5.0, key="inv_laz_m2")
-                    standard_lazienki = c_l2.radio("Standard Wykończenia (Wpływa na koszt materiałów):", ["Podstawowy", "Premium (Duże formaty, odpływy liniowe)"], key="inv_laz_std")
-                    st.info("Algorytm na podstawie tych danych zarezerwuje odpowiednią kwotę w budżecie końcowym oraz dobierze chemię (Kleje S1/S2, Folie w płynie itp.).")
+                    standard_lazienki = c_l2.radio("Standard Wykończenia:", ["Podstawowy", "Premium (Duże formaty, maty)"], key="inv_laz_std")
 
-            # --- ZAKŁADKA 4: INSTALACJE I PODŁOGI ---
+            # --- ZAKŁADKA 4: INSTALACJE, PODŁOGI I DRZWI ---
             with tab_inst:
-                st.subheader("Instalacje Elektryczne i Wykończenie Podłóg")
+                st.subheader("Elektryka, Posadzki i Stolarka Otworowa")
                 do_elektryka = st.checkbox("Nowa instalacja elektryczna (cały lokal)", value=True, key="inv_do_elek")
                 do_podlogi = st.checkbox("Układanie paneli/podłóg w pokojach", value=True, key="inv_do_podl")
                 
                 if do_podlogi:
                     rodzaj_podlogi = st.selectbox("Rodzaj podłogi głównej:", ["Panele Laminowane (Standard)", "Panele Winylowe (LVT/SPC)", "Deska trójwarstwowa (Klejenie)"], key="inv_podloga_typ")
+                
+                st.markdown("---")
+                st.markdown("##### Drzwi Wewnętrzne")
+                do_drzwi = st.checkbox("Montaż nowych drzwi", value=True, key="inv_do_drzwi")
+                if do_drzwi:
+                    c_d1, c_d2 = st.columns(2)
+                    szt_drzwi = c_d1.number_input("Liczba skrzydeł drzwiowych (szt.):", 1, 15, 3, key="inv_szt_drzwi")
+                    rodzaj_drzwi = c_d2.selectbox("Rodzaj drzwi:", ["Płytowe (Budżet)", "Rámowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_rodzaj_drzwi")
+                    koszt_drzwi_sztuka = 900 if "Płytowe" in rodzaj_drzwi else (2500 if "Ukryta" in rodzaj_drzwi else 1400)
+                    koszt_drzwi_total = szt_drzwi * koszt_drzwi_sztuka
+                    st.caption(f"Szacowany budżet na drzwi z ościeżnicami i montażem: **{koszt_drzwi_total:,} zł**".replace(",", " "))
+                else:
+                    koszt_drzwi_total = 0
 
-            # --- ZAKŁADKA 5: PODSUMOWANIE, HARMONOGRAM, ZAPIS ---
+            # --- ZAKŁADKA 5: STOLARKA I MEBLE (NOWOŚĆ DLA FLIPPERA) ---
+            with tab_meble:
+                st.subheader("Meble na wymiar i zabudowy stelażowe")
+                st.write("Skonfiguruj budżet na stolarza. Kwoty możesz ręcznie edytować na podstawie ofert od wykonawców.")
+                
+                c_m1, c_m2 = st.columns(2)
+                do_kuchnia = c_m1.checkbox("Zabudowa Kuchenna", value=True, key="inv_do_kuchnia")
+                koszt_kuchni = c_m2.number_input("Budżet na kuchnię (PLN):", value=20000, step=1000, key="inv_koszt_kuchnia") if do_kuchnia else 0
+                
+                do_szafa = c_m1.checkbox("Szafa w przedpokoju / korytarzu", value=True, key="inv_do_szafa")
+                koszt_szafy = c_m2.number_input("Budżet na szafę (PLN):", value=4000, step=500, key="inv_koszt_szafa") if do_szafa else 0
+                
+                do_laz_meble = c_m1.checkbox("Szafka umywalkowa / Zabudowa WC", value=True, key="inv_do_laz_meble")
+                koszt_laz_meble = c_m2.number_input("Budżet na stolarza łazienki (PLN):", value=1500, step=500, key="inv_koszt_laz_meble") if do_laz_meble else 0
+                
+                koszt_mebli_total = koszt_kuchni + koszt_szafy + koszt_laz_meble
+                st.info(f"Całkowity zarezerwowany budżet meblowy: **{koszt_mebli_total:,} zł**".replace(",", " "))
+
+            # --- ZAKŁADKA 6: PODSUMOWANIE, HARMONOGRAM, ZAPIS ---
             with tab_podsumowanie:
-                # --- A. WIDOK LIVE HARMONOGRAMU (Zintegrowany z poprzedniego zadania) ---
                 st.subheader("Bieżący postęp prac (Harmonogram Live)")
                 if 'etapy_projektu' in st.session_state:
-                    suma_dni = 0
-                    suma_postepu = 0
-                    for etap in st.session_state.etapy_projektu:
-                        suma_dni += etap['Dni']
-                        suma_postepu += (etap['Postęp'] / 100) * etap['Dni']
-                    
+                    suma_dni = sum([e['Dni'] for e in st.session_state.etapy_projektu])
+                    suma_postepu = sum([(e['Postęp'] / 100) * e['Dni'] for e in st.session_state.etapy_projektu])
                     calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
                     
                     c1, c2, c3 = st.columns(3)
-                    c1.metric("Szacowany czas (Dni robocze)", f"{suma_dni}")
-                    c2.metric("Ogólny postęp inwestycji", f"{round(calkowity_progres, 1)}%")
+                    c1.metric("Szacowany czas prac", f"{suma_dni} dni")
+                    c2.metric("Ogólny postęp", f"{round(calkowity_progres, 1)}%")
                     status_projektu = "W trakcie" if calkowity_progres < 100 else "Zakończony"
                     if calkowity_progres == 0: status_projektu = "Oczekuje na start"
                     c3.metric("Status", status_projektu)
                     
                     st.progress(calkowity_progres / 100)
-                    st.caption("Powyższe dane postępu są aktualizowane na żywo przez wykonawcę.")
                 else:
                     st.info("Wykonawca nie udostępnił jeszcze aktywnego harmonogramu.")
 
                 st.markdown("---")
 
-                # --- B. WYLICZENIA FINANSOWE ROI NA BAZIE WSZYSTKICH ZAKŁADEK ---
-                st.subheader("Analiza Rentowności (ROI)")
+                # --- B. WYLICZENIA FINANSOWE ROI ---
+                st.subheader("Pełna Analiza Rentowności (ROI)")
                 
                 koszt_transakcyjny = (cena_zakupu * 0.02) + 4500 
-                # Tutaj w przyszłości zamiast 'bazowy_remont_szacunek' zsumujemy koszty z zakładek:
-                koszt_remontu_total = bazowy_remont_szacunek 
+                # Sumujemy twardy remont + drzwi + meble stolarza
+                calkowity_koszt_remontu_i_wyposazenia = bazowy_remont_szacunek + koszt_drzwi_total + koszt_mebli_total
                 
-                calkowity_koszt_inwestycji = cena_zakupu + koszt_transakcyjny + koszt_remontu_total
+                calkowity_koszt_inwestycji = cena_zakupu + koszt_transakcyjny + calkowity_koszt_remontu_i_wyposazenia
                 zysk_brutto = cena_sprzedazy - calkowity_koszt_inwestycji
                 roi = (zysk_brutto / calkowity_koszt_inwestycji) * 100 if calkowity_koszt_inwestycji > 0 else 0
 
                 r1, r2, r3 = st.columns(3)
-                r1.metric("Całkowity Koszt (Zakup + Remont)", f"{round(calkowity_koszt_inwestycji):,} zł".replace(",", " "))
-                r2.metric("ZYSK BRUTTO", f"{round(zysk_brutto):,} zł".replace(",", " "))
+                r1.metric("Łączny Budżet Wykończeniowy", f"{round(calkowity_koszt_remontu_i_wyposazenia):,} zł".replace(",", " "))
+                r2.metric("ZYSK BRUTTO NA CZYSTO", f"{round(zysk_brutto):,} zł".replace(",", " "))
                 r3.metric("Przewidywane ROI", f"{round(roi, 1)} %")
 
-                if roi < 12: st.error("Słabe ROI! Ryzykowna inwestycja. Poszukaj oszczędności na materiale.")
-                elif roi < 20: st.warning("Przeciętny deal. Pilnuj harmonogramu.")
+                if roi < 12: st.error("Słabe ROI! Ryzykowna inwestycja. Poszukaj oszczędności na stolarni lub wynegocjuj cenę zakupu.")
+                elif roi < 20: st.warning("Przeciętny deal. Pilnuj budżetu wykonawczego.")
                 else: st.success("Świetny projekt! Parametry inwestycyjne w normie.")
 
                 st.markdown("---")
@@ -3435,15 +3460,14 @@ elif branza == "Panel Inwestora":
                 col_save, col_pdf = st.columns(2)
                 
                 with col_save:
-                    if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
+                    if st.button("Zapisz projekt w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
                         if supabase and st.session_state.user_id:
                             try:
                                 dane_roi = {
                                     "suma_calkowita": round(calkowity_koszt_inwestycji),
-                                    "koszt_remontu": round(koszt_remontu_total),
+                                    "koszt_remontu_total": round(calkowity_koszt_remontu_i_wyposazenia),
                                     "zysk_brutto": round(zysk_brutto),
                                     "roi_procent": round(roi, 1)
-                                    # Docelowo tutaj dodamy potężną, zagregowaną listę zakupów
                                 }
                                 supabase.table("projekty").insert({
                                     "user_id": st.session_state.user_id, 
@@ -3459,7 +3483,9 @@ elif branza == "Panel Inwestora":
 
                 with col_pdf:
                     st.button("Generuj PDF z pełnym Kosztorysem (Wkrótce)", use_container_width=True, disabled=True)
-                    st.caption("Funkcja podsumowująca wszystkie materiały ze wszystkich 4 zakładek w budowie.")
+                    st.caption("Funkcja zrzucająca dane ze wszystkich 5 zakładek w przygotowaniu.")
+                    
+        # ... (Tutaj pozostaje reszta logiki opcji z bocznego paska: Mój Profil, Język i Region)
                     
 # ==========================================
 # MODUŁ: HARMONOGRAM (GANTT LIVE)
