@@ -2773,7 +2773,7 @@ elif branza == "Tapetowanie":
     m2_scian = 0.0
     obwod = 0.0
     
-    st.header("Kalkulator: Tapetowanie PRO 📏")
+    st.header("Kalkulator: Tapetowanie PRO ")
     st.write("Precyzyjne wyliczanie zapotrzebowania na rolki tapety z uwzględnieniem raportu (pasowania wzoru) i odpadów.")
 
     # --- ZAKŁADKI KROKOWE ---
