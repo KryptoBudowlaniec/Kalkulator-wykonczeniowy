@@ -3309,253 +3309,158 @@ elif branza == "Panel Inwestora":
                 st.rerun()
 
         # Odpalamy Zawartość w zależności od wyboru w boczku
+        # ==========================================
+        # 1. ZAWARTOSC: NAWIGACJA GŁÓWNA (KOMPLEKSOWY PANEL)
+        # ==========================================
         if opcja_panelu == "Nawigacja Główna":
-            st.header("Pulpit Inwestora 🏠")
-            st.write("Śledź postępy prac na swojej inwestycji w czasie rzeczywistym.")
+            st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
+            st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji.")
             
-            # --- WIDOK LIVE HARMONOGRAMU (READ-ONLY) ---
-            if 'etapy_projektu' in st.session_state:
-                st.markdown("---")
-                st.subheader("Bieżący postęp prac (Live)")
-                
-                # Obliczenia podsumowujące
-                suma_dni = 0
-                suma_postepu = 0
-                for etap in st.session_state.etapy_projektu:
-                    suma_dni += etap['Dni']
-                    suma_postepu += (etap['Postęp'] / 100) * etap['Dni']
-                
-                calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
-                
-                # Metryki dla inwestora
-                c1, c2, c3 = st.columns(3)
-                c1.metric("Szacowany czas (Dni robocze)", f"{suma_dni}")
-                c2.metric("Ogólny postęp inwestycji", f"{round(calkowity_progres, 1)}%")
-                
-                status_projektu = "W trakcie" if calkowity_progres < 100 else "Zakończony"
-                if calkowity_progres == 0: status_projektu = "Oczekuje na start"
-                c3.metric("Status", status_projektu)
-                
-                # Główny pasek postępu całej inwestycji
-                st.progress(calkowity_progres / 100)
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                # Wykres Gantta zablokowany (Tylko do odczytu)
-                st.markdown("#### Szczegóły poszczególnych etapów:")
-                for etap in st.session_state.etapy_projektu:
-                    progres_szerokosc = etap['Postęp']
-                    kolor_paska = "#00D395" # Zielony, jeśli wszystko ok
-                    if progres_szerokosc == 100:
-                        kolor_paska = "#00A876" # Ciemniejszy zielony dla zakończonych
-                    elif progres_szerokosc == 0:
-                        kolor_paska = "#CED4DA" # Szary dla nierozpoczętych
-                        
-                    st.markdown(f"""
-                        <div style="margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 5px solid {kolor_paska};">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="font-weight: 800; color: #1E1E1E;">{etap['Zadanie']}</span>
-                                <span style="color: #6C757D; font-size: 14px;">Przewidywany czas: {etap['Dni']} dni</span>
-                            </div>
-                            <div style="background-color: #E9ECEF; border-radius: 5px; width: 100%; height: 25px;">
-                                <div style="background-color: {kolor_paska}; height: 25px; border-radius: 5px; width: {progres_szerokosc}%; text-align: center; color: white; font-size: 12px; font-weight: bold; line-height: 25px; transition: 0.5s;">
-                                    {etap['Postęp']}%
-                                </div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-            else:
-                st.info("Brak aktywnego harmonogramu prac. Wykonawca jeszcze nie udostępnił planu.")
-                
-            st.markdown("---")
-            st.subheader("Twoje Kosztorysy i Dokumenty")
-            st.info("Tutaj pojawią się wyceny (PDF) udostępnione przez Twojego wykonawcę, oraz analiza ROI z flipa.")
-            # --- B. SEKCJA ANALITYCZNA: CHECKLISTA ---
-            st.subheader("Checklista Przedzakupowa")
-            c_ch1, c_ch2, c_ch3 = st.columns(3)
-            with c_ch1:
-                st.checkbox("Piony wod-kan (stan żeliwa/plastiku)", key="ch_piony")
-                st.checkbox("Okna (szczelność/wiek/pakiet szyb)", key="ch_okna")
-            with c_ch2:
-                st.checkbox("Instalacja elek. (miedź vs alu)", key="ch_elek")
-                st.checkbox("Możliwość wydzielenia pokoju", key="ch_pokoje")
-            with c_ch3:
-                st.checkbox("KW czysta (Dział III i IV)", key="ch_kw")
-                st.checkbox("Przynależność piwnicy", key="ch_piwnica")
+            # Główna nawigacja po etapach remontu
+            tab_roi, tab_suche, tab_mokre, tab_inst, tab_podsumowanie = st.tabs([
+                "1. Parametry & ROI", 
+                "2. Prace Suche (Ściany/Sufity)", 
+                "3. Prace Mokre (Łazienka)", 
+                "4. Instalacje & Podłogi", 
+                "5. Podsumowanie & Harmonogram"
+            ])
 
-            st.markdown("---")
+            # --- ZAKŁADKA 1: PARAMETRY I ROI ---
+            with tab_roi:
+                st.subheader("Parametry Lokalu i Checklista")
+                col_params, col_check = st.columns([1.2, 1])
 
-            # --- C. PARAMETRY I ANALIZA ROI ---
-            col_params, col_roi = st.columns([1, 1.2])
+                with col_params:
+                    nazwa_inwestycji = st.text_input("Nazwa Inwestycji (do zapisu):", value="Kawalerka na Start", key="inv_nazwa")
+                    m2_total = st.number_input("Metraż całkowity lokalu (m2):", min_value=1.0, value=50.0, key="inv_m2_total")
+                    cena_zakupu = st.number_input("Cena zakupu lokalu (PLN):", value=350000, step=5000, key="inv_cena_zakupu")
+                    cena_sprzedazy = st.number_input("Przewidywana cena sprzedaży (PLN):", value=550000, step=5000, key="inv_cena_sprzedazy")
+                    stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"], key="inv_stan")
 
-            with col_params:
-                st.subheader("Parametry Lokalu")
-                nazwa_inwestycji = st.text_input("Nazwa Inwestycji (do zapisu):", value="Kawalerka na Start")
-                m2_total = st.number_input("Metraż mieszkania (m2):", min_value=1.0, value=50.0)
-                cena_zakupu = st.number_input("Cena zakupu lokalu (PLN):", value=350000, step=5000)
-                cena_sprzedazy = st.number_input("Przewidywana cena sprzedaży (PLN):", value=550000, step=5000)
-                standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"])
-                stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"])
+                with col_check:
+                    st.markdown("##### Checklista Przedzakupowa")
+                    st.checkbox("Piony wod-kan (stan żeliwa/plastiku)", key="inv_ch_piony")
+                    st.checkbox("Okna (szczelność/wiek/pakiet szyb)", key="inv_ch_okna")
+                    st.checkbox("Instalacja elek. (miedź vs alu)", key="inv_ch_elek")
+                    st.checkbox("KW czysta (Dział III i IV)", key="inv_ch_kw")
+                    
+                    st.markdown("---")
+                    st.markdown("##### Budżet na robociznę (Szacunek wstępny)")
+                    standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"], key="inv_standard")
+                    mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
+                    bazowy_remont_szacunek = (m2_total * 1200 * mnoznik_std) 
+                    if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont_szacunek *= 1.25
+                    st.info(f"Szacowany koszt bazowy remontu (Robocizna): **~{round(bazowy_remont_szacunek):,} zł**".replace(",", " "))
 
-            pow_scian = m2_total * 3.5
-            mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
-            koszt_transakcyjny = (cena_zakupu * 0.02) + 4500 
-            
-            bazowy_remont = (m2_total * 1200 * mnoznik_std) 
-            if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont *= 1.25
-            
-            calkowity_koszt_inwestycji = cena_zakupu + koszt_transakcyjny + bazowy_remont
-            zysk_brutto = cena_sprzedazy - calkowity_koszt_inwestycji
-            roi = (zysk_brutto / calkowity_koszt_inwestycji) * 100 if calkowity_koszt_inwestycji > 0 else 0
-
-            with col_roi:
-                st.subheader("Analiza Zysku (Live)")
-                st.markdown(f"**Całkowity koszt inwestycji:** {round(calkowity_koszt_inwestycji):,} zł".replace(",", " "))
+            # --- ZAKŁADKA 2: PRACE SUCHE ---
+            with tab_suche:
+                st.subheader("Gładzie, Malowanie, Zabudowy GK")
+                do_szpachlowanie = st.checkbox("Wlicz Szpachlowanie / Gładzie całego lokalu", value=True, key="inv_do_szpach")
+                do_malowanie = st.checkbox("Wlicz Malowanie całego lokalu", value=True, key="inv_do_mal")
+                do_gk = st.checkbox("Wlicz Sufity Podwieszane GK (cały lokal)", value=False, key="inv_do_gk")
                 
-                r1, r2 = st.columns(2)
-                r1.metric("ZYSK BRUTTO", f"{round(zysk_brutto):,} zł".replace(",", " "))
-                r2.metric("ROI %", f"{round(roi, 1)} %")
+                st.info("Powyższe opcje automatycznie wygenerują listę materiałów dla całego podanego wcześniej metrażu mieszkania. W finalnej wersji podłączymy tu pełne algorytmy z sekcji Kalkulatory.")
+
+            # --- ZAKŁADKA 3: PRACE MOKRE (ŁAZIENKA) ---
+            with tab_mokre:
+                st.subheader("Konfiguracja Łazienki")
+                do_lazienka = st.checkbox("Remont Łazienki (Aktywuj moduł)", value=True, key="inv_do_laz")
+                if do_lazienka:
+                    st.markdown("##### Szybkie parametry łazienki")
+                    c_l1, c_l2 = st.columns(2)
+                    m2_lazienka_podloga = c_l1.number_input("Powierzchnia łazienki (m2):", 1.0, 50.0, 5.0, key="inv_laz_m2")
+                    standard_lazienki = c_l2.radio("Standard Wykończenia (Wpływa na koszt materiałów):", ["Podstawowy", "Premium (Duże formaty, odpływy liniowe)"], key="inv_laz_std")
+                    st.info("Algorytm na podstawie tych danych zarezerwuje odpowiednią kwotę w budżecie końcowym oraz dobierze chemię (Kleje S1/S2, Folie w płynie itp.).")
+
+            # --- ZAKŁADKA 4: INSTALACJE I PODŁOGI ---
+            with tab_inst:
+                st.subheader("Instalacje Elektryczne i Wykończenie Podłóg")
+                do_elektryka = st.checkbox("Nowa instalacja elektryczna (cały lokal)", value=True, key="inv_do_elek")
+                do_podlogi = st.checkbox("Układanie paneli/podłóg w pokojach", value=True, key="inv_do_podl")
                 
-                st.write(f"W tym szacowany remont: {round(bazowy_remont):,} zł")
-                st.write(f"Koszty transakcyjne: {round(koszt_transakcyjny):,} zł")
-                
-                if roi < 12:
-                    st.error("Słabe ROI! Negocjuj cenę zakupu.")
-                elif roi < 20:
-                    st.warning("Przeciętny deal. Pilnuj kosztów ekipy.")
+                if do_podlogi:
+                    rodzaj_podlogi = st.selectbox("Rodzaj podłogi głównej:", ["Panele Laminowane (Standard)", "Panele Winylowe (LVT/SPC)", "Deska trójwarstwowa (Klejenie)"], key="inv_podloga_typ")
+
+            # --- ZAKŁADKA 5: PODSUMOWANIE, HARMONOGRAM, ZAPIS ---
+            with tab_podsumowanie:
+                # --- A. WIDOK LIVE HARMONOGRAMU (Zintegrowany z poprzedniego zadania) ---
+                st.subheader("Bieżący postęp prac (Harmonogram Live)")
+                if 'etapy_projektu' in st.session_state:
+                    suma_dni = 0
+                    suma_postepu = 0
+                    for etap in st.session_state.etapy_projektu:
+                        suma_dni += etap['Dni']
+                        suma_postepu += (etap['Postęp'] / 100) * etap['Dni']
+                    
+                    calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
+                    
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Szacowany czas (Dni robocze)", f"{suma_dni}")
+                    c2.metric("Ogólny postęp inwestycji", f"{round(calkowity_progres, 1)}%")
+                    status_projektu = "W trakcie" if calkowity_progres < 100 else "Zakończony"
+                    if calkowity_progres == 0: status_projektu = "Oczekuje na start"
+                    c3.metric("Status", status_projektu)
+                    
+                    st.progress(calkowity_progres / 100)
+                    st.caption("Powyższe dane postępu są aktualizowane na żywo przez wykonawcę.")
                 else:
-                    st.success("Świetny deal! Można wchodzić.")
+                    st.info("Wykonawca nie udostępnił jeszcze aktywnego harmonogramu.")
 
-            st.markdown("---")
+                st.markdown("---")
 
-            # --- D. ZAKRES PRAC I LISTA ZAKUPÓW ---
-            st.subheader("Zakres prac i Lista Zakupów")
-            
-            c_work1, c_work2, c_work3 = st.columns(3)
-            with c_work1:
-                do_elektryka = st.checkbox("Nowa Elektryka", value=True)
-                do_malowanie = st.checkbox("Malowanie (Biała+Kolor)", value=True)
-            with c_work2:
-                do_lazienka = st.checkbox("Remont Łazienki", value=True)
-                do_gk = st.checkbox("Sucha Zabudowa (Sufity)", value=False)
-            with c_work3:
-                do_szpachlowanie = st.checkbox("Szpachlowanie / Gładzie", value=True)
-                szerokosc_pom = st.number_input("Szerokość pom. (m):", value=3.5)
+                # --- B. WYLICZENIA FINANSOWE ROI NA BAZIE WSZYSTKICH ZAKŁADEK ---
+                st.subheader("Analiza Rentowności (ROI)")
+                
+                koszt_transakcyjny = (cena_zakupu * 0.02) + 4500 
+                # Tutaj w przyszłości zamiast 'bazowy_remont_szacunek' zsumujemy koszty z zakładek:
+                koszt_remontu_total = bazowy_remont_szacunek 
+                
+                calkowity_koszt_inwestycji = cena_zakupu + koszt_transakcyjny + koszt_remontu_total
+                zysk_brutto = cena_sprzedazy - calkowity_koszt_inwestycji
+                roi = (zysk_brutto / calkowity_koszt_inwestycji) * 100 if calkowity_koszt_inwestycji > 0 else 0
 
-            zakupy = {"ELEKTRYKA": [], "ŁAZIENKA": [], "G-K / SUFITY": [], "ŚCIANY / PODŁOGI": []}
+                r1, r2, r3 = st.columns(3)
+                r1.metric("Całkowity Koszt (Zakup + Remont)", f"{round(calkowity_koszt_inwestycji):,} zł".replace(",", " "))
+                r2.metric("ZYSK BRUTTO", f"{round(zysk_brutto):,} zł".replace(",", " "))
+                r3.metric("Przewidywane ROI", f"{round(roi, 1)} %")
 
-            if do_elektryka:
-                zakupy["ELEKTRYKA"].extend([
-                    f"Kabel 3x2.5 (Gniazda): {int(m2_total * 2.5)} mb",
-                    f"Kabel 3x1.5 (Światło): {int(m2_total * 1.5)} mb",
-                    "Kabel 4x1.5 (Siła/Schodowe): 25 mb",
-                    "Rozdzielnica + 10 bezpieczników (Eaton/Hager)",
-                    f"Osprzęt (Gniazda/Włączniki): {int(m2_total*0.8)} szt.",
-                    f"Uchwyty (paczki 100 szt.): {int(m2_total/15)+1} op.",
-                    "Kabel LAN kat. 6 + Antenowy RG6: po 25 mb"
-                ])
+                if roi < 12: st.error("Słabe ROI! Ryzykowna inwestycja. Poszukaj oszczędności na materiale.")
+                elif roi < 20: st.warning("Przeciętny deal. Pilnuj harmonogramu.")
+                else: st.success("Świetny projekt! Parametry inwestycyjne w normie.")
 
-            if do_lazienka:
-                m2_p = 5 * 1.12 
-                m2_s = 22 * 1.12
-                zakupy["ŁAZIENKA"].extend([
-                    f"Płytki (Podłoga + Ściany): {round(m2_p + m2_s, 1)} m2",
-                    f"Klej elastyczny S1 (25kg): {int((m2_p+m2_s)/5)+1} worków",
-                    "Hydroizolacja: Folia 5kg + 10mb Taśmy + 2 Mankiety",
-                    "Fuga (2kg) + Silikon sanitarny: 3 + 2 szt.",
-                    "Grunt pod hydroizolację: 1 szt."
-                ])
+                st.markdown("---")
 
-            if do_gk:
-                dl_prof = 4 if szerokosc_pom > 4 else 3
-                zakupy["G-K / SUFITY"].extend([
-                    f"Płyty GK 12.5mm: {int(m2_total/2.5)+2} szt.",
-                    f"Profil CD60 ({dl_prof}mb): {int(m2_total*0.9)+4} szt.",
-                    f"Profil UD27 (3mb): {int(m2_total*0.5)+2} szt.",
-                    f"Wieszaki ES: {int(m2_total*1.3)} szt.",
-                    "Wkręty GK 3.5x25 (1000szt) + Pchełki (250szt)",
-                    "Taśma TUFF-TAPE + Flizelina + Gips Uniflott"
-                ])
+                # --- C. ZAPIS DO CHMURY I PDF ---
+                st.subheader("💾 Zapisz Projekt")
+                col_save, col_pdf = st.columns(2)
+                
+                with col_save:
+                    if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
+                        if supabase and st.session_state.user_id:
+                            try:
+                                dane_roi = {
+                                    "suma_calkowita": round(calkowity_koszt_inwestycji),
+                                    "koszt_remontu": round(koszt_remontu_total),
+                                    "zysk_brutto": round(zysk_brutto),
+                                    "roi_procent": round(roi, 1)
+                                    # Docelowo tutaj dodamy potężną, zagregowaną listę zakupów
+                                }
+                                supabase.table("projekty").insert({
+                                    "user_id": st.session_state.user_id, 
+                                    "nazwa_projektu": nazwa_inwestycji,
+                                    "branza": "Kompleksowy Flip",
+                                    "dane_json": dane_roi
+                                }).execute()
+                                st.success("✅ Projekt zapisany pomyślnie!")
+                            except Exception as e:
+                                st.error(f"Błąd zapisu: {e}")
+                        else:
+                            st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
 
-            if do_malowanie or do_szpachlowanie:
-                if do_szpachlowanie:
-                    zakupy["ŚCIANY / PODŁOGI"].append(f"Gładź szpachlowa: {int(pow_scian*1.5/20)+1} wiader")
-                if do_malowanie:
-                    zakupy["ŚCIANY / PODŁOGI"].extend([
-                        f"Farba Biała: {int(pow_scian*0.4/8)+1} L",
-                        f"Farba Kolor: {int(pow_scian*0.6/9)+1} L",
-                        f"Grunt: {int(pow_scian/50)+1} baniek (5L)"
-                    ])
-
-            buy_col1, buy_col2 = st.columns(2)
-            for i, (cat, items) in enumerate(zakupy.items()):
-                if items:
-                    target_col = buy_col1 if i % 2 == 0 else buy_col2
-                    with target_col:
-                        st.info(f"**{cat}**")
-                        for item in items:
-                            st.write(f"- {item}")
-
-            # --- E. PODSUMOWANIE (ZAPIS DO BAZY I GENERATOR PDF) ---
-            st.markdown("---")
-            st.subheader("💾 Zapis i Eksport")
-            
-            col_save, col_pdf = st.columns(2)
-            
-            # NOWOŚĆ: Przycisk Zapisu widzi teraz listę 'zakupy' i wysyła ją do bazy!
-            with col_save:
-                if st.button("Zapisz projekt do chmury", use_container_width=True, type="primary", key="zapisz_roi_btn"):
-                    if supabase and st.session_state.user_id:
-                        try:
-                            dane_roi = {
-                                "suma_calkowita": round(calkowity_koszt_inwestycji),
-                                "koszt_materialow": round(bazowy_remont),
-                                "zysk_brutto": round(zysk_brutto),
-                                "roi_procent": round(roi, 1),
-                                "lista_zakupow": zakupy # <--- LISTA MATERIAŁÓW LECI DO BAZY!
-                            }
-                            supabase.table("projekty").insert({
-                                "user_id": st.session_state.user_id, 
-                                "nazwa_projektu": nazwa_inwestycji,
-                                "branza": "Analiza ROI z Materiałami",
-                                "dane_json": dane_roi
-                            }).execute()
-                            st.success("✅ Zapisano! Odśwież widok by zobaczyć na liście.")
-                        except Exception as e:
-                            st.error(f"Błąd zapisu: {e}")
-
-            # Eksport PDF
-            with col_pdf:
-                if st.button("Pobierz Listę Zakupów (PDF)", use_container_width=True, key="pobierz_pdf_btn"):
-                    from fpdf import FPDF
-                    import base64
-                    def czysc_tekst(tekst):
-                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
-                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                        return tekst.encode('latin-1', 'replace').decode('latin-1')
-                    try:
-                        pdf = FPDF()
-                        pdf.add_page()
-                        pdf.set_font("Arial", size=12)
-                        pdf.set_text_color(0, 211, 149) 
-                        pdf.cell(200, 10, txt="PROCALC - LISTA ZAKUPOWA (PANEL INWESTORA)", ln=True, align='C')
-                        pdf.ln(10)
-                        pdf.set_text_color(30, 30, 30)
-                        for cat, items in zakupy.items():
-                            if items:
-                                pdf.set_font("Arial", style="B", size=12)
-                                pdf.cell(200, 10, txt=f"--- {czysc_tekst(cat)} ---", ln=True)
-                                pdf.set_font("Arial", size=11)
-                                for item in items:
-                                    pdf.cell(200, 8, txt=f"* {czysc_tekst(item)}", ln=True)
-                                pdf.ln(5)
-                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
-                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="ProCalc_{nazwa_inwestycji}.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz PDF</a>'
-                        st.markdown(href, unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(f"Błąd PDF: {e}")
-
+                with col_pdf:
+                    st.button("Generuj PDF z pełnym Kosztorysem (Wkrótce)", use_container_width=True, disabled=True)
+                    st.caption("Funkcja podsumowująca wszystkie materiały ze wszystkich 4 zakładek w budowie.")
+                    
 # ==========================================
 # MODUŁ: HARMONOGRAM (GANTT LIVE)
 # ==========================================
