@@ -3308,85 +3308,68 @@ elif branza == "Panel Inwestora":
                 if supabase: supabase.auth.sign_out()
                 st.rerun()
 
-# ==========================================
-        # 1. ZAWARTOSC: NAWIGACJA GŁÓWNA (TWOJA LOGIKA)
-        # ==========================================
+        # Odpalamy Zawartość w zależności od wyboru w boczku
         if opcja_panelu == "Nawigacja Główna":
+            st.header("Pulpit Inwestora 🏠")
+            st.write("Śledź postępy prac na swojej inwestycji w czasie rzeczywistym.")
             
-            # --- A. SEKCJA CHMURY: TWOJE PROJEKTY ---
-            st.header("Twoje Zapisane Kosztorysy")
-            if supabase:
-                try:
-                    response = supabase.table("projekty").select("*").eq("user_id", st.session_state.user_id).order("data_stworzenia", desc=True).execute()
-                    zapisane_projekty = response.data
-                    
-                    if not zapisane_projekty:
-                        st.info("Nie masz jeszcze żadnych zapisanych projektów w chmurze.")
-                    else:
-                        st.markdown("---")
-                        col_nazwa, col_data, col_pobierz, col_usun = st.columns([3.5, 1.5, 1, 1])
-                        col_nazwa.markdown("**Nazwa projektu / Kategoria**")
-                        col_data.markdown("**Data utworzenia**")
-                        col_pobierz.markdown("**Pobierz**")
-                        col_usun.markdown("**Akcja**")
-                        st.markdown("---")
-                        
-                        for projekt in zapisane_projekty:
-                            data_utworzenia = projekt['data_stworzenia'][:10] 
-                            nazwa = projekt['nazwa_projektu']
-                            branza_proj = projekt['branza']
-                            dane = projekt['dane_json']
-                            id_projektu = projekt['id']
-                            
-                            # --- NOWOŚĆ: Piękne formatowanie pobieranego pliku z listą materiałów ---
-                            dane_txt = f"=== PROJEKT: {nazwa.upper()} ===\n"
-                            dane_txt += f"DATA ZAPISU: {data_utworzenia}\nKATEGORIA: {branza_proj}\n\n"
-                            dane_txt += "--- PARAMETRY FINANSOWE ---\n"
-                            
-                            for klucz, wartosc in dane.items():
-                                if klucz == "lista_zakupow":
-                                    dane_txt += "\n--- WYGENEROWANA LISTA MATERIAŁÓW ---\n"
-                                    for kategoria, lista_itemow in wartosc.items():
-                                        if lista_itemow:
-                                            dane_txt += f"\n[{kategoria}]\n"
-                                            for item in lista_itemow:
-                                                dane_txt += f" - {item}\n"
-                                else:
-                                    # Formatowanie kluczy na bardziej czytelne
-                                    czysty_klucz = klucz.replace("_", " ").title()
-                                    dane_txt += f"{czysty_klucz}: {wartosc}\n"
-                            
-                            c1, c2, c3, c4 = st.columns([3.5, 1.5, 1, 1])
-                            
-                            with c1:
-                                st.markdown(f"<p style='margin-top: 10px; font-weight: 600;'>{nazwa} <br><span style='color: #00D395; font-size: 12px; font-weight: normal;'>({branza_proj})</span></p>", unsafe_allow_html=True)
-                            with c2:
-                                st.markdown(f"<p style='margin-top: 10px; color: #6C757D;'>{data_utworzenia}</p>", unsafe_allow_html=True)
-                            with c3:
-                                st.download_button(
-                                    label="Pobierz",
-                                    data=dane_txt,
-                                    file_name=f"{nazwa}.txt",
-                                    mime="text/plain",
-                                    key=f"dl_btn_{id_projektu}"
-                                )
-                            with c4:
-                                if st.button("Usuń", type="primary", key=f"del_btn_{id_projektu}"):
-                                    try:
-                                        supabase.table("projekty").delete().eq("id", id_projektu).execute()
-                                        st.rerun() 
-                                    except Exception as e:
-                                        st.error(f"Błąd usuwania: {e}")
-                                        
-                            st.markdown("<hr style='margin: 0px; opacity: 0.2;'>", unsafe_allow_html=True)
-                            
-                except Exception as e:
-                    st.error(f"Wystąpił błąd podczas pobierania danych: {e}")
-            else:
-                st.error("Brak połączenia z chmurą bazy danych.")
+            # --- WIDOK LIVE HARMONOGRAMU (READ-ONLY) ---
+            if 'etapy_projektu' in st.session_state:
+                st.markdown("---")
+                st.subheader("Bieżący postęp prac (Live)")
                 
-            st.markdown("<br><br>", unsafe_allow_html=True)
-
+                # Obliczenia podsumowujące
+                suma_dni = 0
+                suma_postepu = 0
+                for etap in st.session_state.etapy_projektu:
+                    suma_dni += etap['Dni']
+                    suma_postepu += (etap['Postęp'] / 100) * etap['Dni']
+                
+                calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
+                
+                # Metryki dla inwestora
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Szacowany czas (Dni robocze)", f"{suma_dni}")
+                c2.metric("Ogólny postęp inwestycji", f"{round(calkowity_progres, 1)}%")
+                
+                status_projektu = "W trakcie" if calkowity_progres < 100 else "Zakończony"
+                if calkowity_progres == 0: status_projektu = "Oczekuje na start"
+                c3.metric("Status", status_projektu)
+                
+                # Główny pasek postępu całej inwestycji
+                st.progress(calkowity_progres / 100)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Wykres Gantta zablokowany (Tylko do odczytu)
+                st.markdown("#### Szczegóły poszczególnych etapów:")
+                for etap in st.session_state.etapy_projektu:
+                    progres_szerokosc = etap['Postęp']
+                    kolor_paska = "#00D395" # Zielony, jeśli wszystko ok
+                    if progres_szerokosc == 100:
+                        kolor_paska = "#00A876" # Ciemniejszy zielony dla zakończonych
+                    elif progres_szerokosc == 0:
+                        kolor_paska = "#CED4DA" # Szary dla nierozpoczętych
+                        
+                    st.markdown(f"""
+                        <div style="margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 5px solid {kolor_paska};">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="font-weight: 800; color: #1E1E1E;">{etap['Zadanie']}</span>
+                                <span style="color: #6C757D; font-size: 14px;">Przewidywany czas: {etap['Dni']} dni</span>
+                            </div>
+                            <div style="background-color: #E9ECEF; border-radius: 5px; width: 100%; height: 25px;">
+                                <div style="background-color: {kolor_paska}; height: 25px; border-radius: 5px; width: {progres_szerokosc}%; text-align: center; color: white; font-size: 12px; font-weight: bold; line-height: 25px; transition: 0.5s;">
+                                    {etap['Postęp']}%
+                                </div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("Brak aktywnego harmonogramu prac. Wykonawca jeszcze nie udostępnił planu.")
+                
+            st.markdown("---")
+            st.subheader("Twoje Kosztorysy i Dokumenty")
+            st.info("Tutaj pojawią się wyceny (PDF) udostępnione przez Twojego wykonawcę, oraz analiza ROI z flipa.")
             # --- B. SEKCJA ANALITYCZNA: CHECKLISTA ---
             st.subheader("Checklista Przedzakupowa")
             c_ch1, c_ch2, c_ch3 = st.columns(3)
