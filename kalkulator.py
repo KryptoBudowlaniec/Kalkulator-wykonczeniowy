@@ -2778,7 +2778,7 @@ elif branza == "Tapetowanie":
 
     # --- ZAKŁADKI KROKOWE ---
     tab_wym, tab_rolka, tab_wynik = st.tabs([
-        "1. Pomiary Ścian", "2. Parametry Rolki i Wzoru", "3. Wycena i Lista Zakupów"
+        "1. Pomiary Ścian", "2. Parametry Rolki", "3. Wycena i Zakupy"
     ])
 
     with tab_wym:
@@ -2823,7 +2823,7 @@ elif branza == "Tapetowanie":
         
         c_c1, c_c2 = st.columns(2)
         
-        # Baza cenowa dla robocizny (można edytować)
+        # Baza cenowa dla robocizny
         stawka_baza = 50
         if "Fototapeta" in rodzaj_tapety: stawka_baza = 80
         elif "Papierowa" in rodzaj_tapety: stawka_baza = 60 # Papierowe kładzie się trudniej
@@ -2835,7 +2835,7 @@ elif branza == "Tapetowanie":
         # LOGIKA PRO - OBLICZANIE PASÓW I ROLEK
         # ==========================================
         if "Fototapeta" not in rodzaj_tapety:
-            # 1. Ile pasów wejdzie na ścianę? (Odejmujemy szerokość okien/drzwi dla oszczędności)
+            # 1. Ile pasów wejdzie na ścianę?
             szerokosc_odliczen = odliczenia / wysokosc if wysokosc > 0 else 0
             obwod_netto = max(0, obwod - szerokosc_odliczen)
             liczba_pasow = math.ceil(obwod_netto / szer_rolki)
@@ -2851,16 +2851,16 @@ elif branza == "Tapetowanie":
             if pasy_z_rolki > 0:
                 potrzebne_rolki = math.ceil(liczba_pasow / pasy_z_rolki)
             else:
-                potrzebne_rolki = 0 # Zabezpieczenie, jeśli ściana jest wyższa niż długość rolki
+                potrzebne_rolki = 0
                 
             # Wyliczenie kleju
             dane_kleju = baza_kleje_tapety[wybrany_klej]
             szt_kleju = math.ceil(potrzebne_rolki / dane_kleju["wydajnosc_rolek"])
         else:
-            # Dla fototapety na wymiar liczymy z metra kwadratowego
+            # Fototapeta na wymiar
             liczba_pasow = 0
             pasy_z_rolki = 0
-            potrzebne_rolki = 1 # Jako jeden cały komplet
+            potrzebne_rolki = 1 # Jako komplet
             dane_kleju = baza_kleje_tapety[wybrany_klej]
             szt_kleju = math.ceil(m2_scian / 15) # Założenie: 1 opakowanie na 15 m2
 
@@ -2869,14 +2869,13 @@ elif branza == "Tapetowanie":
         # ==========================================
         robocizna_tapetowanie = m2_scian * stawka_tapetowanie
         robocizna_zrywanie = m2_scian * stawka_zrywanie if zrywanie_starej else 0
-        robocizna_grunt = m2_scian * 5 if gruntowanie else 0 # 5 zł/m2 za gruntowanie
+        robocizna_grunt = m2_scian * 5 if gruntowanie else 0
         
         suma_robocizna = robocizna_tapetowanie + robocizna_zrywanie + robocizna_grunt
         
-        # Koszt materiałów własnych (chemia)
         koszt_kleju = szt_kleju * dane_kleju["cena"]
-        szt_gruntu = math.ceil((m2_scian * 0.15) / 5) if gruntowanie else 0 # 0.15L/m2, bańki 5L
-        koszt_gruntu = szt_gruntu * 40 # ok. 40 zł za 5L unigruntu
+        szt_gruntu = math.ceil((m2_scian * 0.15) / 5) if gruntowanie else 0
+        koszt_gruntu = szt_gruntu * 40
         
         suma_materialy = koszt_kleju + koszt_gruntu
 
@@ -2887,7 +2886,7 @@ elif branza == "Tapetowanie":
         st.success(f"### RAZEM ROBOCIZNA: **{round(suma_robocizna)} PLN**")
         
         if "Fototapeta" not in rodzaj_tapety:
-            st.markdown("### 📊 Analiza zużycia tapety")
+            st.markdown("### Analiza zużycia tapety")
             col_a1, col_a2, col_a3 = st.columns(3)
             col_a1.metric("Potrzebne rolki", f"{potrzebne_rolki} szt.")
             col_a2.metric("Łączna liczba pasów", f"{liczba_pasow} pasów")
@@ -2895,26 +2894,31 @@ elif branza == "Tapetowanie":
                           delta=f"Odpad: {round(dl_rolki - (pasy_z_rolki * wysokosc_efektywna), 2)}m / rolkę", delta_color="off")
             
             if pasy_z_rolki == 3 and raport > 0:
-                st.warning(f"💡 **Dlaczego tylko 3 pasy z rolki?** Przy wysokości ścian {wysokosc}m i raporcie {raport}cm, po docięciu wzoru potrzebujesz pasów o długości ok. {round(wysokosc_efektywna,2)}m. Z rolki (10.05m) wytniesz 3 takie pasy (ok. {round(wysokosc_efektywna * 3, 2)}m). Zostaje za mało materiału na czwarty pas.")
+                st.warning(f"💡 **Dlaczego tylko 3 pasy z rolki?** Przy wysokości ścian {wysokosc}m i raporcie {raport}cm, po docięciu wzoru potrzebujesz pasów o długości ok. {round(wysokosc_efektywna,2)}m. Z rolki (10.05m) wytniesz 3 takie pasy (ok. {round(wysokosc_efektywna * 3, 2)}m). Reszta to odpad techniczny.")
         else:
             st.info("💡 **Fototapeta na wymiar:** Tapeta przychodzi w gotowych brytach dociętych pod wymiar ściany.")
 
         st.markdown("---")
-        st.subheader("Lista Zakupów (Do kupienia przez inwestora)")
-        if "Fototapeta" not in rodzaj_tapety:
-            st.write(f"• **Tapeta {rodzaj_tapety}:** {potrzebne_rolki} rolek (Zawsze sprawdzaj ten sam numer partii!)")
-        else:
-            st.write(f"• **Fototapeta:** 1 komplet pod wymiar ({round(m2_scian, 1)} m²)")
+        st.subheader("Lista Zakupów (Chemia Markowa)")
+        col_z1, col_z2 = st.columns(2)
+        
+        with col_z1:
+            if "Fototapeta" not in rodzaj_tapety:
+                st.write(f"🔹 **Tapeta {rodzaj_tapety}:** {potrzebne_rolki} rolek")
+                st.caption("Pamiętaj o sprawdzeniu zgodności numeru partii (Batch/Lot number) na każdej rolce!")
+            else:
+                st.write(f"🔹 **Fototapeta:** 1 komplet pod wymiar ({round(m2_scian, 1)} m²)")
+                
+        with col_z2:
+            st.write(f"🔸 **Klej:** {wybrany_klej.split(' - ')[0]} - {szt_kleju} op.")
+            if gruntowanie:
+                st.write(f"🔸 **Grunt głęboko penetrujący (5L):** {szt_gruntu} szt.")
             
-        st.write(f"• **Klej:** {wybrany_klej.split(' - ')[0]} - {szt_kleju} op.")
-        if gruntowanie:
-            st.write(f"• **Grunt głęboko penetrujący (5L):** {szt_gruntu} szt.")
-            
-        st.markdown(f"*Szacowany koszt chemii (klej, grunt): ~{round(suma_materialy)} zł*")
+        st.markdown(f"*Szacowany koszt chemii roboczej (klej, grunt): ~{round(suma_materialy)} zł*")
 
         # --- GENERATOR PDF (TAPETOWANIE) ---
         st.markdown("---")
-        if st.button("📄 Generuj Pełny Kosztorys PDF (Tapetowanie)"):
+        if st.button("Generuj Pełny Kosztorys PDF (Tapetowanie)"):
             try:
                 from fpdf import FPDF
                 from datetime import datetime
@@ -2956,8 +2960,10 @@ elif branza == "Tapetowanie":
                 pdf.set_font('Inter', '', 10)
                 pdf.ln(2)
                 
+                rodzaj_tapety_pdf = rodzaj_tapety.replace("ś", "s").replace("ł", "l").replace("ó", "o")
+                
                 if "Fototapeta" not in rodzaj_tapety:
-                    pdf.cell(190, 7, txt=f"- Tapeta ({rodzaj_tapety}): {potrzebne_rolki} rolek", ln=True)
+                    pdf.cell(190, 7, txt=f"- Tapeta ({rodzaj_tapety_pdf}): {potrzebne_rolki} rolek", ln=True)
                     pdf.cell(190, 7, txt=f"  *Zalozenia: Pasowanie wzoru {raport}cm, co daje {pasy_z_rolki} pasy z 1 rolki.", ln=True)
                 else:
                     pdf.cell(190, 7, txt=f"- Fototapeta na wymiar: Komplet ok. {round(m2_scian, 1)} m2", ln=True)
@@ -2978,7 +2984,7 @@ elif branza == "Tapetowanie":
                     pdf_bytes = pdf_output
         
                 st.download_button(
-                    label="📥 Pobierz Kosztorys PDF",
+                    label="Pobierz Kosztorys PDF",
                     data=pdf_bytes,
                     file_name=f"Kosztorys_Tapetowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf"
