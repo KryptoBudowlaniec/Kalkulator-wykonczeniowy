@@ -2124,25 +2124,36 @@ elif branza == "Łazienka":
         "Kerakoll Bioflex (Żelowy) - 25kg": 75,
         "Kerakoll H40 (Premium) - 25kg": 125,
         "Mapei Keraflex Extra S1 - 25kg": 80,
+        "Sopro No.1 (400) - 22.5kg": 115,
         "Klej Standardowy C2T - 25kg": 50
     }
     
     baza_folie = {
-        "Standardowa folia w płynie - 5kg": 80,
-        "Atlas Woder E - 5kg": 95,
-        "Mapei Mapegum WPS - 5kg": 115
+        "Standardowa folia w płynie - 5kg": {"cena": 80, "waga": 5},
+        "Sopro FDF 525 - 5kg": {"cena": 165, "waga": 5},
+        "Sopro FDF 525 - 15kg": {"cena": 440, "waga": 15},
+        "Ceresit CL 51 - 5kg": {"cena": 110, "waga": 5},
+        "Ceresit CL 51 - 15kg": {"cena": 275, "waga": 15},
+        "Atlas Woder E - 5kg": {"cena": 95, "waga": 5},
+        "Atlas Woder E - 15kg": {"cena": 255, "waga": 15}
     }
     
     baza_maty = {
         "Mata uszczelniająca Standard (zł/m2)": 45,
+        "Mata Sopro AEB 640 (zł/m2)": 85,
+        "Mata Knauf (zł/m2)": 75,
+        "Mata Ceresit CL 152 (zł/m2)": 70,
         "Mata Kerakoll Aquastop (zł/m2)": 65,
         "Mata Mapei Mapeguard (zł/m2)": 80
     }
 
     baza_masy_2k = {
-        "Masa uszczelniająca 1K/2K Standard - 15kg": 180,
-        "Atlas Woder Duo (Masa 2K) - 15kg": 240,
-        "Mapei Mapelastic (Masa 2K) - 16kg": 290
+        "Masa uszczelniająca 1K/2K Standard - 15kg": {"cena": 180, "waga": 15},
+        "Sopro DSF 523 - 10kg": {"cena": 230, "waga": 10},
+        "Sopro DSF 523 - 20kg": {"cena": 395, "waga": 20},
+        "Kerakoll Aquastop Nanoflex - 20kg": {"cena": 260, "waga": 20},
+        "Atlas Woder Duo (Masa 2K) - 15kg": {"cena": 240, "waga": 15},
+        "Mapei Mapelastic (Masa 2K) - 16kg": {"cena": 290, "waga": 16}
     }
 
     # --- 2. INICJALIZACJA ZMIENNYCH ---
@@ -2250,10 +2261,14 @@ elif branza == "Łazienka":
         procent_zapasu = 1.15 if "Wielki" in format_plytki or "Mozaika" in format_plytki else 1.10
         m2_plytek_z_zapasem = round(m2_plytek_total * procent_zapasu, 1)
 
-        # Hydroizolacja - Jeśli mamy matę, odejmujemy jej powierzchnię od folii w płynie
+        # Hydroizolacja
         m2_pod_folie = max(0, m2_hydro_total - m2_maty) if typ_hydro == "Premium (Maty uszczelniające)" else m2_hydro_total
-        kg_folii = m2_pod_folie * 1.2
-        op_folii_5kg = int(kg_folii / 5 + 0.99)
+        
+        # ODCZYT WAGI I CENY FOLII Z NOWEGO SŁOWNIKA
+        dane_folii = baza_folie[wybrana_folia]
+        kg_folii_potrzebne = m2_pod_folie * 1.2
+        op_folii = int(kg_folii_potrzebne / dane_folii["waga"] + 0.99)
+        
         mb_tasmy = int(mb_tasma_hydro * 1.1)
         szt_mankiety = szt_podejscia 
         
@@ -2284,13 +2299,15 @@ elif branza == "Łazienka":
                           koszt_odplywu + koszt_wneki + koszt_led + koszt_wc)
 
         # Koszty materiałów z wybranymi opcjami
-        mat_folia = op_folii_5kg * baza_folie[wybrana_folia]
+        mat_folia = op_folii * dane_folii["cena"]
         mat_tasma = mb_tasmy * 6
         
         if typ_hydro == "Premium (Maty uszczelniające)":
             mat_mata = m2_maty * baza_maty[wybrana_mata]
-            ile_op_masy = int((m2_maty * 1.5)/15 + 0.99)
-            mat_klej_maty = ile_op_masy * baza_masy_2k[wybrana_masa]
+            dane_masy = baza_masy_2k[wybrana_masa]
+            kg_masy_potrzebne = m2_maty * 1.5 # Przeciętne zużycie masy do wklejenia maty
+            ile_op_masy = int(kg_masy_potrzebne / dane_masy["waga"] + 0.99)
+            mat_klej_maty = ile_op_masy * dane_masy["cena"]
         else:
             mat_mata = 0
             mat_klej_maty = 0
@@ -2338,11 +2355,11 @@ elif branza == "Łazienka":
             ("Grunt pod hydroizolację", f"{op_gruntu_5l} wiader 5L"),
         ]
         
-        if op_folii_5kg > 0:
-            lista_zakupow_lazienka.append((wybrana_folia, f"{op_folii_5kg} wiader"))
+        if op_folii > 0:
+            lista_zakupow_lazienka.append((wybrana_folia, f"{op_folii} op."))
         if m2_maty > 0 and typ_hydro == "Premium (Maty uszczelniające)":
             lista_zakupow_lazienka.append((wybrana_mata, f"{round(m2_maty, 1)} m²"))
-            lista_zakupow_lazienka.append((wybrana_masa, f"{ile_op_masy} op. (15kg)"))
+            lista_zakupow_lazienka.append((wybrana_masa, f"{ile_op_masy} op."))
             
         if worki_tynku > 0:
             lista_zakupow_lazienka.append(("Tynk wyrównawczy (25kg)", f"{worki_tynku} worków"))
