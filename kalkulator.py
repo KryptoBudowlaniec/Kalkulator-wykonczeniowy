@@ -2117,17 +2117,47 @@ elif branza == "Elektryka":
             st.error(f"Problem z generowaniem PDF: {e}")
 
 elif branza == "Łazienka":
-    # --- 1. INICJALIZACJA ZMIENNYCH (To naprawi NameError) ---
+    # --- 1. BAZY MATERIAŁOWE (ŁAZIENKA) ---
+    baza_kleje = {
+        "Atlas Geoflex (Żelowy, C2TE) - 25kg": 65,
+        "Atlas Plus (Wysokoelastyczny S1) - 25kg": 85,
+        "Kerakoll Bioflex (Żelowy) - 25kg": 75,
+        "Kerakoll H40 (Premium) - 25kg": 125,
+        "Mapei Keraflex Extra S1 - 25kg": 80,
+        "Klej Standardowy C2T - 25kg": 50
+    }
+    
+    baza_folie = {
+        "Standardowa folia w płynie - 5kg": 80,
+        "Atlas Woder E - 5kg": 95,
+        "Mapei Mapegum WPS - 5kg": 115
+    }
+    
+    baza_maty = {
+        "Mata uszczelniająca Standard (zł/m2)": 45,
+        "Mata Kerakoll Aquastop (zł/m2)": 65,
+        "Mata Mapei Mapeguard (zł/m2)": 80
+    }
+
+    baza_masy_2k = {
+        "Masa uszczelniająca 1K/2K Standard - 15kg": 180,
+        "Atlas Woder Duo (Masa 2K) - 15kg": 240,
+        "Mapei Mapelastic (Masa 2K) - 16kg": 290
+    }
+
+    # --- 2. INICJALIZACJA ZMIENNYCH ---
     m2_tynku = 0.0
     m2_scian_total = 0.0
     m2_podlogi = 0.0
     obwod = 0.0
     mb_tasma_hydro = 0.0
     m2_hydro_sciany = 0.0
-    format_plytki = "Standardowe (np. 60x60, 30x60)" # domyślna wartość
-    # ---------------------------------------------------------
+    m2_maty = 0.0
+    format_plytki = "Standardowe (np. 60x60, 30x60)"
+    typ_hydro = "Standard (Folia w płynie)"
+    
     st.header("Kompleksowy Kalkulator: Łazienka PRO")
-    st.write("Profesjonalna wycena prac łazienkowych uwzględniająca hydroizolację, format płytek i biały montaż.")
+    st.write("Profesjonalna wycena prac łazienkowych uwzględniająca hydroizolację, markową chemię i biały montaż.")
 
     # --- ZAKŁADKI KROKOWE ---
     tab_wym, tab_plytki, tab_inst, tab_wynik = st.tabs([
@@ -2140,8 +2170,6 @@ elif branza == "Łazienka":
         m2_podlogi = c_w1.number_input("Powierzchnia podłogi (m2):", 1.0, 100.0, 5.0, step=0.5)
         wysokosc = c_w2.number_input("Wysokość łazienki (m):", 2.0, 4.0, 2.5, step=0.1)
         
-        # --- AUTOMATYKA OBWODU ---
-        # Zakładamy prostokąt, gdzie jeden bok to x, a drugi to 1.5x (typowa łazienka)
         import math
         bok_a = math.sqrt(m2_podlogi / 1.5)
         bok_b = bok_a * 1.5
@@ -2157,12 +2185,33 @@ elif branza == "Łazienka":
                 
     with tab_plytki:
         st.subheader("Hydroizolacja (Strefy mokre)")
+        wybrana_folia = st.selectbox("Podstawowa folia w płynie (dla podłogi i ścian):", list(baza_folie.keys()))
+        
+        typ_hydro = st.radio("System hydroizolacji pod prysznicem:", ["Standard (Folia w płynie)", "Premium (Maty uszczelniające)"])
+        
+        wybrana_mata = list(baza_maty.keys())[0]
+        wybrana_masa = list(baza_masy_2k.keys())[0]
+        
+        if typ_hydro == "Premium (Maty uszczelniające)":
+            st.markdown("##### Dobór systemu Mat")
+            wybrana_mata = st.selectbox("Wybierz rodzaj maty:", list(baza_maty.keys()))
+            wybrana_masa = st.selectbox("Wybierz masę do wklejenia maty:", list(baza_masy_2k.keys()))
+            
+            st.markdown("##### Wymiary strefy prysznicowej")
+            ch3, ch4 = st.columns(2)
+            szer_prysznic = ch3.number_input("Szerokość prysznica (m):", 0.5, 3.0, 0.9, step=0.1)
+            dl_prysznic = ch4.number_input("Długość prysznica (m):", 0.5, 3.0, 1.2, step=0.1)
+            # Doliczamy marginesy ok. 50cm poza strefę mokrą
+            m2_maty = (szer_prysznic + 0.5) * (dl_prysznic + 0.5)
+            st.caption(f"Wyliczona powierzchnia maty (+50cm marginesu): **{round(m2_maty, 1)} m²**")
+
         c_h1, c_h2 = st.columns(2)
-        m2_hydro_sciany = c_h1.number_input("Ściany pod prysznicem/wanną (m2):", 0.0, 50.0, 5.0, step=0.5)
+        m2_hydro_sciany = c_h1.number_input("Ściany pod prysznicem/wanną do hydroizolacji (m2):", 0.0, 50.0, 5.0, step=0.5)
         mb_tasma_hydro = c_h2.number_input("Długość taśm narożnikowych (mb):", 0.0, 100.0, 12.0, step=1.0)
         
         st.markdown("---")
         st.subheader("Płytki i Detale")
+        wybrany_klej = st.selectbox("Klej do płytek:", list(baza_kleje.keys()))
         format_plytki = st.selectbox("Format płytek ściennych:", ["Standardowe (np. 60x60, 30x60)", "Wielki Format (np. 120x60, 120x120)", "Mozaika / Małe płyki"])
         szerokosc_fugi = st.slider("Zakładana szerokość fugi (mm):", 1.0, 5.0, 2.0, step=0.5)
         
@@ -2182,34 +2231,33 @@ elif branza == "Łazienka":
 
     with tab_wynik:
         st.subheader("Cennik Wykonawcy (Dostosuj stawki)")
-        c_c1, c_c2, c_c3 = st.columns(3)
-        stawka_m2_plytek = c_c1.number_input("Układanie płytek (zł/m2):", 50, 400, 150 if "Wielki Format" not in format_plytki else 220)
-        stawka_mb_45 = c_c2.number_input("Zacinanie 45° (zł/mb):", 50, 300, 120)
-        stawka_wc = c_c3.number_input("Zabudowa WC (zł/szt):", 100, 1500, 450)
+        c_c1, c_c2 = st.columns(2)
+        stawka_mb_45 = c_c1.number_input("Zacinanie 45° (zł/mb):", 50, 300, 120)
+        stawka_wc = c_c2.number_input("Zabudowa WC (zł/szt):", 100, 1500, 450)
         
         # --- 1. DEFINICJA WYMIARÓW PŁYTEK DO WZORU ---
         if "Wielki Format" in format_plytki:
             dl_p, szer_p, grub_p = 1200, 600, 10
         elif "Standardowe" in format_plytki:
             dl_p, szer_p, grub_p = 600, 600, 9
-        else: # Mozaika / Małe / Drewnopodobne
+        else:
             dl_p, szer_p, grub_p = 600, 170, 8
 
-        # --- 2. OBLICZENIA MATERIAŁOWE (Z DODANYM ZAPASEM PŁYTEK) ---
+        # --- 2. OBLICZENIA MATERIAŁOWE ---
         m2_plytek_total = m2_scian_total + m2_podlogi
         m2_hydro_total = m2_podlogi + m2_hydro_sciany
         
-        # LOGIKA ZAPASU DLA INWESTORA
         procent_zapasu = 1.15 if "Wielki" in format_plytki or "Mozaika" in format_plytki else 1.10
         m2_plytek_z_zapasem = round(m2_plytek_total * procent_zapasu, 1)
 
-        # Hydroizolacja i reszta chemii
-        kg_folii = m2_hydro_total * 1.2
+        # Hydroizolacja - Jeśli mamy matę, odejmujemy jej powierzchnię od folii w płynie
+        m2_pod_folie = max(0, m2_hydro_total - m2_maty) if typ_hydro == "Premium (Maty uszczelniające)" else m2_hydro_total
+        kg_folii = m2_pod_folie * 1.2
         op_folii_5kg = int(kg_folii / 5 + 0.99)
         mb_tasmy = int(mb_tasma_hydro * 1.1)
-        szt_mankiety = szt_podejscia * 2 
+        szt_mankiety = szt_podejscia 
+        
         op_gruntu_5l = int((m2_scian_total * 0.2) / 5 + 0.99)
-
         zuzycie_kleju = 5.5 if "Wielki" in format_plytki else 4.0
         worki_kleju_25kg = int((m2_plytek_total * zuzycie_kleju) / 25 + 0.99)
         
@@ -2222,38 +2270,41 @@ elif branza == "Łazienka":
         worki_tynku = int((m2_tynku * 15) / 25 + 0.99)
 
         # --- 3. OBLICZENIA FINANSOWE ---
-        # BAZA: 2000 zł za każdy m2 podłogi (pokrywa standard prac)
         stawka_bazowa_m2 = 2000 
         robocizna_baza = m2_podlogi * stawka_bazowa_m2
         
-        # DODATKI (Płatne ekstra poza bazą)
         koszt_zacinania = mb_zacinania * stawka_mb_45
-        koszt_listwy = mb_listwy * 100  # Przykład: 100 zł/mb listwy ozdobnej
-        koszt_odplywu = szt_odplyw * 800 # Odpływ jest trudniejszy niż standardowy brodzik
+        koszt_listwy = mb_listwy * 100  
+        koszt_odplywu = szt_odplyw * 800
         koszt_wneki = szt_wneki * 500
         koszt_led = mb_led * 120
-        koszt_wc = szt_wc * 500
+        koszt_wc = szt_wc * stawka_wc
         
-        # Suma całkowita robocizny
         robocizna_suma = (robocizna_baza + koszt_zacinania + koszt_listwy + 
                           koszt_odplywu + koszt_wneki + koszt_led + koszt_wc)
 
-        # --- DODANY BLOK: OBLICZENIA KOSZTÓW MATERIAŁÓW (Naprawia NameError) ---
-        mat_folia = op_folii_5kg * 90
+        # Koszty materiałów z wybranymi opcjami
+        mat_folia = op_folii_5kg * baza_folie[wybrana_folia]
         mat_tasma = mb_tasmy * 6
-        mat_klej = worki_kleju_25kg * 65
+        
+        if typ_hydro == "Premium (Maty uszczelniające)":
+            mat_mata = m2_maty * baza_maty[wybrana_mata]
+            ile_op_masy = int((m2_maty * 1.5)/15 + 0.99)
+            mat_klej_maty = ile_op_masy * baza_masy_2k[wybrana_masa]
+        else:
+            mat_mata = 0
+            mat_klej_maty = 0
+            ile_op_masy = 0
+
+        mat_klej = worki_kleju_25kg * baza_kleje[wybrany_klej]
         mat_fuga_sil = (op_fugi_2kg * 45) + (szt_silikon * 35)
         mat_tynk = worki_tynku * 30
-        materialy_suma = mat_folia + mat_tasma + mat_klej + mat_fuga_sil + mat_tynk + 250
-        # ------------------------------------------------------------------------
+        materialy_suma = mat_folia + mat_tasma + mat_mata + mat_klej_maty + mat_klej + mat_fuga_sil + mat_tynk + 250
 
-        # --- 4. WYŚWIETLANIE WYNIKÓW (WERSJA BIZNESOWA) ---
+        # --- 4. WYŚWIETLANIE WYNIKÓW ---
         st.markdown("---")
-        
-        # Główny wynik
         st.success(f"### ŁĄCZNA KWOTA ROBOCIZNY: **{round(robocizna_suma)} PLN**")
         
-        # Rozbicie na Baza vs Dodatki
         c1, c2 = st.columns(2)
         with c1:
             st.metric("Pakiet Bazowy (Łazienka)", f"{round(robocizna_baza)} zł", help="Obejmuje standardowe układanie płytek, hydroizolację i przygotowanie.")
@@ -2262,16 +2313,14 @@ elif branza == "Łazienka":
             st.metric("Suma dodatków (Detale)", f"{round(suma_dodatkow)} zł", delta="Ekstra za trudność")
 
         st.markdown("---")
-        
-        # SZCZEGÓŁOWA LISTA DODATKÓW
         st.subheader("🛠️ Wycena detali (Poza pakietem bazowym)")
-        
         detale = []
         if mb_zacinania > 0: detale.append({"Zadanie": "Szlifowanie narożników 45°", "Ilość": f"{mb_zacinania} mb", "Koszt": f"{round(koszt_zacinania)} zł"})
         if mb_listwy > 0: detale.append({"Zadanie": "Montaż listew ozdobnych", "Ilość": f"{mb_listwy} mb", "Koszt": f"{round(koszt_listwy)} zł"})
         if szt_wneki > 0: detale.append({"Zadanie": "Wykonanie wnęk/półek", "Ilość": f"{szt_wneki} szt", "Koszt": f"{round(koszt_wneki)} zł"})
         if mb_led > 0: detale.append({"Zadanie": "Montaż profili LED", "Ilość": f"{mb_led} mb", "Koszt": f"{round(koszt_led)} zł"})
         if szt_odplyw > 0: detale.append({"Zadanie": "Odpływ liniowy (koperta)", "Ilość": f"{szt_odplyw} szt", "Koszt": f"{round(koszt_odplywu)} zł"})
+        if szt_wc > 0: detale.append({"Zadanie": "Zabudowa stelaża WC", "Ilość": f"{szt_wc} szt", "Koszt": f"{round(koszt_wc)} zł"})
         
         if detale:
             st.table(detale)
@@ -2281,33 +2330,34 @@ elif branza == "Łazienka":
         # --- DEFINICJA LISTY ---
         lista_zakupow_lazienka = [
             ("PŁYTKI (łącznie z zapasem)", f"{m2_plytek_z_zapasem} m²"),
-            ("Klej elastyczny S1 (25kg)", f"{worki_kleju_25kg} worków"),
-            ("Folia w płynie (5kg)", f"{op_folii_5kg} wiader"),
+            (wybrany_klej, f"{worki_kleju_25kg} worków"),
             ("Taśma uszczelniająca", f"{mb_tasmy} mb"),
             ("Mankiety ścienne", f"{szt_mankiety} szt."),
             ("Fuga elastyczna (2kg)", f"{op_fugi_2kg} op."),
             ("Silikon sanitarny", f"{szt_silikon} szt."),
             ("Grunt pod hydroizolację", f"{op_gruntu_5l} wiader 5L"),
         ]
+        
+        if op_folii_5kg > 0:
+            lista_zakupow_lazienka.append((wybrana_folia, f"{op_folii_5kg} wiader"))
+        if m2_maty > 0 and typ_hydro == "Premium (Maty uszczelniające)":
+            lista_zakupow_lazienka.append((wybrana_mata, f"{round(m2_maty, 1)} m²"))
+            lista_zakupow_lazienka.append((wybrana_masa, f"{ile_op_masy} op. (15kg)"))
+            
         if worki_tynku > 0:
             lista_zakupow_lazienka.append(("Tynk wyrównawczy (25kg)", f"{worki_tynku} worków"))
 
-        # --- WYŚWIETLANIE WYNIKÓW I ANALIZA RENTOWNOŚCI ---
+        # --- WYŚWIETLANIE WYNIKÓW I ANALIZA ---
         st.markdown("---")
-        
-        # Obliczenie wskaźnika na m2 podłogi
         cena_za_m2_podlogi = robocizna_suma / m2_podlogi
         
-        # Główne podsumowanie finansowe
         c_res1, c_res2 = st.columns(2)
         with c_res1:
             st.success(f"### RAZEM ROBOCIZNA\n**{round(robocizna_suma)} PLN**")
         with c_res2:
             st.info(f"### CHEMIA BUDOWLANA\n**~{round(materialy_suma)} PLN**")
 
-        # KONTROLA PRZEDZIAŁU 2000-3000 zł/m2
         st.subheader("Analiza rynkowa wyceny")
-        
         col_metric1, col_metric2 = st.columns([2, 1])
         
         with col_metric1:
@@ -2322,21 +2372,7 @@ elif branza == "Łazienka":
             st.metric("Cena / m² podłogi", f"{round(cena_za_m2_podlogi)} zł")
 
         st.markdown("---")
-        
-        # SEKCJA PŁYTEK I CIĘCIA 45°
-        st.subheader("Zapotrzebowanie i Detale")
-        cp1, cp2, cp3 = st.columns(3)
-        cp1.metric("Płytki do zakupu", f"{m2_plytek_z_zapasem} m²")
-        cp2.metric("Cięcie 45° (mb)", f"{mb_zacinania} mb")
-        cp3.metric("Koszt cięcia", f"{round(koszt_zacinania)} PLN")
-        
-        st.info(f"💡 **Cięcie 45°:** Uwzględniono {mb_zacinania} mb szlifowania krawędzi w stawce {stawka_mb_45} zł/mb.")
-        st.warning("💡 **Wskazówka:** Powyższy metraż uwzględnia docinki i ryzyko pęknięć.")
-
-        # Wyświetlanie listy zakupów
-        st.markdown("---")
         st.subheader("Wykaz Chemii Budowlanej (Lista Zakupów)")
-        
         col_list1, col_list2 = st.columns(2)
         half = len(lista_zakupow_lazienka) // 2 + 1
         
@@ -2347,76 +2383,67 @@ elif branza == "Łazienka":
             for przedmiot, ilosc in lista_zakupow_lazienka[half:]:
                 st.write(f"• **{przedmiot}:** {ilosc}")
                   
-        
-        # --- 5. GENERATOR PDF (ŁAZIENKA PRO - CZCIONKA INTER) ---
+        # --- 5. GENERATOR PDF ---
         st.markdown("---")
         if st.button("📄 Generuj Pełny Kosztorys PDF (Łazienka)"):
             try:
                 from fpdf import FPDF
                 from datetime import datetime
         
-                # 1. NAJPIERW TWORZYMY OBIEKT PDF
                 pdf = FPDF()
                 pdf.add_page()
-                
-                # 2. REJESTRACJA CZCIONKI
                 pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True)
                 
-                # 3. TREŚĆ DOKUMENTU
-                # NAGŁÓWEK
                 pdf.set_font('Inter', '', 16)
-                pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: ŁAZIENKA", ln=True, align='C')
+                pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: LAZIENKA", ln=True, align='C')
                 pdf.set_font('Inter', '', 10)
                 pdf.cell(190, 10, txt=f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
                 pdf.ln(10)
         
-                # SEKCJA 1: PODSUMOWANIE FINANSOWE
                 pdf.set_font('Inter', '', 12)
                 pdf.set_fill_color(230, 230, 230)
-                pdf.cell(190, 10, txt="1. PODSUMOWANIE KOSZTÓW", ln=True, align='L', fill=True)
+                pdf.cell(190, 10, txt="1. PODSUMOWANIE KOSZTOW", ln=True, align='L', fill=True)
                 pdf.ln(2)
                 
                 pdf.set_font('Inter', '', 10)
                 pdf.cell(140, 8, txt="Pakiet Bazowy (Robocizna + przygotowanie)", border=1)
-                pdf.cell(50, 8, txt=f"{round(robocizna_baza)} zł", border=1, ln=True, align='R')
+                pdf.cell(50, 8, txt=f"{round(robocizna_baza)} zl", border=1, ln=True, align='R')
                 
-                pdf.cell(140, 8, txt="Suma dodatków i detali", border=1)
-                pdf.cell(50, 8, txt=f"{round(suma_dodatkow)} zł", border=1, ln=True, align='R')
+                pdf.cell(140, 8, txt="Suma dodatkow i detali", border=1)
+                pdf.cell(50, 8, txt=f"{round(suma_dodatkow)} zl", border=1, ln=True, align='R')
                 
                 pdf.cell(140, 8, txt="Szacowany koszt chemii budowlanej", border=1)
-                pdf.cell(50, 8, txt=f"{round(materialy_suma)} zł", border=1, ln=True, align='R')
+                pdf.cell(50, 8, txt=f"{round(materialy_suma)} zl", border=1, ln=True, align='R')
                 
                 pdf.set_font('Inter', '', 11)
-                pdf.cell(140, 10, txt="RAZEM DO ZAPŁATY (Usługa + Chemia):", border=1, fill=True)
-                pdf.cell(50, 10, txt=f"{round(robocizna_suma + materialy_suma)} zł", border=1, ln=True, align='R', fill=True)
+                pdf.cell(140, 10, txt="RAZEM DO ZAPLATY (Usluga + Chemia):", border=1, fill=True)
+                pdf.cell(50, 10, txt=f"{round(robocizna_suma + materialy_suma)} zl", border=1, ln=True, align='R', fill=True)
                 pdf.ln(5)
         
-                # SEKCJA 2: TABELA DETALI
                 if detale:
                     pdf.set_font('Inter', '', 12)
-                    pdf.cell(190, 10, txt="2. WYCENA ELEMENTÓW DODATKOWYCH", ln=True, align='L', fill=True)
+                    pdf.cell(190, 10, txt="2. WYCENA ELEMENTOW DODATKOWYCH", ln=True, align='L', fill=True)
                     pdf.set_font('Inter', '', 9)
                     pdf.cell(100, 8, "Zadanie / Detal", 1, 0, 'C')
-                    pdf.cell(40, 8, "Ilość", 1, 0, 'C')
+                    pdf.cell(40, 8, "Ilosc", 1, 0, 'C')
                     pdf.cell(50, 8, "Koszt", 1, 1, 'C')
                     for d in detale:
-                        pdf.cell(100, 8, d["Zadanie"], 1)
+                        zadanie_pdf = d["Zadanie"].replace("ś", "s").replace("ó", "o").replace("ł", "l").replace("ń", "n").replace("ę", "e").replace("ą", "a").replace("ż", "z").replace("ź", "z")
+                        pdf.cell(100, 8, zadanie_pdf, 1)
                         pdf.cell(40, 8, d["Ilość"], 1, 0, 'C')
-                        pdf.cell(50, 8, d["Koszt"], 1, 1, 'R')
+                        pdf.cell(50, 8, d["Koszt"].replace("ł", "l"), 1, 1, 'R')
                     pdf.ln(5)
         
-                # SEKCJA 3: LISTA ZAKUPÓW
                 pdf.set_font('Inter', '', 12)
-                pdf.cell(190, 10, txt="3. WYKAZ MATERIAŁÓW (Do dostarczenia)", ln=True, align='L', fill=True)
+                pdf.cell(190, 10, txt="3. WYKAZ MATERIALOW (Do dostarczenia)", ln=True, align='L', fill=True)
                 pdf.set_font('Inter', '', 10)
                 pdf.ln(2)
                 for przedmiot, ilosc in lista_zakupow_lazienka:
-                    pdf.cell(190, 7, txt=f"- {przedmiot}: {ilosc}", ln=True)
+                    prz_pdf = przedmiot.replace("ś", "s").replace("ó", "o").replace("ł", "l").replace("ń", "n").replace("ę", "e").replace("ą", "a").replace("ż", "z").replace("ź", "z").replace("Ś", "S")
+                    pdf.cell(190, 7, txt=f"- {prz_pdf}: {ilosc.replace('ł', 'l')}", ln=True)
         
-                # 4. NA SAMYM KOŃCU GENERUJEMY WYJŚCIE
                 pdf_output = pdf.output()
 
-        # Konwersja na format akceptowany przez Streamlit (standardowe bytes)
                 if isinstance(pdf_output, (bytearray, bytes)):
                     pdf_bytes = bytes(pdf_output)
                 elif isinstance(pdf_output, str):
