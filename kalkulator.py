@@ -2168,11 +2168,11 @@ elif branza == "Łazienka":
     typ_hydro = "Standard (Folia w płynie)"
     
     st.header("Kompleksowy Kalkulator: Łazienka PRO")
-    st.write("Profesjonalna wycena prac łazienkowych uwzględniająca hydroizolację, markową chemię i biały montaż.")
+    st.write("Profesjonalna wycena prac łazienkowych uwzględniająca hydroizolację, markową chemię, demontaże i biały montaż.")
 
     # --- ZAKŁADKI KROKOWE ---
     tab_wym, tab_plytki, tab_inst, tab_wynik = st.tabs([
-        "1. Wymiary", "2. Płytki i Hydro", "3. Instalacje", "4. Podsumowanie"
+        "1. Wymiary & Stan", "2. Płytki i Hydro", "3. Instalacje", "4. Podsumowanie"
     ])
 
     with tab_wym:
@@ -2186,19 +2186,30 @@ elif branza == "Łazienka":
         bok_b = bok_a * 1.5
         sugerowany_obwod = round(2 * (bok_a + bok_b), 1)
         
-        obwod = st.number_input("Suma długości ścian (Obwód w metrach):", 2.0, 100.0, sugerowany_obwod, 
-                               help=f"Dla {m2_podlogi}m2 typowy obwód to ok. {sugerowany_obwod}m")
-        
+        obwod = st.number_input("Suma długości ścian (Obwód w metrach):", 2.0, 100.0, sugerowany_obwod)
         okna_drzwi = st.number_input("Otwory do odjęcia (drzwi/okna w m2):", 0.0, 10.0, 1.6, step=0.1)
         
         m2_scian_total = (obwod * wysokosc) - okna_drzwi
         st.info(f"Całkowita powierzchnia ścian do obróbki: **{round(m2_scian_total, 1)} m²**")
+        
+        st.markdown("---")
+        st.subheader("Stan i Konstrukcje")
+        stan_pomieszczenia = st.radio("Stan pomieszczenia:", ["Stan Deweloperski (Puste)", "Rynek Wtórny (Remont / Demontaże)"], horizontal=True)
+        
+        m2_skuwania = 0.0
+        szt_kontener = 0
+        if stan_pomieszczenia == "Rynek Wtórny (Remont / Demontaże)":
+            c_d1, c_d2 = st.columns(2)
+            m2_skuwania = c_d1.number_input("Metraż płytek do skucia (m2):", 0.0, 150.0, (m2_scian_total + m2_podlogi), step=1.0)
+            szt_kontener = c_d2.number_input("Kontener na gruz (szt):", 0, 5, 1)
+            
+        robimy_sufit = st.checkbox("Sufit podwieszany GK (Płyta zielona H2, stelaż, szpachlowanie)", value=True)
                 
     with tab_plytki:
         st.subheader("Hydroizolacja (Strefy mokre)")
         wybrana_folia = st.selectbox("Podstawowa folia w płynie (dla podłogi i ścian):", list(baza_folie.keys()))
         
-        typ_hydro = st.radio("System hydroizolacji pod prysznicem:", ["Standard (Folia w płynie)", "Premium (Maty uszczelniające)"])
+        typ_hydro = st.radio("System hydroizolacji pod prysznicem:", ["Standard (Folia w płynie)", "Premium (Maty uszczelniające)"], horizontal=True)
         
         wybrana_mata = list(baza_maty.keys())[0]
         wybrana_masa = list(baza_masy_2k.keys())[0]
@@ -2212,7 +2223,6 @@ elif branza == "Łazienka":
             ch3, ch4 = st.columns(2)
             szer_prysznic = ch3.number_input("Szerokość prysznica (m):", 0.5, 3.0, 0.9, step=0.1)
             dl_prysznic = ch4.number_input("Długość prysznica (m):", 0.5, 3.0, 1.2, step=0.1)
-            # Doliczamy marginesy ok. 50cm poza strefę mokrą
             m2_maty = (szer_prysznic + 0.5) * (dl_prysznic + 0.5)
             st.caption(f"Wyliczona powierzchnia maty (+50cm marginesu): **{round(m2_maty, 1)} m²**")
 
@@ -2221,9 +2231,13 @@ elif branza == "Łazienka":
         mb_tasma_hydro = c_h2.number_input("Długość taśm narożnikowych (mb):", 0.0, 100.0, 12.0, step=1.0)
         
         st.markdown("---")
-        st.subheader("Płytki i Detale")
+        st.subheader("Płytki i Fuga")
         wybrany_klej = st.selectbox("Klej do płytek:", list(baza_kleje.keys()))
-        format_plytki = st.selectbox("Format płytek ściennych:", ["Standardowe (np. 60x60, 30x60)", "Wielki Format (np. 120x60, 120x120)", "Mozaika / Małe płyki"])
+        
+        c_f1, c_f2 = st.columns(2)
+        format_plytki = c_f1.selectbox("Format płytek ściennych:", ["Standardowe (np. 60x60, 30x60)", "Wielki Format (np. 120x60, 120x120)", "Mozaika / Małe płyki"])
+        rodzaj_fugi = c_f2.radio("Rodzaj fugi:", ["Cementowa (Elastyczna)", "Epoksydowa (Premium)"])
+        
         szerokosc_fugi = st.slider("Zakładana szerokość fugi (mm):", 1.0, 5.0, 2.0, step=0.5)
         
         c_p1, c_p2 = st.columns(2)
@@ -2238,6 +2252,12 @@ elif branza == "Łazienka":
         
         szt_podejscia = c_i1.number_input("Punkty wodne (mankiety uszczelniające):", 0, 20, 6)
         szt_wneki = c_i2.number_input("Półki / wnęki podświetlane (szt.):", 0, 10, 1)
+        
+        st.markdown("##### Montaże Specjalne")
+        c_i3, c_i4 = st.columns(2)
+        szt_wanna_wolno = c_i3.number_input("Wanna wolnostojąca + bateria podłogowa (szt):", 0, 2, 0)
+        m2_lustra = c_i4.number_input("Wklejanie lustra na wymiar (m2):", 0.0, 10.0, 0.0, step=0.5)
+        
         mb_led = st.number_input("Montaż profili LED w płytkach (mb):", 0.0, 50.0, 0.0, step=1.0)
 
     with tab_wynik:
@@ -2263,8 +2283,6 @@ elif branza == "Łazienka":
 
         # Hydroizolacja
         m2_pod_folie = max(0, m2_hydro_total - m2_maty) if typ_hydro == "Premium (Maty uszczelniające)" else m2_hydro_total
-        
-        # ODCZYT WAGI I CENY FOLII Z NOWEGO SŁOWNIKA
         dane_folii = baza_folie[wybrana_folia]
         kg_folii_potrzebne = m2_pod_folie * 1.2
         op_folii = int(kg_folii_potrzebne / dane_folii["waga"] + 0.99)
@@ -2282,9 +2300,8 @@ elif branza == "Łazienka":
         if op_fugi_2kg == 0: op_fugi_2kg = 1
 
         szt_silikon = int((mb_tasma_hydro + obwod) / 10 + 0.99)
-        worki_tynku = int((m2_tynku * 15) / 25 + 0.99)
 
-        # --- 3. OBLICZENIA FINANSOWE ---
+        # --- 3. OBLICZENIA FINANSOWE (ROBOCIZNA) ---
         stawka_bazowa_m2 = 2000 
         robocizna_baza = m2_podlogi * stawka_bazowa_m2
         
@@ -2294,19 +2311,25 @@ elif branza == "Łazienka":
         koszt_wneki = szt_wneki * 500
         koszt_led = mb_led * 120
         koszt_wc = szt_wc * stawka_wc
+        koszt_demontazu = m2_skuwania * 60
+        koszt_sufitu_rob = m2_podlogi * 180 if robimy_sufit else 0
+        koszt_epoksydu_rob = m2_plytek_total * 50 if rodzaj_fugi == "Epoksydowa (Premium)" else 0
+        koszt_lustro_rob = m2_lustra * 250
+        koszt_wanna_rob = szt_wanna_wolno * 1000
         
         robocizna_suma = (robocizna_baza + koszt_zacinania + koszt_listwy + 
-                          koszt_odplywu + koszt_wneki + koszt_led + koszt_wc)
+                          koszt_odplywu + koszt_wneki + koszt_led + koszt_wc + 
+                          koszt_demontazu + koszt_sufitu_rob + koszt_epoksydu_rob + 
+                          koszt_lustro_rob + koszt_wanna_rob)
 
-        # Koszty materiałów z wybranymi opcjami
+        # --- 4. OBLICZENIA FINANSOWE (MATERIAŁY) ---
         mat_folia = op_folii * dane_folii["cena"]
         mat_tasma = mb_tasmy * 6
         
         if typ_hydro == "Premium (Maty uszczelniające)":
             mat_mata = m2_maty * baza_maty[wybrana_mata]
             dane_masy = baza_masy_2k[wybrana_masa]
-            kg_masy_potrzebne = m2_maty * 1.5 # Przeciętne zużycie masy do wklejenia maty
-            ile_op_masy = int(kg_masy_potrzebne / dane_masy["waga"] + 0.99)
+            ile_op_masy = int((m2_maty * 1.5) / dane_masy["waga"] + 0.99)
             mat_klej_maty = ile_op_masy * dane_masy["cena"]
         else:
             mat_mata = 0
@@ -2314,45 +2337,58 @@ elif branza == "Łazienka":
             ile_op_masy = 0
 
         mat_klej = worki_kleju_25kg * baza_kleje[wybrany_klej]
-        mat_fuga_sil = (op_fugi_2kg * 45) + (szt_silikon * 35)
-        mat_tynk = worki_tynku * 30
-        materialy_suma = mat_folia + mat_tasma + mat_mata + mat_klej_maty + mat_klej + mat_fuga_sil + mat_tynk + 250
+        
+        cena_fugi = 140 if rodzaj_fugi == "Epoksydowa (Premium)" else 45
+        mat_fuga_sil = (op_fugi_2kg * cena_fugi) + (szt_silikon * 35)
+        
+        mat_sufit = m2_podlogi * 65 if robimy_sufit else 0 # Stelaże, GK, akcesoria
+        mat_kontener = szt_kontener * 800
+        mat_lustro_klej = math.ceil(m2_lustra) * 45 if m2_lustra > 0 else 0
+        
+        materialy_suma = mat_folia + mat_tasma + mat_mata + mat_klej_maty + mat_klej + mat_fuga_sil + mat_sufit + mat_kontener + mat_lustro_klej + 250
 
-        # --- 4. WYŚWIETLANIE WYNIKÓW ---
+        # --- 5. WYŚWIETLANIE WYNIKÓW ---
         st.markdown("---")
         st.success(f"### ŁĄCZNA KWOTA ROBOCIZNY: **{round(robocizna_suma)} PLN**")
         
         c1, c2 = st.columns(2)
         with c1:
-            st.metric("Pakiet Bazowy (Łazienka)", f"{round(robocizna_baza)} zł", help="Obejmuje standardowe układanie płytek, hydroizolację i przygotowanie.")
+            st.metric("Pakiet Bazowy (Łazienka)", f"{round(robocizna_baza)} zł", help="Obejmuje standardowe układanie płytek, hydroizolację i biały montaż.")
         with c2:
             suma_dodatkow = robocizna_suma - robocizna_baza
-            st.metric("Suma dodatków (Detale)", f"{round(suma_dodatkow)} zł", delta="Ekstra za trudność")
+            st.metric("Suma dodatków (Detale i Ekstra)", f"{round(suma_dodatkow)} zł", delta="Trudność / Opcje Premium")
 
         st.markdown("---")
-        st.subheader("🛠️ Wycena detali (Poza pakietem bazowym)")
+        st.subheader("Wycena detali (Poza pakietem bazowym)")
         detale = []
+        if m2_skuwania > 0: detale.append({"Zadanie": "Skuwanie starych płytek/kucie", "Ilość": f"{round(m2_skuwania, 1)} m2", "Koszt": f"{round(koszt_demontazu)} zł"})
+        if robimy_sufit: detale.append({"Zadanie": "Sufit podwieszany GK (Robocizna)", "Ilość": f"{round(m2_podlogi, 1)} m2", "Koszt": f"{round(koszt_sufitu_rob)} zł"})
+        if rodzaj_fugi == "Epoksydowa (Premium)": detale.append({"Zadanie": "Aplikacja fugi epoksydowej", "Ilość": f"{round(m2_plytek_total, 1)} m2", "Koszt": f"{round(koszt_epoksydu_rob)} zł"})
         if mb_zacinania > 0: detale.append({"Zadanie": "Szlifowanie narożników 45°", "Ilość": f"{mb_zacinania} mb", "Koszt": f"{round(koszt_zacinania)} zł"})
         if mb_listwy > 0: detale.append({"Zadanie": "Montaż listew ozdobnych", "Ilość": f"{mb_listwy} mb", "Koszt": f"{round(koszt_listwy)} zł"})
         if szt_wneki > 0: detale.append({"Zadanie": "Wykonanie wnęk/półek", "Ilość": f"{szt_wneki} szt", "Koszt": f"{round(koszt_wneki)} zł"})
         if mb_led > 0: detale.append({"Zadanie": "Montaż profili LED", "Ilość": f"{mb_led} mb", "Koszt": f"{round(koszt_led)} zł"})
         if szt_odplyw > 0: detale.append({"Zadanie": "Odpływ liniowy (koperta)", "Ilość": f"{szt_odplyw} szt", "Koszt": f"{round(koszt_odplywu)} zł"})
         if szt_wc > 0: detale.append({"Zadanie": "Zabudowa stelaża WC", "Ilość": f"{szt_wc} szt", "Koszt": f"{round(koszt_wc)} zł"})
+        if szt_wanna_wolno > 0: detale.append({"Zadanie": "Montaż wanny wolnostojącej", "Ilość": f"{szt_wanna_wolno} szt", "Koszt": f"{round(koszt_wanna_rob)} zł"})
+        if m2_lustra > 0: detale.append({"Zadanie": "Wklejanie lustra licowanego", "Ilość": f"{m2_lustra} m2", "Koszt": f"{round(koszt_lustro_rob)} zł"})
         
         if detale:
             st.table(detale)
         else:
             st.info("Brak dodatkowych detali - łazienka w standardzie prostym.")
 
-        # --- DEFINICJA LISTY ---
+        # --- DEFINICJA LISTY ZAKUPÓW ---
+        nazwa_fugi = "Fuga Epoksydowa (Premium 2kg)" if rodzaj_fugi == "Epoksydowa (Premium)" else "Fuga elastyczna cementowa (2kg)"
+        
         lista_zakupow_lazienka = [
             ("PŁYTKI (łącznie z zapasem)", f"{m2_plytek_z_zapasem} m²"),
             (wybrany_klej, f"{worki_kleju_25kg} worków"),
             ("Taśma uszczelniająca", f"{mb_tasmy} mb"),
             ("Mankiety ścienne", f"{szt_mankiety} szt."),
-            ("Fuga elastyczna (2kg)", f"{op_fugi_2kg} op."),
+            (nazwa_fugi, f"{op_fugi_2kg} op."),
             ("Silikon sanitarny", f"{szt_silikon} szt."),
-            ("Grunt pod hydroizolację", f"{op_gruntu_5l} wiader 5L"),
+            ("Grunt głęboko penetrujący", f"{op_gruntu_5l} wiader 5L"),
         ]
         
         if op_folii > 0:
@@ -2361,8 +2397,12 @@ elif branza == "Łazienka":
             lista_zakupow_lazienka.append((wybrana_mata, f"{round(m2_maty, 1)} m²"))
             lista_zakupow_lazienka.append((wybrana_masa, f"{ile_op_masy} op."))
             
-        if worki_tynku > 0:
-            lista_zakupow_lazienka.append(("Tynk wyrównawczy (25kg)", f"{worki_tynku} worków"))
+        if robimy_sufit:
+            lista_zakupow_lazienka.append(("System Sufit GK (płyty H2, profile, uniflott)", f"Na ok. {round(m2_podlogi, 1)} m²"))
+        if szt_kontener > 0:
+            lista_zakupow_lazienka.append(("Kontener na gruz", f"{szt_kontener} szt."))
+        if m2_lustra > 0:
+            lista_zakupow_lazienka.append(("Klej do luster", f"{math.ceil(m2_lustra)} kartuszy"))
 
         # --- WYŚWIETLANIE WYNIKÓW I ANALIZA ---
         st.markdown("---")
@@ -2378,12 +2418,12 @@ elif branza == "Łazienka":
         col_metric1, col_metric2 = st.columns([2, 1])
         
         with col_metric1:
-            if 2000 <= cena_za_m2_podlogi <= 3000:
+            if 2000 <= cena_za_m2_podlogi <= 3500:
                 st.write(f"Twoja wycena to **{round(cena_za_m2_podlogi)} zł/m²** podłogi. Mieścisz się w standardowym przedziale rynkowym.")
             elif cena_za_m2_podlogi < 2000:
                 st.error(f"Uwaga: Wycena wynosi **{round(cena_za_m2_podlogi)} zł/m²** podłogi. To może być za mało przy wysokim standardzie!")
             else:
-                st.warning(f"💎 Standard Premium: Wycena wynosi **{round(cena_za_m2_podlogi)} zł/m²** podłogi. Upewnij się, że Inwestor akceptuje te stawki.")
+                st.warning(f"Standard Premium: Wycena wynosi **{round(cena_za_m2_podlogi)} zł/m²** podłogi. Upewnij się, że Inwestor akceptuje te stawki.")
 
         with col_metric2:
             st.metric("Cena / m² podłogi", f"{round(cena_za_m2_podlogi)} zł")
@@ -2400,9 +2440,9 @@ elif branza == "Łazienka":
             for przedmiot, ilosc in lista_zakupow_lazienka[half:]:
                 st.write(f"• **{przedmiot}:** {ilosc}")
                   
-        # --- 5. GENERATOR PDF ---
+        # --- 6. GENERATOR PDF ---
         st.markdown("---")
-        if st.button("📄 Generuj Pełny Kosztorys PDF (Łazienka)"):
+        if st.button("Generuj Pełny Kosztorys PDF (Łazienka PRO)"):
             try:
                 from fpdf import FPDF
                 from datetime import datetime
@@ -2412,7 +2452,7 @@ elif branza == "Łazienka":
                 pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True)
                 
                 pdf.set_font('Inter', '', 16)
-                pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: LAZIENKA", ln=True, align='C')
+                pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: LAZIENKA PRO", ln=True, align='C')
                 pdf.set_font('Inter', '', 10)
                 pdf.cell(190, 10, txt=f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
                 pdf.ln(10)
@@ -2426,7 +2466,7 @@ elif branza == "Łazienka":
                 pdf.cell(140, 8, txt="Pakiet Bazowy (Robocizna + przygotowanie)", border=1)
                 pdf.cell(50, 8, txt=f"{round(robocizna_baza)} zl", border=1, ln=True, align='R')
                 
-                pdf.cell(140, 8, txt="Suma dodatkow i detali", border=1)
+                pdf.cell(140, 8, txt="Suma dodatkow i detali (W tym ew. demontaze)", border=1)
                 pdf.cell(50, 8, txt=f"{round(suma_dodatkow)} zl", border=1, ln=True, align='R')
                 
                 pdf.cell(140, 8, txt="Szacowany koszt chemii budowlanej", border=1)
@@ -2457,7 +2497,7 @@ elif branza == "Łazienka":
                 pdf.ln(2)
                 for przedmiot, ilosc in lista_zakupow_lazienka:
                     prz_pdf = przedmiot.replace("ś", "s").replace("ó", "o").replace("ł", "l").replace("ń", "n").replace("ę", "e").replace("ą", "a").replace("ż", "z").replace("ź", "z").replace("Ś", "S")
-                    pdf.cell(190, 7, txt=f"- {prz_pdf}: {ilosc.replace('ł', 'l')}", ln=True)
+                    pdf.cell(190, 7, txt=f"- {prz_pdf}: {ilosc.replace('ł', 'l').replace('²','2')}", ln=True)
         
                 pdf_output = pdf.output()
 
@@ -2469,7 +2509,7 @@ elif branza == "Łazienka":
                     pdf_bytes = pdf_output
         
                 st.download_button(
-                    label="📥 Pobierz Kosztorys PDF",
+                    label="Pobierz Kosztorys PDF",
                     data=pdf_bytes,
                     file_name=f"Kosztorys_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf"
