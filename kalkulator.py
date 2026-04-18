@@ -3671,7 +3671,11 @@ elif branza == "Panel Inwestora":
             
             with col_save:
                 if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
-                    if supabase and st.session_state.user_id:
+                    
+                    # BEZPIECZNE POBIERANIE ID - Zapobiega błędom AttributeError!
+                    zalogowany_user = st.session_state.get("user_id") or st.session_state.get("user_email")
+                    
+                    if supabase and zalogowany_user:
                         try:
                             dane_roi = {
                                 "suma_calkowita": round(calkowity_koszt_projektu),
@@ -3681,7 +3685,7 @@ elif branza == "Panel Inwestora":
                                 "lista_zakupow": zakupy 
                             }
                             supabase.table("projekty").insert({
-                                "user_id": st.session_state.user_id, 
+                                "user_id": zalogowany_user, # <--- Wrzuca Email lub ID bez błędu
                                 "nazwa_projektu": nazwa_inwestycji,
                                 "branza": "Kompleksowy Flip",
                                 "dane_json": dane_roi
@@ -3691,7 +3695,6 @@ elif branza == "Panel Inwestora":
                             st.error(f"Błąd zapisu: {e}")
                     else:
                         st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
-
             with col_pdf:
                 if st.button("Generuj Pełny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
                     try:
