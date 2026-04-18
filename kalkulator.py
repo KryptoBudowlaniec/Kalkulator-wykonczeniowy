@@ -612,15 +612,16 @@ elif branza == "Logowanie":
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email_log, "password": pass_log})
                         if res.user:
-                            # Zapisujemy prawdziwe ID z bazy!
+                            # KLUCZOWE: Zapisujemy ID do sesji
                             st.session_state.zalogowany = True
                             st.session_state.user_email = res.user.email
-                            st.session_state.user_id = res.user.id 
+                            st.session_state.user_id = str(res.user.id) # Wymuszamy format string
                             st.session_state.pakiet = "PRO"
-                            st.success("Zalogowano pomyślnie!")
+                            st.success("Zalogowano! Zaraz nastąpi odświeżenie...")
+                            time.sleep(1)
                             st.rerun()
                     except Exception as e:
-                        st.error("Błąd logowania. Sprawdź e-mail i hasło.")
+                        st.error(f"Błąd logowania: {e}")
             
             st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
             st.markdown("#### Lub użyj konta Google")
@@ -3706,10 +3707,12 @@ elif branza == "Panel Inwestora":
             with col_save:
                 if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
                     
-                    # Pobieramy prawdziwe, bezpieczne UUID z logowania!
+                    # Sprawdzamy ID w sesji
                     zalogowany_user_id = st.session_state.get("user_id")
                     
-                    if supabase and zalogowany_user_id:
+                    if not zalogowany_user_id:
+                        st.error("⚠️ Brak aktywnej sesji (ID). Wyloguj się i zaloguj ponownie.")
+                    elif supabase:
                         try:
                             dane_roi = {
                                 "suma_calkowita": round(calkowity_koszt_projektu),
@@ -3718,15 +3721,16 @@ elif branza == "Panel Inwestora":
                                 "roi_procent": round(roi, 1),
                                 "lista_zakupow": zakupy 
                             }
+                            # PRÓBA ZAPISU
                             supabase.table("projekty").insert({
-                                "user_id": zalogowany_user_id, # <--- Prawdziwe UUID
+                                "user_id": zalogowany_user_id, 
                                 "nazwa_projektu": nazwa_inwestycji,
                                 "branza": "Kompleksowy Flip",
                                 "dane_json": dane_roi
                             }).execute()
-                            st.success("✅ Projekt i lista zakupów zapisane pomyślnie!")
+                            st.success("✅ Projekt zapisany pomyślnie!")
                         except Exception as e:
-                            st.error(f"Błąd zapisu w bazie: {e}")
+                            st.error(f"Błąd bazy danych: {e}")
                     else:
                         st.error("Brak poprawnego ID. Wyloguj się i zaloguj ponownie używając adresu E-mail lub Google.")
             with col_pdf:
