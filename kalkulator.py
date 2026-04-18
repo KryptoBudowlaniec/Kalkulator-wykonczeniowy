@@ -351,7 +351,12 @@ elif st.session_state.zalogowany and opcja_boczna == "Język i Region":
 # ==========================================
 # GŁÓWNA LOGIKA WYŚWIETLANIA (IF / ELIF)
 # ==========================================
-
+# --- SYSTEM RATUNKOWY DLA ZMIENNEJ NAWIGACJI ---
+try:
+    branza
+except NameError:
+    branza = "Logowanie"
+    
 if branza == "Start":
     # ---------------- EKRAN STARTOWY (Nietknięty!) ----------------
     st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0; font-weight: 800;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
@@ -546,10 +551,6 @@ if branza == "Start":
         st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
 
 
-try:
-    branza
-except NameError:
-    branza = "Logowanie"
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
 # ==========================================
