@@ -3390,7 +3390,7 @@ elif branza == "Panel Inwestora":
         st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
     else:
         st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
-        st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji.")
+        st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji wraz z listą materiałów.")
         
         tab_roi, tab_suche, tab_mokre, tab_ele, tab_podl, tab_meble, tab_podsumowanie = st.tabs([
             "1. ROI & Koszty", 
@@ -3399,8 +3399,10 @@ elif branza == "Panel Inwestora":
             "4. Elektryka",
             "5. Podłogi & Drzwi", 
             "6. Stolarka & Meble",
-            "7. Podsumowanie"
+            "7. Podsumowanie & Lista Zakupów"
         ])
+
+        import math
 
         # --- ZAKŁADKA 1: PARAMETRY, KOSZTY STAŁE I ROI ---
         with tab_roi:
@@ -3437,19 +3439,34 @@ elif branza == "Panel Inwestora":
         # --- ZAKŁADKA 2: PRACE SUCHE ---
         with tab_suche:
             st.subheader("Gładzie, Malowanie i Zabudowy")
-            st.markdown("#### Konstrukcje GK & Szpachlowanie")
-            c_s1, c_s2 = st.columns(2)
-            do_gk_inv = c_s1.checkbox("Wlicz Sufity GK (całość)", value=False, key="inv_do_gk")
-            do_szpach_inv = c_s2.checkbox("Wlicz Szpachlowanie (całość)", value=True, key="inv_do_szpach")
             
-            if do_szpach_inv:
-                typ_gl_inv = st.radio("Rodzaj gładzi:", ["Sypka", "Gotowa polimerowa"], horizontal=True, key="inv_gl_typ")
+            st.markdown("#### 1. Konstrukcje GK")
+            do_gk_inv = st.checkbox("Wlicz Sufity Podwieszane GK w całym lokalu", value=False, key="inv_do_gk")
+            if do_gk_inv:
+                c_gk1, c_gk2 = st.columns(2)
+                rodzaj_stelaza = c_gk1.radio("Konstrukcja stelaża:", ["Pojedynczy (Standard)", "Krzyżowy (Mniej spękań)"], key="inv_gk_stelaz")
+                system_laczen = c_gk2.selectbox("System łączeń płyt:", ["Taśma z włókna", "Taśma TUFF-TAPE (Premium)", "Flizelina"], key="inv_gk_laczenia")
+                c_gk3, c_gk4 = st.columns(2)
+                rodzaj_plyty = c_gk3.selectbox("Rodzaj płyty:", ["Zwykła GKB", "Impregnowana GKBI (Zielona)"], key="inv_gk_plyta")
+                welna_izolacja = c_gk4.checkbox("Dodaj wełnę mineralną", key="inv_gk_welna")
             
             st.markdown("---")
-            st.markdown("#### Malowanie")
-            do_mal_inv = st.checkbox("Wlicz Malowanie (całość)", value=True, key="inv_do_mal")
+            st.markdown("#### 2. Szpachlowanie i Gładzie")
+            do_szpach_inv = st.checkbox("Wlicz Szpachlowanie całego lokalu", value=True, key="inv_do_szpach")
+            if do_szpach_inv:
+                c_sz1, c_sz2 = st.columns(2)
+                typ_gl_inv = c_sz1.radio("Rodzaj gładzi:", ["Sypka (Worki)", "Gotowa polimerowa (Wiadra)"], horizontal=True, key="inv_szpach_rodzaj")
+                liczba_warstw_gl = c_sz2.slider("Liczba warstw gładzi:", 1, 4, 2, key="inv_szpach_warstwy")
+                mocny_start = st.checkbox("Wlicz równanie gipsem startowym", key="inv_szpach_start")
+
+            st.markdown("---")
+            st.markdown("#### 3. Malowanie")
+            do_mal_inv = st.checkbox("Wlicz Malowanie całego lokalu", value=True, key="inv_do_mal")
             if do_mal_inv:
-                klasa_f = st.selectbox("Klasa farby:", ["Budżetowa", "Standard", "Ceramiczna"], key="inv_f_klasa")
+                c_m1, c_m2 = st.columns(2)
+                klasa_f = c_m1.selectbox("Klasa farby:", ["Budżetowa (Dekoral)", "Standard (Beckers)", "Ceramiczna (Magnat)"], key="inv_mal_klasa")
+                liczba_warstw_mal = c_m2.slider("Liczba warstw farby:", 1, 3, 2, key="inv_mal_warstwy")
+                gruntowanie_typ = st.radio("Sposób gruntowania:", ["Standard (Zwykły Grunt)", "Farba Gruntująca"], horizontal=True, key="inv_mal_grunt")
 
         # --- ZAKŁADKA 3: ŁAZIENKA ---
         with tab_mokre:
@@ -3458,7 +3475,16 @@ elif branza == "Panel Inwestora":
             if do_laz_inv:
                 c_l1, c_l2 = st.columns(2)
                 m2_laz = c_l1.number_input("Powierzchnia łazienki (m2):", 1.0, 30.0, 5.0, key="inv_laz_m2")
-                std_laz = c_l2.radio("Standard płytek:", ["Standard", "Wielki Format"], key="inv_laz_std")
+                m2_hydro = c_l2.number_input("Strefa mokra (hydroizolacja m2):", 2.0, 30.0, 6.0, key="inv_laz_hydro_m2")
+                
+                c_l3, c_l4 = st.columns(2)
+                format_plytek_laz = c_l3.selectbox("Format płytek:", ["Standard (do 60x60)", "Wielki Format (120x60)"], key="inv_laz_format")
+                system_hydro = c_l4.radio("Hydroizolacja:", ["Folia w płynie", "Maty Uszczelniające"], key="inv_laz_system_hydro")
+                
+                c_l5, c_l6 = st.columns(2)
+                rodzaj_kleju_laz = c_l5.selectbox("Klej:", ["Elastyczny C2TE", "Wysokoelastyczny S1"], index=1 if "Wielki" in format_plytek_laz else 0, key="inv_laz_klej")
+                rodzaj_fugi_laz = c_l6.radio("Fuga:", ["Cementowa", "Epoksydowa"], key="inv_laz_fuga")
+                odplyw_liniowy = st.checkbox("Odpływ liniowy (koperta)", value=True, key="inv_laz_odplyw")
 
         # --- ZAKŁADKA 4: ELEKTRYKA ---
         with tab_ele:
@@ -3485,7 +3511,6 @@ elif branza == "Panel Inwestora":
             zrywanie_podlogi = c_p1.checkbox("Zrywanie starego parkietu / płytek", key="inv_zrywanie")
             wylewka_samopoz = c_p2.checkbox("Wylewka samopoziomująca", key="inv_wylewka")
             
-            import math
             koszt_podloze_total = 0
             if zrywanie_podlogi:
                 koszt_podloze_total += (m2_total * 35) 
@@ -3497,7 +3522,9 @@ elif branza == "Panel Inwestora":
                 koszt_mat_wyl = worki_wylewki * 55 
                 koszt_rob_wyl = m2_total * 25
                 koszt_podloze_total += (koszt_mat_wyl + koszt_rob_wyl)
-                st.caption(f"Potrzeba ok. **{worki_wylewki} worków** samopoziomu. Koszt: {round(koszt_mat_wyl + koszt_rob_wyl):,} zł.")
+                st.caption(f"Potrzeba ok. **{worki_wylewki} worków** samopoziomu. Koszt wylewek: {round(koszt_mat_wyl + koszt_rob_wyl):,} zł.")
+            else:
+                worki_wylewki = 0
 
             st.markdown("---")
             st.markdown("##### 2. Wykończenie Podłóg")
@@ -3510,15 +3537,19 @@ elif branza == "Panel Inwestora":
             col_d1, col_d2 = st.columns(2)
             with col_d1:
                 st.markdown("**Drzwi Wewnętrzne**")
-                szt_d_wew = st.number_input("Ilość (szt):", 1, 10, 3, key="inv_d_wew_szt")
-                typ_d_wew = st.selectbox("Rodzaj:", ["Przylgowe (Budżet)", "Bezprzylgowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_d_wew_typ")
-                koszt_drzwi_wew = szt_d_wew * (1000 if "Przylgowe" in typ_d_wew else (2500 if "Ukryta" in typ_d_wew else 1600))
+                do_drzwi = st.checkbox("Montaż nowych drzwi", value=True, key="inv_do_drzwi_wew_ch")
+                if do_drzwi:
+                    szt_d_wew = st.number_input("Ilość (szt):", 1, 10, 3, key="inv_d_wew_szt")
+                    typ_d_wew = st.selectbox("Rodzaj:", ["Przylgowe (Budżet)", "Bezprzylgowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_d_wew_typ")
+                    koszt_drzwi_wew = szt_d_wew * (1000 if "Przylgowe" in typ_d_wew else (2500 if "Ukryta" in typ_d_wew else 1600))
+                else:
+                    koszt_drzwi_wew = 0
             
             with col_d2:
                 st.markdown("**Drzwi Wejściowe**")
                 wymiana_wej = st.checkbox("Wymień drzwi wejściowe", key="inv_d_wej_do")
                 if wymiana_wej:
-                    typ_d_wej = st.selectbox("Standard:", ["Marketowe (ok. 1200 zł)", "Standard (Porta/KrCenter - ok. 2800 zł)", "Premium (Gerda - ok. 4500 zł)"], key="inv_d_wej_typ")
+                    typ_d_wej = st.selectbox("Standard:", ["Marketowe (ok. 1200 zł)", "Standard (Porta/KrCenter)", "Premium (Gerda)"], key="inv_d_wej_typ")
                     koszt_drzwi_wej = 1200 if "Marketowe" in typ_d_wej else (4500 if "Premium" in typ_d_wej else 2800)
                 else:
                     koszt_drzwi_wej = 0
@@ -3535,14 +3566,11 @@ elif branza == "Panel Inwestora":
             
             koszt_mebli_total = kuchnia_inv + szafy_inv + laz_stolarz
 
-        # --- ZAKŁADKA 7: PODSUMOWANIE & ROI ---
+        # --- ZAKŁADKA 7: PODSUMOWANIE & LISTA ZAKUPÓW ---
         with tab_podsumowanie:
-            st.subheader("Analiza Rentowności i Harmonogram 📊")
+            st.subheader("Analiza Rentowności (ROI) 📊")
             
-            # --- KOSZTY UTRZYMANIA ---
             koszty_utrzymania_total = (czynsz_mc + media_mc) * czas_operacji
-
-            # Sumowanie kosztów
             koszt_transakcyjny = (cena_zakupu * 0.02) + 4500
             remont_robocizna = bazowy_remont_szacunek 
             wyposazenie_total = koszt_mebli_total + koszt_ele_total + koszt_podloze_total + koszt_drzwi_total
@@ -3558,17 +3586,128 @@ elif branza == "Panel Inwestora":
             
             st.write(f"💸 **Koszty utrzymania (Czynsz + Media przez {czas_operacji} mc):** {koszty_utrzymania_total:,} zł".replace(",", " "))
             
+            # ==============================================================
+            # GENERATOR LISTY MATERIAŁÓW (ODTWORZONY Z PEŁNYMI DETALAMI!)
+            # ==============================================================
             st.markdown("---")
-            st.subheader("Pasek postępu prac (Harmonogram)")
-            if 'etapy_projektu' in st.session_state:
-                suma_dni = sum([e['Dni'] for e in st.session_state.etapy_projektu])
-                suma_postepu = sum([(e['Postęp'] / 100) * e['Dni'] for e in st.session_state.etapy_projektu])
-                calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
-                
-                st.progress(calkowity_progres / 100)
-                st.write(f"Ogólny postęp: **{round(calkowity_progres, 1)}%**")
-            else:
-                st.info("Brak aktywnego harmonogramu.")
+            st.subheader("🛒 Kompletna Lista Zakupów dla Inwestycji")
+            
+            zakupy = {"ELEKTRYKA": [], "ŁAZIENKA": [], "SUCHY MONTAŻ (G-K)": [], "ŚCIANY (GŁADZIE I MALOWANIE)": [], "PODŁOGI I DRZWI": [], "ZABUDOWY MEBLOWE": []}
+
+            # 1. ELEKTRYKA
+            if do_elek_inv:
+                zakupy["ELEKTRYKA"].extend([
+                    f"Przewód 3x2.5 (Gniazda): ~{int(m2_total*2.5)} mb",
+                    f"Przewód 3x1.5 (Światło): ~{int(m2_total*1.5)} mb",
+                    "Rozdzielnica + Bezpieczniki",
+                    f"Osprzęt ({std_osprzet}): {szt_punktow} szt."
+                ])
+
+            # 2. ŁAZIENKA
+            if do_laz_inv:
+                m2_plytek = m2_laz * 3.5 # Szacunek z podłogą
+                zakupy["ŁAZIENKA"].extend([
+                    f"Płytki ({format_plytek_laz}): {math.ceil(m2_plytek * 1.15)} m2 (z zapasem)",
+                    f"Klej ({rodzaj_kleju_laz}): {math.ceil((m2_plytek*5)/25)} worków",
+                    f"Hydroizolacja ({system_hydro}): na {m2_hydro} m2",
+                    f"Fuga ({rodzaj_fugi_laz}): 2-3 op."
+                ])
+                if odplyw_liniowy: zakupy["ŁAZIENKA"].append("Odpływ liniowy (koperta) - 1 szt.")
+
+            # 3. G-K
+            if do_gk_inv:
+                zakupy["SUCHY MONTAŻ (G-K)"].extend([
+                    f"Płyty GK ({rodzaj_plyty}): {math.ceil((m2_total*1.1)/3)} szt.",
+                    f"Stelaż ({rodzaj_stelaza}) - profile CD/UD i wieszaki",
+                    f"Łączenia: {system_laczen}"
+                ])
+                if welna_izolacja: zakupy["SUCHY MONTAŻ (G-K)"].append(f"Wełna mineralna: {math.ceil(m2_total)} m2")
+
+            # 4. GŁADZIE I MALOWANIE
+            pow_scian = m2_total * 3.5
+            if do_szpach_inv:
+                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Gładź ({typ_gl_inv}) na {liczba_warstw_gl} warstwy: ~{math.ceil((pow_scian * liczba_warstw_gl * 1.2) / 20)} op. (20kg)")
+                if mocny_start: zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append("Gips szpachlowy (Start) do równania krzywizn")
+            if do_mal_inv:
+                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].extend([
+                    f"Grunt: {gruntowanie_typ}",
+                    f"Farba ({klasa_f}) na {liczba_warstw_mal} warstwy: ~{math.ceil((pow_scian * liczba_warstw_mal) / 12)} L"
+                ])
+
+            # 5. PODŁOGI I DRZWI
+            if wylewka_samopoz:
+                zakupy["PODŁOGI I DRZWI"].append(f"Wylewka samopoziomująca ({grubosc_wyl}mm): ~{worki_wylewki} worków (25kg)")
+            if do_podl_fin:
+                zakupy["PODŁOGI I DRZWI"].append(f"Podłoga ({typ_p}) + podkłady: {math.ceil(m2_total * 1.1)} m2")
+            if do_drzwi:
+                zakupy["PODŁOGI I DRZWI"].append(f"Drzwi wewnętrzne ({typ_d_wew}): {szt_d_wew} kpl.")
+            if wymiana_wej:
+                zakupy["PODŁOGI I DRZWI"].append(f"Drzwi wejściowe ({typ_d_wej}): 1 kpl.")
+
+            # 6. MEBLE
+            if kuchnia_inv > 0: zakupy["ZABUDOWY MEBLOWE"].append(f"Kuchnia na wymiar (Budżet: {kuchnia_inv} PLN)")
+            if szafy_inv > 0: zakupy["ZABUDOWY MEBLOWE"].append(f"Szafy/Wnęki (Budżet: {szafy_inv} PLN)")
+            if laz_stolarz > 0: zakupy["ZABUDOWY MEBLOWE"].append(f"Zabudowy Łazienkowe (Budżet: {laz_stolarz} PLN)")
+
+            # Filtracja i wyświetlanie na ekranie
+            zakupy = {k: v for k, v in zakupy.items() if len(v) > 0}
+            
+            c_z1, c_z2 = st.columns(2)
+            kolumny_zakupow = [c_z1, c_z2]
+            idx = 0
+            for kategoria, przedmioty in zakupy.items():
+                with kolumny_zakupow[idx % 2]:
+                    st.markdown(f"**{kategoria}**")
+                    for p in przedmioty:
+                        st.write(f"- {p}")
+                idx += 1
+
+            # ==============================================================
+            # ZAPIS DO BAZY I GENERATOR PDF
+            # ==============================================================
+            st.markdown("---")
+            st.subheader("💾 Zapisz Projekt i Pobierz PDF")
+            col_save, col_pdf = st.columns(2)
+            
+            with col_save:
+                if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
+                    if supabase and st.session_state.user_id:
+                        try:
+                            dane_roi = {
+                                "suma_calkowita": round(calkowity_koszt_projektu),
+                                "koszt_remontu_total": round(remont_robocizna + wyposazenie_total),
+                                "zysk_brutto": round(zysk_brutto),
+                                "roi_procent": round(roi, 1),
+                                "lista_zakupow": zakupy # <--- LISTA MATERIAŁÓW WRACA DO BAZY!
+                            }
+                            supabase.table("projekty").insert({
+                                "user_id": st.session_state.user_id, 
+                                "nazwa_projektu": nazwa_inwestycji,
+                                "branza": "Kompleksowy Flip",
+                                "dane_json": dane_roi
+                            }).execute()
+                            st.success("✅ Projekt i lista zakupów zapisane pomyślnie!")
+                        except Exception as e:
+                            st.error(f"Błąd zapisu: {e}")
+                    else:
+                        st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
+
+            with col_pdf:
+                if st.button("Pobierz Pełny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
+                    try:
+                        from fpdf import FPDF
+                        import base64
+                        def czysc_tekst(tekst):
+                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                            return tekst.encode('latin-1', 'replace').decode('latin-1')
+                        
+                        pdf = FPDF()
+                        pdf.add_page()
+                        pdf.set_font("Arial", style="B", size=16)
+                        pdf.set_text_color(0, 211, 149)
+                        pdf.cell(190, 10, txt=czysc_tekst(f"PROCALC - KOSZTORYS: {nazwa_inwestycji.upper()}"), ln=True, align='C')
+                        pdf.ln(5
                     
 # ==========================================
 # MODUŁ: HARMONOGRAM (GANTT LIVE)
