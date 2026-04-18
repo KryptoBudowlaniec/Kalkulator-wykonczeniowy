@@ -114,8 +114,8 @@ if acc_token and ref_token:
             user_res = supabase.auth.get_user()
             if user_res and user_res.user:
                 st.session_state.user_email = user_res.user.email
+                st.session_state.user_id = user_res.user.id  # <--- TA LINIJKA JEST NOWA I KLUCZOWA!
                 
-        # Zapisujemy twardo w pamięci!
         st.session_state.zalogowany = True
         st.session_state.pakiet = "PRO"
         
@@ -597,14 +597,35 @@ elif branza == "Logowanie":
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.subheader("Witaj w ProCalc")
         st.write("Zaloguj się, aby odblokować pakiet PRO, zapisywać projekty i pobierać raporty PDF.")
-        
         st.markdown("<br>", unsafe_allow_html=True)
         
-        _, col_btn, _ = st.columns([1, 2, 1])
-        with col_btn:
-            # --- OSTATECZNY PRZYCISK: Czysty HTML (Działa natychmiast, w tej samej karcie) ---
-            login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
+        # --- ZAKŁADKI LOGOWANIA I REJESTRACJI ---
+        tab_log, tab_rej = st.tabs(["🔐 Logowanie", "📝 Rejestracja"])
+        
+        with tab_log:
+            st.markdown("#### Zaloguj się adresem E-mail")
+            email_log = st.text_input("Adres E-mail", key="log_email")
+            pass_log = st.text_input("Hasło", type="password", key="log_pass")
             
+            if st.button("Zaloguj się", type="primary", use_container_width=True):
+                if supabase:
+                    try:
+                        res = supabase.auth.sign_in_with_password({"email": email_log, "password": pass_log})
+                        if res.user:
+                            # Zapisujemy prawdziwe ID z bazy!
+                            st.session_state.zalogowany = True
+                            st.session_state.user_email = res.user.email
+                            st.session_state.user_id = res.user.id 
+                            st.session_state.pakiet = "PRO"
+                            st.success("Zalogowano pomyślnie!")
+                            st.rerun()
+                    except Exception as e:
+                        st.error("Błąd logowania. Sprawdź e-mail i hasło.")
+            
+            st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
+            st.markdown("#### Lub użyj konta Google")
+            
+            login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
             przycisk_html = f"""
             <a href="{login_url}" target="_self" style="text-decoration: none;">
                 <div style="background-color: #00D395; color: white; padding: 15px; text-align: center; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -613,28 +634,41 @@ elif branza == "Logowanie":
             </a>
             """
             st.markdown(przycisk_html, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.caption("<center>Wszystkie problemy techniczne zostały zażegnane 🚀</center>", unsafe_allow_html=True)
+            
+        with tab_rej:
+            st.markdown("#### Utwórz darmowe konto")
+            email_rej = st.text_input("Twój adres E-mail", key="rej_email")
+            pass_rej = st.text_input("Utwórz Hasło (min. 6 znaków)", type="password", key="rej_pass")
+            pass_rej2 = st.text_input("Powtórz Hasło", type="password", key="rej_pass2")
+            
+            if st.button("Zarejestruj się", type="primary", use_container_width=True):
+                if pass_rej != pass_rej2:
+                    st.error("Hasła nie są identyczne!")
+                elif len(pass_rej) < 6:
+                    st.error("Hasło musi mieć minimum 6 znaków.")
+                elif supabase:
+                    try:
+                        res = supabase.auth.sign_up({"email": email_rej, "password": pass_rej})
+                        st.success("Konto utworzone! Możesz się teraz zalogować w zakładce obok.")
+                    except Exception as e:
+                        st.error(f"Błąd rejestracji. Upewnij się, że mail jest poprawny.")
 
     else:
-        # WIDOK PO POMYŚLNYM ZALOGOWANIU
+        # WIDOK PO ZALOGOWANIU
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.success("✅ Witaj z powrotem! Jesteś zalogowany.")
-        st.info(f"Zalogowano jako: **{st.session_state.get('user_email', 'Użytkownik ProCalc')}**")
+        st.info(f"Zalogowano jako: **{st.session_state.get('user_email', '')}**")
         st.write("Twój aktywny pakiet: **Premium PRO 💎**")
-        
         st.markdown("<br>", unsafe_allow_html=True)
+        
         _, col_logout, _ = st.columns([1, 1, 1])
         with col_logout:
             if st.button("WYLOGUJ SIĘ", use_container_width=True, type="secondary"):
                 st.session_state.zalogowany = False
                 st.session_state.pakiet = "Podstawowy"
                 st.session_state.user_email = ""
-                st.session_state.pop("access_token", None)
-                st.session_state.pop("refresh_token", None)
-                if supabase:
-                    supabase.auth.sign_out()
+                st.session_state.pop("user_id", None)
+                if supabase: supabase.auth.sign_out()
                 st.rerun()
                 
 # --- INICJALIZACJA STANU ---
@@ -3672,16 +3706,10 @@ elif branza == "Panel Inwestora":
             with col_save:
                 if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
                     
-                    # KULOODPORNE POBIERANIE UŻYTKOWNIKA
-                    zalogowany_user = st.session_state.get("user_id")
-                    if not zalogowany_user:
-                        zalogowany_user = st.session_state.get("user_email")
+                    # Pobieramy prawdziwe, bezpieczne UUID z logowania!
+                    zalogowany_user_id = st.session_state.get("user_id")
                     
-                    # Jeśli testujesz aplikację bez pełnego logowania i email jest pusty:
-                    if not zalogowany_user or zalogowany_user == "":
-                        zalogowany_user = "testowy_inwestor_123"
-                    
-                    if supabase is not None:
+                    if supabase and zalogowany_user_id:
                         try:
                             dane_roi = {
                                 "suma_calkowita": round(calkowity_koszt_projektu),
@@ -3691,17 +3719,16 @@ elif branza == "Panel Inwestora":
                                 "lista_zakupow": zakupy 
                             }
                             supabase.table("projekty").insert({
-                                "user_id": zalogowany_user, 
+                                "user_id": zalogowany_user_id, # <--- Prawdziwe UUID
                                 "nazwa_projektu": nazwa_inwestycji,
                                 "branza": "Kompleksowy Flip",
                                 "dane_json": dane_roi
                             }).execute()
                             st.success("✅ Projekt i lista zakupów zapisane pomyślnie!")
                         except Exception as e:
-                            st.error(f"Błąd podczas wysyłania do bazy: {e}")
-                            st.info("Upewnij się, że w Supabase tabela 'projekty' nie ma włączonych restrykcji RLS (Row Level Security) blokujących zapis.")
+                            st.error(f"Błąd zapisu w bazie: {e}")
                     else:
-                        st.error("Błąd: Obiekt 'supabase' nie istnieje. Sprawdź połączenie na górze pliku.")
+                        st.error("Brak poprawnego ID. Wyloguj się i zaloguj ponownie używając adresu E-mail lub Google.")
             with col_pdf:
                 if st.button("Generuj Pełny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
                     try:
