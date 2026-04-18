@@ -3645,11 +3645,20 @@ elif branza == "Panel Inwestora":
             do_laz_inv = st.checkbox("Wlicz Remont Łazienki", value=True, key="inv_do_laz")
             
             if do_laz_inv:
+                
                 # --- INTERFEJS ---
-                st.markdown("#### 1. Wymiary i Płytki")
+                st.markdown("#### 1. Wymiary i Wykończenie Ścian")
                 c_l1, c_l2 = st.columns(2)
                 m2_laz = c_l1.number_input("Powierzchnia łazienki (m2 podłogi):", 1.0, 30.0, 5.0, key="inv_laz_m2")
                 format_plytek_laz = c_l2.selectbox("Format płytek:", ["Standard (do 60x60)", "Wielki Format (120x60)", "Spiek / Mega Format"], key="inv_laz_format")
+                
+                # --- NOWOŚĆ: Wybór stylu łazienki ---
+                styl_lazienki = st.radio(
+                    "Projekt wykończenia ścian:", 
+                    ["Klasyczny (Płytki na wszystkich ścianach pod sufit)", 
+                     "Nowoczesna Hybryda (ok. 50% ścian w płytkach, reszta to gładź i farba)"], 
+                    key="inv_laz_styl"
+                )
                 
                 st.markdown("---")
                 st.markdown("#### 2. Hydroizolacja (Strefa Mokra)")
@@ -3780,18 +3789,21 @@ elif branza == "Panel Inwestora":
                 ])
 
             # ŁAZIENKA
+
             if do_laz_inv:
-                m2_plytek_laz = m2_laz * 3.5 
+                # OBLICZANIE: HYBRYDA VS KLASYKA
+                if "Hybryda" in styl_lazienki:
+                    m2_plytek_laz = m2_laz * 2.2 # Mniej płytek (tylko strefa mokra + podłoga)
+                    m2_malowania_laz = m2_laz * 2.3 # Sufit + reszta ścian na sucho
+                else:
+                    m2_plytek_laz = m2_laz * 3.5 # Płytki wszędzie po sam sufit
+                    m2_malowania_laz = m2_laz * 1.0 # Malujemy tylko sufit
+
+                # Klej (liczony tylko dla metrów pokrytych płytkami)
                 cena_kleju = baza_kleje[wybrany_klej]
                 worki_kleju = math.ceil((m2_plytek_laz * 5) / 25) 
                 koszt_materialow_detal += (worki_kleju * cena_kleju)
-                
-                zakupy["ŁAZIENKA"].extend([
-                    f"Płytki ({format_plytek_laz}): ok. {math.ceil(m2_plytek_laz * 1.15)} m2",
-                    f"Klej ({wybrany_klej}): {worki_kleju} worków",
-                    f"Fuga ({rodzaj_fugi_laz}): 2-3 op."
-                ])
-                if odplyw_liniowy: zakupy["ŁAZIENKA"].append("Odpływ liniowy (koperta) - 1 szt.")
+                zakupy["ŁAZIENKA"].append(f"Klej ({wybrany_klej}): {worki_kleju} worków")
                 
                 # Hydroizolacja
                 if "Folia" in typ_hydro:
@@ -3808,7 +3820,26 @@ elif branza == "Panel Inwestora":
                     op_m2k = math.ceil((m2_hydro * 2.5) / dane_m2k['waga'])
                     koszt_materialow_detal += (op_m2k * dane_m2k['cena'])
                     zakupy["ŁAZIENKA"].append(f"Masa 2K ({produkt_hydro}): {op_m2k} szt.")
-                koszt_materialow_detal += (m2_plytek_laz * 1.15 * 100) # szacunek za same płytki
+
+                # Płytki i Fuga
+                koszt_materialow_detal += (m2_plytek_laz * 1.15 * 100) # Szacunek 100 zł/m2 płytki
+                zakupy["ŁAZIENKA"].append(f"Płytki ({format_plytek_laz}): ok. {math.ceil(m2_plytek_laz * 1.15)} m2")
+                zakupy["ŁAZIENKA"].append(f"Fuga ({rodzaj_fugi_laz}): 2-3 op.")
+                if odplyw_liniowy: zakupy["ŁAZIENKA"].append("Odpływ liniowy (koperta) - 1 szt.")
+
+                # --- NOWOŚĆ: MATERIAŁY DO ŚCIAN "SUCHYCH" W ŁAZIENCE ---
+                if m2_malowania_laz > 0:
+                    # Gładź wodoodporna (szacunek ok. 70 zł za wiadro 20kg polimerowej)
+                    wiadra_gl_laz = math.ceil((m2_malowania_laz * 2.0) / 20)
+                    koszt_materialow_detal += (wiadra_gl_laz * 70)
+                    if "Hybryda" in styl_lazienki:
+                        zakupy["ŁAZIENKA"].append(f"Gładź wodoodporna/polimerowa (na ściany i sufit): {wiadra_gl_laz} wiader")
+                    
+                    # Farba Łazienkowa (szacunek ok. 55 zł za litr farby Premium Kuchnia/Łazienka)
+                    litry_farby_laz = math.ceil(m2_malowania_laz * 0.2) # 2 warstwy
+                    koszt_materialow_detal += (litry_farby_laz * 55)
+                    opis_farby = "Farba Premium (Kuchnia/Łazienka)" if "Hybryda" in styl_lazienki else "Farba biała na sufit"
+                    zakupy["ŁAZIENKA"].append(f"{opis_farby}: ~{litry_farby_laz} L")
 
             # G-K
             if do_gk_inv:
