@@ -3795,35 +3795,15 @@ elif branza == "Panel Inwestora":
             
             koszt_mebli_total = kuchnia_inv + szafy_inv + laz_stolarz
 
-        # --- ZAKŁADKA 7: PODSUMOWANIE & LISTA ZAKUPÓW ---
+# --- ZAKŁADKA 7: PODSUMOWANIE & LISTA ZAKUPÓW ---
         with tab_podsumowanie:
-            st.subheader("Analiza Rentowności (ROI) 📊")
-            
-            koszty_utrzymania_total = (czynsz_mc + media_mc) * czas_operacji
-            koszt_transakcyjny = (cena_zakupu * 0.02) + 4500
-            remont_robocizna = bazowy_remont_szacunek 
-            wyposazenie_total = koszt_mebli_total + koszt_ele_total + koszt_podloze_total + koszt_drzwi_total
-            
-            calkowity_koszt_projektu = cena_zakupu + koszt_transakcyjny + remont_robocizna + wyposazenie_total + koszty_utrzymania_total
-            zysk_brutto = cena_sprzedazy - calkowity_koszt_projektu
-            roi = (zysk_brutto / calkowity_koszt_projektu) * 100 if calkowity_koszt_projektu > 0 else 0
-            
-            r1, r2, r3 = st.columns(3)
-            r1.metric("Łączny koszt Inwestycji", f"{round(calkowity_koszt_projektu):,} zł".replace(",", " "))
-            r2.metric("PRZEWIDYWANY ZYSK", f"{round(zysk_brutto):,} zł".replace(",", " "))
-            r3.metric("ROI %", f"{round(roi, 1)} %")
-            
-            st.write(f"💸 **Koszty utrzymania (Czynsz + Media przez {czas_operacji} mc):** {koszty_utrzymania_total:,} zł".replace(",", " "))
-            
-            # ==============================================================
-            # GENERATOR LISTY MATERIAŁÓW (ODTWORZONY Z PEŁNYMI DETALAMI!)
-            # ==============================================================
-            st.markdown("---")
-            st.subheader("🛒 Kompletna Lista Zakupów dla Inwestycji")
-            
+            st.subheader("Analiza Rentowności i Kosztorys Materiałowy 📊")
+
+            # --- 1. RE-KALKULACJA KOSZTÓW MATERIAŁÓW (MÓZG SYSTEMU) ---
+            koszt_materialow_detal = 0
             zakupy = {"ELEKTRYKA": [], "ŁAZIENKA": [], "SUCHY MONTAŻ (G-K)": [], "ŚCIANY (GŁADZIE I MALOWANIE)": [], "PODŁOGI I DRZWI": [], "ZABUDOWY MEBLOWE": []}
 
-            # 1. ELEKTRYKA
+            # ELEKTRYKA
             if do_elek_inv:
                 zakupy["ELEKTRYKA"].extend([
                     f"Przewód 3x2.5 (Gniazda): ~{int(m2_total*2.5)} mb",
@@ -3832,18 +3812,38 @@ elif branza == "Panel Inwestora":
                     f"Osprzęt ({std_osprzet}): {szt_punktow} szt."
                 ])
 
-            # 2. ŁAZIENKA
+            # ŁAZIENKA
             if do_laz_inv:
-                m2_plytek = m2_laz * 3.5 # Szacunek z podłogą
+                m2_plytek_laz = m2_laz * 3.5 
+                cena_kleju = baza_kleje[wybrany_klej]
+                worki_kleju = math.ceil((m2_plytek_laz * 5) / 25) 
+                koszt_materialow_detal += (worki_kleju * cena_kleju)
+                
                 zakupy["ŁAZIENKA"].extend([
-                    f"Płytki ({format_plytek_laz}): {math.ceil(m2_plytek * 1.15)} m2 (z zapasem)",
-                    f"Klej ({rodzaj_kleju_laz}): {math.ceil((m2_plytek*5)/25)} worków",
-                    f"Hydroizolacja ({system_hydro}): na {m2_hydro} m2",
+                    f"Płytki ({format_plytek_laz}): ok. {math.ceil(m2_plytek_laz * 1.15)} m2",
+                    f"Klej ({wybrany_klej}): {worki_kleju} worków",
                     f"Fuga ({rodzaj_fugi_laz}): 2-3 op."
                 ])
                 if odplyw_liniowy: zakupy["ŁAZIENKA"].append("Odpływ liniowy (koperta) - 1 szt.")
+                
+                # Hydroizolacja
+                if "Folia" in typ_hydro:
+                    dane_h = baza_folie[produkt_hydro]
+                    op_h = math.ceil((m2_hydro * 1.5) / dane_h['waga'])
+                    koszt_materialow_detal += (op_h * dane_h['cena'])
+                    zakupy["ŁAZIENKA"].append(f"Hydroizolacja ({produkt_hydro}): {op_h} szt.")
+                elif "Mata" in typ_hydro:
+                    cena_m = baza_maty[produkt_hydro]
+                    koszt_materialow_detal += (m2_hydro * cena_m)
+                    zakupy["ŁAZIENKA"].append(f"Mata uszczelniająca ({produkt_hydro}): {math.ceil(m2_hydro)} m2")
+                else: 
+                    dane_m2k = baza_masy_2k[produkt_hydro]
+                    op_m2k = math.ceil((m2_hydro * 2.5) / dane_m2k['waga'])
+                    koszt_materialow_detal += (op_m2k * dane_m2k['cena'])
+                    zakupy["ŁAZIENKA"].append(f"Masa 2K ({produkt_hydro}): {op_m2k} szt.")
+                koszt_materialow_detal += (m2_plytek_laz * 1.15 * 100) # szacunek za same płytki
 
-            # 3. G-K
+            # G-K
             if do_gk_inv:
                 zakupy["SUCHY MONTAŻ (G-K)"].extend([
                     f"Płyty GK ({rodzaj_plyty}): {math.ceil((m2_total*1.1)/3)} szt.",
@@ -3852,18 +3852,30 @@ elif branza == "Panel Inwestora":
                 ])
                 if welna_izolacja: zakupy["SUCHY MONTAŻ (G-K)"].append(f"Wełna mineralna: {math.ceil(m2_total)} m2")
 
-            # 4. GŁADZIE I MALOWANIE
-            pow_scian = m2_total * 3.5
+            # GŁADZIE I MALOWANIE
+            pow_scian_total = m2_total * 3.5
             if do_szpach_inv:
-                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Gładź ({typ_gl_inv}) na {liczba_warstw_gl} warstwy: ~{math.ceil((pow_scian * liczba_warstw_gl * 1.2) / 20)} op. (20kg)")
-                if mocny_start: zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append("Gips szpachlowy (Start) do równania krzywizn")
-            if do_mal_inv:
-                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].extend([
-                    f"Grunt: {gruntowanie_typ}",
-                    f"Farba ({klasa_f}) na {liczba_warstw_mal} warstwy: ~{math.ceil((pow_scian * liczba_warstw_mal) / 12)} L"
-                ])
+                d_gl = baza_sypka[produkt_gl] if "Sypka" in typ_gl_radio else baza_gotowa[produkt_gl]
+                worki_gl = math.ceil((pow_scian_total * liczba_warstw_gl * 1.0) / d_gl['waga'])
+                koszt_materialow_detal += (worki_gl * d_gl['cena'])
+                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Gładź ({produkt_gl}): {worki_gl} op.")
+                if mocny_start: zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Gips szpachlowy (Start): {math.ceil(pow_scian_total/20)} worków")
 
-            # 5. PODŁOGI I DRZWI
+            if do_mal_inv:
+                cena_gruntu = baza_grunty[wybrany_grunt]
+                op_gruntu = math.ceil(pow_scian_total / 50)
+                koszt_materialow_detal += (op_gruntu * cena_gruntu * 5)
+                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Grunt ({wybrany_grunt}): {op_gruntu} bańki 5L")
+                
+                litry_biala = math.ceil(m2_total * 0.2) 
+                koszt_materialow_detal += (litry_biala * baza_biale[produkt_biala])
+                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Farba na sufit ({produkt_biala}): ~{math.ceil(litry_biala/10)} wiadra 10L")
+
+                litry_kolor = math.ceil((pow_scian_total - (m2_laz*2)) * 0.2)
+                koszt_materialow_detal += (litry_kolor * baza_kolory[produkt_kolor])
+                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Farba na ściany ({produkt_kolor}): ~{math.ceil(litry_kolor/5)} wiadra 5L")
+
+            # PODŁOGI I DRZWI
             if wylewka_samopoz:
                 zakupy["PODŁOGI I DRZWI"].append(f"Wylewka samopoziomująca ({grubosc_wyl}mm): ~{worki_wylewki} worków (25kg)")
             if do_podl_fin:
@@ -3873,26 +3885,30 @@ elif branza == "Panel Inwestora":
             if wymiana_wej:
                 zakupy["PODŁOGI I DRZWI"].append(f"Drzwi wejściowe ({typ_d_wej}): 1 kpl.")
 
-            # 6. MEBLE
+            # MEBLE
             if kuchnia_inv > 0: zakupy["ZABUDOWY MEBLOWE"].append(f"Kuchnia na wymiar (Budżet: {kuchnia_inv} PLN)")
             if szafy_inv > 0: zakupy["ZABUDOWY MEBLOWE"].append(f"Szafy/Wnęki (Budżet: {szafy_inv} PLN)")
             if laz_stolarz > 0: zakupy["ZABUDOWY MEBLOWE"].append(f"Zabudowy Łazienkowe (Budżet: {laz_stolarz} PLN)")
 
-            # Filtracja i wyświetlanie na ekranie
-            zakupy = {k: v for k, v in zakupy.items() if len(v) > 0}
+            # --- C. POZOSTAŁE KOSZTY (SZACUNKOWE) ---
+            wyposazenie_total = koszt_mebli_total + koszt_ele_total + koszt_podloze_total + koszt_drzwi_total + koszt_materialow_detal
+            koszty_utrzymania_total = (czynsz_mc + media_mc) * czas_operacji
+            koszt_transakcyjny = (cena_zakupu * 0.02) + 4500
             
-            c_z1, c_z2 = st.columns(2)
-            kolumny_zakupow = [c_z1, c_z2]
-            idx = 0
-            for kategoria, przedmioty in zakupy.items():
-                with kolumny_zakupow[idx % 2]:
-                    st.markdown(f"**{kategoria}**")
-                    for p in przedmioty:
-                        st.write(f"- {p}")
-                idx += 1
+            calkowity_koszt_projektu = cena_zakupu + koszt_transakcyjny + bazowy_remont_szacunek + wyposazenie_total + koszty_utrzymania_total
+            zysk_brutto = cena_sprzedazy - calkowity_koszt_projektu
+            roi = (zysk_brutto / calkowity_koszt_projektu) * 100 if calkowity_koszt_projektu > 0 else 0
+
+            # --- WYŚWIETLANIE NA EKRANIE ---
+            r1, r2, r3 = st.columns(3)
+            r1.metric("Łączny koszt Inwestycji", f"{round(calkowity_koszt_projektu):,} zł".replace(",", " "))
+            r2.metric("PRZEWIDYWANY ZYSK", f"{round(zysk_brutto):,} zł".replace(",", " "))
+            r3.metric("ROI %", f"{round(roi, 1)} %")
+
+            zakupy = {k: v for k, v in zakupy.items() if len(v) > 0} # Filtracja pustych
 
             # ==============================================================
-            # ZAPIS DO BAZY I GENERATOR PDF
+            # ZAPIS DO BAZY I NOWOCZESNY GENERATOR PDF
             # ==============================================================
             st.markdown("---")
             st.subheader("💾 Zapisz Projekt i Pobierz PDF")
@@ -3900,13 +3916,9 @@ elif branza == "Panel Inwestora":
             
             with col_save:
                 if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
-                    
-                    # Pobieramy ID
                     u_id = st.session_state.get("user_id")
-                    
                     if not u_id:
-                        st.error("Błąd: Twoja sesja nie posiada identyfikatora ID.")
-                        st.info("💡 Skoro Logowanie Google sprawiało problemy, użyj zakładki 'Logowanie' -> 'Rejestracja' i załóż konto na dowolny e-mail. To nada Ci poprawne ID i odblokuje zapisywanie.")
+                        st.error("Błąd: Brak ID. Zaloguj się poprawnie.")
                     elif supabase:
                         try:
                             dane_do_zapisu = {
@@ -3916,19 +3928,16 @@ elif branza == "Panel Inwestora":
                                 "lista_zakupow": zakupy 
                             }
                             supabase.table("projekty").insert({
-                                "user_id": u_id, 
-                                "nazwa_projektu": nazwa_inwestycji,
-                                "branza": "Kompleksowy Flip",
-                                "dane_json": dane_do_zapisu
+                                "user_id": u_id, "nazwa_projektu": nazwa_inwestycji,
+                                "branza": "Kompleksowy Flip", "dane_json": dane_do_zapisu
                             }).execute()
                             st.success("✅ Projekt zapisany w chmurze!")
-                            st.rerun() # Odświeżamy, żeby projekt wskoczył na listę na górze
+                            st.rerun() 
                         except Exception as e:
-                            st.error(f"Błąd bazy (RLS): {e}")
-                    else:
-                        st.error("Brak poprawnego ID. Wyloguj się i zaloguj ponownie używając adresu E-mail lub Google.")
+                            st.error(f"Błąd bazy: {e}")
+
             with col_pdf:
-                if st.button("Generuj Pełny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
+                if st.button("Generuj Nowoczesny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
                     try:
                         from fpdf import FPDF
                         
@@ -3941,33 +3950,61 @@ elif branza == "Panel Inwestora":
                         pdf.add_page()
                         pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True) 
                         
+                        # --- DESIGN: CIEMNY BANER GÓRNY ---
+                        pdf.set_fill_color(14, 23, 43) # Kolor granatowy z motywu ProCalc
+                        pdf.rect(0, 0, 210, 25, 'F')
+                        pdf.set_y(8)
                         pdf.set_font("Inter", "", 16)
-                        pdf.cell(190, 10, txt=czysc_tekst(f"PROCALC - KOSZTORYS: {nazwa_inwestycji.upper()}"), ln=True, align='C')
+                        pdf.set_text_color(255, 255, 255)
+                        pdf.cell(190, 10, txt=czysc_tekst("PROCALC - KOSZTORYS INWESTORSKI"), ln=True, align='C')
+                        
+                        # --- NAZWA PROJEKTU ---
+                        pdf.set_y(35)
+                        pdf.set_text_color(0, 211, 149) # Kolor zielony ProCalc
+                        pdf.set_font("Inter", "", 20)
+                        pdf.cell(190, 10, txt=czysc_tekst(nazwa_inwestycji.upper()), ln=True, align='C')
                         pdf.ln(5)
                         
-                        pdf.set_font("Inter", "", 12)
-                        pdf.set_fill_color(230, 230, 230)
-                        pdf.cell(190, 10, txt="1. PODSUMOWANIE FINANSOWE", ln=True, fill=True)
-                        pdf.ln(2)
+                        # --- DESIGN: RAMKA PODSUMOWANIA FINANSOWEGO ---
+                        pdf.set_fill_color(248, 249, 250) # Jasnoszary
+                        pdf.set_draw_color(0, 211, 149) # Zielona ramka
+                        pdf.set_line_width(0.6)
+                        pdf.rect(10, pdf.get_y(), 190, 35, 'DF')
                         
-                        pdf.set_font("Inter", "", 10)
-                        pdf.cell(190, 8, txt=czysc_tekst(f"- Laczny koszt inwestycji (Zakup+Remont+Utrzymanie): {round(calkowity_koszt_projektu)} PLN"), ln=True)
-                        pdf.cell(190, 8, txt=czysc_tekst(f"- Budzet wyposazenia i materialow: {round(wyposazenie_total)} PLN"), ln=True)
-                        pdf.cell(190, 8, txt=czysc_tekst(f"- Szacowany zysk na czysto: {round(zysk_brutto)} PLN (ROI: {round(roi,1)}%)"), ln=True)
+                        pdf.set_y(pdf.get_y() + 5)
+                        pdf.set_text_color(50, 50, 50)
+                        pdf.set_font("Inter", "", 12)
+                        pdf.cell(190, 7, txt=czysc_tekst(f"Laczny koszt inwestycji: {round(calkowity_koszt_projektu):,} PLN".replace(",", " ")), ln=True, align='C')
+                        pdf.cell(190, 7, txt=czysc_tekst(f"Budzet wyposazenia i materialow: {round(wyposazenie_total):,} PLN".replace(",", " ")), ln=True, align='C')
+                        
+                        pdf.set_text_color(0, 160, 110) # Ciemniejszy zielony do zysku
+                        pdf.set_font("Inter", "", 14)
+                        pdf.cell(190, 8, txt=czysc_tekst(f"Szacowany zysk netto: {round(zysk_brutto):,} PLN (ROI: {round(roi,1)}%)".replace(",", " ")), ln=True, align='C')
+                        pdf.ln(15)
+                        
+                        # --- LISTA ZAKUPOWA ---
+                        pdf.set_text_color(14, 23, 43)
+                        pdf.set_font("Inter", "", 14)
+                        pdf.cell(190, 10, txt=czysc_tekst("SZCZEGOLOWA LISTA ZAKUPOWA"), ln=True, border='B')
                         pdf.ln(5)
-                        
-                        pdf.set_font("Inter", "", 12)
-                        pdf.cell(190, 10, txt="2. LISTA ZAKUPOWA MATERIALOW", ln=True, fill=True)
-                        pdf.ln(2)
                         
                         for cat, items in zakupy.items():
+                            # Nagłówek Kategorii (Zielone Tło)
+                            pdf.set_fill_color(0, 211, 149)
+                            pdf.set_text_color(255, 255, 255)
                             pdf.set_font("Inter", "", 11)
-                            pdf.cell(190, 8, txt=czysc_tekst(f"--- {cat} ---"), ln=True)
-                            pdf.set_font("Inter", "", 10)
-                            for item in items:
-                                pdf.cell(190, 6, txt=czysc_tekst(f"* {item}"), ln=True)
-                            pdf.ln(2)
+                            pdf.cell(190, 8, txt=czysc_tekst(f"  {cat}"), ln=True, fill=True)
                             
+                            # Pozycje (Ciemnoszary Tekst)
+                            pdf.set_text_color(70, 70, 70)
+                            pdf.set_font("Inter", "", 10)
+                            pdf.ln(2)
+                            for item in items:
+                                pdf.cell(5, 6, txt="", ln=0) # Wcięcie
+                                pdf.cell(185, 6, txt=czysc_tekst(f"• {item}"), ln=True)
+                            pdf.ln(4)
+                            
+                        # --- GENEROWANIE I POBIERANIE ---
                         pdf_output = pdf.output()
                         if isinstance(pdf_output, (bytearray, bytes)):
                             pdf_bytes = bytes(pdf_output)
@@ -3977,13 +4014,13 @@ elif branza == "Panel Inwestora":
                             pdf_bytes = pdf_output
 
                         st.download_button(
-                            label="📥 Pobierz Kosztorys PDF",
+                            label="📥 Pobierz Nowoczesny Kosztorys PDF",
                             data=pdf_bytes,
-                            file_name=f"Kosztorys_{nazwa_inwestycji.replace(' ', '_')}.pdf",
+                            file_name=f"Kosztorys_ProCalc_{nazwa_inwestycji.replace(' ', '_')}.pdf",
                             mime="application/pdf",
                             key="btn_native_pdf_download"
                         )
-                        st.success("✅ Gotowe! Kliknij przycisk wyżej, aby pobrać.")
+                        st.success("✅ Wygenerowano! Kliknij przycisk wyżej.")
                         
                     except Exception as e:
                         st.error(f"Błąd generowania PDF: {e}")
