@@ -3424,6 +3424,7 @@ elif branza == "Panel Inwestora":
         st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
         st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
     else:
+        # OD RAZU NAGŁÓWEK - ŻADNEGO SIDEBARU TUTAJ! GŁÓWNY SIDEBAR JEST JUŻ NA GÓRZE KODU.
         st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
         st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji wraz z listą materiałów.")
         
