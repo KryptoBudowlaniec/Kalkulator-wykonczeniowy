@@ -3788,8 +3788,7 @@ elif branza == "Panel Inwestora":
                     f"Osprzęt ({std_osprzet}): {szt_punktow} szt."
                 ])
 
-            # ŁAZIENKA
-
+# --- A. ŁAZIENKA (LOGIKA PRODUKTOWA) ---
             if do_laz_inv:
                 # OBLICZANIE: HYBRYDA VS KLASYKA
                 if "Hybryda" in styl_lazienki:
@@ -3827,20 +3826,20 @@ elif branza == "Panel Inwestora":
                 zakupy["ŁAZIENKA"].append(f"Fuga ({rodzaj_fugi_laz}): 2-3 op.")
                 if odplyw_liniowy: zakupy["ŁAZIENKA"].append("Odpływ liniowy (koperta) - 1 szt.")
 
-                # --- NOWOŚĆ: MATERIAŁY DO ŚCIAN "SUCHYCH" W ŁAZIENCE ---
+                # --- MATERIAŁY DO ŚCIAN "SUCHYCH" W ŁAZIENCE ---
                 if m2_malowania_laz > 0:
-                    # Gładź wodoodporna (szacunek ok. 70 zł za wiadro 20kg polimerowej)
                     wiadra_gl_laz = math.ceil((m2_malowania_laz * 2.0) / 20)
                     koszt_materialow_detal += (wiadra_gl_laz * 70)
-                    if "Hybryda" in styl_lazienki:
-                        zakupy["ŁAZIENKA"].append(f"Gładź wodoodporna/polimerowa (na ściany i sufit): {wiadra_gl_laz} wiader")
                     
-                    # Farba Łazienkowa (szacunek ok. 55 zł za litr farby Premium Kuchnia/Łazienka)
-                    litry_farby_laz = math.ceil(m2_malowania_laz * 0.2) # 2 warstwy
+                    litry_farby_laz = math.ceil(m2_malowania_laz * 0.2)
                     koszt_materialow_detal += (litry_farby_laz * 55)
-                    opis_farby = "Farba Premium (Kuchnia/Łazienka)" if "Hybryda" in styl_lazienki else "Farba biała na sufit"
-                    zakupy["ŁAZIENKA"].append(f"{opis_farby}: ~{litry_farby_laz} L")
-
+                    
+                    if "Hybryda" in styl_lazienki:
+                        zakupy["ŁAZIENKA"].append(f"Gładź wodoodporna (ściany i sufit): {wiadra_gl_laz} wiader")
+                        zakupy["ŁAZIENKA"].append(f"Farba Premium (Kuchnia/Łazienka): ~{litry_farby_laz} L")
+                    else:
+                        zakupy["ŁAZIENKA"].append(f"Gładź polimerowa (tylko sufit): {wiadra_gl_laz} wiader")
+                        zakupy["ŁAZIENKA"].append(f"Farba biała (tylko sufit): ~{litry_farby_laz} L")
             # G-K
             if do_gk_inv:
                 zakupy["SUCHY MONTAŻ (G-K)"].extend([
