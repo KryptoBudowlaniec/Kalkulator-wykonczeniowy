@@ -537,22 +537,7 @@ elif branza == "Panel Inwestora":
     if not st.session_state.zalogowany:
         st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
         st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
-    else:
-        # Odpalamy Sidebar (Boczne Menu)
-        with st.sidebar:
-            st.title("Panel Zarządzania")
-            st.markdown(f"Konto: **{st.session_state.user_email}**")
-            
-            opcja_panelu = st.radio(
-                "Nawigacja",
-                ["Nawigacja Główna", "Mój Profil", "Język i Region"]
-            )
-            
-            st.markdown("---")
-            if st.button("Wyloguj (Panel)"):
-                st.session_state.zalogowany = False
-                if supabase: supabase.auth.sign_out()
-                st.rerun()
+    
 
         # Odpalamy Zawartość w zależności od wyboru w boczku
         if opcja_panelu == "Nawigacja Główna":
@@ -3424,7 +3409,7 @@ elif branza == "Panel Inwestora":
         st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
         st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
     else:
-        # OD RAZU NAGŁÓWEK - ŻADNEGO SIDEBARU TUTAJ! GŁÓWNY SIDEBAR JEST JUŻ NA GÓRZE KODU.
+        # TUTAJ OD RAZU ŁADUJEMY GŁÓWNY WIDOK - ŻADNEGO SIDEBARU!
         st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
         st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji wraz z listą materiałów.")
         
@@ -3437,7 +3422,7 @@ elif branza == "Panel Inwestora":
             "6. Stolarka & Meble",
             "7. Podsumowanie & Lista Zakupów"
         ])
-
+        
         import math
 
         # --- ZAKŁADKA 1: PARAMETRY, KOSZTY STAŁE I ROI ---
