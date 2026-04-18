@@ -3540,6 +3540,13 @@ elif branza == "Panel Inwestora":
             "Sopro DSF 523 - 20kg": {"cena": 395, "waga": 20}, "Kerakoll Aquastop Nanoflex - 20kg": {"cena": 260, "waga": 20},
             "Atlas Woder Duo (Masa 2K) - 15kg": {"cena": 240, "waga": 15}, "Mapei Mapelastic (Masa 2K) - 16kg": {"cena": 290, "waga": 16}
         }
+        baza_wylewek = {
+            "Atlas SMS 30 (Szybka, Cementowa)": 62,
+            "Atlas SAM 100 (Anhydrytowa)": 46,
+            "Baumit Nivello Quattro": 58,
+            "Ceresit CN 175": 52,
+            "Wylewka Ekonomiczna (Marketowa)": 38
+        }
 
         # --- ZAKŁADKA 1: PARAMETRY, KOSZTY STAŁE I ROI ---
         with tab_roi:
@@ -3736,35 +3743,52 @@ elif branza == "Panel Inwestora":
         with tab_podl:
             st.subheader("Podłogi i Stolarka Otworowa 🪵")
             
+            # --- 1. WYLEWKI ---
             st.markdown("##### 1. Przygotowanie podłoża i Wylewki")
             c_p1, c_p2 = st.columns(2)
             zrywanie_podlogi = c_p1.checkbox("Zrywanie starego parkietu / płytek", key="inv_zrywanie")
             wylewka_samopoz = c_p2.checkbox("Wylewka samopoziomująca", key="inv_wylewka")
             
             koszt_podloze_total = 0
+            
             if zrywanie_podlogi:
-                koszt_podloze_total += (m2_total * 35) 
+                koszt_zrywania = m2_total * 35 # 35 zł/m2 za kucie i utylizację
+                koszt_podloze_total += koszt_zrywania
+                st.warning(f"Koszt demontażu starej podłogi: **{koszt_zrywania:,} zł**")
             
             if wylewka_samopoz:
-                grubosc_wyl = st.slider("Średnia grubość wylewki (mm):", 3, 20, 5, key="inv_wyl_grub")
-                kg_wylewki = 1.6 * grubosc_wyl * m2_total
-                worki_wylewki = math.ceil(kg_wylewki / 25)
-                koszt_mat_wyl = worki_wylewki * 55 
-                koszt_rob_wyl = m2_total * 25
+                col_w1, col_w2 = st.columns(2)
+                wybrana_wylewka = col_w1.selectbox("Produkt:", list(baza_wylewek.keys()), key="inv_wyl_produkt")
+                grubosc_wyl = col_w2.slider("Średnia grubość (mm):", 2, 20, 5, key="inv_wyl_grub")
+                
+                # Obliczenia techniczne
+                zuzycie_kg_na_mm = 1.6 # średnio 1.6kg na 1mm/m2
+                potrzebne_kg = zuzycie_kg_na_mm * grubosc_wyl * m2_total
+                worki_wylewki = math.ceil(potrzebne_kg / 25)
+                
+                cena_worka = baza_wylewek[wybrana_wylewka]
+                koszt_mat_wyl = worki_wylewki * cena_worka
+                koszt_rob_wyl = m2_total * 25 # Stała stawka za robociznę 25 zł/m2
+                
                 koszt_podloze_total += (koszt_mat_wyl + koszt_rob_wyl)
-                st.caption(f"Potrzeba ok. **{worki_wylewki} worków** samopoziomu. Koszt wylewek: {round(koszt_mat_wyl + koszt_rob_wyl):,} zł.")
-            else:
-                worki_wylewki = 0
+                
+                st.success(f"Potrzeba: **{worki_wylewki} worków** ({wybrana_wylewka}).")
+                st.info(f"Materiał: **{koszt_mat_wyl:,} zł** | Robocizna: **{koszt_rob_wyl:,} zł**")
 
             st.markdown("---")
+            
+            # --- 2. WYKOŃCZENIE PODŁÓG ---
             st.markdown("##### 2. Wykończenie Podłóg")
             do_podl_fin = st.checkbox("Układanie nowej podłogi", value=True, key="inv_podl_fin")
             if do_podl_fin:
                 typ_p = st.selectbox("Materiał:", ["Panele Laminowane", "Winyle (SPC/LVT)", "Deska/Parkiet"], key="inv_p_typ")
             
             st.markdown("---")
-            st.markdown("##### 3. Drzwi")
+            
+            # --- 3. DRZWI I PIANA ---
+            st.markdown("##### 3. Drzwi i Akcesoria Montażowe")
             col_d1, col_d2 = st.columns(2)
+            
             with col_d1:
                 st.markdown("**Drzwi Wewnętrzne**")
                 do_drzwi = st.checkbox("Montaż nowych drzwi", value=True, key="inv_do_drzwi_wew_ch")
@@ -3783,8 +3807,22 @@ elif branza == "Panel Inwestora":
                     koszt_drzwi_wej = 1200 if "Marketowe" in typ_d_wej else (4500 if "Premium" in typ_d_wej else 2800)
                 else:
                     koszt_drzwi_wej = 0
-                    
-            koszt_drzwi_total = koszt_drzwi_wew + koszt_drzwi_wej
+
+            # --- OBLICZENIA PIANY MONTAŻOWEJ ---
+            puszki_piany = 0
+            if do_drzwi:
+                puszki_piany += math.ceil(szt_d_wew * 0.7)
+            if wymiana_wej:
+                puszki_piany += 1 # 1 pełna puszka na drzwi wejściowe
+            
+            cena_piany = 40 # Przyjmujemy średnio 40 zł za puszkę profesjonalnej piany pistoletowej
+            koszt_piany_total = puszki_piany * cena_piany
+            
+            # Sumujemy koszty stolarki
+            koszt_drzwi_total = koszt_drzwi_wew + koszt_drzwi_wej + koszt_piany_total
+
+            if puszki_piany > 0:
+                st.caption(f"Zapotrzebowanie na pianę montażową: **{puszki_piany} szt.** (Koszt: {koszt_piany_total} zł)")
 
         # --- ZAKŁADKA 6: STOLARKA (Meble na wymiar) ---
         with tab_meble:
@@ -3905,13 +3943,19 @@ elif branza == "Panel Inwestora":
 
             # PODŁOGI I DRZWI
             if wylewka_samopoz:
-                zakupy["PODŁOGI I DRZWI"].append(f"Wylewka samopoziomująca ({grubosc_wyl}mm): ~{worki_wylewki} worków (25kg)")
+                zakupy["PODŁOGI I DRZWI"].append(f"Wylewka ({wybrana_wylewka}): {worki_wylewki} worków")
+                zakupy["PODŁOGI I DRZWI"].append(f"Grunt pod wylewki (np. Atlas Grunto-Plast): 1-2 op.")
             if do_podl_fin:
                 zakupy["PODŁOGI I DRZWI"].append(f"Podłoga ({typ_p}) + podkłady: {math.ceil(m2_total * 1.1)} m2")
             if do_drzwi:
                 zakupy["PODŁOGI I DRZWI"].append(f"Drzwi wewnętrzne ({typ_d_wew}): {szt_d_wew} kpl.")
             if wymiana_wej:
                 zakupy["PODŁOGI I DRZWI"].append(f"Drzwi wejściowe ({typ_d_wej}): 1 kpl.")
+            if do_drzwi or wymiana_wej:
+                # Obliczamy ponownie liczbę puszek do listy zakupów
+                puszki_do_listy = math.ceil((szt_d_wew * 0.7 if do_drzwi else 0) + (1 if wymiana_wej else 0))
+                zakupy["PODŁOGI I DRZWI"].append(f"Piana montażowa (pistoletowa): {puszki_do_listy} szt.")
+                zakupy["PODŁOGI I DRZWI"].append("Czyścik do piany pistoletowej: 1 szt.") # Profesjonalny dodatek!
 
             # MEBLE
             if kuchnia_inv > 0: zakupy["ZABUDOWY MEBLOWE"].append(f"Kuchnia na wymiar (Budżet: {kuchnia_inv} PLN)")
