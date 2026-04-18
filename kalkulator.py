@@ -3692,47 +3692,66 @@ elif branza == "Panel Inwestora":
                     else:
                         st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
 
-            with col_pdf:
-                if st.button("Pobierz Pełny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
+           with col_pdf:
+                if st.button("Generuj Pełny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
                     try:
                         from fpdf import FPDF
-                        import base64
+                        
                         def czysc_tekst(tekst):
                             pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
                             for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                            return tekst.encode('latin-1', 'replace').decode('latin-1')
+                            # Zwracamy czysty string bez wymuszania encode
+                            return tekst
                         
                         pdf = FPDF()
                         pdf.add_page()
-                        pdf.set_font("Arial", style="B", size=16)
-                        pdf.set_text_color(0, 211, 149)
+                        pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True) # Używamy naszej czcionki dla polskich znaków
+                        
+                        pdf.set_font("Inter", "", 16)
                         pdf.cell(190, 10, txt=czysc_tekst(f"PROCALC - KOSZTORYS: {nazwa_inwestycji.upper()}"), ln=True, align='C')
                         pdf.ln(5)
-                        pdf.set_font("Arial", style="B", size=12)
-                        pdf.set_text_color(30, 30, 30)
-                        pdf.cell(190, 10, txt="1. PODSUMOWANIE FINANSOWE", ln=True)
-                        pdf.set_font("Arial", size=11)
+                        
+                        pdf.set_font("Inter", "", 12)
+                        pdf.set_fill_color(230, 230, 230)
+                        pdf.cell(190, 10, txt="1. PODSUMOWANIE FINANSOWE", ln=True, fill=True)
+                        pdf.ln(2)
+                        
+                        pdf.set_font("Inter", "", 10)
                         pdf.cell(190, 8, txt=czysc_tekst(f"- Laczny koszt inwestycji (Zakup+Remont+Utrzymanie): {round(calkowity_koszt_projektu)} PLN"), ln=True)
                         pdf.cell(190, 8, txt=czysc_tekst(f"- Budzet wyposazenia i materialow: {round(wyposazenie_total)} PLN"), ln=True)
                         pdf.cell(190, 8, txt=czysc_tekst(f"- Szacowany zysk na czysto: {round(zysk_brutto)} PLN (ROI: {round(roi,1)}%)"), ln=True)
                         pdf.ln(5)
                         
-                        pdf.set_font("Arial", style="B", size=12)
-                        pdf.cell(190, 10, txt="2. LISTA ZAKUPOWA MATERIALOW", ln=True)
+                        pdf.set_font("Inter", "", 12)
+                        pdf.cell(190, 10, txt="2. LISTA ZAKUPOWA MATERIALOW", ln=True, fill=True)
+                        pdf.ln(2)
+                        
                         for cat, items in zakupy.items():
-                            pdf.set_font("Arial", style="B", size=11)
-                            pdf.set_text_color(100, 100, 100)
+                            pdf.set_font("Inter", "", 11)
                             pdf.cell(190, 8, txt=czysc_tekst(f"--- {cat} ---"), ln=True)
-                            pdf.set_font("Arial", size=10)
-                            pdf.set_text_color(30, 30, 30)
+                            pdf.set_font("Inter", "", 10)
                             for item in items:
                                 pdf.cell(190, 6, txt=czysc_tekst(f"* {item}"), ln=True)
                             pdf.ln(2)
                             
-                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
-                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Kosztorys_{nazwa_inwestycji}.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; margin-top: 10px;">Pobierz Kosztorys PDF</a>'
-                        st.markdown(href, unsafe_allow_html=True)
+                        # Bezpieczne pobieranie PDF (obsługuje fpdf i fpdf2)
+                        pdf_output = pdf.output()
+                        if isinstance(pdf_output, (bytearray, bytes)):
+                            pdf_bytes = bytes(pdf_output)
+                        elif isinstance(pdf_output, str):
+                            pdf_bytes = pdf_output.encode('latin-1', 'replace')
+                        else:
+                            pdf_bytes = pdf_output
+
+                        st.download_button(
+                            label="📥 Pobierz Kosztorys PDF",
+                            data=pdf_bytes,
+                            file_name=f"Kosztorys_{nazwa_inwestycji.replace(' ', '_')}.pdf",
+                            mime="application/pdf",
+                            key="btn_native_pdf_download"
+                        )
+                        st.success("✅ Gotowe! Kliknij przycisk wyżej, aby pobrać.")
+                        
                     except Exception as e:
                         st.error(f"Błąd generowania PDF: {e}")
                     
