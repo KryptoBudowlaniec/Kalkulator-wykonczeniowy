@@ -3678,7 +3678,7 @@ elif branza == "Panel Inwestora":
                                 "koszt_remontu_total": round(remont_robocizna + wyposazenie_total),
                                 "zysk_brutto": round(zysk_brutto),
                                 "roi_procent": round(roi, 1),
-                                "lista_zakupow": zakupy # <--- LISTA MATERIAŁÓW WRACA DO BAZY!
+                                "lista_zakupow": zakupy 
                             }
                             supabase.table("projekty").insert({
                                 "user_id": st.session_state.user_id, 
@@ -3692,7 +3692,7 @@ elif branza == "Panel Inwestora":
                     else:
                         st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
 
-           with col_pdf:
+            with col_pdf:
                 if st.button("Generuj Pełny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
                     try:
                         from fpdf import FPDF
@@ -3700,12 +3700,11 @@ elif branza == "Panel Inwestora":
                         def czysc_tekst(tekst):
                             pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
                             for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                            # Zwracamy czysty string bez wymuszania encode
                             return tekst
                         
                         pdf = FPDF()
                         pdf.add_page()
-                        pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True) # Używamy naszej czcionki dla polskich znaków
+                        pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True) 
                         
                         pdf.set_font("Inter", "", 16)
                         pdf.cell(190, 10, txt=czysc_tekst(f"PROCALC - KOSZTORYS: {nazwa_inwestycji.upper()}"), ln=True, align='C')
@@ -3734,7 +3733,6 @@ elif branza == "Panel Inwestora":
                                 pdf.cell(190, 6, txt=czysc_tekst(f"* {item}"), ln=True)
                             pdf.ln(2)
                             
-                        # Bezpieczne pobieranie PDF (obsługuje fpdf i fpdf2)
                         pdf_output = pdf.output()
                         if isinstance(pdf_output, (bytearray, bytes)):
                             pdf_bytes = bytes(pdf_output)
