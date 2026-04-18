@@ -3380,146 +3380,213 @@ elif branza == "Efekty Dekoracyjne":
                             st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
                             
 
+# ==========================================
+# TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
+# ==========================================
 elif branza == "Panel Inwestora":
-        st.markdown("<br>", unsafe_allow_html=True)
-        if not st.session_state.zalogowany:
-            st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
-            st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
-        else:
-            st.header("Pulpit Inwestora: Projekt Kompleksowy ")
-            st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji.")
+    st.markdown("<br>", unsafe_allow_html=True)
+    if not st.session_state.zalogowany:
+        st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
+        st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
+    else:
+        st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
+        st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji.")
+        
+        tab_roi, tab_suche, tab_mokre, tab_inst, tab_meble, tab_podsumowanie = st.tabs([
+            "1. Parametry & ROI", 
+            "2. Prace Suche", 
+            "3. Prace Mokre", 
+            "4. Podłogi & Drzwi", 
+            "5. Stolarka & Meble",
+            "6. Podsumowanie"
+        ])
+
+        with tab_roi:
+            st.subheader("Parametry Lokalu i Checklista")
+            col_params, col_check = st.columns([1.2, 1])
+
+            with col_params:
+                nazwa_inwestycji = st.text_input("Nazwa Inwestycji (do zapisu):", value="Kawalerka na Start", key="inv_nazwa")
+                m2_total = st.number_input("Metraż całkowity lokalu (m2):", min_value=1.0, value=50.0, key="inv_m2_total")
+                cena_zakupu = st.number_input("Cena zakupu lokalu (PLN):", value=350000, step=5000, key="inv_cena_zakupu")
+                cena_sprzedazy = st.number_input("Przewidywana cena sprzedaży (PLN):", value=550000, step=5000, key="inv_cena_sprzedazy")
+                stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"], key="inv_stan")
+
+            with col_check:
+                st.markdown("##### Budżet na robociznę (Szacunek wstępny)")
+                standard = st.select_slider("Standard wykończenia robót:", options=["Ekonomiczny", "Standard", "Premium"], key="inv_standard")
+                mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
+                bazowy_remont_szacunek = (m2_total * 1200 * mnoznik_std) 
+                if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont_szacunek *= 1.25
+                st.info(f"Szacowany koszt prac wykończeniowych: **~{round(bazowy_remont_szacunek):,} zł**".replace(",", " "))
+
+        with tab_suche:
+            st.subheader("Gładzie, Malowanie, Zabudowy GK")
             
-            tab_roi, tab_suche, tab_mokre, tab_inst, tab_meble, tab_podsumowanie = st.tabs([
-                "1. Parametry & ROI", 
-                "2. Prace Suche", 
-                "3. Prace Mokre", 
-                "4. Podłogi & Drzwi", 
-                "5. Stolarka & Meble",
-                "6. Podsumowanie"
-            ])
-
-            with tab_roi:
-                st.subheader("Parametry Lokalu i Checklista")
-                col_params, col_check = st.columns([1.2, 1])
-
-                with col_params:
-                    nazwa_inwestycji = st.text_input("Nazwa Inwestycji (do zapisu):", value="Kawalerka na Start", key="inv_nazwa")
-                    m2_total = st.number_input("Metraż całkowity lokalu (m2):", min_value=1.0, value=50.0, key="inv_m2_total")
-                    cena_zakupu = st.number_input("Cena zakupu lokalu (PLN):", value=350000, step=5000, key="inv_cena_zakupu")
-                    cena_sprzedazy = st.number_input("Przewidywana cena sprzedaży (PLN):", value=550000, step=5000, key="inv_cena_sprzedazy")
-                    stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"], key="inv_stan")
-
-                with col_check:
-                    st.markdown("##### Budżet na robociznę (Szacunek)")
-                    standard = st.select_slider("Standard wykończenia robót:", options=["Ekonomiczny", "Standard", "Premium"], key="inv_standard")
-                    mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
-                    bazowy_remont_szacunek = (m2_total * 1200 * mnoznik_std) 
-                    if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont_szacunek *= 1.25
-                    st.info(f"Szacowany koszt prac wykończeniowych: **~{round(bazowy_remont_szacunek):,} zł**".replace(",", " "))
-
-            with tab_suche:
-                st.subheader("Gładzie, Malowanie, Zabudowy GK")
-                do_szpachlowanie = st.checkbox("Wlicz Szpachlowanie / Gładzie całego lokalu", value=True, key="inv_do_szpach")
-                do_malowanie = st.checkbox("Wlicz Malowanie całego lokalu", value=True, key="inv_do_mal")
-                do_gk = st.checkbox("Wlicz Sufity Podwieszane GK (cały lokal)", value=False, key="inv_do_gk")
-
-            with tab_mokre:
-                st.subheader("Konfiguracja Łazienki")
-                do_lazienka = st.checkbox("Remont Łazienki (Aktywuj moduł)", value=True, key="inv_do_laz")
-                if do_lazienka:
-                    c_l1, c_l2 = st.columns(2)
-                    m2_lazienka_podloga = c_l1.number_input("Powierzchnia łazienki (m2):", 1.0, 50.0, 5.0, key="inv_laz_m2")
-                    standard_lazienki = c_l2.radio("Standard Wykończenia:", ["Podstawowy", "Premium (Duże formaty, maty)"], key="inv_laz_std")
-
-            with tab_inst:
-                st.subheader("Elektryka, Posadzki i Stolarka Otworowa")
-                do_elektryka = st.checkbox("Nowa instalacja elektryczna (cały lokal)", value=True, key="inv_do_elek")
-                do_podlogi = st.checkbox("Układanie paneli/podłóg w pokojach", value=True, key="inv_do_podl")
+            st.markdown("#### 1. Sufity Podwieszane (Sucha Zabudowa)")
+            do_gk = st.checkbox("Wlicz Sufity Podwieszane GK w całym lokalu", value=False, key="inv_do_gk")
+            if do_gk:
+                c_gk1, c_gk2 = st.columns(2)
+                rodzaj_stelaza = c_gk1.radio("Konstrukcja stelaża:", ["Pojedynczy (Standard)", "Krzyżowy (Większa sztywność / mniej spękań)"], key="inv_gk_stelaz")
+                system_laczen = c_gk2.selectbox("System łączeń płyt GK:", ["Taśma z włókna szklanego (Standard)", "Taśma TUFF-TAPE (Premium - brak pęknięć)", "Flizelina + Uniflott"], key="inv_gk_laczenia")
                 
-                st.markdown("---")
-                do_drzwi = st.checkbox("Montaż nowych drzwi", value=True, key="inv_do_drzwi")
-                if do_drzwi:
-                    c_d1, c_d2 = st.columns(2)
-                    szt_drzwi = c_d1.number_input("Liczba skrzydeł drzwiowych (szt.):", 1, 15, 3, key="inv_szt_drzwi")
-                    rodzaj_drzwi = c_d2.selectbox("Rodzaj drzwi:", ["Płytowe (Budżet)", "Ramowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_rodzaj_drzwi")
-                    koszt_drzwi_sztuka = 900 if "Płytowe" in rodzaj_drzwi else (2500 if "Ukryta" in rodzaj_drzwi else 1400)
-                    koszt_drzwi_total = szt_drzwi * koszt_drzwi_sztuka
-                    st.caption(f"Szacowany budżet na drzwi z montażem: **{koszt_drzwi_total:,} zł**".replace(",", " "))
-                else:
-                    koszt_drzwi_total = 0
+                c_gk3, c_gk4 = st.columns(2)
+                rodzaj_plyty = c_gk3.selectbox("Rodzaj płyty dominujący:", ["Zwykła GKB (Biała)", "Impregnowana GKBI (Zielona we wszystkich pom.)"], key="inv_gk_plyta")
+                welna_izolacja = c_gk4.checkbox("Dodaj wełnę mineralną (Wygłuszenie)", key="inv_gk_welna")
+            
+            st.markdown("---")
+            
+            st.markdown("#### 2. Szpachlowanie i Gładzie")
+            do_szpachlowanie = st.checkbox("Wlicz Szpachlowanie ścian i sufitów", value=True, key="inv_do_szpach")
+            if do_szpachlowanie:
+                c_sz1, c_sz2 = st.columns(2)
+                rodzaj_gl = c_sz1.radio("Rodzaj gładzi:", ["Sypka (Worki - tańsza materiałowo)", "Gotowa polimerowa (Wiadra - wyższa twardość)"], key="inv_szpach_rodzaj")
+                liczba_warstw_gl = c_sz2.slider("Liczba warstw gładzi:", 1, 4, 2, key="inv_szpach_warstwy")
+                
+                c_sz3, c_sz4 = st.columns(2)
+                mocny_start = c_sz3.checkbox("Wlicz równanie gipsem startowym (bardzo krzywe ściany)", key="inv_szpach_start")
+                akryle = c_sz4.checkbox("Akrylowanie narożników wewnętrznych", value=True, key="inv_szpach_akryl")
 
-            with tab_meble:
-                st.subheader("Meble na wymiar i zabudowy stelażowe")
+            st.markdown("---")
+
+            st.markdown("#### 3. Malowanie")
+            do_malowanie = st.checkbox("Wlicz Malowanie całego lokalu", value=True, key="inv_do_mal")
+            if do_malowanie:
                 c_m1, c_m2 = st.columns(2)
-                do_kuchnia = c_m1.checkbox("Zabudowa Kuchenna", value=True, key="inv_do_kuchnia")
-                koszt_kuchni = c_m2.number_input("Budżet na kuchnię (PLN):", value=20000, step=1000, key="inv_koszt_kuchnia") if do_kuchnia else 0
+                klasa_farby = c_m1.selectbox("Klasa farby nawierzchniowej:", ["Budżetowa (np. Dekoral)", "Standardowa (np. Beckers, Dulux)", "Ceramiczna / Premium (np. Magnat, Flugger)"], key="inv_mal_klasa")
+                liczba_warstw_mal = c_m2.slider("Liczba warstw farby docelowej:", 1, 3, 2, key="inv_mal_warstwy")
                 
-                do_szafa = c_m1.checkbox("Szafa w przedpokoju / korytarzu", value=True, key="inv_do_szafa")
-                koszt_szafy = c_m2.number_input("Budżet na szafę (PLN):", value=4000, step=500, key="inv_koszt_szafa") if do_szafa else 0
+                gruntowanie_typ = st.radio("Sposób gruntowania:", ["Standard (Zwykły Grunt wodny)", "Farba Gruntująca (Podkładowa odcinająca np. Śnieżka Grunt)"], horizontal=True, key="inv_mal_grunt")
+
+        with tab_mokre:
+            st.subheader("Konfiguracja Łazienki")
+            do_lazienka = st.checkbox("Remont Łazienki (Aktywuj moduł)", value=True, key="inv_do_laz")
+            
+            if do_lazienka:
+                c_l1, c_l2 = st.columns(2)
+                m2_lazienka_podloga = c_l1.number_input("Powierzchnia podłogi w łazience (m2):", 1.0, 50.0, 5.0, key="inv_laz_m2")
+                m2_hydro = c_l2.number_input("Szacowana pow. strefy mokrej (m2):", 2.0, 30.0, 6.0, key="inv_laz_hydro_m2")
                 
-                do_laz_meble = c_m1.checkbox("Szafka umywalkowa / Zabudowa WC", value=True, key="inv_do_laz_meble")
-                koszt_laz_meble = c_m2.number_input("Budżet na stolarza łazienki (PLN):", value=1500, step=500, key="inv_koszt_laz_meble") if do_laz_meble else 0
+                st.markdown("##### Parametry Materiałowe Łazienki")
+                c_l3, c_l4 = st.columns(2)
+                format_plytek_laz = c_l3.selectbox("Dominujący format płytek:", ["Standard (do 60x60)", "Wielki Format (np. 120x60)", "Mozaika"], key="inv_laz_format")
+                system_hydro = c_l4.radio("System Hydroizolacji:", ["Folia w płynie (Standard)", "Maty Uszczelniające (Premium - pewność szczelności)"], key="inv_laz_system_hydro")
                 
-                koszt_mebli_total = koszt_kuchni + koszt_szafy + koszt_laz_meble
-                st.info(f"Całkowity zarezerwowany budżet meblowy: **{koszt_mebli_total:,} zł**".replace(",", " "))
-
-            with tab_podsumowanie:
-                st.subheader("Bieżący postęp prac (Harmonogram Live)")
-                if 'etapy_projektu' in st.session_state:
-                    suma_dni = sum([e['Dni'] for e in st.session_state.etapy_projektu])
-                    suma_postepu = sum([(e['Postęp'] / 100) * e['Dni'] for e in st.session_state.etapy_projektu])
-                    calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
-                    
-                    st.progress(calkowity_progres / 100)
-                    st.write(f"Ogólny postęp: **{round(calkowity_progres, 1)}%**")
-                else:
-                    st.info("Brak aktywnego harmonogramu.")
-
-                st.markdown("---")
-                st.subheader("Pełna Analiza Rentowności (ROI)")
+                c_l5, c_l6 = st.columns(2)
+                rodzaj_kleju_laz = c_l5.selectbox("Wymagany Klej:", ["Elastyczny C2TE (Atlas Geoflex / Kerakoll Bioflex)", "Wysokoelastyczny S1 (Atlas Plus / Kerakoll H40)"], index=1 if format_plytek_laz == "Wielki Format" else 0, key="inv_laz_klej")
+                rodzaj_fugi_laz = c_l6.radio("Rodzaj Fugi pod prysznicem:", ["Cementowa elastyczna", "Epoksydowa (Odporna na pleśń/chemię)"], key="inv_laz_fuga")
                 
-                koszt_transakcyjny = (cena_zakupu * 0.02) + 4500 
-                calkowity_koszt_remontu_i_wyposazenia = bazowy_remont_szacunek + koszt_drzwi_total + koszt_mebli_total
-                calkowity_koszt_inwestycji = cena_zakupu + koszt_transakcyjny + calkowity_koszt_remontu_i_wyposazenia
-                zysk_brutto = cena_sprzedazy - calkowity_koszt_inwestycji
-                roi = (zysk_brutto / calkowity_koszt_inwestycji) * 100 if calkowity_koszt_inwestycji > 0 else 0
+                st.markdown("##### Wyposażenie do wklejenia/montażu")
+                c_l7, c_l8 = st.columns(2)
+                odplyw_liniowy = c_l7.checkbox("Odpływ liniowy (koperta)", value=True, key="inv_laz_odplyw")
+                wneki_led = c_l8.number_input("Ilość podświetlanych wnęk prysznicowych:", 0, 5, 1, key="inv_laz_wneki")
 
-                r1, r2, r3 = st.columns(3)
-                r1.metric("Łączny Budżet Wykończeniowy", f"{round(calkowity_koszt_remontu_i_wyposazenia):,} zł".replace(",", " "))
-                r2.metric("ZYSK BRUTTO NA CZYSTO", f"{round(zysk_brutto):,} zł".replace(",", " "))
-                r3.metric("Przewidywane ROI", f"{round(roi, 1)} %")
-
-                st.markdown("---")
-
-                # --- C. ZAPIS DO CHMURY I PDF ---
-                st.subheader("💾 Zapisz Projekt")
-                col_save, col_pdf = st.columns(2)
+        with tab_inst:
+            st.subheader("Elektryka, Posadzki i Stolarka Otworowa")
+            do_elektryka = st.checkbox("Nowa instalacja elektryczna (cały lokal)", value=True, key="inv_do_elek")
+            do_podlogi = st.checkbox("Układanie paneli/podłóg w pokojach", value=True, key="inv_do_podl")
+            
+            if do_podlogi:
+                rodzaj_podlogi = st.selectbox("Rodzaj podłogi głównej:", ["Panele Laminowane (Standard)", "Panele Winylowe (LVT/SPC)", "Deska trójwarstwowa (Klejenie)"], key="inv_podloga_typ")
+            
+            st.markdown("---")
+            st.markdown("##### Drzwi Wewnętrzne")
+            do_drzwi = st.checkbox("Montaż nowych drzwi wewnętrznych", value=True, key="inv_do_drzwi")
+            if do_drzwi:
+                c_d1, c_d2 = st.columns(2)
+                szt_drzwi = c_d1.number_input("Liczba skrzydeł drzwiowych (szt.):", 1, 15, 3, key="inv_szt_drzwi")
+                rodzaj_drzwi = c_d2.selectbox("Rodzaj drzwi wewn.:", ["Przylgowe (Budżet)", "Bezprzylgowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_rodzaj_drzwi")
                 
-                with col_save:
-                    if st.button("Zapisz projekt w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
-                        if supabase and st.session_state.user_id:
-                            try:
-                                dane_roi = {
-                                    "suma_calkowita": round(calkowity_koszt_inwestycji),
-                                    "koszt_remontu_total": round(calkowity_koszt_remontu_i_wyposazenia),
-                                    "zysk_brutto": round(zysk_brutto),
-                                    "roi_procent": round(roi, 1)
-                                }
-                                supabase.table("projekty").insert({
-                                    "user_id": st.session_state.user_id, 
-                                    "nazwa_projektu": nazwa_inwestycji,
-                                    "branza": "Kompleksowy Flip",
-                                    "dane_json": dane_roi
-                                }).execute()
-                                st.success("✅ Projekt zapisany pomyślnie!")
-                            except Exception as e:
-                                st.error(f"Błąd zapisu: {e}")
-                        else:
-                            st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
+                koszt_drzwi_sztuka = 1000 if "Przylgowe" in rodzaj_drzwi else (2500 if "Ukryta" in rodzaj_drzwi else 1600)
+                koszt_drzwi_total = szt_drzwi * koszt_drzwi_sztuka
+                st.caption(f"Szacowany budżet na drzwi wewn. z ościeżnicami i montażem: **{koszt_drzwi_total:,} zł**".replace(",", " "))
+            else:
+                koszt_drzwi_total = 0
+                
+            st.markdown("##### Drzwi Wejściowe (Wewnątrzklatkowe)")
+            do_drzwi_wejs = st.checkbox("Wymiana drzwi wejściowych", value=False, key="inv_do_drzwi_wejs")
+            if do_drzwi_wejs:
+                rodzaj_drzwi_wejs = st.selectbox("Standard drzwi wejściowych (z montażem):", ["Marketowe (ok. 1200 zł)", "Standard (Porta, KrCenter - ok. 2800 zł)", "Premium (Gerda, stalowe/antywłamaniowe - ok. 4500 zł)"], key="inv_rodzaj_drzwi_wejs")
+                koszt_drzwi_wejs = 1200 if "Marketowe" in rodzaj_drzwi_wejs else (4500 if "Premium" in rodzaj_drzwi_wejs else 2800)
+                st.caption(f"Szacowany budżet na drzwi wejściowe: **{koszt_drzwi_wejs:,} zł**".replace(",", " "))
+            else:
+                koszt_drzwi_wejs = 0
 
-                with col_pdf:
-                    st.button("Generuj PDF z pełnym Kosztorysem (Wkrótce)", use_container_width=True, disabled=True)
-                    st.caption("Funkcja zrzucająca dane ze wszystkich 5 zakładek w przygotowaniu.")
+        with tab_meble:
+            st.subheader("Meble na wymiar i zabudowy stelażowe")
+            c_m1, c_m2 = st.columns(2)
+            do_kuchnia = c_m1.checkbox("Zabudowa Kuchenna", value=True, key="inv_do_kuchnia")
+            koszt_kuchni = c_m2.number_input("Budżet na kuchnię (PLN):", value=20000, step=1000, key="inv_koszt_kuchnia") if do_kuchnia else 0
+            
+            do_szafa = c_m1.checkbox("Szafa w przedpokoju / korytarzu", value=True, key="inv_do_szafa")
+            koszt_szafy = c_m2.number_input("Budżet na szafę (PLN):", value=4000, step=500, key="inv_koszt_szafa") if do_szafa else 0
+            
+            do_laz_meble = c_m1.checkbox("Szafka umywalkowa / Zabudowa WC", value=True, key="inv_do_laz_meble")
+            koszt_laz_meble = c_m2.number_input("Budżet na stolarza łazienki (PLN):", value=1500, step=500, key="inv_koszt_laz_meble") if do_laz_meble else 0
+            
+            koszt_mebli_total = koszt_kuchni + koszt_szafy + koszt_laz_meble
+            st.info(f"Całkowity zarezerwowany budżet meblowy: **{koszt_mebli_total:,} zł**".replace(",", " "))
+
+        with tab_podsumowanie:
+            st.subheader("Bieżący postęp prac (Harmonogram Live)")
+            if 'etapy_projektu' in st.session_state:
+                suma_dni = sum([e['Dni'] for e in st.session_state.etapy_projektu])
+                suma_postepu = sum([(e['Postęp'] / 100) * e['Dni'] for e in st.session_state.etapy_projektu])
+                calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
+                
+                st.progress(calkowity_progres / 100)
+                st.write(f"Ogólny postęp: **{round(calkowity_progres, 1)}%**")
+            else:
+                st.info("Brak aktywnego harmonogramu.")
+
+            st.markdown("---")
+            st.subheader("Pełna Analiza Rentowności (ROI)")
+            
+            koszt_transakcyjny = (cena_zakupu * 0.02) + 4500 
+            # Sumujemy remont bazowy + drzwi wew. + drzwi wejściowe + meble
+            calkowity_koszt_remontu_i_wyposazenia = bazowy_remont_szacunek + koszt_drzwi_total + koszt_drzwi_wejs + koszt_mebli_total
+            calkowity_koszt_inwestycji = cena_zakupu + koszt_transakcyjny + calkowity_koszt_remontu_i_wyposazenia
+            zysk_brutto = cena_sprzedazy - calkowity_koszt_inwestycji
+            roi = (zysk_brutto / calkowity_koszt_inwestycji) * 100 if calkowity_koszt_inwestycji > 0 else 0
+
+            r1, r2, r3 = st.columns(3)
+            r1.metric("Łączny Budżet Wykończeniowy", f"{round(calkowity_koszt_remontu_i_wyposazenia):,} zł".replace(",", " "))
+            r2.metric("ZYSK BRUTTO NA CZYSTO", f"{round(zysk_brutto):,} zł".replace(",", " "))
+            r3.metric("Przewidywane ROI", f"{round(roi, 1)} %")
+
+            if roi < 12: st.error("Słabe ROI! Ryzykowna inwestycja. Poszukaj oszczędności na stolarni lub wynegocjuj cenę zakupu.")
+            elif roi < 20: st.warning("Przeciętny deal. Pilnuj budżetu wykonawczego.")
+            else: st.success("Świetny projekt! Parametry inwestycyjne w normie.")
+
+            st.markdown("---")
+            st.subheader("💾 Zapisz Projekt")
+            col_save, col_pdf = st.columns(2)
+            
+            with col_save:
+                if st.button("Zapisz projekt w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
+                    if supabase and st.session_state.user_id:
+                        try:
+                            dane_roi = {
+                                "suma_calkowita": round(calkowity_koszt_inwestycji),
+                                "koszt_remontu_total": round(calkowity_koszt_remontu_i_wyposazenia),
+                                "zysk_brutto": round(zysk_brutto),
+                                "roi_procent": round(roi, 1)
+                            }
+                            supabase.table("projekty").insert({
+                                "user_id": st.session_state.user_id, 
+                                "nazwa_projektu": nazwa_inwestycji,
+                                "branza": "Kompleksowy Flip",
+                                "dane_json": dane_roi
+                            }).execute()
+                            st.success("✅ Projekt zapisany pomyślnie!")
+                        except Exception as e:
+                            st.error(f"Błąd zapisu: {e}")
+                    else:
+                        st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
+
+            with col_pdf:
+                st.button("Generuj PDF z pełnym Kosztorysem (Wkrótce)", use_container_width=True, disabled=True)
+                st.caption("Funkcja podsumowująca wszystkie materiały ze wszystkich zakładek w budowie.")
                     
         # ... (Tutaj pozostaje reszta logiki opcji z bocznego paska: Mój Profil, Język i Region)
                     
