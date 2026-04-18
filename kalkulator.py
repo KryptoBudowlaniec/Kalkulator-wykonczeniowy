@@ -3429,9 +3429,7 @@ elif branza == "Efekty Dekoracyjne":
                             st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
                             
 
-# ==========================================
-# TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
-# ==========================================
+
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
 # ==========================================
@@ -3526,12 +3524,14 @@ elif branza == "Panel Inwestora":
                 if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont_szacunek *= 1.25
                 st.info(f"Szacowany koszt prac: **~{round(bazowy_remont_szacunek):,} zł**".replace(",", " "))
 
+        
         # --- ZAKŁADKA 2: PRACE SUCHE ---
         with tab_suche:
             st.subheader("Gładzie, Malowanie i Zabudowy")
             
+            # --- SEKCJA 1: GK ---
             st.markdown("#### 1. Konstrukcje GK")
-            do_gk_inv = st.checkbox("Wlicz Sufity Podwieszane GK w całym lokalu", value=False, key="inv_do_gk")
+            do_gk_inv = st.checkbox("Wlicz Sufity Podwieszane GK", value=False, key="inv_do_gk")
             if do_gk_inv:
                 c_gk1, c_gk2 = st.columns(2)
                 rodzaj_stelaza = c_gk1.radio("Konstrukcja stelaża:", ["Pojedynczy (Standard)", "Krzyżowy (Mniej spękań)"], key="inv_gk_stelaz")
@@ -3541,40 +3541,179 @@ elif branza == "Panel Inwestora":
                 welna_izolacja = c_gk4.checkbox("Dodaj wełnę mineralną", key="inv_gk_welna")
             
             st.markdown("---")
+            
+            # --- SEKCJA 2: GŁADZIE ---
             st.markdown("#### 2. Szpachlowanie i Gładzie")
-            do_szpach_inv = st.checkbox("Wlicz Szpachlowanie całego lokalu", value=True, key="inv_do_szpach")
+            do_szpach_inv = st.checkbox("Wlicz Szpachlowanie", value=True, key="inv_do_szpach")
+            
             if do_szpach_inv:
+                # Bazy danych materiałów
+                baza_sypka = {
+                    "Cekol C-45 (20kg)": {"cena": 65, "waga": 20},
+                    "FransPol GS-2 (20kg)": {"cena": 45, "waga": 20},
+                    "Dolina Nidy Omega (20kg)": {"cena": 38, "waga": 20},
+                    "Atlas Gipsar Uni (20kg)": {"cena": 45, "waga": 20}
+                }
+                baza_gotowa = {
+                    "Śmig A-2 (20kg)": {"cena": 55, "waga": 20},
+                    "Knauf Goldband Finish (18kg)": {"cena": 60, "waga": 18},
+                    "Knauf Goldband Finish (28kg)": {"cena": 80, "waga": 28},
+                    "Knauf Fill & Finish Light (20kg)": {"cena": 120, "waga": 20},
+                    "Sheetrock Super Finish (28kg)": {"cena": 135, "waga": 28},
+                    "Atlas GTA (18kg)": {"cena": 70, "waga": 18},
+                    "Atlas GTA (25kg)": {"cena": 90, "waga": 25}
+                }
+                baza_start = {
+                    "FransPol GS-100 (20kg)": {"cena": 45, "waga": 20},
+                    "Nida Start (20kg)": {"cena": 40, "waga": 20},
+                    "Knauf Fugenfuller (25kg)": {"cena": 55, "waga": 25}
+                }
+
                 c_sz1, c_sz2 = st.columns(2)
-                typ_gl_inv = c_sz1.radio("Rodzaj gładzi:", ["Sypka (Worki)", "Gotowa polimerowa (Wiadra)"], horizontal=True, key="inv_szpach_rodzaj")
-                liczba_warstw_gl = c_sz2.slider("Liczba warstw gładzi:", 1, 4, 2, key="inv_szpach_warstwy")
-                mocny_start = st.checkbox("Wlicz równanie gipsem startowym", key="inv_szpach_start")
+                typ_gl_radio = c_sz1.radio("Typ gładzi:", ["Sypka (Worki)", "Gotowa (Wiadra)"], horizontal=True, key="inv_szpach_typ_radio")
+                
+                # Wybór konkretnego produktu na podstawie typu
+                if "Sypka" in typ_gl_radio:
+                    produkt_gl = c_sz2.selectbox("Wybierz gładź sypką:", list(baza_sypka.keys()), key="inv_gl_produkt_sypka")
+                    dane_materialu = baza_sypka[produkt_gl]
+                else:
+                    produkt_gl = c_sz2.selectbox("Wybierz gładź gotową:", list(baza_gotowa.keys()), key="inv_gl_produkt_gotowa")
+                    dane_materialu = baza_gotowa[produkt_gl]
 
+                c_sz3, c_sz4 = st.columns(2)
+                liczba_warstw_gl = c_sz3.slider("Liczba warstw gładzi:", 1, 3, 2, key="inv_szpach_warstwy")
+                
+                # Opcjonalny gips startowy
+                mocny_start = c_sz4.checkbox("Wlicz gips startowy (równanie)", key="inv_szpach_start")
+                if mocny_start:
+                    produkt_start = st.selectbox("Wybierz gips startowy:", list(baza_start.keys()), key="inv_gl_start_produkt")
+                    dane_startu = baza_start[produkt_start]
+                
             st.markdown("---")
-            st.markdown("#### 3. Malowanie")
-            do_mal_inv = st.checkbox("Wlicz Malowanie całego lokalu", value=True, key="inv_do_mal")
+            
+            # --- SEKCJA 3: MALOWANIE ---
+            st.markdown("#### 3. Gruntowanie i Malowanie")
+            do_mal_inv = st.checkbox("Wlicz Gruntowanie i Malowanie", value=True, key="inv_do_mal")
+            
             if do_mal_inv:
-                c_m1, c_m2 = st.columns(2)
-                klasa_f = c_m1.selectbox("Klasa farby:", ["Budżetowa (Dekoral)", "Standard (Beckers)", "Ceramiczna (Magnat)"], key="inv_mal_klasa")
-                liczba_warstw_mal = c_m2.slider("Liczba warstw farby:", 1, 3, 2, key="inv_mal_warstwy")
-                gruntowanie_typ = st.radio("Sposób gruntowania:", ["Standard (Zwykły Grunt)", "Farba Gruntująca"], horizontal=True, key="inv_mal_grunt")
+                baza_grunty = {
+                    "Atlas Unigrunt (Standard)": 8, 
+                    "Ceresit CT 17 (Klasyk)": 12,
+                    "Knauf Tiefengrund (Premium)": 14,
+                    "Mapei Primer G Pro (Koncentrat)": 17
+                }
+                baza_biale = {
+                    "Śnieżka Eko (Ekonomiczna)": 7,
+                    "Dekoral Polinak (Standard)": 10,
+                    "Beckers Designer White (Standard+)": 14,
+                    "Magnat Ultra Matt (Premium)": 18,
+                    "Tikkurila Anti-Reflex 2 (Premium+)": 28,
+                    "Flugger Flutex Pro 5 (Top Premium)": 35
+                }
+                baza_kolory = {
+                    "Śnieżka Barwy Natury (Eko)": 17,
+                    "Dekoral Akrylit W (Standard)": 20,
+                    "Magnat Ceramic (Standard+)": 30,
+                    "Beckers Designer Colour (Premium)": 32,
+                    "Tikkurila Optiva 5 (Premium+)": 50,
+                    "Flugger Dekso (Top Premium)": 70
+                }
 
+                st.markdown("##### Gruntowanie")
+                wybrany_grunt = st.selectbox("Wybierz grunt:", list(baza_grunty.keys()), key="inv_grunt_wybor")
+                
+                st.markdown("##### Farby")
+                c_m1, c_m2 = st.columns(2)
+                
+                with c_m1:
+                    st.write("**Sufity (Biała)**")
+                    produkt_biala = st.selectbox("Farba na sufit:", list(baza_biale.keys()), key="inv_paint_white")
+                
+                with c_m2:
+                    st.write("**Ściany (Kolor)**")
+                    produkt_kolor = st.selectbox("Farba na ściany:", list(baza_kolory.keys()), key="inv_paint_color")
+
+                liczba_warstw_mal = st.slider("Liczba warstw farby (łącznie):", 1, 3, 2, key="inv_mal_warstwy")
+                
         # --- ZAKŁADKA 3: ŁAZIENKA ---
+        # --- ZAKŁADKA 3: KONFIGURACJA ŁAZIENKI ---
         with tab_mokre:
-            st.subheader("Konfiguracja Łazienki")
-            do_laz_inv = st.checkbox("Remont Łazienki", value=True, key="inv_do_laz")
+            st.subheader("Konfiguracja Łazienki 🚿")
+            do_laz_inv = st.checkbox("Wlicz Remont Łazienki", value=True, key="inv_do_laz")
+            
             if do_laz_inv:
+                # --- BAZY DANYCH MATERIAŁÓW ---
+                baza_kleje = {
+                    "Atlas Geoflex (Żelowy, C2TE) - 25kg": 65,
+                    "Atlas Plus (Wysokoelastyczny S1) - 25kg": 85,
+                    "Kerakoll Bioflex (Żelowy) - 25kg": 75,
+                    "Kerakoll H40 (Premium) - 25kg": 125,
+                    "Mapei Keraflex Extra S1 - 25kg": 80,
+                    "Sopro No.1 (400) - 22.5kg": 115,
+                    "Klej Standardowy C2T - 25kg": 50
+                }
+                baza_folie = {
+                    "Standardowa folia w płynie - 5kg": {"cena": 80, "waga": 5},
+                    "Sopro FDF 525 - 5kg": {"cena": 165, "waga": 5},
+                    "Sopro FDF 525 - 15kg": {"cena": 440, "waga": 15},
+                    "Ceresit CL 51 - 5kg": {"cena": 110, "waga": 5},
+                    "Ceresit CL 51 - 15kg": {"cena": 275, "waga": 15},
+                    "Atlas Woder E - 5kg": {"cena": 95, "waga": 5},
+                    "Atlas Woder E - 15kg": {"cena": 255, "waga": 15}
+                }
+                baza_maty = {
+                    "Mata uszczelniająca Standard (m2)": 45,
+                    "Mata Sopro AEB 640 (m2)": 85,
+                    "Mata Knauf (m2)": 75,
+                    "Mata Ceresit CL 152 (m2)": 70,
+                    "Mata Kerakoll Aquastop (m2)": 65,
+                    "Mata Mapei Mapeguard (m2)": 80
+                }
+                baza_masy_2k = {
+                    "Masa 1K/2K Standard - 15kg": {"cena": 180, "waga": 15},
+                    "Sopro DSF 523 - 10kg": {"cena": 230, "waga": 10},
+                    "Sopro DSF 523 - 20kg": {"cena": 395, "waga": 20},
+                    "Kerakoll Aquastop Nanoflex - 20kg": {"cena": 260, "waga": 20},
+                    "Atlas Woder Duo (Masa 2K) - 15kg": {"cena": 240, "waga": 15},
+                    "Mapei Mapelastic (Masa 2K) - 16kg": {"cena": 290, "waga": 16}
+                }
+
+                # --- INTERFEJS ---
+                st.markdown("#### 1. Wymiary i Płytki")
                 c_l1, c_l2 = st.columns(2)
-                m2_laz = c_l1.number_input("Powierzchnia łazienki (m2):", 1.0, 30.0, 5.0, key="inv_laz_m2")
-                m2_hydro = c_l2.number_input("Strefa mokra (hydroizolacja m2):", 2.0, 30.0, 6.0, key="inv_laz_hydro_m2")
+                m2_laz = c_l1.number_input("Powierzchnia łazienki (m2 podłogi):", 1.0, 30.0, 5.0, key="inv_laz_m2")
+                format_plytek_laz = c_l2.selectbox("Format płytek:", ["Standard (do 60x60)", "Wielki Format (120x60)", "Spiek / Mega Format"], key="inv_laz_format")
                 
-                c_l3, c_l4 = st.columns(2)
-                format_plytek_laz = c_l3.selectbox("Format płytek:", ["Standard (do 60x60)", "Wielki Format (120x60)"], key="inv_laz_format")
-                system_hydro = c_l4.radio("Hydroizolacja:", ["Folia w płynie", "Maty Uszczelniające"], key="inv_laz_system_hydro")
+                st.markdown("---")
+                st.markdown("#### 2. Hydroizolacja (Strefa Mokra)")
+                c_l3, c_l4 = st.columns([1, 2])
                 
+                # Wybór technologii
+                typ_hydro = c_l3.radio("System ochrony:", ["Folia w płynie", "Mata Uszczelniająca", "Masa 2K (Szlam)"], key="inv_laz_hydro_tech")
+                m2_hydro = c_l4.number_input("Metraż hydroizolacji (m2 ścian i podłóg):", 2.0, 50.0, 8.0, key="inv_laz_hydro_m2")
+                
+                # Wybór konkretnego produktu na podstawie technologii
+                if "Folia" in typ_hydro:
+                    produkt_hydro = st.selectbox("Wybierz folię w płynie:", list(baza_folie.keys()), key="inv_laz_prod_folia")
+                elif "Mata" in typ_hydro:
+                    produkt_hydro = st.selectbox("Wybierz matę uszczelniającą:", list(baza_maty.keys()), key="inv_laz_prod_mata")
+                else:
+                    produkt_hydro = st.selectbox("Wybierz masę 2K:", list(baza_masy_2k.keys()), key="inv_laz_prod_2k")
+
+                st.markdown("---")
+                st.markdown("#### 3. Klejenie i Fugowanie")
                 c_l5, c_l6 = st.columns(2)
-                rodzaj_kleju_laz = c_l5.selectbox("Klej:", ["Elastyczny C2TE", "Wysokoelastyczny S1"], index=1 if "Wielki" in format_plytek_laz else 0, key="inv_laz_klej")
-                rodzaj_fugi_laz = c_l6.radio("Fuga:", ["Cementowa", "Epoksydowa"], key="inv_laz_fuga")
-                odplyw_liniowy = st.checkbox("Odpływ liniowy (koperta)", value=True, key="inv_laz_odplyw")
+                
+                # Inteligentna podpowiedź kleju
+                rekomendacja_kleju = list(baza_kleje.keys())[1] if "Wielki" in format_plytek_laz else list(baza_kleje.keys())[0]
+                wybrany_klej = c_l5.selectbox("Wybierz klej:", list(baza_kleje.keys()), index=list(baza_kleje.keys()).index(rekomendacja_kleju), key="inv_laz_klej_wybor")
+                
+                rodzaj_fugi_laz = c_l6.radio("Rodzaj fugi:", ["Cementowa", "Epoksydowa (Szczelna/Premium)"], key="inv_laz_fuga")
+                
+                st.markdown("#### 4. Dodatki")
+                odplyw_liniowy = st.checkbox("Odpływ liniowy (wymaga spadków/koperty)", value=True, key="inv_laz_odplyw")
+                if odplyw_liniowy:
+                    st.info("💡 Pamiętaj: Odpływ liniowy wymaga użycia masy 2K lub maty wokół rynny dla pełnej szczelności.")
 
         # --- ZAKŁADKA 4: ELEKTRYKA ---
         with tab_ele:
