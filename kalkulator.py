@@ -3690,21 +3690,38 @@ elif branza == "Panel Inwestora":
                 if odplyw_liniowy:
                     st.info("💡 Pamiętaj: Odpływ liniowy wymaga użycia masy 2K lub maty wokół rynny dla pełnej szczelności.")
 
+        
         # --- ZAKŁADKA 4: ELEKTRYKA ---
         with tab_ele:
             st.subheader("Instalacja Elektryczna ⚡")
-            do_elek_inv = st.checkbox("Wymiana całej instalacji elektrycznej", value=True, key="inv_do_ele")
+            do_elek_inv = st.checkbox("Wlicz nową instalację elektryczną (okablowanie i osprzęt)", value=True, key="inv_do_elek")
+            
             if do_elek_inv:
-                c_e1, c_e2 = st.columns(2)
-                szt_punktow = c_e1.number_input("Szacowana ilość punktów (gniazda/włączniki):", 10, 150, 45, key="inv_ele_punkty")
-                std_osprzet = c_e2.selectbox("Standard osprzętu:", ["Ekonomiczny (np. Simon 10)", "Standard (np. Sedna, As)", "Premium (np. Simon 54, Legrand)"], key="inv_ele_std")
+                st.markdown("#### 1. Wybór standardu")
+                std_osprzet = st.selectbox(
+                    "Standard osprzętu (gniazdka/włączniki):", 
+                    ["Budżet (np. Kontakt Simon 10)", "Standard (np. Simon 54, Ospel Aria)", "Premium (np. Legrand Celiane, Ramki Szklane)"], 
+                    key="inv_ele_std"
+                )
                 
-                rob_ele = szt_punktow * 110 
-                mat_ele = szt_punktow * 45 
-                koszt_ele_total = rob_ele + mat_ele
-                st.info(f"Szacowany koszt elektryki (Robocizna + Materiał): **{koszt_ele_total:,} zł**".replace(",", " "))
-            else:
-                koszt_ele_total = 0
+                st.markdown("---")
+                st.markdown("#### 2. Zestawienie Punktów (Biały Montaż)")
+                c_e1, c_e2 = st.columns(2)
+                
+                with c_e1:
+                    st.write("**Gniazdka zasilające (230V)**")
+                    gniazda_poj = st.number_input("Pojedyncze:", min_value=0, max_value=150, value=15, step=1, key="inv_ele_gn_poj")
+                    gniazda_podw = st.number_input("Podwójne:", min_value=0, max_value=150, value=10, step=1, key="inv_ele_gn_podw")
+                
+                with c_e2:
+                    st.write("**Włączniki oświetlenia**")
+                    wlacznik_poj = st.number_input("Pojedyncze (1-klawiszowe):", min_value=0, max_value=50, value=5, step=1, key="inv_ele_wl_poj")
+                    wlacznik_podw = st.number_input("Podwójne (2-klawiszowe/schodowe):", min_value=0, max_value=50, value=5, step=1, key="inv_ele_wl_podw")
+
+                # Zabezpieczenie! Sumujemy to do starej zmiennej, żeby nie wyskoczył NameError w starych obliczeniach kosztów:
+                szt_punktow = gniazda_poj + gniazda_podw + wlacznik_poj + wlacznik_podw
+                
+                st.info(f"💡 Łączna liczba punktów elektrycznych do obsadzenia: **{szt_punktow} szt.**")
 
         # --- ZAKŁADKA 5: PODŁOGI, WYLEWKI I DRZWI ---
         with tab_podl:
@@ -3783,9 +3800,15 @@ elif branza == "Panel Inwestora":
                 zakupy["ELEKTRYKA"].extend([
                     f"Przewód 3x2.5 (Gniazda): ~{int(m2_total*2.5)} mb",
                     f"Przewód 3x1.5 (Światło): ~{int(m2_total*1.5)} mb",
-                    "Rozdzielnica + Bezpieczniki",
-                    f"Osprzęt ({std_osprzet}): {szt_punktow} szt."
+                    "Rozdzielnica + Bezpieczniki (Komplet)",
                 ])
+                # Dodajemy rozbity osprzęt tylko, jeśli wpisano więcej niż 0
+                if gniazda_poj > 0: zakupy["ELEKTRYKA"].append(f"Gniazdka pojedyncze ({std_osprzet}): {gniazda_poj} szt.")
+                if gniazda_podw > 0: zakupy["ELEKTRYKA"].append(f"Gniazdka podwójne ({std_osprzet}): {gniazda_podw} szt.")
+                if wlacznik_poj > 0: zakupy["ELEKTRYKA"].append(f"Włączniki 1-klawiszowe ({std_osprzet}): {wlacznik_poj} szt.")
+                if wlacznik_podw > 0: zakupy["ELEKTRYKA"].append(f"Włączniki 2-klawiszowe ({std_osprzet}): {wlacznik_podw} szt.")
+                # Dodajemy info o ramkach
+                zakupy["ELEKTRYKA"].append(f"Ramki maskujące (Zależnie od konfiguracji w puszkach): ~{szt_punktow} szt.")
 
             # --- A. ŁAZIENKA (LOGIKA PRODUKTOWA) ---
             if do_laz_inv:
