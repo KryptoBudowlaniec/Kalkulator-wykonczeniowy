@@ -164,15 +164,12 @@ with col_logo:
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     
-    # INTELIGENTNY WYBÓR DOMYŚLNEJ STRONY
-    # Jeśli użytkownik właśnie się zalogował, menu powinno pokazać "Logowanie"
-    domyslna_strona = "Logowanie" if st.session_state.zalogowany else "Start"
-    
+
     nawigacja = st.pills(
         "", 
         ["Start", "Kalkulatory", "Panel Inwestora", "Harmonogram", "Kontakt", "Logowanie"],
         selection_mode="single",
-        default=domyslna_strona, # <-- ZMIANA TUTAJ
+        default="Start", 
         key="main_nav"
     )
     st.markdown('</div>', unsafe_allow_html=True)
