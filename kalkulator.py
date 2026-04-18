@@ -234,18 +234,19 @@ st.markdown("""
 
 
 # ==========================================
-# GLOBALNY PANEL BOCZNY (Widoczny wszędzie po zalogowaniu)
+# GLOBALNY PANEL BOCZNY (Dla zalogowanych)
 # ==========================================
-opcja_boczna = "Nawigacja Główna" # Wartość domyślna
+opcja_boczna = "Nawigacja Główna" # Domyślnie
 
 if st.session_state.zalogowany:
     with st.sidebar:
         st.title("Panel Zarządzania")
         st.markdown(f"Konto: **{st.session_state.user_email}**")
         
+        # Rozbudowane menu SaaS
         opcja_boczna = st.radio(
-            "Opcje konta",
-            ["Nawigacja Główna", "Mój Profil", "Język i Region"],
+            "Menu Konta",
+            ["Nawigacja Główna", "Mój Profil", "Moja Subskrypcja", "Bezpieczeństwo", "Język i Region"],
             key="globalny_sidebar"
         )
         
@@ -260,21 +261,74 @@ if st.session_state.zalogowany:
 # NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY
 # ==========================================
 if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
-    st.header("Mój Profil Inwestora")
+    st.header("Mój Profil i Dane Firmy 👤")
+    st.write("Uzupełnij dane, które będą używane do wystawiania faktur oraz na nagłówkach Twoich kosztorysów PDF.")
+    
     c1, c2 = st.columns(2)
     with c1:
         st.text_input("Imię i Nazwisko / Nazwa Firmy")
+        st.text_input("NIP (Opcjonalnie)")
+        st.text_input("Adres kontaktowy")
     with c2:
         st.number_input("Domyślny narzut na materiały (%)", value=10)
-        st.number_input("Twoja stawka za roboczogodzinę (PLN/h)", value=60)
-    if st.button("Zapisz ustawienia profilu"):
-        st.success("Zapisano zmiany!")
+        st.number_input("Twoja bazowa stawka za roboczogodzinę (PLN/h)", value=60)
+        st.text_input("Numer telefonu (do kosztorysów)")
+        
+    if st.button("Zapisz ustawienia profilu", type="primary"):
+        st.success("Zapisano zmiany w profilu!")
+
+elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
+    st.header("Zarządzanie Subskrypcją 💳")
+    
+    col_sub1, col_sub2 = st.columns([2, 1])
+    with col_sub1:
+        st.info(f"Twój obecny pakiet: **Premium {st.session_state.pakiet}**")
+        st.write("Konto aktywne i opłacone.")
+        st.write("Twoja subskrypcja odnawia się automatycznie: **12.11.2024**")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.button("Zarządzaj kartą płatniczą (Stripe)")
+        st.button("Pobierz ostatnie faktury")
+        
+    with col_sub2:
+        st.markdown("""
+        <div style="border: 1px solid #E9ECEF; border-radius: 10px; padding: 20px; text-align: center;">
+            <p style="margin-bottom: 5px; color: #6C757D;">Chcesz zrezygnować?</p>
+            <button style="background: transparent; border: 1px solid #FF4B4B; color: #FF4B4B; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%;">Anuluj Subskrypcję</button>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif st.session_state.zalogowany and opcja_boczna == "Bezpieczeństwo":
+    st.header("Bezpieczeństwo i Logowanie 🔒")
+    
+    st.subheader("Zmiana hasła")
+    st.write("Zalecamy używanie silnego hasła składającego się z minimum 8 znaków.")
+    
+    col_pw1, col_pw2 = st.columns(2)
+    with col_pw1:
+        st.text_input("Obecne hasło", type="password")
+        nowe_haslo = st.text_input("Nowe hasło", type="password")
+        powtorz_haslo = st.text_input("Powtórz nowe hasło", type="password")
+        
+        if st.button("Zaktualizuj hasło", type="primary"):
+            if nowe_haslo and nowe_haslo == powtorz_haslo:
+                st.success("Hasło zostało pomyślnie zmienione! (Symulacja)")
+                # Docelowo tutaj wejdzie logika: supabase.auth.update_user({"password": nowe_haslo})
+            else:
+                st.error("Nowe hasła nie są identyczne lub pole jest puste.")
+
+    st.markdown("---")
+    st.subheader("Strefa Niebezpieczna")
+    with st.expander("Usuwanie konta"):
+        st.warning("Usunięcie konta jest nieodwracalne. Utracisz dostęp do wszystkich zapisanych projektów, kosztorysów oraz aktywnej subskrypcji.")
+        st.text_input("Aby potwierdzić, wpisz słowo: USUŃ", key="del_confirm")
+        st.button("Trwale usuń moje konto", type="secondary")
 
 elif st.session_state.zalogowany and opcja_boczna == "Język i Region":
-    st.header("Ustawienia Regionalne")
-    st.selectbox("Wybierz język", ["Polski", "English"])
-    st.selectbox("Domyślna waluta", ["PLN", "EUR", "USD"])
-    if st.button("Zapisz region"):
+    st.header("Ustawienia Regionalne 🌍")
+    st.selectbox("Wybierz język interfejsu", ["Polski", "English"])
+    st.selectbox("Domyślna waluta systemu", ["PLN", "EUR", "USD", "GBP"])
+    if st.button("Zapisz ustawienia regionalne"):
         st.success("Zapisano zmiany!")
 
 
