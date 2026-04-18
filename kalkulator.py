@@ -355,7 +355,7 @@ elif st.session_state.zalogowany and opcja_boczna == "Język i Region":
 # ==========================================
 # --- SYSTEM RATUNKOWY DLA ZMIENNEJ NAWIGACJI ---
 try:
-    branza
+    _ = branza
 except NameError:
     branza = "Logowanie"
     
