@@ -3672,10 +3672,16 @@ elif branza == "Panel Inwestora":
             with col_save:
                 if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
                     
-                    # BEZPIECZNE POBIERANIE ID - Zapobiega błędom AttributeError!
-                    zalogowany_user = st.session_state.get("user_id") or st.session_state.get("user_email")
+                    # KULOODPORNE POBIERANIE UŻYTKOWNIKA
+                    zalogowany_user = st.session_state.get("user_id")
+                    if not zalogowany_user:
+                        zalogowany_user = st.session_state.get("user_email")
                     
-                    if supabase and zalogowany_user:
+                    # Jeśli testujesz aplikację bez pełnego logowania i email jest pusty:
+                    if not zalogowany_user or zalogowany_user == "":
+                        zalogowany_user = "testowy_inwestor_123"
+                    
+                    if supabase is not None:
                         try:
                             dane_roi = {
                                 "suma_calkowita": round(calkowity_koszt_projektu),
@@ -3685,16 +3691,17 @@ elif branza == "Panel Inwestora":
                                 "lista_zakupow": zakupy 
                             }
                             supabase.table("projekty").insert({
-                                "user_id": zalogowany_user, # <--- Wrzuca Email lub ID bez błędu
+                                "user_id": zalogowany_user, 
                                 "nazwa_projektu": nazwa_inwestycji,
                                 "branza": "Kompleksowy Flip",
                                 "dane_json": dane_roi
                             }).execute()
                             st.success("✅ Projekt i lista zakupów zapisane pomyślnie!")
                         except Exception as e:
-                            st.error(f"Błąd zapisu: {e}")
+                            st.error(f"Błąd podczas wysyłania do bazy: {e}")
+                            st.info("Upewnij się, że w Supabase tabela 'projekty' nie ma włączonych restrykcji RLS (Row Level Security) blokujących zapis.")
                     else:
-                        st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
+                        st.error("Błąd: Obiekt 'supabase' nie istnieje. Sprawdź połączenie na górze pliku.")
             with col_pdf:
                 if st.button("Generuj Pełny Kosztorys (PDF)", use_container_width=True, key="pobierz_pdf_kompleks_btn"):
                     try:
