@@ -55,14 +55,18 @@ if not st.session_state.cookies_accepted:
     st.markdown("---")
 
 # ==========================================
-# 2. POŁĄCZENIE Z BAZĄ DANYCH
+# 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
 # ==========================================
-URL_TEST = "https://pkfuzakuzobwtpvxoscx.supabase.co"
-KEY_TEST = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrZnV6YWt1em9id3Rwdnhvc2N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NTQ4NzEsImV4cCI6MjA5MTUzMDg3MX0.qffEeyUoti95qA7rVq6TRPkwOIweQSEfdIen-ZBzDPU"
+try:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+except KeyError:
+    st.error("⚠️ Brak kluczy bazy danych! Skonfiguruj zakładkę 'Secrets' w ustawieniach Streamlit Cloud.")
+    st.stop()
 
 supabase: Client = None
 try:
-    supabase = create_client(URL_TEST, KEY_TEST)
+    supabase = create_client(url, key)
 except Exception as e:
     st.error(f"Błąd inicjalizacji Supabase: {e}")
     st.stop()
@@ -80,9 +84,9 @@ if supabase and "access_token" in st.session_state and "refresh_token" in st.ses
 # 3. STAN APLIKACJI (INICJALIZACJA)
 # ==========================================
 if 'zalogowany' not in st.session_state:
-    st.session_state.zalogowany = True
+    st.session_state.zalogowany = False # <--- ZMIENIONE NA FALSE (Prawdziwe zabezpieczenie)
 if 'pakiet' not in st.session_state:
-    st.session_state.pakiet = "Pro"
+    st.session_state.pakiet = "Podstawowy"
 if 'user_email' not in st.session_state:
     st.session_state.user_email = ""
 if 'access_token' not in st.session_state:
@@ -123,7 +127,9 @@ if acc_token and ref_token:
             user_res = supabase.auth.get_user()
             if user_res and user_res.user:
                 st.session_state.user_email = user_res.user.email
-                st.session_state.user_id = user_res.user.id  # <--- TA LINIJKA JEST NOWA I KLUCZOWA!
+                st.session_state.user_id = user_res.user.id  
+                st.session_state.access_token = acc_token
+                st.session_state.refresh_token = ref_token
                 
         st.session_state.zalogowany = True
         st.session_state.pakiet = "PRO"
@@ -135,7 +141,6 @@ if acc_token and ref_token:
         st.stop()
     except Exception:
         pass
-
 
 # SYTUACJA B: PODTRZYMANIE SESJI
 elif st.session_state.get("zalogowany") == True:
