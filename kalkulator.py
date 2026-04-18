@@ -3479,14 +3479,17 @@ elif branza == "Panel Inwestora":
         st.write("### Skonfiguruj nowy kosztorys:")
         # --- KONIEC: SEKCJA TWOJE PROJEKTY ---
 
-        tab_roi, tab_suche, tab_mokre, tab_ele, tab_podl, tab_meble, tab_podsumowanie = st.tabs([
-            "1. ROI & Koszty", 
-            "2. Prace Suche", 
-            "3. Łazienka", 
-            "4. Elektryka",
-            "5. Podłogi & Drzwi", 
-            "6. Stolarka & Meble",
-            "7. Podsumowanie & Lista Zakupów"
+        # Dodajemy tab_tynki i tab_posadzki do listy po lewej i do nazw w nawiasie
+        tab_roi, tab_tynki, tab_posadzki, tab_suche, tab_mokre, tab_ele, tab_podl, tab_meble, tab_podsumowanie = st.tabs([
+            "1 ROI", 
+            "2 Tynki i GK", 
+            "3 Posadzki", 
+            "4 Prace Suche", 
+            "5 Łazienka", 
+            "6 Elektryka", 
+            "7 Podłogi & Drzwi", 
+            "8 Meble", 
+            "9 Podsumowanie"
         ])
 
         import math
