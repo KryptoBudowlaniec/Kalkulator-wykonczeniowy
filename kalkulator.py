@@ -3708,6 +3708,33 @@ elif branza == "Panel Inwestora":
                         pdf.set_text_color(0, 211, 149)
                         pdf.cell(190, 10, txt=czysc_tekst(f"PROCALC - KOSZTORYS: {nazwa_inwestycji.upper()}"), ln=True, align='C')
                         pdf.ln(5)
+                        pdf.set_font("Arial", style="B", size=12)
+                        pdf.set_text_color(30, 30, 30)
+                        pdf.cell(190, 10, txt="1. PODSUMOWANIE FINANSOWE", ln=True)
+                        pdf.set_font("Arial", size=11)
+                        pdf.cell(190, 8, txt=czysc_tekst(f"- Laczny koszt inwestycji (Zakup+Remont+Utrzymanie): {round(calkowity_koszt_projektu)} PLN"), ln=True)
+                        pdf.cell(190, 8, txt=czysc_tekst(f"- Budzet wyposazenia i materialow: {round(wyposazenie_total)} PLN"), ln=True)
+                        pdf.cell(190, 8, txt=czysc_tekst(f"- Szacowany zysk na czysto: {round(zysk_brutto)} PLN (ROI: {round(roi,1)}%)"), ln=True)
+                        pdf.ln(5)
+                        
+                        pdf.set_font("Arial", style="B", size=12)
+                        pdf.cell(190, 10, txt="2. LISTA ZAKUPOWA MATERIALOW", ln=True)
+                        for cat, items in zakupy.items():
+                            pdf.set_font("Arial", style="B", size=11)
+                            pdf.set_text_color(100, 100, 100)
+                            pdf.cell(190, 8, txt=czysc_tekst(f"--- {cat} ---"), ln=True)
+                            pdf.set_font("Arial", size=10)
+                            pdf.set_text_color(30, 30, 30)
+                            for item in items:
+                                pdf.cell(190, 6, txt=czysc_tekst(f"* {item}"), ln=True)
+                            pdf.ln(2)
+                            
+                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
+                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
+                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Kosztorys_{nazwa_inwestycji}.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; margin-top: 10px;">Pobierz Kosztorys PDF</a>'
+                        st.markdown(href, unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Błąd generowania PDF: {e}")
                     
 # ==========================================
 # MODUŁ: HARMONOGRAM (GANTT LIVE)
