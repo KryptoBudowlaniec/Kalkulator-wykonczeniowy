@@ -3645,14 +3645,13 @@ elif branza == "Panel Inwestora":
             do_laz_inv = st.checkbox("Wlicz Remont Łazienki", value=True, key="inv_do_laz")
             
             if do_laz_inv:
-                
                 # --- INTERFEJS ---
                 st.markdown("#### 1. Wymiary i Wykończenie Ścian")
                 c_l1, c_l2 = st.columns(2)
                 m2_laz = c_l1.number_input("Powierzchnia łazienki (m2 podłogi):", 1.0, 30.0, 5.0, key="inv_laz_m2")
                 format_plytek_laz = c_l2.selectbox("Format płytek:", ["Standard (do 60x60)", "Wielki Format (120x60)", "Spiek / Mega Format"], key="inv_laz_format")
                 
-                # --- NOWOŚĆ: Wybór stylu łazienki ---
+                # --- TO JEST TEN ZGUBIONY PRZYCISK! ---
                 styl_lazienki = st.radio(
                     "Projekt wykończenia ścian:", 
                     ["Klasyczny (Płytki na wszystkich ścianach pod sufit)", 
@@ -3668,7 +3667,7 @@ elif branza == "Panel Inwestora":
                 typ_hydro = c_l3.radio("System ochrony:", ["Folia w płynie", "Mata Uszczelniająca", "Masa 2K (Szlam)"], key="inv_laz_hydro_tech")
                 m2_hydro = c_l4.number_input("Metraż hydroizolacji (m2 ścian i podłóg):", 2.0, 50.0, 8.0, key="inv_laz_hydro_m2")
                 
-                # Wybór konkretnego produktu na podstawie technologii
+                # Wybór konkretnego produktu na podstawie technologii (Bazy są globalne)
                 if "Folia" in typ_hydro:
                     produkt_hydro = st.selectbox("Wybierz folię w płynie:", list(baza_folie.keys()), key="inv_laz_prod_folia")
                 elif "Mata" in typ_hydro:
@@ -3788,7 +3787,7 @@ elif branza == "Panel Inwestora":
                     f"Osprzęt ({std_osprzet}): {szt_punktow} szt."
                 ])
 
-# --- A. ŁAZIENKA (LOGIKA PRODUKTOWA) ---
+            # --- A. ŁAZIENKA (LOGIKA PRODUKTOWA) ---
             if do_laz_inv:
                 # OBLICZANIE: HYBRYDA VS KLASYKA
                 if "Hybryda" in styl_lazienki:
