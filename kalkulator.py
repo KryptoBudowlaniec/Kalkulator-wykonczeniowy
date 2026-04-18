@@ -4014,17 +4014,41 @@ elif branza == "Panel Inwestora":
                 if welna_izolacja: zakupy["SUCHY MONTAŻ (G-K)"].append(f"Wełna mineralna: {math.ceil(m2_total)} m2")
 
             # GŁADZIE I MALOWANIE
+            pow_scian_total = m2_total * 3.5 # Standardowy przelicznik powierzchni ścian i sufitów
+            
+            # 1. GŁADZIE
             if do_szpach_inv:
-                d_gl = baza_sypka[produkt_gl] if "Sypka" in typ_gl_radio else baza_gotowa[produkt_gl]
-                worki_gl = math.ceil((m2_total * 3.5 * liczba_warstw_gl * 1.0) / d_gl['waga'])
-                koszt_materialow_detal += (worki_gl * d_gl['cena'])
-                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Gładź ({produkt_gl}): {worki_gl} op.")
+                try:
+                    # Wybieramy odpowiednią bazę (sypka lub gotowa)
+                    d_gl = baza_sypka[produkt_gl] if "Sypka" in typ_gl_radio else baza_gotowa[produkt_gl]
+                    # Obliczamy liczbę opakowań (zużycie ok. 1kg/m2 na warstwę)
+                    worki_gl = math.ceil((pow_scian_total * liczba_warstw_gl) / d_gl['waga'])
+                    
+                    zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Gladz ({produkt_gl}): {worki_gl} op.")
+                    
+                    if mocny_start:
+                        worki_start = math.ceil(pow_scian_total / 20)
+                        zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Gips szpachlowy (Start): {worki_start} workow")
+                except:
+                    pass
 
+            # 2. GRUNT I FARBY
             if do_mal_inv:
-                cena_gruntu = baza_grunty[wybrany_grunt]
-                op_gruntu = math.ceil((m2_total * 3.5) / 50)
-                koszt_materialow_detal += (op_gruntu * cena_gruntu * 5)
-                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Grunt ({wybrany_grunt}): {op_gruntu} bańki 5L")
+                # Grunt (wydajność ok. 10m2/L, czyli bańka 5L na 50m2)
+                op_gruntu = math.ceil(pow_scian_total / 50)
+                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Grunt ({wybrany_grunt}): {op_gruntu} banki 5L")
+                
+                # Farba biała (Sufity - m2 podłogi to m2 sufitu)
+                litry_biala = math.ceil(m2_total * 0.2) # 0.2L na m2 (2 warstwy)
+                zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Farba biala sufitowa ({produkt_biala}): ~{math.ceil(litry_biala)} L")
+
+                # Farba kolorowa (Ściany - m2 ścian minus łazienka)
+                # Odejmujemy m2 łazienki (zakładając, że tam są płytki/specjalna farba)
+                m2_scian_kolor = pow_scian_total - m2_total - (m2_laz * 2 if do_laz_inv else 0)
+                litry_kolor = math.ceil(max(0, m2_scian_kolor) * 0.2)
+                
+                if litry_kolor > 0:
+                    zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Farba kolorowa na sciany ({produkt_kolor}): ~{math.ceil(litry_kolor)} L")
 
             # PODŁOGI
             if wylewka_samopoz:
