@@ -4079,51 +4079,96 @@ elif branza == "Panel Inwestora":
                         }).execute()
                         st.success("✅ Projekt zapisany!")
 
-            with col_pdf:
+with col_pdf:
                 if st.button("Generuj Nowoczesny Kosztorys PDF", use_container_width=True):
                     try:
                         from fpdf import FPDF
+                        
                         def czysc_tekst(tekst):
                             pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
-                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                            for pl, ang in pl_znaki.items(): 
+                                tekst = tekst.replace(pl, ang)
                             return tekst
                         
                         pdf = FPDF()
                         pdf.add_page()
-                        pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True) 
                         
-                        # Baner i tytuł
-                        pdf.set_fill_color(14, 23, 43); pdf.rect(0, 0, 210, 25, 'F')
-                        pdf.set_y(8); pdf.set_font("Inter", "", 16); pdf.set_text_color(255, 255, 255)
+                        # Próba dodania czcionki - upewnij się, że plik ttf jest w folderze projektu
+                        try:
+                            pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True)
+                            pdf.set_font('Inter', '', 12)
+                        except:
+                            pdf.set_font('Arial', '', 12) # Font zastępczy, jeśli Inter nie zostanie znaleziony
+                        
+                        # --- DESIGN: BANER I TYTUŁ ---
+                        pdf.set_fill_color(14, 23, 43)
+                        pdf.rect(0, 0, 210, 25, 'F')
+                        pdf.set_y(8)
+                        pdf.set_text_color(255, 255, 255)
+                        pdf.set_font("Arial", "B", 16) # Używamy Arial B dla pewności
                         pdf.cell(190, 10, txt=czysc_tekst("PROCALC - KOSZTORYS INWESTORSKI"), ln=True, align='C')
                         
-                        pdf.set_y(35); pdf.set_text_color(0, 211, 149); pdf.set_font("Inter", "", 20)
+                        # --- NAZWA PROJEKTU ---
+                        pdf.set_y(35)
+                        pdf.set_text_color(0, 211, 149)
+                        pdf.set_font("Arial", "B", 20)
                         pdf.cell(190, 10, txt=czysc_tekst(nazwa_inwestycji.upper()), ln=True, align='C')
                         
-                        # Ramka ROI
-                        pdf.ln(5); pdf.set_fill_color(248, 249, 250); pdf.set_draw_color(0, 211, 149)
+                        # --- RAMKA ROI ---
+                        pdf.ln(5)
+                        pdf.set_fill_color(248, 249, 250)
+                        pdf.set_draw_color(0, 211, 149)
+                        pdf.set_line_width(0.5)
                         pdf.rect(10, pdf.get_y(), 190, 35, 'DF')
-                        pdf.set_y(pdf.get_y() + 5); pdf.set_text_color(50, 50, 50); pdf.set_font("Inter", "", 12)
-                        pdf.cell(190, 7, txt=czysc_tekst(f"Laczny koszt inwestycji: {round(calkowity_koszt_projektu):,} PLN"), ln=True, align='C')
-                        pdf.set_font("Inter", "", 14); pdf.set_text_color(0, 160, 110)
-                        pdf.cell(190, 10, txt=czysc_tekst(f"Szacowany zysk netto: {round(zysk_brutto):,} PLN (ROI: {round(roi,1)}%)"), ln=True, align='C')
                         
-                        # Pętla po wszystkich kategoriach zakupów
-                        pdf.set_y(pdf.get_y() + 15); pdf.set_text_color(14, 23, 43); pdf.set_font("Inter", "", 14)
+                        pdf.set_y(pdf.get_y() + 5)
+                        pdf.set_text_color(50, 50, 50)
+                        pdf.set_font("Arial", "", 12)
+                        pdf.cell(190, 7, txt=czysc_tekst(f"Laczny koszt inwestycji: {round(calkowity_koszt_projektu):,} PLN").replace(",", " "), ln=True, align='C')
+                        
+                        pdf.set_font("Arial", "B", 14)
+                        pdf.set_text_color(0, 160, 110)
+                        pdf.cell(190, 10, txt=czysc_tekst(f"Szacowany zysk netto: {round(zysk_brutto):,} PLN (ROI: {round(roi,1)}%)").replace(",", " "), ln=True, align='C')
+                        
+                        # --- LISTA ZAKUPOWA ---
+                        pdf.set_y(pdf.get_y() + 15)
+                        pdf.set_text_color(14, 23, 43)
+                        pdf.set_font("Arial", "B", 14)
                         pdf.cell(190, 10, txt=czysc_tekst("SZCZEGOLOWA LISTA ZAKUPOWA"), ln=True, border='B')
                         pdf.ln(5)
                         
                         for cat, items in zakupy.items():
-                            pdf.set_fill_color(0, 211, 149); pdf.set_text_color(255, 255, 255); pdf.set_font("Inter", "", 11)
-                            pdf.cell(190, 8, txt=czysc_tekst(f"  {cat}"), ln=True, fill=True)
-                            pdf.set_text_color(70, 70, 70); pdf.set_font("Inter", "", 10); pdf.ln(2)
-                            for item in items:
-                                pdf.cell(5, 6, txt="", ln=0)
-                                pdf.cell(185, 6, txt=czysc_tekst(f"* {item}"), ln=True)
-                            pdf.ln(4)
+                            if items:
+                                pdf.set_fill_color(0, 211, 149)
+                                pdf.set_text_color(255, 255, 255)
+                                pdf.set_font("Arial", "B", 11)
+                                pdf.cell(190, 8, txt=czysc_tekst(f"  {cat}"), ln=True, fill=True)
+                                
+                                pdf.set_text_color(70, 70, 70)
+                                pdf.set_font("Arial", "", 10)
+                                pdf.ln(2)
+                                for item in items:
+                                    pdf.cell(5, 6, txt="", ln=0)
+                                    pdf.cell(185, 6, txt=czysc_tekst(f"* {item}"), ln=True)
+                                pdf.ln(4)
+                        
+                        # --- POPRAWKA BŁĘDU BYTEARRAY / ENCODE ---
+                        output_pdf = pdf.output(dest='S')
+                        
+                        # Jeśli output to bajty, nie używamy .encode()
+                        if isinstance(output_pdf, str):
+                            pdf_bytes = output_pdf.encode('latin-1')
+                        else:
+                            pdf_bytes = bytes(output_pdf)
                             
-                        pdf_bytes = pdf.output(dest='S').encode('latin-1')
-                        st.download_button(label="📥 Pobierz Kosztorys PDF", data=pdf_bytes, file_name=f"ProCalc_{nazwa_inwestycji}.pdf", mime="application/pdf")
+                        st.download_button(
+                            label="📥 Pobierz Kosztorys PDF", 
+                            data=pdf_bytes, 
+                            file_name=f"ProCalc_{nazwa_inwestycji.replace(' ', '_')}.pdf", 
+                            mime="application/pdf"
+                        )
+                        st.success("✅ PDF wygenerowany pomyślnie!")
+
                     except Exception as e:
                         st.error(f"Błąd PDF: {e}")
                     
