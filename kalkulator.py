@@ -3707,7 +3707,7 @@ elif branza == "Panel Inwestora":
                         pdf.set_font("Arial", style="B", size=16)
                         pdf.set_text_color(0, 211, 149)
                         pdf.cell(190, 10, txt=czysc_tekst(f"PROCALC - KOSZTORYS: {nazwa_inwestycji.upper()}"), ln=True, align='C')
-                        pdf.ln(5
+                        pdf.ln(5)
                     
 # ==========================================
 # MODUŁ: HARMONOGRAM (GANTT LIVE)
