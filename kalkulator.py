@@ -3692,9 +3692,13 @@ elif branza == "Panel Inwestora":
 
         
         # --- ZAKŁADKA 4: ELEKTRYKA ---
+        # --- ZAKŁADKA 4: ELEKTRYKA ---
         with tab_ele:
             st.subheader("Instalacja Elektryczna ⚡")
             do_elek_inv = st.checkbox("Wlicz nową instalację elektryczną (okablowanie i osprzęt)", value=True, key="inv_do_elek")
+            
+            # --- ZABEZPIECZENIE (Brak tego wywołał błąd) ---
+            koszt_ele_total = 0 
             
             if do_elek_inv:
                 st.markdown("#### 1. Wybór standardu")
@@ -3718,10 +3722,15 @@ elif branza == "Panel Inwestora":
                     wlacznik_poj = st.number_input("Pojedyncze (1-klawiszowe):", min_value=0, max_value=50, value=5, step=1, key="inv_ele_wl_poj")
                     wlacznik_podw = st.number_input("Podwójne (2-klawiszowe/schodowe):", min_value=0, max_value=50, value=5, step=1, key="inv_ele_wl_podw")
 
-                # Zabezpieczenie! Sumujemy to do starej zmiennej, żeby nie wyskoczył NameError w starych obliczeniach kosztów:
+                # Sumowanie punktów
                 szt_punktow = gniazda_poj + gniazda_podw + wlacznik_poj + wlacznik_podw
                 
-                st.info(f"💡 Łączna liczba punktów elektrycznych do obsadzenia: **{szt_punktow} szt.**")
+                # --- PRZYWRÓCONE OBLICZANIE KOSZTÓW ---
+                # Zakładamy np. 150 zł za punkt (robocizna + kable podtynkowe). Możesz to zmienić na swoją stawkę!
+                koszt_ele_total = szt_punktow * 150 
+                
+                st.info(f"💡 Łączna liczba punktów elektrycznych: **{szt_punktow} szt.**")
+                st.write(f"Szacowany koszt wykonania (robocizna + okablowanie): **{koszt_ele_total} PLN**")
 
         # --- ZAKŁADKA 5: PODŁOGI, WYLEWKI I DRZWI ---
         with tab_podl:
