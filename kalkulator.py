@@ -3410,64 +3410,66 @@ elif branza == "Efekty Dekoracyjne":
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
 # ==========================================
+# ==========================================
+# TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
+# ==========================================
 elif branza == "Panel Inwestora":
     st.markdown("<br>", unsafe_allow_html=True)
     if not st.session_state.zalogowany:
         st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
-        st.info("Przejdź do zakładki 'Logowanie', aby uzyskać dostęp do swoich projektów.")
+        st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
     else:
-else:
         st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
         
-        # --- PRZYWRÓCONA SEKCJA: TWOJE PROJEKTY ---
+        # --- START: SEKCJA TWOJE PROJEKTY ---
+        st.markdown("---")
         st.subheader("Twoje Zapisane Kosztorysy")
         
-        # Pobieramy ID (z sesji lub próbujemy odzyskać z Supabase)
-        current_user_id = st.session_state.get("user_id")
+        u_id = st.session_state.get("user_id")
         
-        if supabase and current_user_id:
+        if supabase and u_id:
             try:
-                # Pobieramy projekty tylko dla tego użytkownika
-                response = supabase.table("projekty").select("*").eq("user_id", current_user_id).order("data_stworzenia", desc=True).execute()
+                # Szukamy projektów tylko dla zalogowanego ID
+                response = supabase.table("projekty").select("*").eq("user_id", u_id).order("data_stworzenia", desc=True).execute()
                 zapisane_projekty = response.data
                 
                 if not zapisane_projekty:
-                    st.info("Nie masz jeszcze żadnych zapisanych projektów.")
+                    st.info("Nie masz jeszcze żadnych zapisanych projektów w chmurze. Skonfiguruj projekt poniżej i zapisz go na ostatniej zakładce!")
                 else:
-                    # Rysujemy prostą tabelę z projektami
                     col_h1, col_h2, col_h3, col_h4 = st.columns([3, 2, 1, 1])
                     col_h1.caption("Nazwa projektu")
-                    col_h2.caption("Data stworzenia")
-                    st.markdown("---")
+                    col_h2.caption("Data")
                     
                     for proj in zapisane_projekty:
                         c1, c2, c3, c4 = st.columns([3, 2, 1, 1])
                         c1.write(f"**{proj['nazwa_projektu']}**")
                         c2.write(proj['data_stworzenia'][:10])
                         
-                        # Przycisk info / szybki podgląd
-                        if c3.button("🧐", key=f"view_{proj['id']}"):
+                        if c3.button("Podgląd", key=f"view_{proj['id']}"):
                             st.json(proj['dane_json'])
                             
-                        # Usuwanie
-                        if c4.button("🗑️", key=f"del_{proj['id']}"):
+                        if c4.button("Usuń", key=f"del_{proj['id']}"):
                             supabase.table("projekty").delete().eq("id", proj['id']).execute()
                             st.rerun()
-                    st.markdown("---")
             except Exception as e:
-                st.error(f"Problem z listą projektów: {e}")
+                st.error(f"Błąd wczytywania projektów: {e}")
         else:
-            st.warning("⚠️ Nie wykryto identyfikatora użytkownika. Zaloguj się ponownie, aby zobaczyć swoje projekty.")
-
-        st.markdown("<br>", unsafe_allow_html=True)
+            st.warning("⚠️ Nie wykryto technicznego ID użytkownika. Wyloguj się i zaloguj ponownie.")
+        
+        st.markdown("---")
         st.write("### Skonfiguruj nowy kosztorys:")
-        
-        # --- TUTAJ ZACZYNAJĄ SIĘ TWOJE ZAKŁADKI (TABS) ---
+        # --- KONIEC: SEKCJA TWOJE PROJEKTY ---
+
         tab_roi, tab_suche, tab_mokre, tab_ele, tab_podl, tab_meble, tab_podsumowanie = st.tabs([
-            "1. ROI & Koszty", "2. Prace Suche", "3. Łazienka", "4. Elektryka",
-            "5. Podłogi & Drzwi", "6. Stolarka & Meble", "7. Podsumowanie"
+            "1. ROI & Koszty", 
+            "2. Prace Suche", 
+            "3. Łazienka", 
+            "4. Elektryka",
+            "5. Podłogi & Drzwi", 
+            "6. Stolarka & Meble",
+            "7. Podsumowanie & Lista Zakupów"
         ])
-        
+
         import math
 
         # --- ZAKŁADKA 1: PARAMETRY, KOSZTY STAŁE I ROI ---
