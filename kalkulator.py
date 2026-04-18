@@ -638,7 +638,9 @@ elif branza == "Logowanie":
             st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
             st.markdown("#### Lub użyj konta Google")
             
-            login_url = f"{URL_TEST}/auth/v1/authorize?provider=google&redirect_to=https://procalc.pl"
+            # Używamy zmiennej 'url', którą zdefiniowaliśmy na samej górze z secrets
+            login_url = f"{url}/auth/v1/authorize?provider=google&redirect_to=https://kalkulator-wykonczeniowy-buwyvwvkgmc7qdxit7ipst.streamlit.app/"
+
             przycisk_html = f"""
             <a href="{login_url}" target="_self" style="text-decoration: none;">
                 <div style="background-color: #00D395; color: white; padding: 15px; text-align: center; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
