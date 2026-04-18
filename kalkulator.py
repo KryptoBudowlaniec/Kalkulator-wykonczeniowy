@@ -67,6 +67,15 @@ except Exception as e:
     st.error(f"Błąd inicjalizacji Supabase: {e}")
     st.stop()
 
+# ========================================================
+# PODTRZYMANIE AUTORYZACJI SUPABASE (Naprawa błędu RLS)
+# ========================================================
+if supabase and "access_token" in st.session_state and "refresh_token" in st.session_state:
+    try:
+        supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
+    except Exception:
+        pass
+
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA)
 # ==========================================
@@ -268,7 +277,7 @@ if st.session_state.zalogowany:
 # NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY
 # ==========================================
 if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
-    st.header("Mój Profil i Dane Firmy 👤")
+    st.header("Mój Profil i Dane Firmy")
     st.write("Uzupełnij dane, które będą używane do wystawiania faktur oraz na nagłówkach Twoich kosztorysów PDF.")
     
     c1, c2 = st.columns(2)
@@ -285,7 +294,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         st.success("Zapisano zmiany w profilu!")
 
 elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
-    st.header("Zarządzanie Subskrypcją 💳")
+    st.header("Zarządzanie Subskrypcją ")
     
     col_sub1, col_sub2 = st.columns([2, 1])
     with col_sub1:
@@ -604,16 +613,19 @@ elif branza == "Logowanie":
                     try:
                         res = supabase.auth.sign_in_with_password({"email": email_log, "password": pass_log})
                         if res.user:
-                            # KLUCZOWE: Zapisujemy ID do sesji
                             st.session_state.zalogowany = True
                             st.session_state.user_email = res.user.email
-                            st.session_state.user_id = str(res.user.id) # Wymuszamy format string
+                            st.session_state.user_id = str(res.user.id)
+                            # --- TE DWIE LINIJKI TO LEKARSTWO NA AMNEZJĘ ---
+                            st.session_state.access_token = res.session.access_token
+                            st.session_state.refresh_token = res.session.refresh_token
+                            # -----------------------------------------------
                             st.session_state.pakiet = "PRO"
-                            st.success("Zalogowano! Zaraz nastąpi odświeżenie...")
+                            st.success("Zalogowano pomyślnie! Zaraz odświeżę...")
                             time.sleep(1)
                             st.rerun()
                     except Exception as e:
-                        st.error(f"Błąd logowania: {e}")
+                        st.error("Błąd logowania. Sprawdź e-mail i hasło.")
             
             st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
             st.markdown("#### Lub użyj konta Google")
