@@ -545,6 +545,11 @@ if branza == "Start":
         st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk.")
         st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
 
+
+try:
+    branza
+except NameError:
+    branza = "Logowanie"
 # ==========================================
 # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
 # ==========================================
