@@ -4079,7 +4079,7 @@ elif branza == "Panel Inwestora":
                         }).execute()
                         st.success("✅ Projekt zapisany!")
 
-with col_pdf:
+            with col_pdf:
                 if st.button("Generuj Nowoczesny Kosztorys PDF", use_container_width=True):
                     try:
                         from fpdf import FPDF
