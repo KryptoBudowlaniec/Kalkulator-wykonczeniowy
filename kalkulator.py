@@ -3392,9 +3392,8 @@ elif branza == "Panel Inwestora":
         st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
         st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji.")
         
-        # --- ROZBUDOWANA NAWIGACJA (7 ZAKŁADEK) ---
         tab_roi, tab_suche, tab_mokre, tab_ele, tab_podl, tab_meble, tab_podsumowanie = st.tabs([
-            "1. ROI", 
+            "1. ROI & Koszty", 
             "2. Prace Suche", 
             "3. Łazienka", 
             "4. Elektryka",
@@ -3403,9 +3402,9 @@ elif branza == "Panel Inwestora":
             "7. Podsumowanie"
         ])
 
-        # --- ZAKŁADKA 1: PARAMETRY I ROI (Bez zmian) ---
+        # --- ZAKŁADKA 1: PARAMETRY, KOSZTY STAŁE I ROI ---
         with tab_roi:
-            st.subheader("Parametry Lokalu i Checklista")
+            st.subheader("Parametry Lokalu i Koszty Stałe")
             col_params, col_check = st.columns([1.2, 1])
             with col_params:
                 nazwa_inwestycji = st.text_input("Nazwa Inwestycji:", value="Kawalerka na Start", key="inv_nazwa")
@@ -3414,7 +3413,20 @@ elif branza == "Panel Inwestora":
                 cena_sprzedazy = st.number_input("Cena sprzedaży (PLN):", value=550000, step=5000, key="inv_cena_sprzedazy")
                 stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"], key="inv_stan")
 
+                st.markdown("##### Koszty Utrzymania (W trakcie flipa)")
+                c_utr1, c_utr2, c_utr3 = st.columns(3)
+                czynsz_mc = c_utr1.number_input("Czynsz do adm. (zł/mc):", 0, 3000, 500, step=50, key="inv_czynsz")
+                media_mc = c_utr2.number_input("Prąd/Woda (zł/mc):", 0, 2000, 150, step=50, key="inv_media")
+                czas_operacji = c_utr3.number_input("Czas trwania (mc):", 1, 36, 4, step=1, help="Czas remontu + szukanie kupca", key="inv_czas_mc")
+
             with col_check:
+                st.markdown("##### Checklista Przedzakupowa")
+                st.checkbox("Piony wod-kan (stan żeliwa/plastiku)", key="inv_ch_piony")
+                st.checkbox("Okna (szczelność/wiek/pakiet szyb)", key="inv_ch_okna")
+                st.checkbox("Instalacja elek. (miedź vs alu)", key="inv_ch_elek")
+                st.checkbox("KW czysta (Dział III i IV)", key="inv_ch_kw")
+                
+                st.markdown("---")
                 st.markdown("##### Budżet na robociznę (Szacunek)")
                 standard = st.select_slider("Standard wykończenia:", options=["Ekonomiczny", "Standard", "Premium"], key="inv_standard")
                 mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
@@ -3422,7 +3434,7 @@ elif branza == "Panel Inwestora":
                 if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont_szacunek *= 1.25
                 st.info(f"Szacowany koszt prac: **~{round(bazowy_remont_szacunek):,} zł**".replace(",", " "))
 
-        # --- ZAKŁADKA 2: PRACE SUCHE (Gładzie/GK/Malowanie) ---
+        # --- ZAKŁADKA 2: PRACE SUCHE ---
         with tab_suche:
             st.subheader("Gładzie, Malowanie i Zabudowy")
             st.markdown("#### Konstrukcje GK & Szpachlowanie")
@@ -3439,7 +3451,7 @@ elif branza == "Panel Inwestora":
             if do_mal_inv:
                 klasa_f = st.selectbox("Klasa farby:", ["Budżetowa", "Standard", "Ceramiczna"], key="inv_f_klasa")
 
-        # --- ZAKŁADKA 3: ŁAZIENKA (Bez zmian) ---
+        # --- ZAKŁADKA 3: ŁAZIENKA ---
         with tab_mokre:
             st.subheader("Konfiguracja Łazienki")
             do_laz_inv = st.checkbox("Remont Łazienki", value=True, key="inv_do_laz")
@@ -3448,7 +3460,7 @@ elif branza == "Panel Inwestora":
                 m2_laz = c_l1.number_input("Powierzchnia łazienki (m2):", 1.0, 30.0, 5.0, key="inv_laz_m2")
                 std_laz = c_l2.radio("Standard płytek:", ["Standard", "Wielki Format"], key="inv_laz_std")
 
-        # --- ZAKŁADKA 4: ELEKTRYKA (NOWA OSOBNA ZAKŁADKA) ---
+        # --- ZAKŁADKA 4: ELEKTRYKA ---
         with tab_ele:
             st.subheader("Instalacja Elektryczna ⚡")
             do_elek_inv = st.checkbox("Wymiana całej instalacji elektrycznej", value=True, key="inv_do_ele")
@@ -3457,9 +3469,8 @@ elif branza == "Panel Inwestora":
                 szt_punktow = c_e1.number_input("Szacowana ilość punktów (gniazda/włączniki):", 10, 150, 45, key="inv_ele_punkty")
                 std_osprzet = c_e2.selectbox("Standard osprzętu:", ["Ekonomiczny (np. Simon 10)", "Standard (np. Sedna, As)", "Premium (np. Simon 54, Legrand)"], key="inv_ele_std")
                 
-                # Prosta logika kosztów elektryki
-                rob_ele = szt_punktow * 110 # Średnia za punkt z okablowaniem
-                mat_ele = szt_punktow * 45 # Średnia za osprzęt i kable
+                rob_ele = szt_punktow * 110 
+                mat_ele = szt_punktow * 45 
                 koszt_ele_total = rob_ele + mat_ele
                 st.info(f"Szacowany koszt elektryki (Robocizna + Materiał): **{koszt_ele_total:,} zł**".replace(",", " "))
             else:
@@ -3474,16 +3485,16 @@ elif branza == "Panel Inwestora":
             zrywanie_podlogi = c_p1.checkbox("Zrywanie starego parkietu / płytek", key="inv_zrywanie")
             wylewka_samopoz = c_p2.checkbox("Wylewka samopoziomująca", key="inv_wylewka")
             
+            import math
             koszt_podloze_total = 0
             if zrywanie_podlogi:
-                koszt_podloze_total += (m2_total * 35) # Zrywanie + wyniesienie
+                koszt_podloze_total += (m2_total * 35) 
             
             if wylewka_samopoz:
                 grubosc_wyl = st.slider("Średnia grubość wylewki (mm):", 3, 20, 5, key="inv_wyl_grub")
-                # Zużycie: 1.6kg * mm * m2
                 kg_wylewki = 1.6 * grubosc_wyl * m2_total
                 worki_wylewki = math.ceil(kg_wylewki / 25)
-                koszt_mat_wyl = worki_wylewki * 55 # 55 zł za worek dobrej klasy
+                koszt_mat_wyl = worki_wylewki * 55 
                 koszt_rob_wyl = m2_total * 25
                 koszt_podloze_total += (koszt_mat_wyl + koszt_rob_wyl)
                 st.caption(f"Potrzeba ok. **{worki_wylewki} worków** samopoziomu. Koszt: {round(koszt_mat_wyl + koszt_rob_wyl):,} zł.")
@@ -3501,12 +3512,18 @@ elif branza == "Panel Inwestora":
                 st.markdown("**Drzwi Wewnętrzne**")
                 szt_d_wew = st.number_input("Ilość (szt):", 1, 10, 3, key="inv_d_wew_szt")
                 typ_d_wew = st.selectbox("Rodzaj:", ["Przylgowe (Budżet)", "Bezprzylgowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_d_wew_typ")
+                koszt_drzwi_wew = szt_d_wew * (1000 if "Przylgowe" in typ_d_wew else (2500 if "Ukryta" in typ_d_wew else 1600))
             
             with col_d2:
                 st.markdown("**Drzwi Wejściowe**")
                 wymiana_wej = st.checkbox("Wymień drzwi wejściowe", key="inv_d_wej_do")
                 if wymiana_wej:
                     typ_d_wej = st.selectbox("Standard:", ["Marketowe (ok. 1200 zł)", "Standard (Porta/KrCenter - ok. 2800 zł)", "Premium (Gerda - ok. 4500 zł)"], key="inv_d_wej_typ")
+                    koszt_drzwi_wej = 1200 if "Marketowe" in typ_d_wej else (4500 if "Premium" in typ_d_wej else 2800)
+                else:
+                    koszt_drzwi_wej = 0
+                    
+            koszt_drzwi_total = koszt_drzwi_wew + koszt_drzwi_wej
 
         # --- ZAKŁADKA 6: STOLARKA (Meble na wymiar) ---
         with tab_meble:
@@ -3522,15 +3539,15 @@ elif branza == "Panel Inwestora":
         with tab_podsumowanie:
             st.subheader("Analiza Rentowności i Harmonogram 📊")
             
-            # Sumowanie kosztów dodatkowych (elektryka, podłoże, drzwi, meble)
-            # Uwaga: w pełnym kodzie należy dodać wyliczenie robocizny z m2 dla pozostałych branż
-            
-            # Szacunkowe wyliczenie kosztów sumarycznych
+            # --- KOSZTY UTRZYMANIA ---
+            koszty_utrzymania_total = (czynsz_mc + media_mc) * czas_operacji
+
+            # Sumowanie kosztów
             koszt_transakcyjny = (cena_zakupu * 0.02) + 4500
-            remont_robocizna = bazowy_remont_szacunek # Na bazie m2 i standardu
-            wyposazenie_total = koszt_mebli_total + koszt_ele_total + koszt_podloze_total
+            remont_robocizna = bazowy_remont_szacunek 
+            wyposazenie_total = koszt_mebli_total + koszt_ele_total + koszt_podloze_total + koszt_drzwi_total
             
-            calkowity_koszt_projektu = cena_zakupu + koszt_transakcyjny + remont_robocizna + wyposazenie_total
+            calkowity_koszt_projektu = cena_zakupu + koszt_transakcyjny + remont_robocizna + wyposazenie_total + koszty_utrzymania_total
             zysk_brutto = cena_sprzedazy - calkowity_koszt_projektu
             roi = (zysk_brutto / calkowity_koszt_projektu) * 100 if calkowity_koszt_projektu > 0 else 0
             
@@ -3538,42 +3555,20 @@ elif branza == "Panel Inwestora":
             r1.metric("Łączny koszt Inwestycji", f"{round(calkowity_koszt_projektu):,} zł".replace(",", " "))
             r2.metric("PRZEWIDYWANY ZYSK", f"{round(zysk_brutto):,} zł".replace(",", " "))
             r3.metric("ROI %", f"{round(roi, 1)} %")
-
-            if roi < 12: st.error("Słabe ROI! Ryzykowna inwestycja. Poszukaj oszczędności na stolarni lub wynegocjuj cenę zakupu.")
-            elif roi < 20: st.warning("Przeciętny deal. Pilnuj budżetu wykonawczego.")
-            else: st.success("Świetny projekt! Parametry inwestycyjne w normie.")
-
-            st.markdown("---")
-            st.subheader("💾 Zapisz Projekt")
-            col_save, col_pdf = st.columns(2)
             
-            with col_save:
-                if st.button("Zapisz projekt w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
-                    if supabase and st.session_state.user_id:
-                        try:
-                            dane_roi = {
-                                "suma_calkowita": round(calkowity_koszt_inwestycji),
-                                "koszt_remontu_total": round(calkowity_koszt_remontu_i_wyposazenia),
-                                "zysk_brutto": round(zysk_brutto),
-                                "roi_procent": round(roi, 1)
-                            }
-                            supabase.table("projekty").insert({
-                                "user_id": st.session_state.user_id, 
-                                "nazwa_projektu": nazwa_inwestycji,
-                                "branza": "Kompleksowy Flip",
-                                "dane_json": dane_roi
-                            }).execute()
-                            st.success("✅ Projekt zapisany pomyślnie!")
-                        except Exception as e:
-                            st.error(f"Błąd zapisu: {e}")
-                    else:
-                        st.warning("Błąd połączenia z bazą lub brak autoryzacji.")
-
-            with col_pdf:
-                st.button("Generuj PDF z pełnym Kosztorysem (Wkrótce)", use_container_width=True, disabled=True)
-                st.caption("Funkcja podsumowująca wszystkie materiały ze wszystkich zakładek w budowie.")
-                    
-        # ... (Tutaj pozostaje reszta logiki opcji z bocznego paska: Mój Profil, Język i Region)
+            st.write(f"💸 **Koszty utrzymania (Czynsz + Media przez {czas_operacji} mc):** {koszty_utrzymania_total:,} zł".replace(",", " "))
+            
+            st.markdown("---")
+            st.subheader("Pasek postępu prac (Harmonogram)")
+            if 'etapy_projektu' in st.session_state:
+                suma_dni = sum([e['Dni'] for e in st.session_state.etapy_projektu])
+                suma_postepu = sum([(e['Postęp'] / 100) * e['Dni'] for e in st.session_state.etapy_projektu])
+                calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
+                
+                st.progress(calkowity_progres / 100)
+                st.write(f"Ogólny postęp: **{round(calkowity_progres, 1)}%**")
+            else:
+                st.info("Brak aktywnego harmonogramu.")
                     
 # ==========================================
 # MODUŁ: HARMONOGRAM (GANTT LIVE)
