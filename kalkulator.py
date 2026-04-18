@@ -204,35 +204,78 @@ st.markdown("""
     .faq-card-answer, .faq-card-answer-blue { background: #00D395; border-radius: 0 0 15px 15px; padding: 20px; color: #FFF !important; text-align: center; margin-bottom: 20px;}
     .faq-card-answer-blue { background: #0E172B; }
     div.stButton > button { background-color: #00D395 !important; color: white !important; font-weight: 800 !important; height: 60px !important; border-radius: 15px !important; width: 100%; }
-    /* CAŁKOWITE WYCOFANIE STRZAŁEK (CHEVRON) I NAPISÓW Z KAŻDEGO EXPANDERA */
-    [data-testid="stExpander"] summary [data-testid="stIconMaterial"],
-    [data-testid="stExpander"] summary [data-testid="stIcon"],
-    [data-testid="stExpander"] summary svg,
-    [data-testid="stExpander"] i,
-    [data-testid="stExpander"] summary::after {
-        display: none !important;
-        font-size: 0px !important; /* To zabija surowy tekst _arrow_right */
-        color: transparent !important; /* To dobija go ostatecznie */
-        visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
+       
+    /* 1. Globalna czcionka */
+    html, body, [class*="st-"] { font-family: 'Inter', sans-serif; }
+    
+    /* 2. NAPRAWA IKON: Przywracamy czcionkę dla ikon Streamlita */
+    span.material-symbols-rounded, 
+    [data-testid="stIconMaterial"], 
+    i {
+        font-family: 'Material Symbols Rounded' !important;
     }
-
-    /* Wyprostowanie paska po usunięciu ikony */
+    
+    /* 3. CAŁKOWITE UKRYCIE STRZAŁKI W EXPANDERZE */
+    [data-testid="stExpander"] summary span.material-symbols-rounded,
+    [data-testid="stExpander"] summary [data-testid="stIconMaterial"] {
+        display: none !important;
+        font-size: 0px !important;
+        color: transparent !important;
+    }
     [data-testid="stExpander"] summary {
         list-style: none !important; 
         display: flex !important;
-        align-items: center !important;
     }
-
-    /* Usunięcie kropki/strzałki w przeglądarkach Safari/Chrome */
     [data-testid="stExpander"] summary::-webkit-details-marker {
         display: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
+
+
+# ==========================================
+# GLOBALNY PANEL BOCZNY (Widoczny wszędzie po zalogowaniu)
+# ==========================================
+opcja_boczna = "Nawigacja Główna" # Wartość domyślna
+
+if st.session_state.zalogowany:
+    with st.sidebar:
+        st.title("Panel Zarządzania")
+        st.markdown(f"Konto: **{st.session_state.user_email}**")
+        
+        opcja_boczna = st.radio(
+            "Opcje konta",
+            ["Nawigacja Główna", "Mój Profil", "Język i Region"],
+            key="globalny_sidebar"
+        )
+        
+        st.markdown("---")
+        if st.button("Wyloguj się", key="btn_wyloguj_global"):
+            st.session_state.zalogowany = False
+            st.session_state.pakiet = "Podstawowy"
+            if supabase: supabase.auth.sign_out()
+            st.rerun()
+
+# ==========================================
+# NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY
+# ==========================================
+if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
+    st.header("Mój Profil Inwestora")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.text_input("Imię i Nazwisko / Nazwa Firmy")
+    with c2:
+        st.number_input("Domyślny narzut na materiały (%)", value=10)
+        st.number_input("Twoja stawka za roboczogodzinę (PLN/h)", value=60)
+    if st.button("Zapisz ustawienia profilu"):
+        st.success("Zapisano zmiany!")
+
+elif st.session_state.zalogowany and opcja_boczna == "Język i Region":
+    st.header("Ustawienia Regionalne")
+    st.selectbox("Wybierz język", ["Polski", "English"])
+    st.selectbox("Domyślna waluta", ["PLN", "EUR", "USD"])
+    if st.button("Zapisz region"):
+        st.success("Zapisano zmiany!")
 
 
 # ==========================================
@@ -3281,43 +3324,17 @@ elif branza == "Efekty Dekoracyjne":
                             st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w chmurze!")
                         except Exception as e:
                             st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
-# ==========================================
-# TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
-# ==========================================
-# ==========================================
-# TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
-# ==========================================
-elif branza == "Panel Inwestora":
-    st.markdown("<br>", unsafe_allow_html=True)
-    if not st.session_state.zalogowany:
-        st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
-        st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
-    else:
-        # Odpalamy Sidebar (Boczne Menu) JEDEN RAZ!
-        with st.sidebar:
-            st.title("Panel Zarządzania")
-            st.markdown(f"Konto: **{st.session_state.user_email}**")
-            
-            opcja_panelu = st.radio(
-                "Nawigacja",
-                ["Nawigacja Główna", "Mój Profil", "Język i Region"],
-                key="panel_inwestora_nawigacja" 
-            )
-            
-            st.markdown("---")
-            if st.button("Wyloguj (Panel)", key="btn_wyloguj_panel"):
-                st.session_state.zalogowany = False
-                if supabase: supabase.auth.sign_out()
-                st.rerun()
+                            
 
-        # ==========================================
-        # 1. ZAWARTOSC: NAWIGACJA GŁÓWNA (KOMPLEKSOWY PANEL)
-        # ==========================================
-        if opcja_panelu == "Nawigacja Główna":
-            st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
+elif branza == "Panel Inwestora":
+        st.markdown("<br>", unsafe_allow_html=True)
+        if not st.session_state.zalogowany:
+            st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
+            st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
+        else:
+            st.header("Pulpit Inwestora: Projekt Kompleksowy ")
             st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji.")
             
-            # --- ZAKTUALIZOWANA NAWIGACJA (DODANA STOLARKA) ---
             tab_roi, tab_suche, tab_mokre, tab_inst, tab_meble, tab_podsumowanie = st.tabs([
                 "1. Parametry & ROI", 
                 "2. Prace Suche", 
@@ -3327,7 +3344,6 @@ elif branza == "Panel Inwestora":
                 "6. Podsumowanie"
             ])
 
-            # --- ZAKŁADKA 1: PARAMETRY I ROI ---
             with tab_roi:
                 st.subheader("Parametry Lokalu i Checklista")
                 col_params, col_check = st.columns([1.2, 1])
@@ -3340,30 +3356,19 @@ elif branza == "Panel Inwestora":
                     stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"], key="inv_stan")
 
                 with col_check:
-                    st.markdown("##### Checklista Przedzakupowa")
-                    st.checkbox("Piony wod-kan (stan żeliwa/plastiku)", key="inv_ch_piony")
-                    st.checkbox("Okna (szczelność/wiek/pakiet szyb)", key="inv_ch_okna")
-                    st.checkbox("Instalacja elek. (miedź vs alu)", key="inv_ch_elek")
-                    st.checkbox("KW czysta (Dział III i IV)", key="inv_ch_kw")
-                    
-                    st.markdown("---")
-                    st.markdown("##### Budżet na robociznę (Szacunek wstępny)")
+                    st.markdown("##### Budżet na robociznę (Szacunek)")
                     standard = st.select_slider("Standard wykończenia robót:", options=["Ekonomiczny", "Standard", "Premium"], key="inv_standard")
                     mnoznik_std = 0.8 if standard == "Ekonomiczny" else (1.3 if standard == "Premium" else 1.0)
                     bazowy_remont_szacunek = (m2_total * 1200 * mnoznik_std) 
                     if stan_lokalu == "Rynek Wtórny (Do remontu)": bazowy_remont_szacunek *= 1.25
                     st.info(f"Szacowany koszt prac wykończeniowych: **~{round(bazowy_remont_szacunek):,} zł**".replace(",", " "))
 
-            # --- ZAKŁADKA 2: PRACE SUCHE ---
             with tab_suche:
                 st.subheader("Gładzie, Malowanie, Zabudowy GK")
                 do_szpachlowanie = st.checkbox("Wlicz Szpachlowanie / Gładzie całego lokalu", value=True, key="inv_do_szpach")
                 do_malowanie = st.checkbox("Wlicz Malowanie całego lokalu", value=True, key="inv_do_mal")
                 do_gk = st.checkbox("Wlicz Sufity Podwieszane GK (cały lokal)", value=False, key="inv_do_gk")
-                
-                st.info("Algorytmy wygenerują listę chemii, farb i płyt na podstawie metrażu.")
 
-            # --- ZAKŁADKA 3: PRACE MOKRE (ŁAZIENKA) ---
             with tab_mokre:
                 st.subheader("Konfiguracja Łazienki")
                 do_lazienka = st.checkbox("Remont Łazienki (Aktywuj moduł)", value=True, key="inv_do_laz")
@@ -3372,33 +3377,25 @@ elif branza == "Panel Inwestora":
                     m2_lazienka_podloga = c_l1.number_input("Powierzchnia łazienki (m2):", 1.0, 50.0, 5.0, key="inv_laz_m2")
                     standard_lazienki = c_l2.radio("Standard Wykończenia:", ["Podstawowy", "Premium (Duże formaty, maty)"], key="inv_laz_std")
 
-            # --- ZAKŁADKA 4: INSTALACJE, PODŁOGI I DRZWI ---
             with tab_inst:
                 st.subheader("Elektryka, Posadzki i Stolarka Otworowa")
                 do_elektryka = st.checkbox("Nowa instalacja elektryczna (cały lokal)", value=True, key="inv_do_elek")
                 do_podlogi = st.checkbox("Układanie paneli/podłóg w pokojach", value=True, key="inv_do_podl")
                 
-                if do_podlogi:
-                    rodzaj_podlogi = st.selectbox("Rodzaj podłogi głównej:", ["Panele Laminowane (Standard)", "Panele Winylowe (LVT/SPC)", "Deska trójwarstwowa (Klejenie)"], key="inv_podloga_typ")
-                
                 st.markdown("---")
-                st.markdown("##### Drzwi Wewnętrzne")
                 do_drzwi = st.checkbox("Montaż nowych drzwi", value=True, key="inv_do_drzwi")
                 if do_drzwi:
                     c_d1, c_d2 = st.columns(2)
                     szt_drzwi = c_d1.number_input("Liczba skrzydeł drzwiowych (szt.):", 1, 15, 3, key="inv_szt_drzwi")
-                    rodzaj_drzwi = c_d2.selectbox("Rodzaj drzwi:", ["Płytowe (Budżet)", "Rámowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_rodzaj_drzwi")
+                    rodzaj_drzwi = c_d2.selectbox("Rodzaj drzwi:", ["Płytowe (Budżet)", "Ramowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_rodzaj_drzwi")
                     koszt_drzwi_sztuka = 900 if "Płytowe" in rodzaj_drzwi else (2500 if "Ukryta" in rodzaj_drzwi else 1400)
                     koszt_drzwi_total = szt_drzwi * koszt_drzwi_sztuka
-                    st.caption(f"Szacowany budżet na drzwi z ościeżnicami i montażem: **{koszt_drzwi_total:,} zł**".replace(",", " "))
+                    st.caption(f"Szacowany budżet na drzwi z montażem: **{koszt_drzwi_total:,} zł**".replace(",", " "))
                 else:
                     koszt_drzwi_total = 0
 
-            # --- ZAKŁADKA 5: STOLARKA I MEBLE (NOWOŚĆ DLA FLIPPERA) ---
             with tab_meble:
                 st.subheader("Meble na wymiar i zabudowy stelażowe")
-                st.write("Skonfiguruj budżet na stolarza. Kwoty możesz ręcznie edytować na podstawie ofert od wykonawców.")
-                
                 c_m1, c_m2 = st.columns(2)
                 do_kuchnia = c_m1.checkbox("Zabudowa Kuchenna", value=True, key="inv_do_kuchnia")
                 koszt_kuchni = c_m2.number_input("Budżet na kuchnię (PLN):", value=20000, step=1000, key="inv_koszt_kuchnia") if do_kuchnia else 0
@@ -3412,7 +3409,6 @@ elif branza == "Panel Inwestora":
                 koszt_mebli_total = koszt_kuchni + koszt_szafy + koszt_laz_meble
                 st.info(f"Całkowity zarezerwowany budżet meblowy: **{koszt_mebli_total:,} zł**".replace(",", " "))
 
-            # --- ZAKŁADKA 6: PODSUMOWANIE, HARMONOGRAM, ZAPIS ---
             with tab_podsumowanie:
                 st.subheader("Bieżący postęp prac (Harmonogram Live)")
                 if 'etapy_projektu' in st.session_state:
@@ -3420,26 +3416,16 @@ elif branza == "Panel Inwestora":
                     suma_postepu = sum([(e['Postęp'] / 100) * e['Dni'] for e in st.session_state.etapy_projektu])
                     calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
                     
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("Szacowany czas prac", f"{suma_dni} dni")
-                    c2.metric("Ogólny postęp", f"{round(calkowity_progres, 1)}%")
-                    status_projektu = "W trakcie" if calkowity_progres < 100 else "Zakończony"
-                    if calkowity_progres == 0: status_projektu = "Oczekuje na start"
-                    c3.metric("Status", status_projektu)
-                    
                     st.progress(calkowity_progres / 100)
+                    st.write(f"Ogólny postęp: **{round(calkowity_progres, 1)}%**")
                 else:
-                    st.info("Wykonawca nie udostępnił jeszcze aktywnego harmonogramu.")
+                    st.info("Brak aktywnego harmonogramu.")
 
                 st.markdown("---")
-
-                # --- B. WYLICZENIA FINANSOWE ROI ---
                 st.subheader("Pełna Analiza Rentowności (ROI)")
                 
                 koszt_transakcyjny = (cena_zakupu * 0.02) + 4500 
-                # Sumujemy twardy remont + drzwi + meble stolarza
                 calkowity_koszt_remontu_i_wyposazenia = bazowy_remont_szacunek + koszt_drzwi_total + koszt_mebli_total
-                
                 calkowity_koszt_inwestycji = cena_zakupu + koszt_transakcyjny + calkowity_koszt_remontu_i_wyposazenia
                 zysk_brutto = cena_sprzedazy - calkowity_koszt_inwestycji
                 roi = (zysk_brutto / calkowity_koszt_inwestycji) * 100 if calkowity_koszt_inwestycji > 0 else 0
@@ -3448,10 +3434,6 @@ elif branza == "Panel Inwestora":
                 r1.metric("Łączny Budżet Wykończeniowy", f"{round(calkowity_koszt_remontu_i_wyposazenia):,} zł".replace(",", " "))
                 r2.metric("ZYSK BRUTTO NA CZYSTO", f"{round(zysk_brutto):,} zł".replace(",", " "))
                 r3.metric("Przewidywane ROI", f"{round(roi, 1)} %")
-
-                if roi < 12: st.error("Słabe ROI! Ryzykowna inwestycja. Poszukaj oszczędności na stolarni lub wynegocjuj cenę zakupu.")
-                elif roi < 20: st.warning("Przeciętny deal. Pilnuj budżetu wykonawczego.")
-                else: st.success("Świetny projekt! Parametry inwestycyjne w normie.")
 
                 st.markdown("---")
 
