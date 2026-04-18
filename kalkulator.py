@@ -127,12 +127,19 @@ if acc_token and ref_token:
     except Exception:
         pass
 
-# SYTUACJA B: PODTRZYMANIE SESJI (Kluczowa zmiana!)
-# Jeśli pamięć Streamlita wie, że jesteś zalogowany, NIE PYTAMY BAZY przy każdej zmianie zakładki.
+
+# SYTUACJA B: PODTRZYMANIE SESJI
 elif st.session_state.get("zalogowany") == True:
     st.session_state.pakiet = "PRO"
+    # Dodajemy zabezpieczenie: jeśli user_id zniknął, a mamy sesję w Supabase, spróbuj go odzyskać
+    if not st.session_state.get("user_id") and supabase:
+        try:
+            user_res = supabase.auth.get_user()
+            if user_res and user_res.user:
+                st.session_state.user_id = user_res.user.id
+        except:
+            pass
 
-# =======================================================
 
 
 # =======================================================
@@ -3407,21 +3414,60 @@ elif branza == "Panel Inwestora":
     st.markdown("<br>", unsafe_allow_html=True)
     if not st.session_state.zalogowany:
         st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
-        st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
+        st.info("Przejdź do zakładki 'Logowanie', aby uzyskać dostęp do swoich projektów.")
     else:
+else:
         st.header("Pulpit Inwestora: Projekt Kompleksowy 🏢")
-        st.write("Skonfiguruj cały remont w jednym miejscu. Przechodź przez zakładki, aby zbudować pełny kosztorys inwestycji wraz z listą materiałów.")
         
-        tab_roi, tab_suche, tab_mokre, tab_ele, tab_podl, tab_meble, tab_podsumowanie = st.tabs([
-            "1. ROI & Koszty", 
-            "2. Prace Suche", 
-            "3. Łazienka", 
-            "4. Elektryka",
-            "5. Podłogi & Drzwi", 
-            "6. Stolarka & Meble",
-            "7. Podsumowanie & Lista Zakupów"
-        ])
+        # --- PRZYWRÓCONA SEKCJA: TWOJE PROJEKTY ---
+        st.subheader("Twoje Zapisane Kosztorysy")
+        
+        # Pobieramy ID (z sesji lub próbujemy odzyskać z Supabase)
+        current_user_id = st.session_state.get("user_id")
+        
+        if supabase and current_user_id:
+            try:
+                # Pobieramy projekty tylko dla tego użytkownika
+                response = supabase.table("projekty").select("*").eq("user_id", current_user_id).order("data_stworzenia", desc=True).execute()
+                zapisane_projekty = response.data
+                
+                if not zapisane_projekty:
+                    st.info("Nie masz jeszcze żadnych zapisanych projektów.")
+                else:
+                    # Rysujemy prostą tabelę z projektami
+                    col_h1, col_h2, col_h3, col_h4 = st.columns([3, 2, 1, 1])
+                    col_h1.caption("Nazwa projektu")
+                    col_h2.caption("Data stworzenia")
+                    st.markdown("---")
+                    
+                    for proj in zapisane_projekty:
+                        c1, c2, c3, c4 = st.columns([3, 2, 1, 1])
+                        c1.write(f"**{proj['nazwa_projektu']}**")
+                        c2.write(proj['data_stworzenia'][:10])
+                        
+                        # Przycisk info / szybki podgląd
+                        if c3.button("🧐", key=f"view_{proj['id']}"):
+                            st.json(proj['dane_json'])
+                            
+                        # Usuwanie
+                        if c4.button("🗑️", key=f"del_{proj['id']}"):
+                            supabase.table("projekty").delete().eq("id", proj['id']).execute()
+                            st.rerun()
+                    st.markdown("---")
+            except Exception as e:
+                st.error(f"Problem z listą projektów: {e}")
+        else:
+            st.warning("⚠️ Nie wykryto identyfikatora użytkownika. Zaloguj się ponownie, aby zobaczyć swoje projekty.")
 
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.write("### Skonfiguruj nowy kosztorys:")
+        
+        # --- TUTAJ ZACZYNAJĄ SIĘ TWOJE ZAKŁADKI (TABS) ---
+        tab_roi, tab_suche, tab_mokre, tab_ele, tab_podl, tab_meble, tab_podsumowanie = st.tabs([
+            "1. ROI & Koszty", "2. Prace Suche", "3. Łazienka", "4. Elektryka",
+            "5. Podłogi & Drzwi", "6. Stolarka & Meble", "7. Podsumowanie"
+        ])
+        
         import math
 
         # --- ZAKŁADKA 1: PARAMETRY, KOSZTY STAŁE I ROI ---
@@ -3692,30 +3738,30 @@ elif branza == "Panel Inwestora":
             with col_save:
                 if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary", key="zapisz_kompleks_btn"):
                     
-                    # Sprawdzamy ID w sesji
-                    zalogowany_user_id = st.session_state.get("user_id")
+                    # Pobieramy ID
+                    u_id = st.session_state.get("user_id")
                     
-                    if not zalogowany_user_id:
-                        st.error("⚠️ Brak aktywnej sesji (ID). Wyloguj się i zaloguj ponownie.")
+                    if not u_id:
+                        st.error("Błąd: Twoja sesja nie posiada identyfikatora ID.")
+                        st.info("💡 Skoro Logowanie Google sprawiało problemy, użyj zakładki 'Logowanie' -> 'Rejestracja' i załóż konto na dowolny e-mail. To nada Ci poprawne ID i odblokuje zapisywanie.")
                     elif supabase:
                         try:
-                            dane_roi = {
+                            dane_do_zapisu = {
                                 "suma_calkowita": round(calkowity_koszt_projektu),
-                                "koszt_remontu_total": round(remont_robocizna + wyposazenie_total),
                                 "zysk_brutto": round(zysk_brutto),
                                 "roi_procent": round(roi, 1),
                                 "lista_zakupow": zakupy 
                             }
-                            # PRÓBA ZAPISU
                             supabase.table("projekty").insert({
-                                "user_id": zalogowany_user_id, 
+                                "user_id": u_id, 
                                 "nazwa_projektu": nazwa_inwestycji,
                                 "branza": "Kompleksowy Flip",
-                                "dane_json": dane_roi
+                                "dane_json": dane_do_zapisu
                             }).execute()
-                            st.success("✅ Projekt zapisany pomyślnie!")
+                            st.success("✅ Projekt zapisany w chmurze!")
+                            st.rerun() # Odświeżamy, żeby projekt wskoczył na listę na górze
                         except Exception as e:
-                            st.error(f"Błąd bazy danych: {e}")
+                            st.error(f"Błąd bazy (RLS): {e}")
                     else:
                         st.error("Brak poprawnego ID. Wyloguj się i zaloguj ponownie używając adresu E-mail lub Google.")
             with col_pdf:
