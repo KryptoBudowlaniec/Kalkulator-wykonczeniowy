@@ -255,7 +255,6 @@ st.markdown("""
 # GLOBALNY PANEL BOCZNY (Dla zalogowanych)
 # ==========================================
 opcja_boczna = "Nawigacja Główna" # Domyślnie
-
 if st.session_state.zalogowany:
     with st.sidebar:
         st.title("Panel Zarządzania")
@@ -564,11 +563,11 @@ elif branza == "Panel Inwestora":
     
 
         # Odpalamy Zawartość w zależności od wyboru w boczku
-        if opcja_panelu == "Nawigacja Główna":
+        if opcja_boczna == "Nawigacja Główna":
             st.header("Twoje Kosztorysy i Projekty")
             st.info("Tutaj docelowo wyświetlą się Twoje wyceny i analiza ROI.")
             
-        elif opcja_panelu == "Mój Profil":
+        elif opcja_boczna == "Mój Profil":
             st.header("Mój Profil Inwestora")
             c1, c2 = st.columns(2)
             with c1:
@@ -579,7 +578,7 @@ elif branza == "Panel Inwestora":
             if st.button("Zapisz ustawienia profilu"):
                 st.success("Zapisano zmiany!")
                 
-        elif opcja_panelu == "Język i Region":
+        elif opcja_boczna == "Język i Region":
             st.header("Ustawienia Regionalne")
             st.selectbox("Wybierz język", ["Polski", "English"])
             st.selectbox("Domyślna waluta", ["PLN", "EUR", "USD"])
