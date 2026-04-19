@@ -116,16 +116,13 @@ if 'przekierowanie' not in st.session_state:
 # =======================================================
 import streamlit.components.v1 as components
 
-# 1. HACK JS: Zmieniamy z automatycznego na "Przycisk", żeby ominąć blokady Streamlit (iframe sandbox)
+# 1. HACK JS: Zmieniamy z automatycznego na "Przycisk", żeby ominąć blokady Streamlit
 components.html("""
     <script>
         try {
             const h = window.parent.location.hash;
             if (h.includes("access_token=")) {
-                // Zamieniamy hash (#) na zapytanie (?) czytelne dla Pythona
                 const newUrl = window.parent.location.pathname + "?" + h.substring(1);
-                    
-                // Tworzymy fizyczny przycisk (omija blokady bezpieczeństwa przeglądarki)
                 document.body.innerHTML = `
                     <div style="font-family: sans-serif; text-align: center; margin-top: 10px;">
                         <a href="${newUrl}" target="_parent" style="background-color: #00D395; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -140,6 +137,19 @@ components.html("""
         }
     </script>
 """, height=120)
+
+# --- TUTAJ BYŁA LUKA! GŁÓWNY WARUNEK (if) ---
+if supabase and not st.session_state.get("zalogowany"):
+    q = st.query_params
+    
+    # WYCHWYTYWANIE ODRZUCEŃ I BŁĘDÓW OD GOOGLE
+    if "error" in q:
+        opis_bledu = q.get("error_description", q.get("error"))
+        st.error(f"❌ Autoryzacja odrzucona: {opis_bledu}")
+        if st.button("Spróbuj ponownie"):
+            st.query_params.clear()
+            st.rerun()
+        st.stop()
 
     # SCENARIUSZ A: Sukces - nowoczesny "code"
     elif "code" in q:
@@ -158,7 +168,7 @@ components.html("""
                 st.rerun()
         except Exception as e:
             st.error(f"❌ Błąd logowania (Google Code): {e}")
-            st.stop() # Zatrzymujemy, żeby błąd nie zniknął
+            st.stop()
 
     # SCENARIUSZ B: Sukces - stare tokeny
     elif "access_token" in q and "refresh_token" in q:
@@ -169,7 +179,6 @@ components.html("""
             user_res = supabase.auth.get_user()
             
             if user_res and user_res.user:
-                # ... reszta kodu z przypisaniem sesji ...
                 st.session_state.user_email = user_res.user.email
                 st.session_state.user_id = user_res.user.id  
                 st.session_state.zalogowany = True
@@ -187,7 +196,6 @@ components.html("""
 # =======================================================
 elif st.session_state.get("zalogowany") == True:
     st.session_state.pakiet = "PRO"
-    # Zabezpieczenie: jeśli user_id zniknął (np. po odświeżeniu), odzyskaj go
     if not st.session_state.get("user_id") and supabase:
         try:
             user_res = supabase.auth.get_user()
@@ -196,7 +204,6 @@ elif st.session_state.get("zalogowany") == True:
                 st.session_state.user_email = user_res.user.email
         except:
             pass
-
 
 
 # =======================================================
