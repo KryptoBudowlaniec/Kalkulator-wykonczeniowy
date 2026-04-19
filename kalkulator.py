@@ -5,6 +5,10 @@ from supabase import create_client, Client
 import time
 import streamlit.components.v1 as components
 
+# --- RADAR DEBUGOWANIA (do usunięcia po naprawieniu) ---
+if st.query_params:
+    st.warning(f"🔍 RADAR WYKRYŁ W ADRESIE: {dict(st.query_params)}")
+    
 # 1. KONFIGURACJA GŁÓWNA (SEO i Favicon)
 st.set_page_config(
     page_title="ProCalc | Profesjonalny Kalkulator Budowlany",
