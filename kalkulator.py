@@ -61,21 +61,31 @@ if not st.session_state.cookies_accepted:
 # ==========================================
 # 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
 # ==========================================
+# ==========================================
+# 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
+# ==========================================
 import os
 import streamlit as st
 from supabase import create_client, Client, ClientOptions
 
 # =======================================================
-# 0. LEKARSTWO NA AMNEZJĘ (Pamięć podręczna dla PKCE)
+# 0. LEKARSTWO NA AMNEZJĘ (Globalna pamięć serwera dla PKCE)
 # =======================================================
-class StreamlitStorage:
+# To tworzy słownik bezpośrednio w pamięci serwera, który nigdy nie znika
+@st.cache_resource
+def get_server_storage():
+    return {}
+
+SERVER_STORAGE = get_server_storage()
+
+class ServerSideStorage:
     def get_item(self, key):
-        return st.session_state.get(key)
+        return SERVER_STORAGE.get(key)
     def set_item(self, key, value):
-        st.session_state[key] = value
+        SERVER_STORAGE[key] = value
     def remove_item(self, key):
-        if key in st.session_state:
-            del st.session_state[key]
+        if key in SERVER_STORAGE:
+            del SERVER_STORAGE[key]
 
 supabase = None
 
@@ -87,15 +97,12 @@ except:
     url = os.environ.get("SUPABASE_URL", "").strip().replace('"', '').replace("'", "")
     key = os.environ.get("SUPABASE_KEY", "").strip().replace('"', '').replace("'", "")
 
-# --- 2. INICJALIZACJA BAZY (Z ZAINSTALOWANĄ PAMIĘCIĄ) ---
+# --- 2. INICJALIZACJA BAZY (Z ZAINSTALOWANĄ GLOBALNĄ PAMIĘCIĄ) ---
 if url and key:
     try:
-        # Wpinamy nasz sejf StreamlitStorage do klienta Supabase!
-        options = ClientOptions(flow_type="pkce", storage=StreamlitStorage())
+        # Wpinamy nasz tytanowy sejf ServerSideStorage!
+        options = ClientOptions(flow_type="pkce", storage=ServerSideStorage())
         supabase: Client = create_client(url, key, options=options)
-        
-        # UWAGA: Usunąłem stąd linijki z `sign_out()`, 
-        # ponieważ to one działały jak mina lądowa i kasowały nam hasło po powrocie z Google!
                 
     except Exception as e:
         supabase = None
