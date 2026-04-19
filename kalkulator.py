@@ -59,10 +59,7 @@ if not st.session_state.cookies_accepted:
 # ==========================================
 import os
 
-# --- BEZPIECZNE ŁĄCZENIE Z BAZĄ DANYCH ---
-# Próbujemy pobrać klucze ze Streamlit Secrets (jeśli działasz lokalnie), 
-# a jeśli wywali błąd, pobieramy bezpośrednio ze zmiennych Render (os.environ)
-
+# --- 1. BEZPIECZNE POBIERANIE KLUCZY ---
 try:
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
@@ -70,31 +67,24 @@ except:
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_KEY")
 
-# Dodatkowe zabezpieczenie, żeby od razu wiedzieć, jeśli kluczy wciąż brakuje
 if not url or not key:
-    st.error("Błąd: Brak kluczy do bazy danych. Upewnij się, że są dodane w Environment Variables.")
+    st.error("Błąd: Brak kluczy do bazy danych. Sprawdź Environment Variables na serwerze.")
     st.stop()
 
+# --- 2. INICJALIZACJA BAZY I CZYSZCZENIE SESJI ---
 try:
-    supabase: Client = create_client(url, key)
-
-# --- NAPRAWA BŁĘDU REFRESH TOKEN ---
-# Jeśli w Streamlit nie ma informacji o zalogowanym użytkowniku,
-# wymuszamy na Supabase "zapomnienie" starych, martwych sesji
-if "user_id" not in st.session_state:
-    try:
-        supabase.auth.sign_out()
-    except:
-        pass
-
-# ========================================================
-# PODTRZYMANIE AUTORYZACJI SUPABASE (Naprawa błędu RLS)
-# ========================================================
-if supabase and "access_token" in st.session_state and "refresh_token" in st.session_state:
-    try:
-        supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
-    except Exception:
-        pass
+    supabase = create_client(url, key)
+    
+    # NAPRAWA BŁĘDU REFRESH TOKEN (musi być wewnątrz tego bloku try!)
+    if "user_id" not in st.session_state:
+        try:
+            supabase.auth.sign_out()
+        except:
+            pass
+            
+except Exception as e:
+    supabase = None
+    st.warning(f"Baza danych Supabase jest obecnie niedostępna. ({e})")
 
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA)
