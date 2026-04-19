@@ -4,6 +4,8 @@ import os
 from supabase import create_client, Client
 import time
 import streamlit.components.v1 as components
+import random
+import string
 
 # --- RADAR DEBUGOWANIA (do usunięcia po naprawieniu) ---
 if st.query_params:
@@ -243,6 +245,52 @@ if st.session_state.get("zalogowany"):
                     st.error("Wpisz kod przed kliknięciem przycisku.")
 
         st.stop()
+
+# =======================================================
+# 6. UKRYTY PANEL ADMINISTRATORA (WIDOCZNY TYLKO DLA CIEBIE)
+# =======================================================
+# Zmień adres e-mail na swój główny, jeśli używasz innego!
+if st.session_state.get("zalogowany") and st.session_state.get("user_email") == "pawelkubiak685@gmail.com":
+    
+    st.markdown("---")
+    # Expander sprawi, że panel będzie domyślnie zwinięty, żeby nie zaśmiecać Ci ekranu
+    with st.expander("🛠️ UKRYTY PANEL ADMINA - GENERATOR KODÓW", expanded=False):
+        st.info("Zarządzaj kodami dostępu. Ta sekcja jest niewidoczna dla innych użytkowników.")
+        
+        kolumna_ustawien, kolumna_wynikow = st.columns(2)
+        
+        with kolumna_ustawien:
+            ile_kodow = st.number_input("Ile kodów wygenerować?", min_value=1, max_value=500, value=30)
+            prefix = st.text_input("Przedrostek kodu (np. OLX, ALLEGRO, VIP):", value="OLX")
+            
+            if st.button("⚙️ Wygeneruj i dodaj do bazy", type="primary"):
+                with st.spinner("Trwa generowanie..."):
+                    nowe_kody_do_bazy = []
+                    kody_do_wyswietlenia = []
+                    
+                    for _ in range(ile_kodow):
+                        # Losuje 5 wielkich liter i cyfr (np. X7B9Q)
+                        losowe_znaki = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+                        pelny_kod = f"PRO-{prefix}-{losowe_znaki}"
+                        
+                        nowe_kody_do_bazy.append({"kod": pelny_kod, "zuzyty": False})
+                        kody_do_wyswietlenia.append(pelny_kod)
+                    
+                    try:
+                        # Masowe wrzucenie wszystkich kodów do Supabase (jeden szybki strzał!)
+                        supabase.table("kody_aktywacyjne").insert(nowe_kody_do_bazy).execute()
+                        st.success(f"✅ Zapisano {ile_kodow} kodów w bazie!")
+                        
+                        # Zapisujemy wygenerowane kody do sesji, żeby pokazać je w oknie obok
+                        st.session_state['ostatnio_wygenerowane'] = "\n".join(kody_do_wyswietlenia)
+                    except Exception as e:
+                        st.error(f"Błąd dodawania do bazy: {e}")
+                        
+        with kolumna_wynikow:
+            if 'ostatnio_wygenerowane' in st.session_state:
+                st.write("**Skopiuj swoje kody (gotowe do wysłania):**")
+                # Pole tekstowe, z którego łatwo skopiujesz wszystko naraz np. do notatnika
+                st.text_area("Gotowe kody", value=st.session_state['ostatnio_wygenerowane'], height=250, label_visibility="collapsed")
 
 # =======================================================
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
