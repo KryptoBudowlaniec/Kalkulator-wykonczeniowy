@@ -180,7 +180,7 @@ if supabase and not st.session_state.get("zalogowany"):
 # SYTUACJA C: PODTRZYMANIE SESJI ZALOGOWANEGO
 # =======================================================
 elif st.session_state.get("zalogowany") == True:
-    st.session_state.pakiet = "Podstawowy"
+    # USUNIĘTO: st.session_state.pakiet = "Podstawowy"
     if not st.session_state.get("user_id") and supabase:
         try:
             user_res = supabase.auth.get_user()
@@ -189,7 +189,58 @@ elif st.session_state.get("zalogowany") == True:
                 st.session_state.user_email = user_res.user.email
         except:
             pass
+# =======================================================
+# 5. SPRAWDZANIE UPRAWNIEŃ I AKTYWACJA KODÓW
+# =======================================================
+if st.session_state.get("zalogowany"):
+    
+    # 1. Sprawdzamy w bazie, czy użytkownik ma już przypisany (zużyty) kod
+    if st.session_state.get("pakiet") != "PRO":
+        try:
+            # Szukamy w tabeli kodu, który jest przypisany do aktualnego użytkownika
+            odp = supabase.table("kody_aktywacyjne").select("*").eq("uzytkownik_id", st.session_state.user_id).execute()
+            if len(odp.data) > 0:
+                # Znaleziono zużyty kod przypisany do tego konta! Dajemy PRO na zawsze.
+                st.session_state.pakiet = "PRO"
+                st.rerun() # Odświeżamy stronę, żeby schować moduł aktywacji
+        except Exception as e:
+            pass # Ignorujemy błędy, użytkownik po prostu zostanie z pakietem "Podstawowy"
 
+    # 2. Wyświetlamy moduł aktywacji TYLKO dla kont podstawowych
+    if st.session_state.get("pakiet") == "Podstawowy":
+        st.warning("🔒 Posiadasz pakiet Podstawowy. Aktywuj kod, aby odblokować pełnię możliwości ProCalc!")
+        
+        with st.form("formularz_aktywacji"):
+            wpisany_kod = st.text_input("Wpisz kod aktywacyjny (np. z OLX/Allegro):")
+            przycisk_aktywuj = st.form_submit_button("🚀 Aktywuj pakiet PRO")
+            
+            if przycisk_aktywuj:
+                if wpisany_kod:
+                    try:
+                        # Szukamy w bazie, czy kod istnieje i NIE JEST zużyty
+                        szukaj_kodu = supabase.table("kody_aktywacyjne").select("*").eq("kod", wpisany_kod).eq("zuzyty", False).execute()
+                        
+                        if len(szukaj_kodu.data) > 0:
+                            # SUKCES! Kod istnieje.
+                            kod_id = szukaj_kodu.data[0]['id']
+                            
+                            # Aktualizujemy bazę: kod staje się zużyty i przypisujemy go do tego użytkownika
+                            supabase.table("kody_aktywacyjne").update({
+                                "zuzyty": True,
+                                "uzytkownik_id": st.session_state.user_id
+                            }).eq("id", kod_id).execute()
+                            
+                            st.success("✅ Kod zaakceptowany! Witaj w gronie użytkowników PRO!")
+                            st.session_state.pakiet = "PRO"
+                            import time
+                            time.sleep(2)
+                            st.rerun()
+                        else:
+                            st.error("❌ Podany kod jest nieprawidłowy, wymyślony lub został już zużyty.")
+                    except Exception as e:
+                        st.error(f"Błąd podczas sprawdzania kodu: {e}")
+                else:
+                    st.error("Wpisz kod przed kliknięciem przycisku.")
 
 # =======================================================
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
