@@ -242,6 +242,8 @@ if st.session_state.get("zalogowany"):
                 else:
                     st.error("Wpisz kod przed kliknięciem przycisku.")
 
+        st.stop()
+
 # =======================================================
 # --- HEADER: LOGO LEWA | MENU PRAWA ---
 col_logo, col_nav = st.columns([1.5, 2.5]) 
