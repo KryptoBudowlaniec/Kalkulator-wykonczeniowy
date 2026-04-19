@@ -131,8 +131,10 @@ if supabase and not st.session_state.get("zalogowany"):
     # WYCHWYTYWANIE KODU SUKCESU (?code=...)
     elif "code" in q:
         try:
-            # Wymieniamy krótki kod na pełną sesję
-            supabase.auth.exchange_code_for_session(q.get("code"))
+            kod = q.get("code")
+            # TUTAJ ZMIANA: Pakujemy kod w słownik {"auth_code": ...}, bo tak wymaga Supabase
+            supabase.auth.exchange_code_for_session({"auth_code": kod})
+            
             user_res = supabase.auth.get_user()
             
             if user_res and user_res.user:
