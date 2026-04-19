@@ -124,11 +124,32 @@ components.html("""
 """, height=0)
 
 # 2. GŁÓWNA LOGIKA WYCHWYTYWANIA
+import streamlit.components.v1 as components
+
+components.html("""
+    <script>
+        const h = window.parent.location.hash;
+        if (h.includes("access_token=") || h.includes("error=")) {
+            const newUrl = window.parent.location.href.split('#')[0] + "?" + h.substring(1);
+            window.parent.location.replace(newUrl);
+        }
+    </script>
+""", height=0)
+
 if supabase and not st.session_state.get("zalogowany"):
     q = st.query_params
     
-    # SCENARIUSZ A: Supabase zwraca nowoczesny "code" (PKCE flow)
-    if "code" in q:
+    # WYCHWYTYWANIE ODRZUCEŃ I BŁĘDÓW OD GOOGLE/SUPABASE
+    if "error" in q:
+        opis_bledu = q.get("error_description", q.get("error"))
+        st.error(f"❌ Autoryzacja odrzucona: {opis_bledu}")
+        if st.button("Spróbuj ponownie"):
+            st.query_params.clear()
+            st.rerun()
+        st.stop() # Zatrzymujemy stronę, żebyś zdążył przeczytać błąd!
+
+    # SCENARIUSZ A: Sukces - nowoczesny "code"
+    elif "code" in q:
         try:
             supabase.auth.exchange_code_for_session(q.get("code"))
             user_res = supabase.auth.get_user()
@@ -139,13 +160,14 @@ if supabase and not st.session_state.get("zalogowany"):
                 st.session_state.zalogowany = True
                 st.session_state.pakiet = "PRO"
                 
-                st.query_params.clear() # Czyścimy URL
-                st.success("Google (Code): Autoryzacja udana! Wczytuję panel...")
+                st.query_params.clear() 
+                st.success("Google: Autoryzacja udana! Wczytuję panel...")
                 st.rerun()
         except Exception as e:
-            st.error(f"Błąd logowania (Google Code): {e}")
+            st.error(f"❌ Błąd logowania (Google Code): {e}")
+            st.stop() # Zatrzymujemy, żeby błąd nie zniknął
 
-    # SCENARIUSZ B: Supabase zwraca stare tokeny (Implicit flow) - wyłapane przez JS hack
+    # SCENARIUSZ B: Sukces - stare tokeny
     elif "access_token" in q and "refresh_token" in q:
         try:
             acc_token = q.get("access_token")
@@ -154,18 +176,18 @@ if supabase and not st.session_state.get("zalogowany"):
             user_res = supabase.auth.get_user()
             
             if user_res and user_res.user:
+                # ... reszta kodu z przypisaniem sesji ...
                 st.session_state.user_email = user_res.user.email
                 st.session_state.user_id = user_res.user.id  
-                st.session_state.access_token = acc_token
-                st.session_state.refresh_token = ref_token
                 st.session_state.zalogowany = True
                 st.session_state.pakiet = "PRO"
                 
-                st.query_params.clear() # Czyścimy URL
-                st.success("Google (Token): Autoryzacja udana! Wczytuję panel...")
+                st.query_params.clear()
+                st.success("Google: Autoryzacja udana! Wczytuję panel...")
                 st.rerun()
         except Exception as e:
-            st.error(f"Błąd logowania (Google Token): {e}")
+            st.error(f"❌ Błąd logowania (Google Token): {e}")
+            st.stop()
 
 # =======================================================
 # SYTUACJA C: PODTRZYMANIE SESJI ZALOGOWANEGO
