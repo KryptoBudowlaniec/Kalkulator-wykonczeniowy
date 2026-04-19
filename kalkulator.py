@@ -57,19 +57,29 @@ if not st.session_state.cookies_accepted:
 # ==========================================
 # 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
 # ==========================================
+import os
+
+# --- BEZPIECZNE ŁĄCZENIE Z BAZĄ DANYCH ---
+# Próbujemy pobrać klucze ze Streamlit Secrets (jeśli działasz lokalnie), 
+# a jeśli wywali błąd, pobieramy bezpośrednio ze zmiennych Render (os.environ)
+
 try:
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
-except KeyError:
-    st.error("⚠️ Brak kluczy bazy danych! Skonfiguruj zakładkę 'Secrets' w ustawieniach Streamlit Cloud.")
+except:
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_KEY")
+
+# Dodatkowe zabezpieczenie, żeby od razu wiedzieć, jeśli kluczy wciąż brakuje
+if not url or not key:
+    st.error("Błąd: Brak kluczy do bazy danych. Upewnij się, że są dodane w Environment Variables.")
     st.stop()
 
-supabase: Client = None
 try:
-    supabase = create_client(url, key)
+    supabase: Client = create_client(url, key)
 except Exception as e:
-    st.error(f"Błąd inicjalizacji Supabase: {e}")
-    st.stop()
+    supabase = None
+    st.warning(f"Baza danych Supabase jest obecnie niedostępna. ({e})")
 
 # ========================================================
 # PODTRZYMANIE AUTORYZACJI SUPABASE (Naprawa błędu RLS)
