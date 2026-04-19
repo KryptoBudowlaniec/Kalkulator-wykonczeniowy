@@ -194,6 +194,12 @@ elif st.session_state.get("zalogowany") == True:
 # =======================================================
 # 5. SPRAWDZANIE UPRAWNIEŃ I AKTYWACJA KODÓW
 # =======================================================
+# =======================================================
+# 4.5. VIP BYPASS (Konto Administratora)
+# =======================================================
+if st.session_state.get("zalogowany") and st.session_state.get("user_email") == "pawelkubiak685@gmail.com":
+    st.session_state.pakiet = "PRO"
+
 if st.session_state.get("zalogowany"):
     
     # 1. Sprawdzamy w bazie, czy użytkownik ma już przypisany (zużyty) kod
