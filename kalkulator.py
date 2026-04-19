@@ -617,7 +617,7 @@ elif branza == "Logowanie":
         # --- ZAKŁADKI LOGOWANIA I REJESTRACJI ---
         tab_log, tab_rej = st.tabs(["🔐 Logowanie", "📝 Rejestracja"])
         
-with tab_log:
+        with tab_log:
             st.markdown("#### Zaloguj się adresem E-mail")
             email_log = st.text_input("Adres E-mail", key="log_email")
             pass_log = st.text_input("Hasło", type="password", key="log_pass")
