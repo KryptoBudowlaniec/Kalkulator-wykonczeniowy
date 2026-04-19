@@ -108,9 +108,12 @@ if 'przekierowanie' not in st.session_state:
     st.session_state.przekierowanie = False
 
 # =======================================================
-# 4. KULOODPORNY ŁAPACZ SESJI (BEZ WYLOGOWYWANIA)
+# 4. KULOODPORNY ŁAPACZ SESJI (HYBRYDOWY: CODE + TOKEN)
 # =======================================================
-st.components.v1.html("""
+import streamlit.components.v1 as components
+
+# 1. HACK JS: Zostawiamy go na wypadek, gdyby Supabase zwróciło tokeny w hash-u (#)
+components.html("""
     <script>
         const h = window.parent.location.hash;
         if (h.includes("access_token=")) {
@@ -120,48 +123,62 @@ st.components.v1.html("""
     </script>
 """, height=0)
 
-# Jeśli mamy tokeny w URL (Właśnie wracamy z Google)
-try:
+# 2. GŁÓWNA LOGIKA WYCHWYTYWANIA
+if supabase and not st.session_state.get("zalogowany"):
     q = st.query_params
-    acc_token = q.get("access_token")
-    ref_token = q.get("refresh_token")
-except:
-    q = st.experimental_get_query_params()
-    acc_token = q.get("access_token", [None])[0]
-    ref_token = q.get("refresh_token", [None])[0]
+    
+    # SCENARIUSZ A: Supabase zwraca nowoczesny "code" (PKCE flow)
+    if "code" in q:
+        try:
+            supabase.auth.exchange_code_for_session(q.get("code"))
+            user_res = supabase.auth.get_user()
+            
+            if user_res and user_res.user:
+                st.session_state.user_email = user_res.user.email
+                st.session_state.user_id = user_res.user.id  
+                st.session_state.zalogowany = True
+                st.session_state.pakiet = "PRO"
+                
+                st.query_params.clear() # Czyścimy URL
+                st.success("Google (Code): Autoryzacja udana! Wczytuję panel...")
+                st.rerun()
+        except Exception as e:
+            st.error(f"Błąd logowania (Google Code): {e}")
 
-# SYTUACJA A: Logowanie z Google
-if acc_token and ref_token:
-    try:
-        if supabase:
+    # SCENARIUSZ B: Supabase zwraca stare tokeny (Implicit flow) - wyłapane przez JS hack
+    elif "access_token" in q and "refresh_token" in q:
+        try:
+            acc_token = q.get("access_token")
+            ref_token = q.get("refresh_token")
             supabase.auth.set_session(acc_token, ref_token)
             user_res = supabase.auth.get_user()
+            
             if user_res and user_res.user:
                 st.session_state.user_email = user_res.user.email
                 st.session_state.user_id = user_res.user.id  
                 st.session_state.access_token = acc_token
                 st.session_state.refresh_token = ref_token
+                st.session_state.zalogowany = True
+                st.session_state.pakiet = "PRO"
                 
-        st.session_state.zalogowany = True
-        st.session_state.pakiet = "PRO"
-        
-        st.query_params.clear()
-        st.success("Autoryzacja udana! Wczytuję panel PRO...")
-        time.sleep(1)
-        st.rerun()
-        st.stop()
-    except Exception:
-        pass
+                st.query_params.clear() # Czyścimy URL
+                st.success("Google (Token): Autoryzacja udana! Wczytuję panel...")
+                st.rerun()
+        except Exception as e:
+            st.error(f"Błąd logowania (Google Token): {e}")
 
-# SYTUACJA B: PODTRZYMANIE SESJI
+# =======================================================
+# SYTUACJA C: PODTRZYMANIE SESJI ZALOGOWANEGO
+# =======================================================
 elif st.session_state.get("zalogowany") == True:
     st.session_state.pakiet = "PRO"
-    # Dodajemy zabezpieczenie: jeśli user_id zniknął, a mamy sesję w Supabase, spróbuj go odzyskać
+    # Zabezpieczenie: jeśli user_id zniknął (np. po odświeżeniu), odzyskaj go
     if not st.session_state.get("user_id") and supabase:
         try:
             user_res = supabase.auth.get_user()
             if user_res and user_res.user:
                 st.session_state.user_id = user_res.user.id
+                st.session_state.user_email = user_res.user.email
         except:
             pass
 
