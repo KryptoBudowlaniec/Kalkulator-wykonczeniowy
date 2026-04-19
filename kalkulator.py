@@ -117,29 +117,29 @@ if 'przekierowanie' not in st.session_state:
 import streamlit.components.v1 as components
 
 # 1. HACK JS: Zmieniamy z automatycznego na "Przycisk", żeby ominąć blokady Streamlit (iframe sandbox)
-components.html("""
-    <script>
-        try {
-            const h = window.parent.location.hash;
-            if (h.includes("access_token=")) {
-                // Zamieniamy hash (#) na zapytanie (?) czytelne dla Pythona
-                const newUrl = window.parent.location.pathname + "?" + h.substring(1);
-                
-                // Tworzymy fizyczny przycisk (omija blokady bezpieczeństwa przeglądarki)
-                document.body.innerHTML = `
-                    <div style="font-family: sans-serif; text-align: center; margin-top: 10px;">
-                        <a href="${newUrl}" target="_parent" style="background-color: #00D395; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            ✅ Kliknij, aby dokończyć logowanie Google
-                        </a>
-                        <p style="color: #888; font-size: 12px; margin-top: 8px;">(Przeglądarka zablokowała automatyczny powrót)</p>
-                    </div>
-                `;
+    components.html("""
+        <script>
+            try {
+                const h = window.parent.location.hash;
+                if (h.includes("access_token=")) {
+                    // Zamieniamy hash (#) na zapytanie (?) czytelne dla Pythona
+                    const newUrl = window.parent.location.pathname + "?" + h.substring(1);
+                    
+                    // Tworzymy fizyczny przycisk (omija blokady bezpieczeństwa przeglądarki)
+                    document.body.innerHTML = `
+                        <div style="font-family: sans-serif; text-align: center; margin-top: 10px;">
+                            <a href="${newUrl}" target="_parent" style="background-color: #00D395; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                ✅ Kliknij, aby dokończyć logowanie Google
+                            </a>
+                            <p style="color: #888; font-size: 12px; margin-top: 8px;">(Przeglądarka zablokowała automatyczny powrót)</p>
+                        </div>
+                    `;
+                }
+            } catch(e) {
+                console.error("Błąd odczytu URL:", e);
             }
-        } catch(e) {
-            console.error("Błąd odczytu URL:", e);
-        }
-    </script>
-""", height=120)
+        </script>
+    """, height=120)
 
     # SCENARIUSZ A: Sukces - nowoczesny "code"
     elif "code" in q:
