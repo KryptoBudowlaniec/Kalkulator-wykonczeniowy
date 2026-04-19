@@ -59,32 +59,18 @@ if not st.session_state.cookies_accepted:
 # ==========================================
 import os
 
-# --- 1. BEZPIECZNE POBIERANIE KLUCZY ---
+# --- 1. BEZPIECZNE POBIERANIE I CZYSZCZENIE KLUCZY ---
 try:
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
 except:
-    url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_KEY")
+    # Pobieramy zmienne i od razu usuwamy białe znaki (.strip()) oraz ewentualne cudzysłowy
+    url = os.environ.get("SUPABASE_URL", "").strip().replace('"', '').replace("'", "")
+    key = os.environ.get("SUPABASE_KEY", "").strip().replace('"', '').replace("'", "")
 
 if not url or not key:
     st.error("Błąd: Brak kluczy do bazy danych. Sprawdź Environment Variables na serwerze.")
     st.stop()
-
-# --- 2. INICJALIZACJA BAZY I CZYSZCZENIE SESJI ---
-try:
-    supabase = create_client(url, key)
-    
-    # NAPRAWA BŁĘDU REFRESH TOKEN (musi być wewnątrz tego bloku try!)
-    if "user_id" not in st.session_state:
-        try:
-            supabase.auth.sign_out()
-        except:
-            pass
-            
-except Exception as e:
-    supabase = None
-    st.warning(f"Baza danych Supabase jest obecnie niedostępna. ({e})")
 
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA)
