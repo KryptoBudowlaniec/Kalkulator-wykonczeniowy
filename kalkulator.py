@@ -617,7 +617,7 @@ elif branza == "Logowanie":
         # --- ZAKŁADKI LOGOWANIA I REJESTRACJI ---
         tab_log, tab_rej = st.tabs(["🔐 Logowanie", "📝 Rejestracja"])
         
-        with tab_log:
+with tab_log:
             st.markdown("#### Zaloguj się adresem E-mail")
             email_log = st.text_input("Adres E-mail", key="log_email")
             pass_log = st.text_input("Hasło", type="password", key="log_pass")
@@ -644,17 +644,22 @@ elif branza == "Logowanie":
             st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
             st.markdown("#### Lub użyj konta Google")
             
-            # Używamy zmiennej 'url', którą zdefiniowaliśmy na samej górze z secrets
-            login_url = f"{url}/auth/v1/authorize?provider=google&redirect_to=https://kalkulator-wykonczeniowy-buwyvwvkgmc7qdxit7ipst.streamlit.app/"
-
-            przycisk_html = f"""
-            <a href="{login_url}" target="_self" style="text-decoration: none;">
-                <div style="background-color: #00D395; color: white; padding: 15px; text-align: center; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    🌐 Zaloguj przez Google
-                </div>
-            </a>
-            """
-            st.markdown(przycisk_html, unsafe_allow_html=True)
+            # --- ZAKTUALIZOWANY PRZYCISK GOOGLE (PKCE FLOW) ---
+            if supabase:
+                try:
+                    res = supabase.auth.sign_in_with_oauth({
+                        "provider": "google",
+                        "options": {
+                            "redirect_to": "https://procalc.pl",
+                            "skip_browser_redirect": True
+                        }
+                    })
+                    
+                    # Natywny przycisk Streamlit, który wywoła bezpieczny link od Supabase
+                    st.link_button("🌐 Zaloguj przez Google", res.url, use_container_width=True)
+                
+                except Exception as e:
+                    st.error(f"Błąd generowania linku: {e}")
             
         with tab_rej:
             st.markdown("#### Utwórz darmowe konto")
