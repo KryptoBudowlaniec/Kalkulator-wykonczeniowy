@@ -58,19 +58,38 @@ if not st.session_state.cookies_accepted:
 # 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
 # ==========================================
 import os
+from supabase import create_client, Client
 
-# --- 1. BEZPIECZNE POBIERANIE I CZYSZCZENIE KLUCZY ---
+# --- 0. DEKLARACJA GLOBALNA (Zabezpieczenie przed NameError) ---
+supabase = None
+
+# --- 1. BEZPIECZNE POBIERANIE KLUCZY ---
 try:
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
 except:
-    # Pobieramy zmienne i od razu usuwamy białe znaki (.strip()) oraz ewentualne cudzysłowy
     url = os.environ.get("SUPABASE_URL", "").strip().replace('"', '').replace("'", "")
     key = os.environ.get("SUPABASE_KEY", "").strip().replace('"', '').replace("'", "")
 
-if not url or not key:
+# --- 2. INICJALIZACJA BAZY DANYCH ---
+if url and key:
+    try:
+        supabase: Client = create_client(url, key)
+        
+        # Oczyszczanie starych sesji
+        if "user_id" not in st.session_state:
+            try:
+                supabase.auth.sign_out()
+            except:
+                pass
+                
+    except Exception as e:
+        supabase = None
+        st.warning(f"Błąd łączenia z Supabase: {e}")
+else:
     st.error("Błąd: Brak kluczy do bazy danych. Sprawdź Environment Variables na serwerze.")
-    st.stop()
+    # Nie robimy st.stop(), żeby reszta aplikacji (np. samo UI) mogła się załadować, 
+    # a zmienna supabase pozostanie jako None, więc `if supabase:` w linii 611 po prostu to ominie.
 
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA)
