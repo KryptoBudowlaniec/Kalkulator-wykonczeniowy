@@ -167,7 +167,7 @@ if supabase and not st.session_state.get("zalogowany"):
                 st.session_state.user_email = user_res.user.email
                 st.session_state.user_id = user_res.user.id  
                 st.session_state.zalogowany = True
-                st.session_state.pakiet = "PRO"
+                st.session_state.pakiet = "Podstawowy"
                 
                 st.query_params.clear() 
                 st.success("✅ Google: Autoryzacja udana! Wczytuję panel...")
@@ -180,7 +180,7 @@ if supabase and not st.session_state.get("zalogowany"):
 # SYTUACJA C: PODTRZYMANIE SESJI ZALOGOWANEGO
 # =======================================================
 elif st.session_state.get("zalogowany") == True:
-    st.session_state.pakiet = "PRO"
+    st.session_state.pakiet = "Podstawowy"
     if not st.session_state.get("user_id") and supabase:
         try:
             user_res = supabase.auth.get_user()
@@ -662,7 +662,7 @@ elif branza == "Logowanie":
                             st.session_state.access_token = res.session.access_token
                             st.session_state.refresh_token = res.session.refresh_token
                             # -----------------------------------------------
-                            st.session_state.pakiet = "PRO"
+                            st.session_state.pakiet = "Podstawowy"
                             st.success("Zalogowano pomyślnie! Zaraz odświeżę...")
                             time.sleep(1)
                             st.rerun()
