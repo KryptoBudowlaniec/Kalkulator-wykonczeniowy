@@ -77,9 +77,15 @@ if not url or not key:
 
 try:
     supabase: Client = create_client(url, key)
-except Exception as e:
-    supabase = None
-    st.warning(f"Baza danych Supabase jest obecnie niedostępna. ({e})")
+
+# --- NAPRAWA BŁĘDU REFRESH TOKEN ---
+# Jeśli w Streamlit nie ma informacji o zalogowanym użytkowniku,
+# wymuszamy na Supabase "zapomnienie" starych, martwych sesji
+if "user_id" not in st.session_state:
+    try:
+        supabase.auth.sign_out()
+    except:
+        pass
 
 # ========================================================
 # PODTRZYMANIE AUTORYZACJI SUPABASE (Naprawa błędu RLS)
