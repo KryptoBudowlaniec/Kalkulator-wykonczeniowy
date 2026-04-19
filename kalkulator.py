@@ -4185,10 +4185,19 @@ elif branza == "Panel Inwestora":
                         else:
                             pdf_bytes = bytes(output_pdf)
                             
+                        # --- BEZPIECZNA NAZWA PLIKU (Naprawa błędu) ---
+                        # 1. Usuwamy polskie znaki za pomocą naszej funkcji
+                        bezpieczna_nazwa = czysc_tekst(nazwa_inwestycji)
+                        # 2. Zostawiamy tylko litery A-Z, cyfry i zamieniamy resztę na "_"
+                        bezpieczna_nazwa = "".join([c if c.isalnum() else "_" for c in bezpieczna_nazwa])
+                        
+                        # Gwarantujemy, że plik zawsze zaczyna się od "ProCalc_" (czyli od dozwolonej litery 'P')
+                        nazwa_pliku = f"ProCalc_{bezpieczna_nazwa}.pdf"
+                            
                         st.download_button(
                             label="📥 Pobierz Kosztorys PDF", 
                             data=pdf_bytes, 
-                            file_name=f"ProCalc_{nazwa_inwestycji.replace(' ', '_')}.pdf", 
+                            file_name=nazwa_pliku, 
                             mime="application/pdf"
                         )
                         st.success("✅ PDF wygenerowany pomyślnie!")
