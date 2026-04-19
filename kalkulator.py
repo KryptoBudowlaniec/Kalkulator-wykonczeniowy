@@ -62,9 +62,9 @@ if not st.session_state.cookies_accepted:
 # 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
 # ==========================================
 import os
-from supabase import create_client, Client
+from supabase import create_client, Client, ClientOptions
 
-# --- 0. DEKLARACJA GLOBALNA (Zabezpieczenie przed NameError) ---
+# --- 0. DEKLARACJA GLOBALNA ---
 supabase = None
 
 # --- 1. BEZPIECZNE POBIERANIE KLUCZY ---
@@ -75,10 +75,12 @@ except:
     url = os.environ.get("SUPABASE_URL", "").strip().replace('"', '').replace("'", "")
     key = os.environ.get("SUPABASE_KEY", "").strip().replace('"', '').replace("'", "")
 
-# --- 2. INICJALIZACJA BAZY DANYCH ---
+# --- 2. INICJALIZACJA BAZY (Z WYMUSZENIEM PKCE) ---
 if url and key:
     try:
-        supabase: Client = create_client(url, key)
+        # TUTAJ JEST MAGIA: Mówimy Supabase, żeby wysyłało ?code= zamiast #access_token=
+        options = ClientOptions(flow_type="pkce")
+        supabase: Client = create_client(url, key, options=options)
         
         # Oczyszczanie starych sesji
         if "user_id" not in st.session_state:
@@ -92,8 +94,6 @@ if url and key:
         st.warning(f"Błąd łączenia z Supabase: {e}")
 else:
     st.error("Błąd: Brak kluczy do bazy danych. Sprawdź Environment Variables na serwerze.")
-    # Nie robimy st.stop(), żeby reszta aplikacji (np. samo UI) mogła się załadować, 
-    # a zmienna supabase pozostanie jako None, więc `if supabase:` w linii 611 po prostu to ominie.
 
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA)
@@ -111,38 +111,15 @@ if 'refresh_token' not in st.session_state:
 if 'przekierowanie' not in st.session_state:
     st.session_state.przekierowanie = False
 
-# =======================================================
-# 4. KULOODPORNY ŁAPACZ SESJI (HYBRYDOWY: CODE + TOKEN)
-# =======================================================
-import streamlit.components.v1 as components
 
-# 1. HACK JS: Zmieniamy z automatycznego na "Przycisk", żeby ominąć blokady Streamlit
-components.html("""
-    <script>
-        try {
-            const h = window.parent.location.hash;
-            if (h.includes("access_token=")) {
-                const newUrl = window.parent.location.pathname + "?" + h.substring(1);
-                document.body.innerHTML = `
-                    <div style="font-family: sans-serif; text-align: center; margin-top: 10px;">
-                        <a href="${newUrl}" target="_parent" style="background-color: #00D395; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            ✅ Kliknij, aby dokończyć logowanie Google
-                        </a>
-                        <p style="color: #888; font-size: 12px; margin-top: 8px;">(Przeglądarka zablokowała automatyczny powrót)</p>
-                    </div>
-                `;
-            }
-        } catch(e) {
-            console.error("Błąd odczytu URL:", e);
-        }
-    </script>
-""", height=120)
+# =======================================================
+# 4. CZYSTY ŁAPACZ SESJI (PKCE CODE)
+# =======================================================
 
-# --- TUTAJ BYŁA LUKA! GŁÓWNY WARUNEK (if) ---
 if supabase and not st.session_state.get("zalogowany"):
     q = st.query_params
     
-    # WYCHWYTYWANIE ODRZUCEŃ I BŁĘDÓW OD GOOGLE
+    # WYCHWYTYWANIE BŁĘDÓW
     if "error" in q:
         opis_bledu = q.get("error_description", q.get("error"))
         st.error(f"❌ Autoryzacja odrzucona: {opis_bledu}")
@@ -151,9 +128,10 @@ if supabase and not st.session_state.get("zalogowany"):
             st.rerun()
         st.stop()
 
-    # SCENARIUSZ A: Sukces - nowoczesny "code"
+    # WYCHWYTYWANIE KODU SUKCESU (?code=...)
     elif "code" in q:
         try:
+            # Wymieniamy krótki kod na pełną sesję
             supabase.auth.exchange_code_for_session(q.get("code"))
             user_res = supabase.auth.get_user()
             
@@ -164,31 +142,10 @@ if supabase and not st.session_state.get("zalogowany"):
                 st.session_state.pakiet = "PRO"
                 
                 st.query_params.clear() 
-                st.success("Google: Autoryzacja udana! Wczytuję panel...")
+                st.success("✅ Google: Autoryzacja udana! Wczytuję panel...")
                 st.rerun()
         except Exception as e:
             st.error(f"❌ Błąd logowania (Google Code): {e}")
-            st.stop()
-
-    # SCENARIUSZ B: Sukces - stare tokeny
-    elif "access_token" in q and "refresh_token" in q:
-        try:
-            acc_token = q.get("access_token")
-            ref_token = q.get("refresh_token")
-            supabase.auth.set_session(acc_token, ref_token)
-            user_res = supabase.auth.get_user()
-            
-            if user_res and user_res.user:
-                st.session_state.user_email = user_res.user.email
-                st.session_state.user_id = user_res.user.id  
-                st.session_state.zalogowany = True
-                st.session_state.pakiet = "PRO"
-                
-                st.query_params.clear()
-                st.success("Google: Autoryzacja udana! Wczytuję panel...")
-                st.rerun()
-        except Exception as e:
-            st.error(f"❌ Błąd logowania (Google Token): {e}")
             st.stop()
 
 # =======================================================
