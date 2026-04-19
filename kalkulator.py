@@ -62,9 +62,21 @@ if not st.session_state.cookies_accepted:
 # 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
 # ==========================================
 import os
+import streamlit as st
 from supabase import create_client, Client, ClientOptions
 
-# --- 0. DEKLARACJA GLOBALNA ---
+# =======================================================
+# 0. LEKARSTWO NA AMNEZJĘ (Pamięć podręczna dla PKCE)
+# =======================================================
+class StreamlitStorage:
+    def get_item(self, key):
+        return st.session_state.get(key)
+    def set_item(self, key, value):
+        st.session_state[key] = value
+    def remove_item(self, key):
+        if key in st.session_state:
+            del st.session_state[key]
+
 supabase = None
 
 # --- 1. BEZPIECZNE POBIERANIE KLUCZY ---
@@ -75,19 +87,15 @@ except:
     url = os.environ.get("SUPABASE_URL", "").strip().replace('"', '').replace("'", "")
     key = os.environ.get("SUPABASE_KEY", "").strip().replace('"', '').replace("'", "")
 
-# --- 2. INICJALIZACJA BAZY (Z WYMUSZENIEM PKCE) ---
+# --- 2. INICJALIZACJA BAZY (Z ZAINSTALOWANĄ PAMIĘCIĄ) ---
 if url and key:
     try:
-        # TUTAJ JEST MAGIA: Mówimy Supabase, żeby wysyłało ?code= zamiast #access_token=
-        options = ClientOptions(flow_type="pkce")
+        # Wpinamy nasz sejf StreamlitStorage do klienta Supabase!
+        options = ClientOptions(flow_type="pkce", storage=StreamlitStorage())
         supabase: Client = create_client(url, key, options=options)
         
-        # Oczyszczanie starych sesji
-        if "user_id" not in st.session_state:
-            try:
-                supabase.auth.sign_out()
-            except:
-                pass
+        # UWAGA: Usunąłem stąd linijki z `sign_out()`, 
+        # ponieważ to one działały jak mina lądowa i kasowały nam hasło po powrocie z Google!
                 
     except Exception as e:
         supabase = None
