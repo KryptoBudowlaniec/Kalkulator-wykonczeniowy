@@ -675,8 +675,8 @@ elif branza == "Logowanie":
                         res = supabase.auth.sign_up({"email": email_rej, "password": pass_rej})
                         st.success("Konto utworzone! Możesz się teraz zalogować w zakładce obok.")
                     except Exception as e:
-                        st.error(f"Błąd rejestracji. Upewnij się, że mail jest poprawny.")
-
+                        st.error(f"Szczegóły błędu rejestracji z Supabase: {str(e)}")
+    
     else:
         # WIDOK PO ZALOGOWANIU
         st.markdown("<br><br>", unsafe_allow_html=True)
