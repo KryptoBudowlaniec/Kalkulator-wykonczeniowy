@@ -21,22 +21,33 @@ st.set_page_config(
         'About': "# ProCalc\nTwój cyfrowy kosztorysant wykończeniowy. Oblicz materiały z precyzją fachowca."
     }
 )
-# --- ZAAWANSOWANE SEO (Meta Tagi) ---
-st.markdown(
-    """
-<meta name="description" content="ProCalc - Profesjonalny kalkulator remontowy dla Inwestorów i Ekip. Precyzyjne listy materiałowe, kosztorysy PDF i analiza ROI flippów.">
-<meta name="keywords" content="kalkulator remontowy, kosztorys wykończenia, wycena remontu, kalkulator malowania, kalkulator szpachlowania, ROI flip, budowa, wykończenia">
-<meta property="og:title" content="ProCalc | Profesjonalny Kalkulator Budowlany">
-<meta property="og:description" content="Oblicz materiały i robociznę z dokładnością do jednego worka. Pobieraj raporty PDF i zarządzaj budżetem.">
-<meta property="og:image" content="https://raw.githubusercontent.com/KryptoBudowlaniec/Kalkulator-wykonczeniowy/main/logo2.png">
-<meta property="og:url" content="https://procalc.pl">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ProCalc | Twój Cyfrowy Kosztorysant">
-<meta name="twitter:description" content="Koniec z błędami w zamówieniach materiałów. Precyzyjne obliczenia w 30 sekund.">
-    """,
-    unsafe_allow_html=True
-)
+import streamlit.components.v1 as components
+
+# --- ZAAWANSOWANE SEO (Meta Tagi wstrzykiwane do <head>) ---
+components.html("""
+    <script>
+        // Pobieramy "głowę" (head) głównego dokumentu
+        const head = window.parent.document.head;
+        
+        // Sprawdzamy, czy tagi już tam są (żeby nie dublować przy odświeżaniu)
+        if (!head.querySelector('meta[name="description"]')) {
+            const metaTags = `
+                <meta name="description" content="ProCalc - Profesjonalny kalkulator remontowy dla Inwestorów i Ekip. Precyzyjne listy materiałowe, kosztorysy PDF i analiza ROI flippów.">
+                <meta name="keywords" content="kalkulator remontowy, kosztorys wykończenia, wycena remontu, kalkulator malowania, kalkulator szpachlowania, ROI flip, budowa, wykończenia">
+                <meta property="og:title" content="ProCalc | Profesjonalny Kalkulator Budowlany">
+                <meta property="og:description" content="Oblicz materiały i robociznę z dokładnością do jednego worka. Pobieraj raporty PDF i zarządzaj budżetem.">
+                <meta property="og:image" content="https://raw.githubusercontent.com/KryptoBudowlaniec/Kalkulator-wykonczeniowy/main/logo2.png">
+                <meta property="og:url" content="https://procalc.pl">
+                <meta property="og:type" content="website">
+                <meta name="twitter:card" content="summary_large_image">
+                <meta name="twitter:title" content="ProCalc | Twój Cyfrowy Kosztorysant">
+                <meta name="twitter:description" content="Koniec z błędami w zamówieniach materiałów. Precyzyjne obliczenia w 30 sekund.">
+            `;
+            // Wklejamy wszystkie Twoje tagi prosto do <head>
+            head.insertAdjacentHTML('beforeend', metaTags);
+        }
+    </script>
+""", height=0)
 
 # ==========================================
 # 🟢 BANER COOKIES I PRYWATNOŚCI (PRZYWRÓCONY)
