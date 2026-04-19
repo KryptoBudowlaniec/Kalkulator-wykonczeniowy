@@ -116,41 +116,30 @@ if 'przekierowanie' not in st.session_state:
 # =======================================================
 import streamlit.components.v1 as components
 
-# 1. HACK JS: Zostawiamy go na wypadek, gdyby Supabase zwróciło tokeny w hash-u (#)
+# 1. HACK JS: Zmieniamy z automatycznego na "Przycisk", żeby ominąć blokady Streamlit (iframe sandbox)
 components.html("""
     <script>
-        const h = window.parent.location.hash;
-        if (h.includes("access_token=")) {
-            const newUrl = window.parent.location.href.split('#')[0] + "?" + h.substring(1);
-            window.parent.location.replace(newUrl);
+        try {
+            const h = window.parent.location.hash;
+            if (h.includes("access_token=")) {
+                // Zamieniamy hash (#) na zapytanie (?) czytelne dla Pythona
+                const newUrl = window.parent.location.pathname + "?" + h.substring(1);
+                
+                // Tworzymy fizyczny przycisk (omija blokady bezpieczeństwa przeglądarki)
+                document.body.innerHTML = `
+                    <div style="font-family: sans-serif; text-align: center; margin-top: 10px;">
+                        <a href="${newUrl}" target="_parent" style="background-color: #00D395; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            ✅ Kliknij, aby dokończyć logowanie Google
+                        </a>
+                        <p style="color: #888; font-size: 12px; margin-top: 8px;">(Przeglądarka zablokowała automatyczny powrót)</p>
+                    </div>
+                `;
+            }
+        } catch(e) {
+            console.error("Błąd odczytu URL:", e);
         }
     </script>
-""", height=0)
-
-# 2. GŁÓWNA LOGIKA WYCHWYTYWANIA
-import streamlit.components.v1 as components
-
-components.html("""
-    <script>
-        const h = window.parent.location.hash;
-        if (h.includes("access_token=") || h.includes("error=")) {
-            const newUrl = window.parent.location.href.split('#')[0] + "?" + h.substring(1);
-            window.parent.location.replace(newUrl);
-        }
-    </script>
-""", height=0)
-
-if supabase and not st.session_state.get("zalogowany"):
-    q = st.query_params
-    
-    # WYCHWYTYWANIE ODRZUCEŃ I BŁĘDÓW OD GOOGLE/SUPABASE
-    if "error" in q:
-        opis_bledu = q.get("error_description", q.get("error"))
-        st.error(f"❌ Autoryzacja odrzucona: {opis_bledu}")
-        if st.button("Spróbuj ponownie"):
-            st.query_params.clear()
-            st.rerun()
-        st.stop() # Zatrzymujemy stronę, żebyś zdążył przeczytać błąd!
+""", height=120)
 
     # SCENARIUSZ A: Sukces - nowoczesny "code"
     elif "code" in q:
