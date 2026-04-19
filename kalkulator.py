@@ -168,9 +168,9 @@ col_logo, col_nav = st.columns([1.5, 2.5])
 
 with col_logo:
     try:
-        st.image("logo2.png", use_container_width=True)
+        st.image("logo.svg", use_container_width=True)
     except:
-        st.error("Brak logo2.png")
+        st.error("Brak logo.svg")
 
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
