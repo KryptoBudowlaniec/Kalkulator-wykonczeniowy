@@ -192,7 +192,7 @@ elif st.session_state.get("zalogowany") == True:
         except:
             pass
 # =======================================================
-# 5. SPRAWDZANIE UPRAWNIEŃ I TERMINU WAŻNOŚCI (365 DNI)
+# 5. SPRAWDZANIE UPRAWNIEŃ, TRIAL 7 DNI I KODY (365 DNI)
 # =======================================================
 from datetime import datetime, timezone, timedelta
 
@@ -204,10 +204,13 @@ if st.session_state.get("zalogowany") and st.session_state.get("user_email") == 
 
 if st.session_state.get("zalogowany"):
     
-    # 1. Sprawdzamy w bazie status użytkownika i datę wygaśnięcia
+    # Sprawdzamy uprawnienia tylko, jeśli pakiet to nadal "Podstawowy" (np. po świeżym logowaniu)
     if st.session_state.get("pakiet") != "PRO":
         try:
-            # Pobieramy dane przypisanego kodu
+            ma_aktywny_kod = False
+            dzisiaj = datetime.now(timezone.utc)
+            
+            # 1. NAJPIERW SPRAWDZAMY, CZY MA WYKUPIONY KOD NA 365 DNI
             odp = supabase.table("kody_aktywacyjne").select("*").eq("uzytkownik_id", st.session_state.user_id).execute()
             
             if len(odp.data) > 0:
@@ -215,28 +218,36 @@ if st.session_state.get("zalogowany"):
                 data_akt_str = dane_kodu.get("data_aktywacji")
                 
                 if data_akt_str:
-                    # Konwersja daty z Supabase (ISO) na obiekt Pythona
                     data_aktywacji = datetime.fromisoformat(data_akt_str.replace('Z', '+00:00'))
-                    dzisiaj = datetime.now(timezone.utc)
-                    
-                    # KLUCZOWY WARUNEK: Czy od aktywacji minęło mniej niż 365 dni?
                     if dzisiaj < data_aktywacji + timedelta(days=365):
                         st.session_state.pakiet = "PRO"
-                        # Opcjonalnie: obliczanie dni do końca
+                        ma_aktywny_kod = True
                         dni_do_konca = (data_aktywacji + timedelta(days=365) - dzisiaj).days
                         st.toast(f"💎 Pakiet PRO aktywny! Pozostało: {dni_do_konca} dni.")
                         st.rerun()
-                    else:
-                        st.error("⏰ Twoja roczna subskrypcja wygasła. Aby korzystać z PRO, aktywuj nowy kod.")
-                else:
-                    # Kod zużyty, ale brak daty (np. ręczne dopisanie w bazie) - traktujemy jako podstawowy
-                    pass
+
+            # 2. JEŚLI NIE MA KODU -> SPRAWDZAMY DARMOWY TRIAL (7 DNI)
+            if not ma_aktywny_kod:
+                user_res = supabase.auth.get_user()
+                if user_res and user_res.user:
+                    # Pobieramy ukrytą datę rejestracji z Supabase
+                    data_zalozenia_str = user_res.user.created_at
+                    data_zalozenia = datetime.fromisoformat(data_zalozenia_str.replace('Z', '+00:00'))
+                    
+                    # Jeśli od rejestracji minęło mniej niż 7 dni
+                    if dzisiaj < data_zalozenia + timedelta(days=7):
+                        st.session_state.pakiet = "PRO"
+                        dni_trial = (data_zalozenia + timedelta(days=7) - dzisiaj).days
+                        dni_trial = max(1, dni_trial) # Zabezpieczenie wizualne na ostatni dzień
+                        st.toast(f"🎁 Wersja próbna PRO. Pozostało darmowych dni: {dni_trial}.")
+                        st.rerun()
+                        
         except Exception as e:
             st.error(f"Błąd sprawdzania subskrypcji: {e}")
 
-    # 2. Wyświetlamy moduł aktywacji dla kont podstawowych lub wygasłych
+    # 3. MODUŁ AKTYWACJI (Dla kont po trialu i bez ważnego kodu)
     if st.session_state.get("pakiet") == "Podstawowy":
-        st.warning("🔒 Posiadasz pakiet Podstawowy. Aktywuj kod, aby otrzymać dostęp PRO na 365 dni!")
+        st.warning("🔒 Twój darmowy okres próbny dobiegł końca. Aktywuj kod, aby odzyskać pełny dostęp na 365 dni!")
         
         with st.form("formularz_aktywacji"):
             wpisany_kod = st.text_input("Wpisz kod aktywacyjny (np. z OLX/Allegro):")
@@ -245,12 +256,11 @@ if st.session_state.get("zalogowany"):
             if przycisk_aktywuj:
                 if wpisany_kod:
                     try:
-                        # Szukamy wolnego kodu w bazie
+                        # Szukamy wolnego kodu
                         szukaj_kodu = supabase.table("kody_aktywacyjne").select("*").eq("kod", wpisany_kod).eq("zuzyty", False).execute()
                         
                         if len(szukaj_kodu.data) > 0:
                             kod_id = szukaj_kodu.data[0]['id']
-                            # Zapisujemy aktualny czas jako moment aktywacji
                             teraz = datetime.now(timezone.utc).isoformat()
                             
                             supabase.table("kody_aktywacyjne").update({
@@ -271,7 +281,6 @@ if st.session_state.get("zalogowany"):
                 else:
                     st.error("Proszę wpisać kod.")
         
-        # Blokujemy resztę aplikacji dla użytkowników bez PRO
         st.stop()
 
 # =======================================================
