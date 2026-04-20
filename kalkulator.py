@@ -142,9 +142,7 @@ if not st.session_state.cookies_accepted:
                 st.rerun() 
     st.markdown("---")
 
-# ==========================================
-# 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
-# ==========================================
+
 # ==========================================
 # 2. POŁĄCZENIE Z BAZĄ DANYCH (SECURE)
 # ==========================================
@@ -197,18 +195,35 @@ else:
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA)
 # ==========================================
+# ==========================================
+# 3. STAN APLIKACJI (INICJALIZACJA Z AUTO-ODZYSKIWANIEM)
+# ==========================================
 if 'zalogowany' not in st.session_state:
-    st.session_state.zalogowany = False # <--- ZMIENIONE NA FALSE (Prawdziwe zabezpieczenie)
+    # Domyślne wartości przy starcie / restarcie karty
+    st.session_state.zalogowany = False
+    st.session_state.pakiet = "Podstawowy"
+    st.session_state.user_email = ""
+    st.session_state.access_token = None
+    st.session_state.refresh_token = None
+    st.session_state.przekierowanie = False
+
+    # 🟢 AUTO-ODZYSKIWANIE SESJI: 
+    # Jeśli Streamlit "zgubił" sesję przez uśpienie karty, pytamy Supabase o pamięć
+    if supabase:
+        try:
+            # Sprawdzamy, czy w tytanowym sejfie ServerSideStorage wciąż jest żywy token
+            user_res = supabase.auth.get_user()
+            if user_res and user_res.user:
+                st.session_state.zalogowany = True
+                st.session_state.user_email = user_res.user.email
+                st.session_state.user_id = user_res.user.id
+                # Uwaga: Pakiet PRO odzyska się sam automatycznie w Sekcji 5!
+        except Exception as e:
+            pass # Jeśli token wygasł, użytkownik po prostu zostanie wylogowany
+
+# Zabezpieczenie pozostałych zmiennych (jeśli aplikacja działa płynnie)
 if 'pakiet' not in st.session_state:
     st.session_state.pakiet = "Podstawowy"
-if 'user_email' not in st.session_state:
-    st.session_state.user_email = ""
-if 'access_token' not in st.session_state:
-    st.session_state.access_token = None
-if 'refresh_token' not in st.session_state:
-    st.session_state.refresh_token = None
-if 'przekierowanie' not in st.session_state:
-    st.session_state.przekierowanie = False
 
 
 # =======================================================
@@ -2191,7 +2206,8 @@ elif branza == "Sucha Zabudowa":
             grubosc_welny = None
             izolacja_gk = False
             plytowanie = "1xGK (Jednostronnie)"
-            lista_z = []
+            lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
+            lista_z.append(("Laczniki krzyzowe i wzdluzne CD", f"{laczniki_krzyzowe + laczniki_cd1} szt."))
             
             col_g1, col_g2 = st.columns([1, 1.2])
 
@@ -2228,24 +2244,44 @@ elif branza == "Sucha Zabudowa":
                                 st.rerun()
                         
                         # Sumowanie
+                        # Sumowanie dla sufitów
                         for p in st.session_state.pokoje_sufit:
                             p_dl, p_sz = p['dl'], p['sz']
                             p_m2 = p_dl * p_sz
                             m2_gk += p_m2
+                            
+                            # Profile UD (po obwodzie + 10% zapasu)
                             szt_ud += int(((p_dl + p_sz) * 2 * 1.1) / 3) + 1
+                            
+                            # Wieszaki (średnio 1 wieszak co 0.7 m2)
                             szt_wieszaki += int(p_m2 / 0.7) + 1
-                            rozstaw_cd1 = 0.40 if p['typ'] == "Pojedynczy" else 1.10
-                            liczba_cd1 = int(p_sz / rozstaw_cd1) + 1
-                            odcinki_cd1 = int(p_dl / dl_profilu_cd)
-                            szt_cd += liczba_cd1 * (odcinki_cd1 + (1 if p_dl % dl_profilu_cd > 0 else 0))
-                            laczniki_cd1 += odcinki_cd1 * liczba_cd1
-
-                            if p['typ'] == "Krzyzowy":
-                                liczba_cd2 = int(p_dl / 0.40) + 1
-                                odcinki_cd2 = int(p_sz / dl_profilu_cd)
-                                szt_cd += liczba_cd2 * (odcinki_cd2 + (1 if p_sz % dl_profilu_cd > 0 else 0))
-                                laczniki_cd2 += odcinki_cd2 * liczba_cd2
-                                laczniki_krzyzowe += (liczba_cd1 * liczba_cd2)
+                            
+                            if p['typ'] == "Pojedynczy":
+                                # Profile nośne co 40 cm
+                                liczba_linii = int(p_sz / 0.40) + 1
+                                suma_mb_cd = liczba_linii * p_dl
+                                
+                                # Całkowite zapotrzebowanie ze ścinkami (10%)
+                                szt_cd += int((suma_mb_cd * 1.10) / dl_profilu_cd) + 1
+                                laczniki_cd1 += int(suma_mb_cd / dl_profilu_cd)
+                                
+                            elif p['typ'] == "Krzyzowy":
+                                # Profile główne (nośne) co ok. 100 cm
+                                liczba_linii_glownych = int(p_sz / 1.0) + 1
+                                suma_mb_glowne = liczba_linii_glownych * p_dl
+                                
+                                # Profile montażowe co 40 cm
+                                liczba_linii_montaz = int(p_dl / 0.40) + 1
+                                suma_mb_montaz = liczba_linii_montaz * p_sz
+                                
+                                suma_mb_cd = suma_mb_glowne + suma_mb_montaz
+                                
+                                # Całkowite zapotrzebowanie ze ścinkami (10%)
+                                szt_cd += int((suma_mb_cd * 1.10) / dl_profilu_cd) + 1
+                                
+                                # Łączniki
+                                laczniki_cd1 += int(suma_mb_cd / dl_profilu_cd)
+                                laczniki_krzyzowe += liczba_linii_glownych * liczba_linii_montaz
                 else:
                     # Ściana Działowa
                     c1, c2 = st.columns(2)
