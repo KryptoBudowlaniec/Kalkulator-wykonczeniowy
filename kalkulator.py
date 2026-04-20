@@ -31,17 +31,67 @@ if "p" in params:
     strona = params["p"]
     
     if strona == "regulamin":
-        st.title("Regulamin serwisu ProCalc.pl")
-        st.write("Tutaj wkleisz treść regulaminu...")
-        if st.button("⬅️ Powrót do kalkulatora"):
+        st.title("📜 Regulamin serwisu ProCalc")
+        st.markdown("""
+        *Obowiązuje od dnia: 13.04.2026 r.*
+        
+        **§ 1. Postanowienia ogólne**
+        1. Niniejszy regulamin określa zasady korzystania z aplikacji internetowej ProCalc, dostępnej pod adresem procalc.pl (zwanej dalej "Serwisem").
+        2. Twórcą i operatorem Serwisu jest Paweł Kubiak, prowadzący projekt w ramach działalności nierejestrowanej.
+        3. Serwis ProCalc to narzędzie wspomagające kosztorysowanie prac wykończeniowych oraz generowanie zestawień materiałowych i finansowych.
+        
+        **§ 2. Rodzaje kont i Usługi**
+        1. Serwis oferuje następujące modele dostępu:
+           • **Okres Próbny (Trial 7 dni):** Każdy nowy użytkownik po pierwszej rejestracji otrzymuje bezpłatny dostęp do pełnej funkcjonalności Serwisu na okres 7 dni.
+           • **Pakiet PRO (Płatny na 365 dni):** Pełna funkcjonalność, w tym zapisywanie projektów w chmurze, precyzyjne normy zużycia materiałów oraz generator ofert PDF. Dostęp uzyskuje się poprzez aktywację specjalnego kodu.
+           • **Pakiet Podstawowy:** Ograniczony dostęp po wygaśnięciu okresu próbnego lub ważności pakietu PRO.
+        2. Operator zastrzega sobie prawo do zmiany zakresu funkcjonalności pakietów w ramach aktualizacji Serwisu.
+        
+        **§ 3. Rejestracja i Logowanie**
+        1. Korzystanie z funkcji zapisu danych oraz pakietu PRO wymaga założenia Konta Użytkownika.
+        2. Rejestracja odbywa się poprzez zewnętrzny system uwierzytelniania Google (OAuth2), co zapewnia najwyższy poziom bezpieczeństwa danych.
+        
+        **§ 4. Kody Aktywacyjne i Dostęp**
+        1. Dostęp do Pakietu PRO przyznawany jest na okres 365 dni od momentu poprawnego wpisania kodu aktywacyjnego w panelu Serwisu.
+        2. Ze względu na dostarczanie treści cyfrowych, które nie są zapisane na nośniku materialnym, Użytkownik wyraża zgodę na rozpoczęcie świadczenia usługi przed upływem terminu do odstąpienia od umowy, co skutkuje utratą prawa do zwrotu.
+        
+        **§ 5. Wyłączenie Odpowiedzialności**
+        1. Wszelkie wyliczenia w Serwisie mają charakter poglądowy i pomocniczy. Serwis nie jest narzędziem projektowym w rozumieniu prawa budowlanego.
+        2. Operator nie ponosi odpowiedzialności za błędy wykonawcze, różnice w rzeczywistym zużyciu materiałów na budowie oraz ewentualne straty finansowe.
+        
+        **§ 6. Kontakt**
+        1. Wszelkie uwagi i reklamacje należy kierować na adres: biuro@procalc.pl.
+        """)
+        
+        st.markdown("---")
+        if st.button("⬅️ Powrót do kalkulatora", type="primary"):
             st.query_params.clear()
             st.rerun()
-        st.stop() # Zatrzymujemy resztę aplikacji, żeby pokazać tylko regulamin
+        st.stop()
         
     elif strona == "prywatnosc":
-        st.title("Polityka Prywatności")
-        st.write("Tutaj wkleisz treść polityki prywatności...")
-        if st.button("⬅️ Powrót do kalkulatora"):
+        st.title("🔒 Polityka Prywatności ProCalc")
+        st.markdown("""
+        *Obowiązuje od: 13.04.2026 r.*
+        
+        **1. Administrator Danych**
+        Administratorem Twoich danych jest Paweł Kubiak, prowadzący projekt w ramach działalności nierejestrowanej. Kontakt: biuro@procalc.pl.
+        
+        **2. Jakie dane zbieramy i w jakim celu?**
+        W celu świadczenia usług w ramach aplikacji ProCalc, przetwarzamy:
+        • **Adres e-mail oraz identyfikator konta:** Pozyskane poprzez bezpieczne logowanie Google OAuth, niezbędne do utworzenia konta. Nie posiadamy i nie przechowujemy Twoich haseł.
+        • **Dane projektowe:** Informacje o metrażach, stawkach i zapisanych kosztorysach, przetwarzane w celu działania funkcji PRO.
+        • **Historia kodów:** Informacje o datach aktywacji kodów w celu weryfikacji 365-dniowej subskrypcji lub 7-dniowego triala.
+        
+        **3. Bezpieczeństwo i Przechowywanie**
+        Twoje dane są przechowywane w bezpiecznej chmurze Supabase, która gwarantuje wysoki standard szyfrowania.
+        
+        **4. Prawa Użytkownika**
+        Masz prawo do wglądu w swoje dane, ich modyfikacji, a także żądania całkowitego usunięcia Twojego konta. W tym celu skontaktuj się z nami na adres: biuro@procalc.pl.
+        """)
+        
+        st.markdown("---")
+        if st.button("⬅️ Powrót do kalkulatora", type="primary"):
             st.query_params.clear()
             st.rerun()
         st.stop()
