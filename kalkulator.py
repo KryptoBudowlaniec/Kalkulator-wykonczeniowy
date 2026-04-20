@@ -25,6 +25,27 @@ st.set_page_config(
 )
 import streamlit.components.v1 as components
 
+# --- LOGIKA WYŚWIETLANIA PODSTRON ---
+params = st.query_params
+if "p" in params:
+    strona = params["p"]
+    
+    if strona == "regulamin":
+        st.title("Regulamin serwisu ProCalc.pl")
+        st.write("Tutaj wkleisz treść regulaminu...")
+        if st.button("⬅️ Powrót do kalkulatora"):
+            st.query_params.clear()
+            st.rerun()
+        st.stop() # Zatrzymujemy resztę aplikacji, żeby pokazać tylko regulamin
+        
+    elif strona == "prywatnosc":
+        st.title("Polityka Prywatności")
+        st.write("Tutaj wkleisz treść polityki prywatności...")
+        if st.button("⬅️ Powrót do kalkulatora"):
+            st.query_params.clear()
+            st.rerun()
+        st.stop()
+
 # --- ZAAWANSOWANE SEO (Meta Tagi wstrzykiwane do <head>) ---
 components.html("""
     <script>
@@ -4481,8 +4502,8 @@ Projekt realizowany w ramach<br>działalności nierejestrowanej.<br><br>
 <a href="https://wa.me/TWOJ_NUMER" target="_blank" style="text-decoration: none;">
 <div style="background-color: #0E172B; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(14, 23, 43, 0.2);">🤖 Support / Chat AI</div>
 </a><br>
-<a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Polityka Prywatności</a> | 
-<a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Regulamin</a>
+<a href="/?p=prywatnosc" target="_self" style="color: #00D395; text-decoration: none; font-weight: 600;">Polityka Prywatności</a> | 
+<a href="/?p=regulamin" target="_self" style="color: #00D395; text-decoration: none; font-weight: 600;">Regulamin</a>
 </div>
     
 </div>
