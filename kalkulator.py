@@ -2206,8 +2206,9 @@ elif branza == "Sucha Zabudowa":
             grubosc_welny = None
             izolacja_gk = False
             plytowanie = "1xGK (Jednostronnie)"
-            lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
-            lista_z.append(("Laczniki krzyzowe i wzdluzne CD", f"{laczniki_krzyzowe + laczniki_cd1} szt."))
+            lista_z = []
+
+
             
             col_g1, col_g2 = st.columns([1, 1.2])
 
@@ -2346,6 +2347,8 @@ elif branza == "Sucha Zabudowa":
                 lista_z.append(("Plyty G-K 12.5mm", f"{szt_plyt} szt."))
                 lista_z.append(("Wkrety TN25", f"{int(wkret_25/1000)+1} op."))
                 lista_z.append((f"Masa ({wybrana_masa})", f"{worki_masy} szt."))
+                lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
+                lista_z.append(("Laczniki krzyzowe i wzdluzne CD", f"{laczniki_krzyzowe + laczniki_cd1} szt."))
 
             with col_g2:
                 st.subheader("Podsumowanie")
