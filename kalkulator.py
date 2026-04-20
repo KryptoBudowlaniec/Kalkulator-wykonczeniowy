@@ -4441,40 +4441,43 @@ link_rodo = create_pdf_link("Polityka_Prywatnosci_ProCalc_v2.pdf", "Polityka pry
 # ==========================================
 # ROZSZERZONY FOOTER (DZIAŁALNOŚĆ NIEREJESTROWANA)
 # ==========================================
+# ==========================================
+# ROZSZERZONY FOOTER (DZIAŁALNOŚĆ NIEREJESTROWANA)
+# ==========================================
 st.markdown(
     """
-    <hr style="margin-top: 50px; border-color: #E9ECEF;">
-    <div style="padding: 20px 0; text-align: center; color: #6C757D; font-size: 13px; line-height: 1.6;">
-        <div style="display: flex; justify-content: space-around; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; text-align: left;">
-            
-            <div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
-                <strong style="color: #00D395; font-size: 18px;">ProCalc</strong><br>
-                Twój Cyfrowy Kosztorysant<br>
-                <br>
-                © 2026 Wszelkie prawa zastrzeżone.
-            </div>
-            
-            <div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
-                <strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Informacje Prawne</strong><br>
-                Projekt realizowany w ramach<br>działalności nierejestrowanej.<br><br>
-                <strong>Paweł Kubiak</strong><br>
-                ✉️ biuro@procalc.pl
-            </div>
-            
-            <div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
-                <strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Kontakt & Pomoc</strong><br><br>
-                <a href="https://chat.whatsapp.com/TWOJ_LINK" target="_blank" style="text-decoration: none;">
-                    <div style="background-color: #25D366; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);">🧪 Grupa dla Testerów (WA)</div>
-                </a><br>
-                <a href="https://wa.me/TWOJ_NUMER" target="_blank" style="text-decoration: none;">
-                    <div style="background-color: #0E172B; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(14, 23, 43, 0.2);">🤖 Support / Chat AI</div>
-                </a><br>
-                <a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Polityka Prywatności</a> | 
-                <a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Regulamin</a>
-            </div>
-            
-        </div>
-    </div>
+<hr style="margin-top: 50px; border-color: #E9ECEF;">
+<div style="padding: 20px 0; text-align: center; color: #6C757D; font-size: 13px; line-height: 1.6;">
+<div style="display: flex; justify-content: space-around; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; text-align: left;">
+    
+<div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
+<strong style="color: #00D395; font-size: 18px;">ProCalc</strong><br>
+Twój Cyfrowy Kosztorysant<br>
+<br>
+© 2026 Wszelkie prawa zastrzeżone.
+</div>
+    
+<div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
+<strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Informacje Prawne</strong><br>
+Projekt realizowany w ramach<br>działalności nierejestrowanej.<br><br>
+<strong>Paweł Kubiak</strong><br>
+✉️ biuro@procalc.pl
+</div>
+    
+<div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
+<strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Kontakt & Pomoc</strong><br><br>
+<a href="https://chat.whatsapp.com/TWOJ_LINK" target="_blank" style="text-decoration: none;">
+<div style="background-color: #25D366; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);">🧪 Grupa dla Testerów (WA)</div>
+</a><br>
+<a href="https://wa.me/TWOJ_NUMER" target="_blank" style="text-decoration: none;">
+<div style="background-color: #0E172B; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(14, 23, 43, 0.2);">🤖 Support / Chat AI</div>
+</a><br>
+<a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Polityka Prywatności</a> | 
+<a href="#" style="color: #00D395; text-decoration: none; font-weight: 600;">Regulamin</a>
+</div>
+    
+</div>
+</div>
     """,
     unsafe_allow_html=True
 )
