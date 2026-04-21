@@ -192,9 +192,7 @@ if url and key:
 else:
     st.error("Błąd: Brak kluczy do bazy danych. Sprawdź Environment Variables na serwerze.")
 
-# ==========================================
-# 3. STAN APLIKACJI (INICJALIZACJA)
-# ==========================================
+
 # ==========================================
 # 3. STAN APLIKACJI (INICJALIZACJA Z AUTO-ODZYSKIWANIEM)
 # ==========================================
@@ -456,7 +454,42 @@ if nawigacja == "Kalkulatory":
     )
     branza = wybor_kalkulatora
 
+# ==========================================
+# 🟢 TUTAJ WKLEJ GLOBALNY PANEL PERSONALIZACJI PDF 🟢
+# ==========================================
+if st.session_state.get("zalogowany") and st.session_state.get("pakiet") == "PRO":
+    st.markdown("<br>", unsafe_allow_html=True) # Dodaje ładny odstęp pod menu
+    with st.expander("⚙️ Personalizacja Ofert PDF (Wgraj logo i dane firmy)", expanded=False):
+        st.info("Wypełnij poniższe dane. Będą one automatycznie dodawane do KAŻDEGO wygenerowanego kosztorysu (Malowanie, GK, itp.).")
+        
+        col_dane, col_logo_pdf = st.columns(2)
+        with col_dane:
+            firma_nazwa = st.text_input("Nazwa firmy:", value=st.session_state.get('firma_nazwa', ''))
+            firma_adres = st.text_input("Adres (Ulica, Kod, Miasto):", value=st.session_state.get('firma_adres', ''))
+            firma_nip = st.text_input("NIP:", value=st.session_state.get('firma_nip', ''))
+            firma_kontakt = st.text_input("Telefon / E-mail:", value=st.session_state.get('firma_kontakt', ''))
 
+        with col_logo_pdf:
+            wgrane_logo = st.file_uploader("Wgraj logo firmy (PNG lub JPG)", type=['png', 'jpg', 'jpeg'])
+
+        if st.button("💾 Zapisz dane do wszystkich PDF", type="primary"):
+            st.session_state.firma_nazwa = firma_nazwa
+            st.session_state.firma_adres = firma_adres
+            st.session_state.firma_nip = firma_nip
+            st.session_state.firma_kontakt = firma_kontakt
+            
+            if wgrane_logo is not None:
+                try:
+                    ext = wgrane_logo.name.split('.')[-1]
+                    sciezka_logo = f"temp_logo_{st.session_state.user_id}.{ext}"
+                    with open(sciezka_logo, "wb") as f:
+                        f.write(wgrane_logo.getbuffer())
+                    st.session_state.firma_logo = sciezka_logo
+                except Exception as e:
+                    st.error(f"Błąd wgrywania logo: {e}")
+            
+            st.success("✅ Zapisane! Twoje logo i dane będą widoczne na każdym wygenerowanym PDF-ie.")
+st.markdown("---")
 # --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
 <style>
@@ -1193,11 +1226,18 @@ if branza == "Malowanie":
                     import os
                     from datetime import datetime
 
-                    # 1. Inicjalizacja PDF
+                    # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
+                    def czysc_tekst(tekst):
+                        if not tekst: return ""
+                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                        return tekst.encode('latin-1', 'replace').decode('latin-1')
+
+                    # 2. Inicjalizacja PDF
                     pdf = FPDF()
                     pdf.add_page()
 
-                    # 2. KONFIGURACJA CZCIONKI INTER
+                    # 3. KONFIGURACJA CZCIONKI INTER
                     font_path = "Inter-Regular.ttf"
                     if os.path.exists(font_path):
                         pdf.add_font("Inter", "", font_path)
@@ -1207,20 +1247,46 @@ if branza == "Malowanie":
                         pdf.set_font("Arial", size=12)
                         font_exists = False
 
-                    # --- NAGŁÓWEK ---
-                    if os.path.exists("logo.png"):
+                    # =======================================================
+                    # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                    # =======================================================
+                    
+                    # LOGO (po lewej)
+                    logo_path = st.session_state.get('firma_logo')
+                    if logo_path and os.path.exists(logo_path):
+                        pdf.image(logo_path, x=10, y=8, w=35)
+                    elif os.path.exists("logo.png"): # Backup dla domyślnego logo
                         pdf.image("logo.png", x=10, y=8, w=35)
                     
-                    pdf.set_font("Inter" if font_exists else "Arial", size=18)
-                    pdf.cell(0, 15, "PROCALC - RAPORT KOSZTORYSOWY", ln=True, align='C')
-                    pdf.ln(10)
+                    # DANE FIRMY (po prawej)
+                    pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                    
+                    f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                    f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                    f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                    f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                    
+                    pdf.set_xy(110, 8) 
+                    tekst_firmy = f"{f_nazwa}\n"
+                    if f_adres: tekst_firmy += f"{f_adres}\n"
+                    if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                    if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                    
+                    pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                    # TYTUŁ RAPORTU (na środku, niżej)
+                    pdf.set_y(35)
+                    pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                    pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: MALOWANIE", ln=True, align='C')
 
                     # --- LINIA SEPARATORA ---
                     pdf.set_draw_color(0, 0, 0)
-                    pdf.line(10, 35, 200, 35)
+                    pdf.line(10, 50, 200, 50) 
                     pdf.ln(5)
+                    # =======================================================
 
                     # --- DANE PROJEKTU ---
+                    pdf.set_y(55)
                     pdf.set_font("Inter" if font_exists else "Arial", size=10)
                     data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
                     pdf.cell(0, 8, f"Data: {data_str} | Metraz: {m_uzytkowy} m2", ln=True)
@@ -1250,21 +1316,17 @@ if branza == "Malowanie":
                     pdf.ln(2)
 
                     lista_pdf = {
-                        "Farba Biała (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
-                        "Farba Kolor (Ściany)": f"{round(l_kolor, 1)}L ({f_kolor})",
-                        "Grunt głęboko penetrujący": f"{round(l_grunt, 1)}L ({f_grunt})",
-                        "Taśma malarska": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
+                        "Farba Biala (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
+                        "Farba Kolor (Sciany)": f"{round(l_kolor, 1)}L ({f_kolor})",
+                        "Grunt gleboko penetrujacy": f"{round(l_grunt, 1)}L ({f_grunt})",
+                        "Tasma malarska": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
                         "Akryl szpachlowy": f"{round(szt_akryl + 0.5)} szt."
                     }
                     
                     if mb_sztukaterii > 0:
                         lista_pdf["Klej do listew"] = f"Bostik Mamut ({int(mb_sztukaterii/8 + 1)} szt.)"
 
-                    def czysc_tekst(tekst):
-                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
-                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                        return tekst.encode('latin-1', 'replace').decode('latin-1')
-
+                    # (Tu już nie ma definicji czysc_tekst, bo przenieśliśmy ją na samą górę)
                     for produkt, opis in lista_pdf.items():
                         pdf.cell(0, 8, f"- {czysc_tekst(produkt)}: {czysc_tekst(opis)}", ln=True)
 
@@ -1272,7 +1334,7 @@ if branza == "Malowanie":
                     pdf.set_y(-25)
                     pdf.set_font("Inter" if font_exists else "Arial", size=8)
                     pdf.set_text_color(100, 100, 100)
-                    pdf.cell(0, 10, "Wygenerowano automatycznie przez proCalc. Kosztorys nie stanowi oferty handlowej.", 0, 0, 'C')
+                    pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
 
                     pdf_output = pdf.output(dest="S")
                     
@@ -1290,7 +1352,6 @@ if branza == "Malowanie":
                     )
                 except Exception as e:
                     st.error(f"Błąd PDF: {e}")
-
 
 
 
@@ -1552,57 +1613,109 @@ elif branza == "Szpachlowanie":
                         st.session_state.pokoje_szp = []
                         st.rerun()
 
-                with c_pdf2:
+               with c_pdf2:
                     try:
                         from fpdf import FPDF
-                        from datetime import datetime
                         import os
+                        from datetime import datetime
 
-                        pdf = FPDF()
-                        pdf.add_page()
-                        
-                        if os.path.exists("logo.png"):
-                            pdf.image("logo.png", x=10, y=8, w=35)
-                            
-                        pdf.set_font("Arial", "B", 16)
-                        pdf.cell(0, 15, "PROCALC - KOSZTORYS SZPACHLOWANIA", ln=True, align='C')
-                        pdf.ln(5)
-                        pdf.line(10, 35, 200, 35)
-                        
-                        pdf.ln(10)
-                        pdf.set_font("Arial", "B", 12)
-                        pdf.set_fill_color(240, 240, 240)
-                        pdf.cell(0, 10, " 1. PODSUMOWANIE FINANSOWE", ln=True, fill=True)
-                        pdf.set_font("Arial", "", 10)
-                        pdf.cell(0, 8, f" Suma calkowita: {round(koszt_m + robocizna)} PLN", ln=True)
-                        pdf.cell(0, 8, f" W tym robocizna: {round(robocizna)} PLN | Materialy: {round(koszt_m)} PLN", ln=True)
-
-                        pdf.ln(5)
-                        pdf.set_font("Arial", "B", 12)
-                        pdf.cell(0, 10, " 2. SZCZEGOLY WYKONANIA", ln=True, fill=True)
-                        pdf.set_font("Arial", "", 10)
-                        
+                        # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
                         def czysc_tekst(tekst):
+                            if not tekst: return ""
                             pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
                             for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
                             return tekst.encode('latin-1', 'replace').decode('latin-1')
 
+                        # 2. Inicjalizacja PDF
+                        pdf = FPDF()
+                        pdf.add_page()
+                        
+                        # 3. KONFIGURACJA CZCIONKI INTER
+                        font_path = "Inter-Regular.ttf"
+                        if os.path.exists(font_path):
+                            pdf.add_font("Inter", "", font_path)
+                            pdf.set_font("Inter", size=12)
+                            font_exists = True
+                        else:
+                            pdf.set_font("Arial", size=12)
+                            font_exists = False
+
+                        # =======================================================
+                        # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                        # =======================================================
+                        
+                        # LOGO (po lewej)
+                        logo_path = st.session_state.get('firma_logo')
+                        if logo_path and os.path.exists(logo_path):
+                            pdf.image(logo_path, x=10, y=8, w=35)
+                        elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                            pdf.image("logo.png", x=10, y=8, w=35)
+                        
+                        # DANE FIRMY (po prawej)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                        
+                        f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                        f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                        f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                        f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                        
+                        pdf.set_xy(110, 8) 
+                        tekst_firmy = f"{f_nazwa}\n"
+                        if f_adres: tekst_firmy += f"{f_adres}\n"
+                        if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                        if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                        
+                        pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                        # TYTUŁ RAPORTU (na środku, niżej)
+                        pdf.set_y(35)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                        pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: SZPACHLOWANIE", ln=True, align='C')
+
+                        # --- LINIA SEPARATORA ---
+                        pdf.set_draw_color(0, 0, 0)
+                        pdf.line(10, 50, 200, 50) 
+                        pdf.ln(5)
+                        # =======================================================
+
+                        # --- DANE PROJEKTU ---
+                        pdf.set_y(55)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                        data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                        pdf.cell(0, 8, f"Data: {data_str} | Metraz: {round(m2_total, 1)} m2", ln=True)
+                        pdf.ln(5)
+                        
+                        # --- SEKCJA 1: FINANSE ---
+                        pdf.set_fill_color(230, 230, 230)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                        pdf.cell(0, 10, " 1. PODSUMOWANIE FINANSOWE", ln=True, fill=True)
+                        
+                        pdf.set_font("Inter" if font_exists else "Arial", size=11)
+                        pdf.cell(0, 8, f" Suma calkowita: {round(koszt_m + robocizna)} PLN", ln=True)
+                        pdf.cell(0, 8, f" W tym robocizna: {round(robocizna)} PLN | Materialy: {round(koszt_m)} PLN", ln=True)
+                        pdf.ln(5)
+                        
+                        # --- SEKCJA 2: SZCZEGÓŁY WYKONANIA ---
+                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                        pdf.cell(0, 10, " 2. SZCZEGOLY WYKONANIA", ln=True, fill=True)
+                        
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
                         pdf.cell(0, 8, f" - Calkowity metraz prac: {round(m2_total, 1)} m2", ln=True)
                         pdf.cell(0, 8, f" - Liczba warstw: {l_warstw}", ln=True)
                         pdf.cell(0, 8, f" - Podloze: {'Plyty GK' if czy_gk else 'Tynki/Beton'}", ln=True)
                         if uzyj_flizeliny:
                             pdf.cell(0, 8, f" - Zbrojenie flizelina: TAK ({mb_flizeliny} mb tasmy)", ln=True)
-
                         pdf.ln(5)
-                        pdf.set_font("Arial", "B", 12)
+                        
+                        # --- SEKCJA 3: LISTA MATERIAŁÓW (TABELA) ---
+                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
                         pdf.cell(0, 10, " 3. LISTA MATERIALOW", ln=True, fill=True)
                         
-                        pdf.set_font("Arial", "B", 10)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
                         pdf.cell(15, 10, " OK", 1, 0, 'C')
                         pdf.cell(135, 10, " Nazwa materialu", 1, 0)
                         pdf.cell(40, 10, " Ilosc", 1, 1, 'C')
                         
-                        pdf.set_font("Arial", "", 10)
                         materialy_lista = [
                             (f"Gladz: {czysc_tekst(wybrana_g)}", f"{szt_gladzi} szt."),
                             (f"Grunt: {czysc_tekst(wybrany_grunt)}", f"{szt_gruntu} szt. (5L)"),
@@ -1618,9 +1731,11 @@ elif branza == "Szpachlowanie":
                             pdf.cell(135, 10, f" {mat}", 1, 0)
                             pdf.cell(40, 10, f" {ilosc}", 1, 1, 'C')
 
-                        pdf.ln(10)
-                        pdf.set_font("Arial", "I", 8)
-                        pdf.cell(0, 10, f"Wygenerowano: {datetime.now().strftime('%Y-%m-%d %H:%M')} | ProCalc", align='R')
+                        # --- STOPKA ---
+                        pdf.set_y(-25)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                        pdf.set_text_color(100, 100, 100)
+                        pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
                         
                         pdf_bytes = pdf.output(dest="S")
                         safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
@@ -1628,7 +1743,7 @@ elif branza == "Szpachlowanie":
                         st.download_button(
                             label="Pobierz Raport PDF",
                             data=safe_bytes,
-                            file_name=f"Szpachlowanie_Raport_{datetime.now().strftime('%Y%m%d')}.pdf",
+                            file_name=f"Kosztorys_Szpachlowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
                             mime="application/pdf",
                             use_container_width=True
                         )
@@ -1790,14 +1905,14 @@ elif branza == "Podłogi":
                 
                 st.markdown("---")
 
-                # --- GENERATOR PDF (PODŁOGI) ---
                 try:
                     from fpdf import FPDF
                     from datetime import datetime
                     import os
-                    import base64
 
+                    # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
                     def czysc_tekst(tekst):
+                        if not tekst: return ""
                         pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
                         for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
                         return tekst.encode('latin-1', 'replace').decode('latin-1')
@@ -1806,52 +1921,110 @@ elif branza == "Podłogi":
                         pdf = FPDF()
                         pdf.add_page()
                         
-                        f_path = "Inter-Regular.ttf"
-                        if os.path.exists(f_path):
-                            pdf.add_font("Inter", "", f_path)
+                        # 2. KONFIGURACJA CZCIONKI INTER
+                        font_path = "Inter-Regular.ttf"
+                        if os.path.exists(font_path):
+                            pdf.add_font("Inter", "", font_path)
                             pdf.set_font("Inter", size=12)
+                            font_exists = True
                         else:
                             pdf.set_font("Arial", size=12)
+                            font_exists = False
+
+                        # =======================================================
+                        # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                        # =======================================================
                         
-                        pdf.set_font(pdf.font_family, size=16)
-                        pdf.cell(0, 15, "KOSZTORYS: PRACE POSADZKOWE", ln=True, align='C')
+                        # LOGO (po lewej)
+                        logo_path = st.session_state.get('firma_logo')
+                        if logo_path and os.path.exists(logo_path):
+                            pdf.image(logo_path, x=10, y=8, w=35)
+                        elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                            pdf.image("logo.png", x=10, y=8, w=35)
+                        
+                        # DANE FIRMY (po prawej)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                        
+                        f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                        f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                        f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                        f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                        
+                        pdf.set_xy(110, 8) 
+                        tekst_firmy = f"{f_nazwa}\n"
+                        if f_adres: tekst_firmy += f"{f_adres}\n"
+                        if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                        if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                        
+                        pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                        # TYTUŁ RAPORTU (na środku, niżej)
+                        pdf.set_y(35)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                        pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: PRACE POSADZKOWE", ln=True, align='C')
+
+                        # --- LINIA SEPARATORA ---
+                        pdf.set_draw_color(0, 0, 0)
+                        pdf.line(10, 50, 200, 50) 
+                        pdf.ln(5)
+                        # =======================================================
+
+                        # --- DANE PROJEKTU ---
+                        pdf.set_y(55)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                        data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                        pdf.cell(0, 8, f"Data: {data_str} | Metraz: {m2_p} m2", ln=True)
                         pdf.ln(5)
 
+                        # --- TABELA FINANSOWA I SZCZEGÓŁY ---
                         pdf.set_fill_color(245, 245, 245)
-                        pdf.set_font(pdf.font_family, size=12)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
                         
-                        pdf.cell(95, 10, " Metraz calkowity:", 1)
-                        pdf.cell(95, 10, f" {m2_p} m2", 1, 1)
                         pdf.cell(95, 10, " System montazu:", 1)
                         pdf.cell(95, 10, f" {czysc_tekst(system_montazu)}", 1, 1)
                         
-                        if "Płytki" in system_montazu:
+                        if "Płytki" in system_montazu or "Plytki" in czysc_tekst(system_montazu):
                             pdf.cell(95, 10, " Format plytki:", 1)
                             pdf.cell(95, 10, f" {dl_p}x{sz_p} cm", 1, 1)
 
-                        pdf.ln(10)
+                        pdf.ln(5)
                         pdf.cell(95, 10, " Robocizna (Montaz):", 1)
                         pdf.cell(95, 10, f" {round(k_robocizna)} PLN", 1, 1)
                         pdf.cell(95, 10, " Chemia i materialy:", 1)
                         pdf.cell(95, 10, f" {round(koszt_akc)} PLN", 1, 1)
                         
-                        pdf.set_font(pdf.font_family, size=13)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=13)
                         pdf.cell(95, 12, " LACZNIE REALIZACJA:", 1, 0, 'L', True)
                         pdf.cell(95, 12, f" {round(usluga_plus_chemia)} PLN", 1, 1, 'L', True)
                         
                         pdf.ln(10)
-                        pdf.set_font(pdf.font_family, size=12)
+                        
+                        # --- LISTA MATERIAŁOWA ---
+                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
                         pdf.cell(0, 10, "LISTA MATERIALOWA DO ZAMOWIENIA:", ln=True)
-                        pdf.set_font(pdf.font_family, size=10)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
                         
                         pdf.cell(0, 7, f"- Okladzina: {paczki_szt} paczek (zawiera {int(zapas*100)}% zapasu)", ln=True)
                         for nazwa, ilosc in info_zakup:
                             pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
 
-                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
-                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Kosztorys_Podloga.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz Raport PDF</a>'
-                        st.markdown(href, unsafe_allow_html=True)
+                        # --- STOPKA ---
+                        pdf.set_y(-25)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                        pdf.set_text_color(100, 100, 100)
+                        pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
+                        # --- BEZPIECZNE POBIERANIE (Zmienione na standard st.download_button) ---
+                        pdf_bytes = pdf.output(dest="S")
+                        safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+                        
+                        st.download_button(
+                            label="Pobierz Raport PDF",
+                            data=safe_bytes,
+                            file_name=f"Kosztorys_Podlogi_{datetime.now().strftime('%Y%m%d')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
                 except Exception as e:
                     st.error(f"Błąd PDF: {e}")
                       
@@ -2069,14 +2242,15 @@ elif branza == "Tynkowanie":
                 for przedmiot, ilosc in lista_zakupow:
                     st.write(f"• **{przedmiot}:** {ilosc}")
 
-                # --- GENERATOR PDF ---
+                # --- GENERATOR PDF (TYNKOWANIE) ---
                 try:
                     from fpdf import FPDF
                     from datetime import datetime
-                    import base64
                     import os
 
+                    # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
                     def czysc_tekst(tekst):
+                        if not tekst: return ""
                         pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
                         for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
                         return tekst.encode('latin-1', 'replace').decode('latin-1')
@@ -2085,41 +2259,101 @@ elif branza == "Tynkowanie":
                         pdf = FPDF()
                         pdf.add_page()
                         
-                        f_path = "Inter-Regular.ttf"
-                        if os.path.exists(f_path):
-                            pdf.add_font("Inter", "", f_path)
+                        # 2. KONFIGURACJA CZCIONKI INTER
+                        font_path = "Inter-Regular.ttf"
+                        if os.path.exists(font_path):
+                            pdf.add_font("Inter", "", font_path)
                             pdf.set_font("Inter", size=12)
+                            font_exists = True
                         else:
                             pdf.set_font("Arial", size=12)
+                            font_exists = False
 
-                        pdf.set_font(pdf.font_family, size=16)
-                        pdf.cell(0, 15, "OFERTA: TYNKOWANIE / SUCHY TYNK", ln=True, align='C')
+                        # =======================================================
+                        # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                        # =======================================================
+                        
+                        # LOGO (po lewej)
+                        logo_path = st.session_state.get('firma_logo')
+                        if logo_path and os.path.exists(logo_path):
+                            pdf.image(logo_path, x=10, y=8, w=35)
+                        elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                            pdf.image("logo.png", x=10, y=8, w=35)
+                        
+                        # DANE FIRMY (po prawej)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                        
+                        f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                        f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                        f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                        f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                        
+                        pdf.set_xy(110, 8) 
+                        tekst_firmy = f"{f_nazwa}\n"
+                        if f_adres: tekst_firmy += f"{f_adres}\n"
+                        if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                        if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                        
+                        pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                        # TYTUŁ RAPORTU (na środku, niżej)
+                        pdf.set_y(35)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                        pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: TYNKI I SUCHY TYNK", ln=True, align='C')
+
+                        # --- LINIA SEPARATORA ---
+                        pdf.set_draw_color(0, 0, 0)
+                        pdf.line(10, 50, 200, 50) 
+                        pdf.ln(5)
+                        # =======================================================
+
+                        # --- DANE PROJEKTU ---
+                        pdf.set_y(55)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                        data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                        pdf.cell(0, 8, f"Data: {data_str} | Powierzchnia prac: {round(m2_rob_pro, 1)} m2", ln=True)
                         pdf.ln(5)
 
+                        # --- TABELA FINANSOWA ---
                         pdf.set_fill_color(245, 245, 245)
-                        pdf.set_font(pdf.font_family, size=12)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
                         
-                        pdf.cell(95, 10, " Powierzchnia prac:", 1)
-                        pdf.cell(95, 10, f" {round(m2_rob_pro, 1)} m2", 1, 1)
                         pdf.cell(95, 10, " Robocizna:", 1)
                         pdf.cell(95, 10, f" {round(koszt_rob_t)} PLN", 1, 1)
                         pdf.cell(95, 10, " Materialy:", 1)
                         pdf.cell(95, 10, f" {round(koszt_mat_t)} PLN", 1, 1)
-                        pdf.set_font(pdf.font_family, size=13)
+                        
+                        pdf.set_font("Inter" if font_exists else "Arial", size=13)
                         pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
                         pdf.cell(95, 12, f" {round(suma_tynki)} PLN", 1, 1, 'L', True)
 
                         pdf.ln(10)
-                        pdf.set_font(pdf.font_family, size=12)
-                        pdf.cell(0, 10, "LISTA MATERIALOW:", ln=True)
-                        pdf.set_font(pdf.font_family, size=10)
+                        
+                        # --- LISTA MATERIAŁOWA ---
+                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                        pdf.cell(0, 10, "LISTA MATERIALOW DO ZAMOWIENIA:", ln=True)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                        
                         for przedmiot, ilosc in lista_zakupow:
                             pdf.cell(0, 7, f"- {czysc_tekst(przedmiot)}: {czysc_tekst(ilosc)}", ln=True)
 
-                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
-                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Oferta_Tynki.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz Raport PDF</a>'
-                        st.markdown(href, unsafe_allow_html=True)
+                        # --- STOPKA ---
+                        pdf.set_y(-25)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                        pdf.set_text_color(100, 100, 100)
+                        pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
+                        # --- BEZPIECZNE POBIERANIE ---
+                        pdf_bytes = pdf.output(dest="S")
+                        safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+                        
+                        st.download_button(
+                            label="Pobierz Raport PDF",
+                            data=safe_bytes,
+                            file_name=f"Kosztorys_Tynki_{datetime.now().strftime('%Y%m%d')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
                 except Exception as e:
                     st.error(f"Problem z PDF: {e}")
                     
@@ -2365,14 +2599,15 @@ elif branza == "Sucha Zabudowa":
                 else:
                     st.info("Dodaj metraz, aby wygenerowac zestawienie.")
                 
-                # --- GENERATOR PDF ---
+               # --- GENERATOR PDF (SYSTEMY G-K) ---
                 try:
                     from fpdf import FPDF
                     from datetime import datetime
-                    import base64
                     import os
 
+                    # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
                     def czysc_tekst(tekst):
+                        if not tekst: return ""
                         pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
                         for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
                         return tekst.encode('latin-1', 'replace').decode('latin-1')
@@ -2381,32 +2616,104 @@ elif branza == "Sucha Zabudowa":
                         if m2_gk > 0:
                             pdf = FPDF()
                             pdf.add_page()
-                            f_path = "Inter-Regular.ttf"
-                            if os.path.exists(f_path):
-                                pdf.add_font("Inter", "", f_path)
+                            
+                            # 2. KONFIGURACJA CZCIONKI INTER
+                            font_path = "Inter-Regular.ttf"
+                            if os.path.exists(font_path):
+                                pdf.add_font("Inter", "", font_path)
                                 pdf.set_font("Inter", size=12)
+                                font_exists = True
                             else:
                                 pdf.set_font("Arial", size=12)
+                                font_exists = False
+
+                            # =======================================================
+                            # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                            # =======================================================
                             
-                            pdf.set_font(pdf.font_family, size=16)
-                            pdf.cell(0, 15, "OFERTA: SYSTEMY G-K (PRO)", ln=True, align='C')
+                            # LOGO (po lewej)
+                            logo_path = st.session_state.get('firma_logo')
+                            if logo_path and os.path.exists(logo_path):
+                                pdf.image(logo_path, x=10, y=8, w=35)
+                            elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                                pdf.image("logo.png", x=10, y=8, w=35)
+                            
+                            # DANE FIRMY (po prawej)
+                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                            
+                            f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                            f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                            f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                            f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                            
+                            pdf.set_xy(110, 8) 
+                            tekst_firmy = f"{f_nazwa}\n"
+                            if f_adres: tekst_firmy += f"{f_adres}\n"
+                            if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                            if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                            
+                            pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                            # TYTUŁ RAPORTU (na środku, niżej)
+                            pdf.set_y(35)
+                            pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                            pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: SYSTEMY G-K", ln=True, align='C')
+
+                            # --- LINIA SEPARATORA ---
+                            pdf.set_draw_color(0, 0, 0)
+                            pdf.line(10, 50, 200, 50) 
                             pdf.ln(5)
+                            # =======================================================
+
+                            # --- DANE PROJEKTU ---
+                            pdf.set_y(55)
+                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                            data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                            pdf.cell(0, 8, f"Data: {data_str} | Metraz: {round(m2_gk, 1)} m2", ln=True)
+                            pdf.ln(5)
+
+                            # --- TABELA FINANSOWA ---
                             pdf.set_fill_color(245, 245, 245)
-                            pdf.cell(95, 10, " Metraz calkowity:", 1)
-                            pdf.cell(95, 10, f" {round(m2_gk, 1)} m2", 1, 1)
+                            pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                            
+                            pdf.cell(95, 10, " Robocizna:", 1)
+                            pdf.cell(95, 10, f" {round(robocizna)} PLN", 1, 1)
+                            pdf.cell(95, 10, " Materialy:", 1)
+                            pdf.cell(95, 10, f" {round(total_material)} PLN", 1, 1)
+
+                            pdf.set_font("Inter" if font_exists else "Arial", size=13)
                             pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
                             pdf.cell(95, 12, f" {round(total_material + robocizna)} PLN", 1, 1, 'L', True)
+                            
                             pdf.ln(10)
-                            pdf.set_font(pdf.font_family, size=12)
-                            pdf.cell(0, 10, "LISTA MATERIALOWA:", ln=True)
-                            pdf.set_font(pdf.font_family, size=10)
+                            
+                            # --- LISTA MATERIAŁOWA ---
+                            pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                            pdf.cell(0, 10, "LISTA MATERIALOWA DO ZAMOWIENIA:", ln=True)
+                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                            
                             for poz, ilosc in lista_z:
                                 pdf.cell(0, 7, f"- {czysc_tekst(poz)}: {czysc_tekst(ilosc)}", ln=True)
 
-                            pdf_bytes = pdf.output(dest="S").encode('latin-1')
-                            pdf_b64 = base64.b64encode(pdf_bytes).decode()
-                            href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Oferta_GK.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz Raport PDF</a>'
-                            st.markdown(href, unsafe_allow_html=True)
+                            # --- STOPKA ---
+                            pdf.set_y(-25)
+                            pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                            pdf.set_text_color(100, 100, 100)
+                            pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
+                            # --- BEZPIECZNE POBIERANIE ---
+                            pdf_bytes = pdf.output(dest="S")
+                            safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+                            
+                            st.download_button(
+                                label="Pobierz Raport PDF",
+                                data=safe_bytes,
+                                file_name=f"Kosztorys_GK_{datetime.now().strftime('%Y%m%d')}.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+                        else:
+                            st.warning("Dodaj metraż zabudowy, aby wygenerować ofertę PDF.")
                 except Exception as e:
                     st.error(f"Problem z PDF: {e}")
             
@@ -2499,62 +2806,117 @@ elif branza == "Elektryka":
             from datetime import datetime
             import os
 
+            # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
+            def czysc_tekst(tekst):
+                if not tekst: return ""
+                pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                # Upewniamy się, że tekst jest stringiem, zanim użyjemy replace
+                tekst = str(tekst)
+                for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                return tekst.encode('latin-1', 'replace').decode('latin-1')
+
             if st.button("Generuj Kosztorys PDF", use_container_width=True, key="ele_pdf_btn"):
                 pdf = FPDF()
                 pdf.add_page()
                 
-                f_path = "Inter-Regular.ttf"
-                if os.path.exists(f_path):
-                    pdf.add_font("Inter", "", f_path)
+                # 2. KONFIGURACJA CZCIONKI INTER
+                font_path = "Inter-Regular.ttf"
+                if os.path.exists(font_path):
+                    pdf.add_font("Inter", "", font_path)
                     pdf.set_font("Inter", size=12)
+                    font_exists = True
                 else:
                     pdf.set_font("Arial", size=12)
+                    font_exists = False
 
-                pdf.set_font(pdf.font_family, size=16)
-                pdf.cell(0, 15, "KOSZTORYS: INSTALACJA ELEKTRYCZNA", ln=True, align='C')
+                # =======================================================
+                # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                # =======================================================
+                
+                # LOGO (po lewej)
+                logo_path = st.session_state.get('firma_logo')
+                if logo_path and os.path.exists(logo_path):
+                    pdf.image(logo_path, x=10, y=8, w=35)
+                elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                    pdf.image("logo.png", x=10, y=8, w=35)
+                
+                # DANE FIRMY (po prawej)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                
+                pdf.set_xy(110, 8) 
+                tekst_firmy = f"{f_nazwa}\n"
+                if f_adres: tekst_firmy += f"{f_adres}\n"
+                if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                
+                pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                # TYTUŁ RAPORTU (na środku, niżej)
+                pdf.set_y(35)
+                pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: INSTALACJA ELEKTRYCZNA", ln=True, align='C')
+
+                # --- LINIA SEPARATORA ---
+                pdf.set_draw_color(0, 0, 0)
+                pdf.line(10, 50, 200, 50) 
+                pdf.ln(5)
+                # =======================================================
+
+                # --- DANE PROJEKTU ---
+                pdf.set_y(55)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                pdf.cell(0, 8, f"Data: {data_str} | Metraz lokalu: {m2_mieszkania} m2", ln=True)
                 pdf.ln(5)
 
+                # --- TABELA FINANSOWA ---
                 pdf.set_fill_color(245, 245, 245)
-                pdf.set_font(pdf.font_family, size=12)
-                pdf.cell(95, 10, " Kategoria", 1, 0, 'L', True)
-                pdf.cell(95, 10, " Koszt", 1, 1, 'L', True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
                 
                 pdf.cell(95, 10, " Robocizna:", 1)
                 pdf.cell(95, 10, f" {round(total_robocizna_e)} PLN", 1, 1)
                 pdf.cell(95, 10, " Materialy:", 1)
                 pdf.cell(95, 10, f" {round(total_material_e)} PLN", 1, 1)
-                pdf.set_font(pdf.font_family, size=13)
+
+                pdf.set_font("Inter" if font_exists else "Arial", size=13)
                 pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
                 pdf.cell(95, 12, f" {round(total_e)} PLN", 1, 1, 'L', True)
 
                 pdf.ln(10)
-                pdf.set_font(pdf.font_family, size=12)
-                pdf.cell(0, 10, "SZCZEGOLY PROJEKTU:", ln=True)
-                pdf.set_font(pdf.font_family, size=10)
-                pdf.cell(0, 7, f"- Metraz lokalu: {m2_mieszkania} m2", ln=True)
-                pdf.cell(0, 7, f"- Typ scian: {typ_scian}", ln=True)
+                
+                # --- SZCZEGÓŁY I LISTA MATERIAŁOWA ---
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                pdf.cell(0, 10, "SZCZEGOLY PROJEKTU I MATERIALY:", ln=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                pdf.cell(0, 7, f"- Typ scian: {czysc_tekst(typ_scian)}", ln=True)
                 pdf.cell(0, 7, f"- Liczba punktow do osadzenia: {n_punktow}", ln=True)
+                pdf.ln(3)
 
-                pdf.ln(5)
-                pdf.set_font(pdf.font_family, size=12)
-                pdf.cell(0, 10, "LISTA MATERIALOW DO ZAKUPU:", ln=True)
-                pdf.set_font(pdf.font_family, size=10)
                 for przedmiot, ilosc in lista_zakupow_ele:
-                    pdf.cell(0, 7, f"- {przedmiot}: {ilosc}", ln=True)
+                    pdf.cell(0, 7, f"- {czysc_tekst(przedmiot)}: {czysc_tekst(ilosc)}", ln=True)
                 
                 pdf.ln(5)
                 pdf.set_text_color(100, 100, 100)
                 pdf.cell(0, 7, "* Wycena nie uwzglednia zakupu lamp i opraw oswietleniowych.", ln=True)
 
-                pdf_bytes = pdf.output()
-                
-                if isinstance(pdf_bytes, (bytearray, bytes)):
-                    safe_bytes = bytes(pdf_bytes)
-                else:
-                    safe_bytes = pdf_bytes.encode('latin-1', 'replace')
+                # --- STOPKA ---
+                pdf.set_y(-25)
+                pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
 
+                # --- BEZPIECZNE POBIERANIE ---
+                pdf_bytes = pdf.output(dest="S")
+                safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+                
                 st.download_button(
-                    label="Pobierz gotowy PDF",
+                    label="Pobierz Raport PDF",
                     data=safe_bytes,
                     file_name=f"Kosztorys_Elektryka_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
@@ -2887,79 +3249,144 @@ elif branza == "Łazienka":
             for przedmiot, ilosc in lista_zakupow_lazienka[half:]:
                 st.write(f"• **{przedmiot}:** {ilosc}")
                   
-        # --- 6. GENERATOR PDF ---
+       # --- 6. GENERATOR PDF (ŁAZIENKA PRO) ---
         st.markdown("---")
-        if st.button("Generuj Pełny Kosztorys PDF (Łazienka PRO)"):
+        if st.button("Generuj Pełny Kosztorys PDF (Łazienka PRO)", use_container_width=True, key="laz_pdf_btn"):
             try:
                 from fpdf import FPDF
                 from datetime import datetime
-        
+                import os
+
+                # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
+                def czysc_tekst(tekst):
+                    if not tekst: return ""
+                    pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                    tekst = str(tekst)
+                    for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                    return tekst.encode('latin-1', 'replace').decode('latin-1')
+
                 pdf = FPDF()
                 pdf.add_page()
-                pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True)
                 
-                pdf.set_font('Inter', '', 16)
-                pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: LAZIENKA PRO", ln=True, align='C')
-                pdf.set_font('Inter', '', 10)
-                pdf.cell(190, 10, txt=f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
-                pdf.ln(10)
-        
-                pdf.set_font('Inter', '', 12)
-                pdf.set_fill_color(230, 230, 230)
-                pdf.cell(190, 10, txt="1. PODSUMOWANIE KOSZTOW", ln=True, align='L', fill=True)
-                pdf.ln(2)
-                
-                pdf.set_font('Inter', '', 10)
-                pdf.cell(140, 8, txt="Pakiet Bazowy (Robocizna + przygotowanie)", border=1)
-                pdf.cell(50, 8, txt=f"{round(robocizna_baza)} zl", border=1, ln=True, align='R')
-                
-                pdf.cell(140, 8, txt="Suma dodatkow i detali (W tym ew. demontaze)", border=1)
-                pdf.cell(50, 8, txt=f"{round(suma_dodatkow)} zl", border=1, ln=True, align='R')
-                
-                pdf.cell(140, 8, txt="Szacowany koszt chemii budowlanej", border=1)
-                pdf.cell(50, 8, txt=f"{round(materialy_suma)} zl", border=1, ln=True, align='R')
-                
-                pdf.set_font('Inter', '', 11)
-                pdf.cell(140, 10, txt="RAZEM DO ZAPLATY (Usluga + Chemia):", border=1, fill=True)
-                pdf.cell(50, 10, txt=f"{round(robocizna_suma + materialy_suma)} zl", border=1, ln=True, align='R', fill=True)
-                pdf.ln(5)
-        
-                if detale:
-                    pdf.set_font('Inter', '', 12)
-                    pdf.cell(190, 10, txt="2. WYCENA ELEMENTOW DODATKOWYCH", ln=True, align='L', fill=True)
-                    pdf.set_font('Inter', '', 9)
-                    pdf.cell(100, 8, "Zadanie / Detal", 1, 0, 'C')
-                    pdf.cell(40, 8, "Ilosc", 1, 0, 'C')
-                    pdf.cell(50, 8, "Koszt", 1, 1, 'C')
-                    for d in detale:
-                        zadanie_pdf = d["Zadanie"].replace("ś", "s").replace("ó", "o").replace("ł", "l").replace("ń", "n").replace("ę", "e").replace("ą", "a").replace("ż", "z").replace("ź", "z")
-                        pdf.cell(100, 8, zadanie_pdf, 1)
-                        pdf.cell(40, 8, d["Ilość"], 1, 0, 'C')
-                        pdf.cell(50, 8, d["Koszt"].replace("ł", "l"), 1, 1, 'R')
-                    pdf.ln(5)
-        
-                pdf.set_font('Inter', '', 12)
-                pdf.cell(190, 10, txt="3. WYKAZ MATERIALOW (Do dostarczenia)", ln=True, align='L', fill=True)
-                pdf.set_font('Inter', '', 10)
-                pdf.ln(2)
-                for przedmiot, ilosc in lista_zakupow_lazienka:
-                    prz_pdf = przedmiot.replace("ś", "s").replace("ó", "o").replace("ł", "l").replace("ń", "n").replace("ę", "e").replace("ą", "a").replace("ż", "z").replace("ź", "z").replace("Ś", "S")
-                    pdf.cell(190, 7, txt=f"- {prz_pdf}: {ilosc.replace('ł', 'l').replace('²','2')}", ln=True)
-        
-                pdf_output = pdf.output()
-
-                if isinstance(pdf_output, (bytearray, bytes)):
-                    pdf_bytes = bytes(pdf_output)
-                elif isinstance(pdf_output, str):
-                    pdf_bytes = pdf_output.encode('latin-1', 'replace')
+                # 2. KONFIGURACJA CZCIONKI INTER
+                font_path = "Inter-Regular.ttf"
+                if os.path.exists(font_path):
+                    pdf.add_font("Inter", "", font_path)
+                    pdf.set_font("Inter", size=12)
+                    font_exists = True
                 else:
-                    pdf_bytes = pdf_output
-        
+                    pdf.set_font("Arial", size=12)
+                    font_exists = False
+
+                # =======================================================
+                # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                # =======================================================
+                
+                # LOGO (po lewej)
+                logo_path = st.session_state.get('firma_logo')
+                if logo_path and os.path.exists(logo_path):
+                    pdf.image(logo_path, x=10, y=8, w=35)
+                elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                    pdf.image("logo.png", x=10, y=8, w=35)
+                
+                # DANE FIRMY (po prawej)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                
+                pdf.set_xy(110, 8) 
+                tekst_firmy = f"{f_nazwa}\n"
+                if f_adres: tekst_firmy += f"{f_adres}\n"
+                if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                
+                pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                # TYTUŁ RAPORTU (na środku, niżej)
+                pdf.set_y(35)
+                pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: LAZIENKA PRO", ln=True, align='C')
+
+                # --- LINIA SEPARATORA ---
+                pdf.set_draw_color(0, 0, 0)
+                pdf.line(10, 50, 200, 50) 
+                pdf.ln(5)
+                # =======================================================
+
+                # --- DANE PROJEKTU ---
+                pdf.set_y(55)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                pdf.cell(0, 8, f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True)
+                pdf.ln(5)
+
+                # --- 1. PODSUMOWANIE KOSZTÓW ---
+                pdf.set_fill_color(245, 245, 245)
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
+                pdf.ln(2)
+                
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                pdf.cell(140, 8, " Pakiet Bazowy (Robocizna + przygotowanie)", border=1)
+                pdf.cell(50, 8, f" {round(robocizna_baza)} PLN", border=1, ln=True, align='R')
+                
+                pdf.cell(140, 8, " Suma dodatkow i detali (W tym ew. demontaze)", border=1)
+                pdf.cell(50, 8, f" {round(suma_dodatkow)} PLN", border=1, ln=True, align='R')
+                
+                pdf.cell(140, 8, " Szacowany koszt chemii budowlanej", border=1)
+                pdf.cell(50, 8, f" {round(materialy_suma)} PLN", border=1, ln=True, align='R')
+                
+                pdf.set_font("Inter" if font_exists else "Arial", size=11)
+                pdf.cell(140, 10, " RAZEM DO ZAPLATY (Usluga + Chemia):", border=1, fill=True)
+                pdf.cell(50, 10, f" {round(robocizna_suma + materialy_suma)} PLN", border=1, ln=True, align='R', fill=True)
+                pdf.ln(5)
+
+                # --- 2. WYCENA ELEMENTÓW DODATKOWYCH ---
+                if detale:
+                    pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                    pdf.cell(0, 10, " 2. WYCENA ELEMENTOW DODATKOWYCH", ln=True, fill=True)
+                    
+                    pdf.set_font("Inter" if font_exists else "Arial", size=9)
+                    pdf.cell(100, 8, " Zadanie / Detal", 1, 0, 'C')
+                    pdf.cell(40, 8, " Ilosc", 1, 0, 'C')
+                    pdf.cell(50, 8, " Koszt", 1, 1, 'C')
+                    
+                    for d in detale:
+                        zadanie_pdf = czysc_tekst(d["Zadanie"])
+                        pdf.cell(100, 8, f" {zadanie_pdf}", 1)
+                        pdf.cell(40, 8, f" {czysc_tekst(d['Ilość'])}", 1, 0, 'C')
+                        pdf.cell(50, 8, f" {czysc_tekst(d['Koszt'])}", 1, 1, 'R')
+                    pdf.ln(5)
+
+                # --- 3. WYKAZ MATERIAŁÓW ---
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                pdf.cell(0, 10, " 3. WYKAZ MATERIALOW (Do dostarczenia)", ln=True, fill=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                pdf.ln(2)
+                
+                for przedmiot, ilosc in lista_zakupow_lazienka:
+                    prz_pdf = czysc_tekst(przedmiot)
+                    ilosc_pdf = czysc_tekst(str(ilosc).replace('²', '2'))
+                    pdf.cell(0, 7, f"- {prz_pdf}: {ilosc_pdf}", ln=True)
+
+                # --- STOPKA ---
+                pdf.set_y(-25)
+                pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
+                # --- BEZPIECZNE POBIERANIE ---
+                pdf_bytes = pdf.output(dest="S")
+                safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+                
                 st.download_button(
                     label="Pobierz Kosztorys PDF",
-                    data=pdf_bytes,
+                    data=safe_bytes,
                     file_name=f"Kosztorys_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf"
+                    mime="application/pdf",
+                    use_container_width=True
                 )
             except Exception as e:
                 st.error(f"Błąd PDF: {e}")
@@ -3103,69 +3530,129 @@ elif branza == "Drzwi":
                 if doplata_demontaz > 0: st.write(f"- Demontaż starych drzwi: {doplata_demontaz} PLN")
                 st.write(f"**Łącznie za 1 sztukę: {robocizna_jednostkowa} PLN**")
 
-                # --- GENERATOR PDF ---
-                try:
-                    from fpdf import FPDF
-                    from datetime import datetime
-                    import os
+               # --- GENERATOR PDF (DRZWI) ---
+        try:
+            from fpdf import FPDF
+            from datetime import datetime
+            import os
 
-                    if st.button("Generuj Kosztorys PDF", use_container_width=True, key="drzwi_pdf_btn"):
-                        pdf = FPDF()
-                        pdf.add_page()
-                        
-                        f_path = "Inter-Regular.ttf"
-                        if os.path.exists(f_path):
-                            pdf.add_font("Inter", "", f_path)
-                            pdf.set_font("Inter", size=12)
-                        else:
-                            pdf.set_font("Arial", size=12)
-                        
-                        pdf.set_font(pdf.font_family, size=16)
-                        pdf.cell(0, 15, "KOSZTORYS: STOLARKA DRZWIOWA", ln=True, align='C')
-                        pdf.ln(5)
+            # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
+            def czysc_tekst(tekst):
+                if not tekst: return ""
+                pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                tekst = str(tekst)
+                for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                return tekst.encode('latin-1', 'replace').decode('latin-1')
 
-                        pdf.set_fill_color(245, 245, 245)
-                        pdf.set_font(pdf.font_family, size=12)
-                        
-                        pdf.cell(95, 10, " Liczba kompletów:", 1)
-                        pdf.cell(95, 10, f" {szt_drzwi} szt.", 1, 1)
-                        pdf.cell(95, 10, " Model drzwi:", 1)
-                        pdf.cell(95, 10, f" {wybrany_model.split(' (')[0]}", 1, 1)
-                        pdf.cell(95, 10, " Szerokość muru:", 1)
-                        pdf.cell(95, 10, f" {szerokosc_muru}", 1, 1)
+            if st.button("Generuj Kosztorys PDF", use_container_width=True, key="drzwi_pdf_btn"):
+                pdf = FPDF()
+                pdf.add_page()
+                
+                # 2. KONFIGURACJA CZCIONKI INTER
+                font_path = "Inter-Regular.ttf"
+                if os.path.exists(font_path):
+                    pdf.add_font("Inter", "", font_path)
+                    pdf.set_font("Inter", size=12)
+                    font_exists = True
+                else:
+                    pdf.set_font("Arial", size=12)
+                    font_exists = False
 
-                        pdf.ln(10)
-                        
-                        pdf.cell(95, 10, " Robocizna (Montaż całości):", 1)
-                        pdf.cell(95, 10, f" {round(total_robocizna)} PLN", 1, 1)
-                        pdf.cell(95, 10, " Koszt zakupu drzwi (szacunek):", 1)
-                        pdf.cell(95, 10, f" {round(koszt_samych_drzwi)} PLN", 1, 1)
-                        pdf.cell(95, 10, " Chemia i akcesoria:", 1)
-                        pdf.cell(95, 10, f" {round(koszt_chemii)} PLN", 1, 1)
-                        
-                        pdf.set_font(pdf.font_family, size=13)
-                        pdf.cell(95, 12, " ŁĄCZNY KOSZT INWESTYCJI:", 1, 0, 'L', True)
-                        pdf.cell(95, 12, f" {round(suma_calkowita)} PLN", 1, 1, 'L', True)
-                        
-                        pdf.ln(10)
-                        pdf.set_font(pdf.font_family, size=12)
-                        pdf.cell(0, 10, "LISTA ZAKUPÓW:", ln=True)
-                        pdf.set_font(pdf.font_family, size=10)
-                        for nazwa, ilosc in info_zakup:
-                            pdf.cell(0, 7, f"- {nazwa}: {ilosc}", ln=True)
+                # =======================================================
+                # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                # =======================================================
+                
+                # LOGO (po lewej)
+                logo_path = st.session_state.get('firma_logo')
+                if logo_path and os.path.exists(logo_path):
+                    pdf.image(logo_path, x=10, y=8, w=35)
+                elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                    pdf.image("logo.png", x=10, y=8, w=35)
+                
+                # DANE FIRMY (po prawej)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                
+                pdf.set_xy(110, 8) 
+                tekst_firmy = f"{f_nazwa}\n"
+                if f_adres: tekst_firmy += f"{f_adres}\n"
+                if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                
+                pdf.multi_cell(90, 5, tekst_firmy, align='R')
 
-                        pdf_bytes = pdf.output()
-                        safe_bytes = bytes(pdf_bytes) if isinstance(pdf_bytes, (bytearray, bytes)) else pdf_bytes.encode('latin-1', 'replace')
+                # TYTUŁ RAPORTU (na środku, niżej)
+                pdf.set_y(35)
+                pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: STOLARKA DRZWIOWA", ln=True, align='C')
 
-                        st.download_button(
-                            label="Pobierz gotowy PDF",
-                            data=safe_bytes,
-                            file_name=f"Kosztorys_Drzwi_{datetime.now().strftime('%Y%m%d')}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                except Exception as e:
-                    st.error(f"Błąd podczas generowania PDF: {e}")
+                # --- LINIA SEPARATORA ---
+                pdf.set_draw_color(0, 0, 0)
+                pdf.line(10, 50, 200, 50) 
+                pdf.ln(5)
+                # =======================================================
+
+                # --- DANE PROJEKTU ---
+                pdf.set_y(55)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                pdf.cell(0, 8, f"Data: {data_str} | Liczba kompletow: {szt_drzwi} szt.", ln=True)
+                pdf.ln(5)
+
+                # --- TABELA FINANSOWA ---
+                pdf.set_fill_color(245, 245, 245)
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                
+                pdf.cell(95, 10, " Model drzwi:", 1)
+                pdf.cell(95, 10, f" {czysc_tekst(wybrany_model.split(' (')[0])}", 1, 1)
+                pdf.cell(95, 10, " Szerokosc muru:", 1)
+                pdf.cell(95, 10, f" {czysc_tekst(szerokosc_muru)}", 1, 1)
+
+                pdf.ln(5)
+                pdf.cell(95, 10, " Robocizna (Montaz calosci):", 1)
+                pdf.cell(95, 10, f" {round(total_robocizna)} PLN", 1, 1)
+                pdf.cell(95, 10, " Koszt zakupu drzwi (szacunek):", 1)
+                pdf.cell(95, 10, f" {round(koszt_samych_drzwi)} PLN", 1, 1)
+                pdf.cell(95, 10, " Chemia i akcesoria:", 1)
+                pdf.cell(95, 10, f" {round(koszt_chemii)} PLN", 1, 1)
+                
+                pdf.set_font("Inter" if font_exists else "Arial", size=13)
+                pdf.cell(95, 12, " LACZNY KOSZT INWESTYCJI:", 1, 0, 'L', True)
+                pdf.cell(95, 12, f" {round(suma_calkowita)} PLN", 1, 1, 'L', True)
+                
+                pdf.ln(10)
+                
+                # --- LISTA MATERIAŁOWA ---
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                pdf.cell(0, 10, "LISTA ZAKUPOW:", ln=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                for nazwa, ilosc in info_zakup:
+                    pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
+
+                # --- STOPKA ---
+                pdf.set_y(-25)
+                pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
+                # --- BEZPIECZNE POBIERANIE ---
+                pdf_bytes = pdf.output(dest="S")
+                safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+                
+                st.download_button(
+                    label="Pobierz Kosztorys PDF",
+                    data=safe_bytes,
+                    file_name=f"Kosztorys_Drzwi_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+        except Exception as e:
+            st.error(f"Błąd podczas generowania PDF: {e}")
 
                 st.markdown("---")
                 st.subheader("💾 Zapisz Kosztorys w Chmurze")
@@ -3365,76 +3852,136 @@ elif branza == "Tapetowanie":
 
         # --- GENERATOR PDF (TAPETOWANIE) ---
         st.markdown("---")
-        if st.button("Generuj Pełny Kosztorys PDF (Tapetowanie)"):
+        if st.button("Generuj Pełny Kosztorys PDF (Tapetowanie)", use_container_width=True, key="tapeta_pdf_btn"):
             try:
                 from fpdf import FPDF
                 from datetime import datetime
-        
+                import os
+
+                # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
+                def czysc_tekst(tekst):
+                    if not tekst: return ""
+                    pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                    tekst = str(tekst)
+                    for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                    return tekst.encode('latin-1', 'replace').decode('latin-1')
+
                 pdf = FPDF()
                 pdf.add_page()
-                pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True)
                 
-                pdf.set_font('Inter', '', 16)
-                pdf.cell(190, 10, txt="KOSZTORYS WYKONAWCZY: TAPETOWANIE", ln=True, align='C')
-                pdf.set_font('Inter', '', 10)
-                pdf.cell(190, 10, txt=f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True, align='C')
-                pdf.ln(10)
-        
-                pdf.set_font('Inter', '', 12)
-                pdf.set_fill_color(230, 230, 230)
-                pdf.cell(190, 10, txt="1. PODSUMOWANIE KOSZTOW ROBOCIZNY", ln=True, align='L', fill=True)
+                # 2. KONFIGURACJA CZCIONKI INTER
+                font_path = "Inter-Regular.ttf"
+                if os.path.exists(font_path):
+                    pdf.add_font("Inter", "", font_path)
+                    pdf.set_font("Inter", size=12)
+                    font_exists = True
+                else:
+                    pdf.set_font("Arial", size=12)
+                    font_exists = False
+
+                # =======================================================
+                # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                # =======================================================
+                
+                # LOGO (po lewej)
+                logo_path = st.session_state.get('firma_logo')
+                if logo_path and os.path.exists(logo_path):
+                    pdf.image(logo_path, x=10, y=8, w=35)
+                elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                    pdf.image("logo.png", x=10, y=8, w=35)
+                
+                # DANE FIRMY (po prawej)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                
+                pdf.set_xy(110, 8) 
+                tekst_firmy = f"{f_nazwa}\n"
+                if f_adres: tekst_firmy += f"{f_adres}\n"
+                if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                
+                pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                # TYTUŁ RAPORTU (na środku, niżej)
+                pdf.set_y(35)
+                pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: TAPETOWANIE", ln=True, align='C')
+
+                # --- LINIA SEPARATORA ---
+                pdf.set_draw_color(0, 0, 0)
+                pdf.line(10, 50, 200, 50) 
+                pdf.ln(5)
+                # =======================================================
+
+                # --- DANE PROJEKTU ---
+                pdf.set_y(55)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                pdf.cell(0, 8, f"Data wystawienia: {datetime.now().strftime('%d.%m.%Y')}", ln=True)
+                pdf.ln(5)
+
+                # --- 1. PODSUMOWANIE KOSZTÓW ---
+                pdf.set_fill_color(245, 245, 245)
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW ROBOCIZNY", ln=True, fill=True)
                 pdf.ln(2)
                 
-                pdf.set_font('Inter', '', 10)
-                pdf.cell(140, 8, txt=f"Tapetowanie ({round(m2_scian,1)} m2)", border=1)
-                pdf.cell(50, 8, txt=f"{round(robocizna_tapetowanie)} zl", border=1, ln=True, align='R')
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                pdf.cell(140, 8, f" Tapetowanie ({round(m2_scian,1)} m2)", border=1)
+                pdf.cell(50, 8, f" {round(robocizna_tapetowanie)} PLN", border=1, ln=True, align='R')
                 
                 if zrywanie_starej:
-                    pdf.cell(140, 8, txt="Zrywanie starej tapety i przygotowanie", border=1)
-                    pdf.cell(50, 8, txt=f"{round(robocizna_zrywanie)} zl", border=1, ln=True, align='R')
+                    pdf.cell(140, 8, " Zrywanie starej tapety i przygotowanie", border=1)
+                    pdf.cell(50, 8, f" {round(robocizna_zrywanie)} PLN", border=1, ln=True, align='R')
                 
                 if gruntowanie:
-                    pdf.cell(140, 8, txt="Gruntowanie podloza", border=1)
-                    pdf.cell(50, 8, txt=f"{round(robocizna_grunt)} zl", border=1, ln=True, align='R')
+                    pdf.cell(140, 8, " Gruntowanie podloza", border=1)
+                    pdf.cell(50, 8, f" {round(robocizna_grunt)} PLN", border=1, ln=True, align='R')
                 
-                pdf.set_font('Inter', '', 11)
-                pdf.cell(140, 10, txt="RAZEM ROBOCIZNA:", border=1, fill=True)
-                pdf.cell(50, 10, txt=f"{round(suma_robocizna)} zl", border=1, ln=True, align='R', fill=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=11)
+                pdf.cell(140, 10, " RAZEM ROBOCIZNA:", border=1, fill=True)
+                pdf.cell(50, 10, f" {round(suma_robocizna)} PLN", border=1, ln=True, align='R', fill=True)
                 pdf.ln(10)
-        
-                pdf.set_font('Inter', '', 12)
-                pdf.cell(190, 10, txt="2. LISTA ZAKUPOWA DLA INWESTORA", ln=True, align='L', fill=True)
-                pdf.set_font('Inter', '', 10)
+
+                # --- 2. LISTA ZAKUPOWA ---
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                pdf.cell(0, 10, " 2. LISTA ZAKUPOWA DLA INWESTORA", ln=True, fill=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
                 pdf.ln(2)
                 
-                rodzaj_tapety_pdf = rodzaj_tapety.replace("ś", "s").replace("ł", "l").replace("ó", "o")
+                rodzaj_tapety_pdf = czysc_tekst(rodzaj_tapety)
                 
                 if "Fototapeta" not in rodzaj_tapety:
-                    pdf.cell(190, 7, txt=f"- Tapeta ({rodzaj_tapety_pdf}): {potrzebne_rolki} rolek", ln=True)
-                    pdf.cell(190, 7, txt=f"  *Zalozenia: Pasowanie wzoru {raport}cm, co daje {pasy_z_rolki} pasy z 1 rolki.", ln=True)
+                    pdf.cell(190, 7, f"- Tapeta ({rodzaj_tapety_pdf}): {potrzebne_rolki} rolek", ln=True)
+                    pdf.cell(190, 7, f"  *Zalozenia: Pasowanie wzoru {raport}cm, co daje {pasy_z_rolki} pasy z 1 rolki.", ln=True)
                 else:
-                    pdf.cell(190, 7, txt=f"- Fototapeta na wymiar: Komplet ok. {round(m2_scian, 1)} m2", ln=True)
+                    pdf.cell(190, 7, f"- Fototapeta na wymiar: Komplet ok. {round(m2_scian, 1)} m2", ln=True)
                 
-                klej_czysty = wybrany_klej.split(" - ")[0].replace("ż", "z").replace("ł", "l")
-                pdf.cell(190, 7, txt=f"- Klej dedykowany ({klej_czysty}): {szt_kleju} op.", ln=True)
+                klej_czysty = czysc_tekst(wybrany_klej.split(" - ")[0])
+                pdf.cell(190, 7, f"- Klej dedykowany ({klej_czysty}): {szt_kleju} op.", ln=True)
                 
                 if gruntowanie:
-                    pdf.cell(190, 7, txt=f"- Grunt gleboko penetrujacy (5L): {szt_gruntu} opakowan", ln=True)
-        
-                pdf_output = pdf.output()
+                    pdf.cell(190, 7, f"- Grunt gleboko penetrujacy (5L): {szt_gruntu} opakowan", ln=True)
 
-                if isinstance(pdf_output, (bytearray, bytes)):
-                    pdf_bytes = bytes(pdf_output)
-                elif isinstance(pdf_output, str):
-                    pdf_bytes = pdf_output.encode('latin-1', 'replace')
-                else:
-                    pdf_bytes = pdf_output
-        
+                # --- STOPKA ---
+                pdf.set_y(-25)
+                pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
+                # --- BEZPIECZNE POBIERANIE ---
+                pdf_bytes = pdf.output(dest="S")
+                safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+                
                 st.download_button(
                     label="Pobierz Kosztorys PDF",
-                    data=pdf_bytes,
+                    data=safe_bytes,
                     file_name=f"Kosztorys_Tapetowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf"
+                    mime="application/pdf",
+                    use_container_width=True
                 )
             except Exception as e:
                 st.error(f"Błąd PDF: {e}")
@@ -3616,68 +4163,127 @@ elif branza == "Efekty Dekoracyjne":
                 for nazwa, ilosc in lista_zakupow:
                     st.write(f"• **{nazwa}:** {ilosc}")
 
-                # --- GENERATOR PDF ---
-                try:
-                    from fpdf import FPDF
-                    from datetime import datetime
-                    import os
-                    import base64
+                # --- GENERATOR PDF (EFEKTY DEKORACYJNE) ---
+        try:
+            from fpdf import FPDF
+            from datetime import datetime
+            import os
 
-                    if st.button("Generuj Kosztorys PDF", use_container_width=True, key="deko_pdf_btn"):
-                        pdf = FPDF()
-                        pdf.add_page()
-                        
-                        f_path = "Inter-Regular.ttf"
-                        if os.path.exists(f_path):
-                            pdf.add_font("Inter", "", f_path)
-                            pdf.set_font("Inter", size=12)
-                        else:
-                            pdf.set_font("Arial", size=12)
-                        
-                        pdf.set_font(pdf.font_family, size=16)
-                        pdf.cell(0, 15, "KOSZTORYS: EFEKTY DEKORACYJNE", ln=True, align='C')
-                        pdf.ln(5)
+            # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
+            def czysc_tekst(tekst):
+                if not tekst: return ""
+                pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                tekst = str(tekst)
+                for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                return tekst.encode('latin-1', 'replace').decode('latin-1')
 
-                        pdf.set_fill_color(245, 245, 245)
-                        pdf.set_font(pdf.font_family, size=12)
-                        
-                        def czysc_tekst(tekst):
-                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
-                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                            return tekst.encode('latin-1', 'replace').decode('latin-1')
+            if st.button("Generuj Kosztorys PDF", use_container_width=True, key="deko_pdf_btn"):
+                pdf = FPDF()
+                pdf.add_page()
+                
+                # 2. KONFIGURACJA CZCIONKI INTER
+                font_path = "Inter-Regular.ttf"
+                if os.path.exists(font_path):
+                    pdf.add_font("Inter", "", font_path)
+                    pdf.set_font("Inter", size=12)
+                    font_exists = True
+                else:
+                    pdf.set_font("Arial", size=12)
+                    font_exists = False
 
-                        pdf.cell(95, 10, " Wybrany system:", 1)
-                        pdf.cell(95, 10, f" {czysc_tekst(wybrany_efekt)}", 1, 1)
-                        pdf.cell(95, 10, " Producent / Klasa:", 1)
-                        pdf.cell(95, 10, f" {czysc_tekst(wybrana_marka)}", 1, 1)
-                        pdf.cell(95, 10, " Powierzchnia sciany:", 1)
-                        pdf.cell(95, 10, f" {m2_pro} m2", 1, 1)
+                # =======================================================
+                # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                # =======================================================
+                
+                # LOGO (po lewej)
+                logo_path = st.session_state.get('firma_logo')
+                if logo_path and os.path.exists(logo_path):
+                    pdf.image(logo_path, x=10, y=8, w=35)
+                elif os.path.exists("logo.png"): # Backup dla domyślnego logo
+                    pdf.image("logo.png", x=10, y=8, w=35)
+                
+                # DANE FIRMY (po prawej)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                
+                pdf.set_xy(110, 8) 
+                tekst_firmy = f"{f_nazwa}\n"
+                if f_adres: tekst_firmy += f"{f_adres}\n"
+                if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                
+                pdf.multi_cell(90, 5, tekst_firmy, align='R')
 
-                        pdf.ln(10)
-                        pdf.cell(95, 10, " Wycena Robocizny:", 1)
-                        pdf.cell(95, 10, f" {round(total_robocizna)} PLN", 1, 1)
-                        pdf.cell(95, 10, " Koszt materialow (System):", 1)
-                        pdf.cell(95, 10, f" {round(total_materialy)} PLN", 1, 1)
-                        
-                        pdf.set_font(pdf.font_family, size=13)
-                        pdf.cell(95, 12, " LACZNY KOSZT INWESTYCJI:", 1, 0, 'L', True)
-                        pdf.cell(95, 12, f" {round(suma_calkowita)} PLN", 1, 1, 'L', True)
-                        
-                        pdf.ln(10)
-                        pdf.set_font(pdf.font_family, size=12)
-                        pdf.cell(0, 10, "LISTA ZAKUPOW (Normy producenta):", ln=True)
-                        pdf.set_font(pdf.font_family, size=10)
-                        
-                        for nazwa, ilosc in lista_zakupow:
-                            pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
+                # TYTUŁ RAPORTU (na środku, niżej)
+                pdf.set_y(35)
+                pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: EFEKTY DEKORACYJNE", ln=True, align='C')
 
-                        pdf_bytes = pdf.output(dest="S").encode('latin-1')
-                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
-                        href = f'<a href="data:application/pdf;base64,{pdf_b64}" download="Kosztorys_Dekoracje_{datetime.now().strftime("%Y%m%d")}.pdf" style="display: block; text-align: center; padding: 15px; background-color: #00D395; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px;">Pobierz gotowy PDF</a>'
-                        st.markdown(href, unsafe_allow_html=True)
-                        
-                except Exception as e:
-                    st.error(f"Błąd podczas generowania PDF: {e}")
+                # --- LINIA SEPARATORA ---
+                pdf.set_draw_color(0, 0, 0)
+                pdf.line(10, 50, 200, 50) 
+                pdf.ln(5)
+                # =======================================================
+
+                # --- DANE PROJEKTU ---
+                pdf.set_y(55)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                pdf.cell(0, 8, f"Data wystawienia: {data_str} | Powierzchnia sciany: {m2_pro} m2", ln=True)
+                pdf.ln(5)
+
+                # --- TABELA FINANSOWA ---
+                pdf.set_fill_color(245, 245, 245)
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                
+                pdf.cell(95, 10, " Wybrany system:", 1)
+                pdf.cell(95, 10, f" {czysc_tekst(wybrany_efekt)}", 1, 1)
+                pdf.cell(95, 10, " Producent / Klasa:", 1)
+                pdf.cell(95, 10, f" {czysc_tekst(wybrana_marka)}", 1, 1)
+
+                pdf.ln(5)
+                pdf.cell(95, 10, " Wycena Robocizny:", 1)
+                pdf.cell(95, 10, f" {round(total_robocizna)} PLN", 1, 1)
+                pdf.cell(95, 10, " Koszt materialow (System):", 1)
+                pdf.cell(95, 10, f" {round(total_materialy)} PLN", 1, 1)
+                
+                pdf.set_font("Inter" if font_exists else "Arial", size=13)
+                pdf.cell(95, 12, " LACZNY KOSZT INWESTYCJI:", 1, 0, 'L', True)
+                pdf.cell(95, 12, f" {round(suma_calkowita)} PLN", 1, 1, 'L', True)
+                
+                pdf.ln(10)
+                
+                # --- LISTA MATERIAŁOWA ---
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                pdf.cell(0, 10, "LISTA ZAKUPOW (Normy producenta):", ln=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                for nazwa, ilosc in lista_zakupow:
+                    pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
+
+                # --- STOPKA ---
+                pdf.set_y(-25)
+                pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
+                # --- BEZPIECZNE POBIERANIE ---
+                pdf_bytes = pdf.output(dest="S")
+                safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
+                
+                st.download_button(
+                    label="Pobierz Kosztorys PDF",
+                    data=safe_bytes,
+                    file_name=f"Kosztorys_Dekoracje_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+        except Exception as e:
+            st.error(f"Błąd podczas generowania PDF: {e}")
 
                 st.markdown("---")
                 st.subheader("💾 Zapisz Kosztorys w Chmurze")
@@ -4368,61 +4974,76 @@ elif branza == "Panel Inwestora":
 
             zakupy = {k: v for k, v in zakupy.items() if len(v) > 0}
 
-            # ==============================================================
-            # GENERATOR PDF (WIDZI WSZYSTKIE KATEGORIE)
-            # ==============================================================
-            st.markdown("---")
-            st.subheader("💾 Zapisz Projekt i Pobierz PDF")
-            col_save, col_pdf = st.columns(2)
-            
-            with col_save:
-                if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary"):
-                    u_id = st.session_state.get("user_id")
-                    if u_id and supabase:
-                        dane_do_zapisu = {
-                            "suma_calkowita": round(calkowity_koszt_projektu),
-                            "zysk_brutto": round(zysk_brutto),
-                            "roi_procent": round(roi, 1),
-                            "lista_zakupow": zakupy 
-                        }
-                        supabase.table("projekty").insert({
-                            "user_id": u_id, "nazwa_projektu": nazwa_inwestycji,
-                            "branza": "Kompleksowy Flip", "dane_json": dane_do_zapisu
-                        }).execute()
-                        st.success("✅ Projekt zapisany!")
-
             with col_pdf:
                 if st.button("Generuj Nowoczesny Kosztorys PDF", use_container_width=True):
                     try:
                         from fpdf import FPDF
+                        import os
+                        from datetime import datetime
                         
+                        # --- 1. PRZENIESIONA FUNKCJA ---
                         def czysc_tekst(tekst):
+                            if not tekst: return ""
                             pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                            tekst = str(tekst)
                             for pl, ang in pl_znaki.items(): 
                                 tekst = tekst.replace(pl, ang)
-                            return tekst
+                            return tekst.encode('latin-1', 'replace').decode('latin-1')
                         
                         pdf = FPDF()
                         pdf.add_page()
                         
-                        # Próba dodania czcionki - upewnij się, że plik ttf jest w folderze projektu
-                        try:
-                            pdf.add_font('Inter', '', 'Inter-Regular.ttf', uni=True)
-                            pdf.set_font('Inter', '', 12)
-                        except:
-                            pdf.set_font('Arial', '', 12) # Font zastępczy, jeśli Inter nie zostanie znaleziony
+                        # 2. KONFIGURACJA CZCIONKI INTER
+                        font_path = "Inter-Regular.ttf"
+                        if os.path.exists(font_path):
+                            pdf.add_font("Inter", "", font_path)
+                            pdf.set_font("Inter", size=12)
+                            font_exists = True
+                        else:
+                            pdf.set_font("Arial", size=12)
+                            font_exists = False
                         
-                        # --- DESIGN: BANER I TYTUŁ ---
-                        pdf.set_fill_color(14, 23, 43)
-                        pdf.rect(0, 0, 210, 25, 'F')
-                        pdf.set_y(8)
+                        # =======================================================
+                        # --- SPERSONALIZOWANY NAGŁÓWEK ---
+                        # =======================================================
+                        
+                        # LOGO (po lewej)
+                        logo_path = st.session_state.get('firma_logo')
+                        if logo_path and os.path.exists(logo_path):
+                            pdf.image(logo_path, x=10, y=8, w=35)
+                        elif os.path.exists("logo.png"):
+                            pdf.image("logo.png", x=10, y=8, w=35)
+                        
+                        # DANE FIRMY (po prawej)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                        
+                        f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                        f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                        f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                        f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                        
+                        pdf.set_text_color(0, 0, 0)
+                        pdf.set_xy(110, 8) 
+                        tekst_firmy = f"{f_nazwa}\n"
+                        if f_adres: tekst_firmy += f"{f_adres}\n"
+                        if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                        if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                        
+                        pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                        # =======================================================
+                        # --- DESIGN: GRANATOWY BANER I TYTUŁ ---
+                        # =======================================================
+                        pdf.set_fill_color(14, 23, 43) # Ciemny granat
+                        pdf.rect(0, 35, 210, 15, 'F') # Przesunięty w dół na Y=35
+                        pdf.set_y(38)
                         pdf.set_text_color(255, 255, 255)
-                        pdf.set_font("Arial", "B", 16) # Używamy Arial B dla pewności
+                        pdf.set_font("Arial", "B", 16) 
                         pdf.cell(190, 10, txt=czysc_tekst("PROCALC - KOSZTORYS INWESTORSKI"), ln=True, align='C')
                         
                         # --- NAZWA PROJEKTU ---
-                        pdf.set_y(35)
-                        pdf.set_text_color(0, 211, 149)
+                        pdf.set_y(55)
+                        pdf.set_text_color(0, 211, 149) # Zielony ProCalc
                         pdf.set_font("Arial", "B", 20)
                         pdf.cell(190, 10, txt=czysc_tekst(nazwa_inwestycji.upper()), ln=True, align='C')
                         
@@ -4463,32 +5084,33 @@ elif branza == "Panel Inwestora":
                                     pdf.cell(5, 6, txt="", ln=0)
                                     pdf.cell(185, 6, txt=czysc_tekst(f"* {item}"), ln=True)
                                 pdf.ln(4)
-                        
+
+                        # --- STOPKA ---
+                        pdf.set_y(-25)
+                        pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                        pdf.set_text_color(100, 100, 100)
+                        pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
                         # --- POPRAWKA BŁĘDU BYTEARRAY / ENCODE ---
                         output_pdf = pdf.output(dest='S')
                         
-                        # Jeśli output to bajty, nie używamy .encode()
                         if isinstance(output_pdf, str):
-                            pdf_bytes = output_pdf.encode('latin-1')
+                            pdf_bytes = output_pdf.encode('latin-1', 'replace')
                         else:
                             pdf_bytes = bytes(output_pdf)
                             
-                        # --- BEZPIECZNA NAZWA PLIKU (Naprawa błędu) ---
-                        # 1. Usuwamy polskie znaki za pomocą naszej funkcji
+                        # --- BEZPIECZNA NAZWA PLIKU ---
                         bezpieczna_nazwa = czysc_tekst(nazwa_inwestycji)
-                        # 2. Zostawiamy tylko litery A-Z, cyfry i zamieniamy resztę na "_"
                         bezpieczna_nazwa = "".join([c if c.isalnum() else "_" for c in bezpieczna_nazwa])
-                        
-                        # Gwarantujemy, że plik zawsze zaczyna się od "ProCalc_" (czyli od dozwolonej litery 'P')
                         nazwa_pliku = f"ProCalc_{bezpieczna_nazwa}.pdf"
                             
                         st.download_button(
                             label="📥 Pobierz Kosztorys PDF", 
                             data=pdf_bytes, 
                             file_name=nazwa_pliku, 
-                            mime="application/pdf"
+                            mime="application/pdf",
+                            use_container_width=True
                         )
-                        st.success("✅ PDF wygenerowany pomyślnie!")
 
                     except Exception as e:
                         st.error(f"Błąd PDF: {e}")
