@@ -1,3 +1,47 @@
+# ==========================================
+# 🛡️ GLOBALNA TARCZA OCHRONNA DLA PDF
+# ==========================================
+def dodaj_tarcze_ochronna(pdf, font_exists=True):
+    pdf.ln(10) # Odstęp od listy materiałów
+    
+    # Nagłówek sekcji
+    pdf.set_font("Inter" if font_exists else "Arial", "", 12)
+    pdf.set_fill_color(240, 240, 240)
+    pdf.set_text_color(14, 23, 43)
+    pdf.cell(0, 10, " WARUNKI WSPOLPRACY I GWARANCJE", ln=True, fill=True)
+    
+    pdf.set_font("Inter" if font_exists else "Arial", "", 9)
+    pdf.set_text_color(80, 80, 80)
+    pdf.ln(3)
+    
+    # Gotowe klauzule psychologiczno-prawne (bez polskich znaków dla bezpieczeństwa FPDF)
+    klauzule = [
+        "1. WAZNOSC OFERTY: Niniejszy kosztorys ma charakter szacunkowy i jest wazny przez 14 dni od daty wystawienia.",
+        "2. ZAPAS MATERIALOWY: Wyliczone ilosci materialow (w tym np. plytek, paneli, profili) zawieraja standardowy",
+        "   zapas technologiczny (zwykle 10-15%). Uwzglednia on scinki, docinki przy scianach oraz uszkodzenia transportowe.",
+        "3. PRACE UKRYTE: Kosztorys nie obejmuje napraw ukrytych wad budynku (np. pekajacych scian pod stara tapeta",
+        "   czy wadliwej instalacji pod tynkiem), chyba ze zostaly one jawnie wyszczegolnione w kosztorysie.",
+        "4. ZMIANY DECYZJI: Wszelkie zmiany materialow lub zakresu prac na zyczenie Inwestora w trakcie realizacji",
+        "   moga wplynac na koncowy koszt uslugi."
+    ]
+    
+    for k in klauzule:
+        pdf.cell(0, 5, k, ln=True)
+        
+    # Miejsce na podpis
+    pdf.ln(15)
+    pdf.set_font("Inter" if font_exists else "Arial", "B", 10)
+    pdf.set_text_color(0, 0, 0)
+    
+    # Rysowanie linii na podpisy
+    pdf.cell(95, 5, "........................................................", align='C')
+    pdf.cell(95, 5, "........................................................", ln=True, align='C')
+    
+    pdf.set_font("Inter" if font_exists else "Arial", "", 8)
+    pdf.cell(95, 5, "Miejscowosc i Data", align='C')
+    pdf.cell(95, 5, "Akceptuje zakres prac i budzet (Podpis)", ln=True, align='C')
+    pdf.ln(5)
+
 import streamlit as st
 import math
 import os
@@ -1330,6 +1374,11 @@ if branza == "Malowanie":
                     for produkt, opis in lista_pdf.items():
                         pdf.cell(0, 8, f"- {czysc_tekst(produkt)}: {czysc_tekst(opis)}", ln=True)
 
+                    # ==========================================
+                    # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                    dodaj_tarcze_ochronna(pdf, font_exists)
+                    # ==========================================
+
                     # --- STOPKA ---
                     pdf.set_y(-25)
                     pdf.set_font("Inter" if font_exists else "Arial", size=8)
@@ -1731,6 +1780,11 @@ elif branza == "Szpachlowanie":
                             pdf.cell(135, 10, f" {mat}", 1, 0)
                             pdf.cell(40, 10, f" {ilosc}", 1, 1, 'C')
 
+                        # ==========================================
+                        # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                        dodaj_tarcze_ochronna(pdf, font_exists)
+                        # ==========================================
+
                         # --- STOPKA ---
                         pdf.set_y(-25)
                         pdf.set_font("Inter" if font_exists else "Arial", size=8)
@@ -2007,6 +2061,11 @@ elif branza == "Podłogi":
                         pdf.cell(0, 7, f"- Okladzina: {paczki_szt} paczek (zawiera {int(zapas*100)}% zapasu)", ln=True)
                         for nazwa, ilosc in info_zakup:
                             pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
+
+                                            # ==========================================
+                        # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                        dodaj_tarcze_ochronna(pdf, font_exists)
+                        # ==========================================
 
                         # --- STOPKA ---
                         pdf.set_y(-25)
@@ -2336,6 +2395,11 @@ elif branza == "Tynkowanie":
                         
                         for przedmiot, ilosc in lista_zakupow:
                             pdf.cell(0, 7, f"- {czysc_tekst(przedmiot)}: {czysc_tekst(ilosc)}", ln=True)
+
+                        
+                        # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                        dodaj_tarcze_ochronna(pdf, font_exists)
+                        # ==========================================
 
                         # --- STOPKA ---
                         pdf.set_y(-25)
@@ -2694,6 +2758,11 @@ elif branza == "Sucha Zabudowa":
                             
                             for poz, ilosc in lista_z:
                                 pdf.cell(0, 7, f"- {czysc_tekst(poz)}: {czysc_tekst(ilosc)}", ln=True)
+        
+                                                        
+                            # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                            dodaj_tarcze_ochronna(pdf, font_exists)
+                            # ==========================================
 
                             # --- STOPKA ---
                             pdf.set_y(-25)
@@ -2905,6 +2974,11 @@ elif branza == "Elektryka":
                 pdf.set_text_color(100, 100, 100)
                 pdf.cell(0, 7, "* Wycena nie uwzglednia zakupu lamp i opraw oswietleniowych.", ln=True)
 
+                                    # ==========================================
+                # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                dodaj_tarcze_ochronna(pdf, font_exists)
+                # ==========================================
+                
                 # --- STOPKA ---
                 pdf.set_y(-25)
                 pdf.set_font("Inter" if font_exists else "Arial", size=8)
@@ -3371,6 +3445,11 @@ elif branza == "Łazienka":
                     ilosc_pdf = czysc_tekst(str(ilosc).replace('²', '2'))
                     pdf.cell(0, 7, f"- {prz_pdf}: {ilosc_pdf}", ln=True)
 
+                # ==========================================
+                # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                dodaj_tarcze_ochronna(pdf, font_exists)
+                # ==========================================
+
                 # --- STOPKA ---
                 pdf.set_y(-25)
                 pdf.set_font("Inter" if font_exists else "Arial", size=8)
@@ -3633,6 +3712,11 @@ elif branza == "Drzwi":
                 
                 for nazwa, ilosc in info_zakup:
                     pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
+
+                # ==========================================
+                # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                dodaj_tarcze_ochronna(pdf, font_exists)
+                # ==========================================
 
                 # --- STOPKA ---
                 pdf.set_y(-25)
@@ -3966,6 +4050,11 @@ elif branza == "Tapetowanie":
                 if gruntowanie:
                     pdf.cell(190, 7, f"- Grunt gleboko penetrujacy (5L): {szt_gruntu} opakowan", ln=True)
 
+                # ==========================================
+                # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                dodaj_tarcze_ochronna(pdf, font_exists)
+                # ==========================================
+
                 # --- STOPKA ---
                 pdf.set_y(-25)
                 pdf.set_font("Inter" if font_exists else "Arial", size=8)
@@ -4265,6 +4354,11 @@ elif branza == "Efekty Dekoracyjne":
                 for nazwa, ilosc in lista_zakupow:
                     pdf.cell(0, 7, f"- {czysc_tekst(nazwa)}: {czysc_tekst(ilosc)}", ln=True)
 
+                                    # ==========================================
+                # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                dodaj_tarcze_ochronna(pdf, font_exists)
+                # ==========================================
+                
                 # --- STOPKA ---
                 pdf.set_y(-25)
                 pdf.set_font("Inter" if font_exists else "Arial", size=8)
@@ -5084,7 +5178,10 @@ elif branza == "Panel Inwestora":
                                     pdf.cell(5, 6, txt="", ln=0)
                                     pdf.cell(185, 6, txt=czysc_tekst(f"* {item}"), ln=True)
                                 pdf.ln(4)
-
+                        # ==========================================
+                        # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
+                        dodaj_tarcze_ochronna(pdf, font_exists)
+                        # ==========================================
                         # --- STOPKA ---
                         pdf.set_y(-25)
                         pdf.set_font("Inter" if font_exists else "Arial", size=8)
