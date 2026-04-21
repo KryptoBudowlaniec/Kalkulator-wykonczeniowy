@@ -30,7 +30,9 @@ def dodaj_tarcze_ochronna(pdf, font_exists=True):
         
     # Miejsce na podpis
     pdf.ln(15)
-    pdf.set_font("Inter" if font_exists else "Arial", "B", 10)
+    
+    # Wymuszamy wbudowany Arial Bold, aby ominąć brak pliku Inter-Bold.ttf
+    pdf.set_font("Arial", "B", 10)
     pdf.set_text_color(0, 0, 0)
     
     # Rysowanie linii na podpisy
