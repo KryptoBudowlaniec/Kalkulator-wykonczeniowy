@@ -5103,7 +5103,9 @@ elif branza == "Panel Inwestora":
             r3.metric("ROI %", f"{round(roi, 1)} %")
 
             zakupy = {k: v for k, v in zakupy.items() if len(v) > 0}
-
+            
+            col_save, col_pdf = st.columns(2)
+            
             with col_pdf:
                 if st.button("Generuj Nowoczesny Kosztorys PDF", use_container_width=True):
                     try:
