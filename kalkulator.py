@@ -534,6 +534,37 @@ if st.session_state.get("zalogowany") and st.session_state.get("pakiet") == "PRO
             
             st.success("✅ Zapisane! Twoje logo i dane będą widoczne na każdym wygenerowanym PDF-ie.")
 st.markdown("---")
+
+# ==========================================
+    # 🚧 GLOBALNY MNOŻNIK UTRUDNIEŃ (TYLKO DLA PRO)
+    # ==========================================
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.expander("🚧 Ukryte Utrudnienia (Zwiększ zysk na trudnych zleceniach)", expanded=False):
+        st.info("Zaznacz utrudnienia na budowie. System automatycznie i **niewidocznie dla klienta** podniesie stawki robocizny we wszystkich wycenach.")
+        
+        c_u1, c_u2 = st.columns(2)
+        with c_u1:
+            u_winda = st.checkbox("Brak windy / Wysokie piętro (+10%)", key="u_winda")
+            u_meble = st.checkbox("Mieszkanie umeblowane (+15%)", key="u_meble")
+        with c_u2:
+            u_krzywizny = st.checkbox("Bardzo krzywe ściany / Stare budownictwo (+20%)", key="u_krzywizny")
+            u_dojazdy = st.checkbox("Trudny dojazd / Strefa płatna (+5%)", key="u_dojazdy")
+        
+        # Obliczanie ukrytego mnożnika
+        mnoznik_utrudnien = 1.0
+        if u_winda: mnoznik_utrudnien += 0.10
+        if u_meble: mnoznik_utrudnien += 0.15
+        if u_krzywizny: mnoznik_utrudnien += 0.20
+        if u_dojazdy: mnoznik_utrudnien += 0.05
+        
+        # Zapisujemy mnożnik do pamięci aplikacji
+        st.session_state.globalny_mnoznik = mnoznik_utrudnien
+        
+        if mnoznik_utrudnien > 1.0:
+            st.success(f"🔥 Aktywny mnożnik: **+{int((mnoznik_utrudnien - 1) * 100)}%** do wyceny Twojej robocizny.")
+        else:
+            st.write("Brak aktywnych utrudnień (Stawki standardowe).")
+            
 # --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
 <style>
@@ -1932,7 +1963,7 @@ elif branza == "Podłogi":
                 info_zakup.append(("System poziomujący (klipsy)", f"{op_klipsy} op. (po 100 szt.)"))
                 info_zakup.append((f"{wybrany_klej_plytki}", f"{worki_kleju} worków"))
 
-            k_robocizna = m2_p * stawka_podl
+            k_robocizna = (m2_p * stawka_podl) * st.session_state.get('globalny_mnoznik', 1.0)
             usluga_plus_chemia = k_robocizna + koszt_akc 
 
             with col_p2:
@@ -2466,8 +2497,8 @@ elif branza == "Sucha Zabudowa":
         m2_fast = st.number_input("Przyblizony metraz zabudowy (m2):", min_value=1.0, value=20.0, key="gk_fast_m2")
         
         # Uśrednione stawki: robota 120, materiał 75
-        k_rob_fast = m2_fast * 120
-        k_mat_fast = m2_fast * 75
+        k_rob_fast = m2_fast * 100
+        k_mat_fast = m2_fast * 65
         total_fast = k_rob_fast + k_mat_fast
         
         st.success(f"### Szacowany koszt calkowity: ok. {round(total_fast)} PLN")
@@ -2631,7 +2662,7 @@ elif branza == "Sucha Zabudowa":
                 
                 total_material = koszt_plyt + koszt_profile + (szt_wieszaki * 1.5) + (m2_gk * 16 if izolacja_gk else 0) + \
                                  (worki_masy * baza_masy_gk[wybrana_masa]) + (rolki_tuff * 150) + (rolki_fliz * 20) + (m2_gk * 15)
-                robocizna = m2_gk * stawka_gk
+                robocizna = (m2_gk * stawka_gk) * st.session_state.get('globalny_mnoznik', 1.0)
 
                 # Lista zakupów
                 if rodzaj_gk == "Sufit Podwieszany":
