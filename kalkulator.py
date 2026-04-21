@@ -533,7 +533,7 @@ if st.session_state.get("zalogowany") and st.session_state.get("pakiet") == "PRO
                     st.error(f"Błąd wgrywania logo: {e}")
             
             st.success("✅ Zapisane! Twoje logo i dane będą widoczne na każdym wygenerowanym PDF-ie.")
-st.markdown("---")
+
 
 # ==========================================
     # 🚧 GLOBALNY MNOŻNIK UTRUDNIEŃ (TYLKO DLA PRO)
@@ -564,7 +564,7 @@ st.markdown("---")
             st.success(f"🔥 Aktywny mnożnik: **+{int((mnoznik_utrudnien - 1) * 100)}%** do wyceny Twojej robocizny.")
         else:
             st.write("Brak aktywnych utrudnień (Stawki standardowe).")
-            
+st.markdown("---")            
 # --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
 <style>
