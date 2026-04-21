@@ -3728,54 +3728,56 @@ elif branza == "Drzwi":
                 pdf_bytes = pdf.output(dest="S")
                 safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
                 
-                st.download_button(
-                    label="Pobierz Kosztorys PDF",
-                    data=safe_bytes,
-                    file_name=f"Kosztorys_Drzwi_{datetime.now().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
+                # ... tu jest pobieranie PDF ...
+            st.download_button(
+                label="Pobierz Kosztorys PDF",
+                data=safe_bytes,
+                file_name=f"Kosztorys_Drzwi_{datetime.now().strftime('%Y%m%d')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
         except Exception as e:
             st.error(f"Błąd podczas generowania PDF: {e}")
 
-                st.markdown("---")
-                st.subheader("💾 Zapisz Kosztorys w Chmurze")
-                st.caption("Zapisz ten projekt, aby mieć do niego dostęp z dowolnego urządzenia.")
+    # ==========================================
+    # 💾 ZAPIS DO CHMURY (Wyrównane do lewej!)
+    # ==========================================
+    st.markdown("---")
+    st.subheader("💾 Zapisz Kosztorys w Chmurze")
+    st.caption("Zapisz ten projekt, aby mieć do niego dostęp z dowolnego urządzenia.")
+    
+    nazwa_projektu = st.text_input("Nazwa projektu (np. Mieszkanie na Złotej 44):", key="nazwa_proj_drzwi")
+    
+    if st.button("Zapisz Projekt", use_container_width=True, type="primary"):
+        if not nazwa_projektu:
+            st.warning("⚠️ Podaj nazwę projektu przed zapisaniem.")
+        elif 'user_id' not in st.session_state or not st.session_state.user_id:
+            st.error("❌ Błąd krytyczny: Zgubiłeś sesję! Wyloguj się i zaloguj ponownie.")
+        else:
+            try:
+                # 1. Pakujemy wszystkie ważne dane
+                dane_do_zapisu = {
+                    "szt_drzwi": szt_drzwi,
+                    "wybrany_model": wybrany_model,
+                    "szerokosc_muru": szerokosc_muru,
+                    "podciecie": podciecie,
+                    "demontaz": demontaz,
+                    "koszt_materialow": total_materialy,
+                    "koszt_robocizny": total_robocizna,
+                    "suma_calkowita": suma_calkowita
+                }
                 
-                nazwa_projektu = st.text_input("Nazwa projektu (np. Mieszkanie na Złotej 44):", key="nazwa_proj_drzwi")
+                # 2. Wysyłamy paczkę do bazy Supabase
+                response = supabase.table("projekty").insert({
+                    "user_id": st.session_state.user_id, 
+                    "nazwa_projektu": nazwa_projektu,
+                    "branza": "Drzwi",
+                    "dane_json": dane_do_zapisu
+                }).execute()
                 
-                if st.button("Zapisz Projekt", use_container_width=True, type="primary"):
-                    if not nazwa_projektu:
-                        st.warning("⚠️ Podaj nazwę projektu przed zapisaniem.")
-                    # --- DODANE ZABEZPIECZENIE ---
-                    elif 'user_id' not in st.session_state or not st.session_state.user_id:
-                        st.error("❌ Błąd krytyczny: Zgubiłeś sesję! Wyloguj się i zaloguj ponownie.")
-                    # ---------------------------
-                    else:
-                        try:
-                            # 1. Pakujemy wszystkie ważne dane
-                            dane_do_zapisu = {
-                                "szt_drzwi": szt_drzwi,
-                                "wybrany_model": wybrany_model,
-                                "szerokosc_muru": szerokosc_muru,
-                                "podciecie": podciecie,
-                                "demontaz": demontaz,
-                                "koszt_materialow": total_materialy,
-                                "koszt_robocizny": total_robocizna,
-                                "suma_calkowita": suma_calkowita
-                            }
-                            
-                            # 2. Wysyłamy paczkę do bazy Supabase
-                            response = supabase.table("projekty").insert({
-                                "user_id": st.session_state.user_id, 
-                                "nazwa_projektu": nazwa_projektu,
-                                "branza": "Drzwi",
-                                "dane_json": dane_do_zapisu
-                            }).execute()
-                            
-                            st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w chmurze!")
-                        except Exception as e:
-                            st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
+                st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w chmurze!")
+            except Exception as e:
+                st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
 
 
 elif branza == "Tapetowanie":
