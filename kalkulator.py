@@ -5104,8 +5104,43 @@ elif branza == "Panel Inwestora":
 
             zakupy = {k: v for k, v in zakupy.items() if len(v) > 0}
             
+           # ==============================================================
+            # 💾 GENERATOR PDF I ZAPIS W CHMURZE (PANEL INWESTORA)
+            # ==============================================================
+            st.markdown("---")
+            st.subheader("💾 Zapisz Projekt i Pobierz PDF")
+            
+            # Tworzymy dwie kolumny (Zapisz po lewej, PDF po prawej)
             col_save, col_pdf = st.columns(2)
             
+            # --- KOLUMNA 1: ZAPIS DO CHMURY ---
+            with col_save:
+                if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary"):
+                    u_id = st.session_state.get("user_id")
+                    # Zabezpieczenia, by nie wysłać pustych danych do bazy
+                    if not u_id:
+                        st.error("❌ Błąd krytyczny: Zgubiłeś sesję! Zaloguj się ponownie.")
+                    elif 'nazwa_inwestycji' not in locals() or not nazwa_inwestycji:
+                        st.warning("⚠️ Podaj nazwę inwestycji (na samej górze panelu), aby zapisać projekt.")
+                    else:
+                        try:
+                            dane_do_zapisu = {
+                                "suma_calkowita": round(calkowity_koszt_projektu),
+                                "zysk_brutto": round(zysk_brutto),
+                                "roi_procent": round(roi, 1),
+                                "lista_zakupow": zakupy 
+                            }
+                            supabase.table("projekty").insert({
+                                "user_id": u_id, 
+                                "nazwa_projektu": nazwa_inwestycji,
+                                "branza": "Kompleksowy Flip", 
+                                "dane_json": dane_do_zapisu
+                            }).execute()
+                            st.success("✅ Projekt został bezpiecznie zapisany w chmurze!")
+                        except Exception as e:
+                            st.error(f"❌ Błąd zapisu: {e}")
+
+            # --- KOLUMNA 2: GENERATOR PDF ---
             with col_pdf:
                 if st.button("Generuj Nowoczesny Kosztorys PDF", use_container_width=True):
                     try:
@@ -5113,7 +5148,6 @@ elif branza == "Panel Inwestora":
                         import os
                         from datetime import datetime
                         
-                        # --- 1. PRZENIESIONA FUNKCJA ---
                         def czysc_tekst(tekst):
                             if not tekst: return ""
                             pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
@@ -5125,7 +5159,6 @@ elif branza == "Panel Inwestora":
                         pdf = FPDF()
                         pdf.add_page()
                         
-                        # 2. KONFIGURACJA CZCIONKI INTER
                         font_path = "Inter-Regular.ttf"
                         if os.path.exists(font_path):
                             pdf.add_font("Inter", "", font_path)
@@ -5135,20 +5168,14 @@ elif branza == "Panel Inwestora":
                             pdf.set_font("Arial", size=12)
                             font_exists = False
                         
-                        # =======================================================
                         # --- SPERSONALIZOWANY NAGŁÓWEK ---
-                        # =======================================================
-                        
-                        # LOGO (po lewej)
                         logo_path = st.session_state.get('firma_logo')
                         if logo_path and os.path.exists(logo_path):
                             pdf.image(logo_path, x=10, y=8, w=35)
                         elif os.path.exists("logo.png"):
                             pdf.image("logo.png", x=10, y=8, w=35)
                         
-                        # DANE FIRMY (po prawej)
                         pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                        
                         f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
                         f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
                         f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
@@ -5163,19 +5190,16 @@ elif branza == "Panel Inwestora":
                         
                         pdf.multi_cell(90, 5, tekst_firmy, align='R')
 
-                        # =======================================================
                         # --- DESIGN: GRANATOWY BANER I TYTUŁ ---
-                        # =======================================================
-                        pdf.set_fill_color(14, 23, 43) # Ciemny granat
-                        pdf.rect(0, 35, 210, 15, 'F') # Przesunięty w dół na Y=35
+                        pdf.set_fill_color(14, 23, 43) 
+                        pdf.rect(0, 35, 210, 15, 'F') 
                         pdf.set_y(38)
                         pdf.set_text_color(255, 255, 255)
                         pdf.set_font("Arial", "B", 16) 
                         pdf.cell(190, 10, txt=czysc_tekst("PROCALC - KOSZTORYS INWESTORSKI"), ln=True, align='C')
                         
-                        # --- NAZWA PROJEKTU ---
                         pdf.set_y(55)
-                        pdf.set_text_color(0, 211, 149) # Zielony ProCalc
+                        pdf.set_text_color(0, 211, 149) 
                         pdf.set_font("Arial", "B", 20)
                         pdf.cell(190, 10, txt=czysc_tekst(nazwa_inwestycji.upper()), ln=True, align='C')
                         
@@ -5216,25 +5240,25 @@ elif branza == "Panel Inwestora":
                                     pdf.cell(5, 6, txt="", ln=0)
                                     pdf.cell(185, 6, txt=czysc_tekst(f"* {item}"), ln=True)
                                 pdf.ln(4)
+
                         # ==========================================
                         # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
                         dodaj_tarcze_ochronna(pdf, font_exists)
                         # ==========================================
+
                         # --- STOPKA ---
                         pdf.set_y(-25)
                         pdf.set_font("Inter" if font_exists else "Arial", size=8)
                         pdf.set_text_color(100, 100, 100)
                         pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
 
-                        # --- POPRAWKA BŁĘDU BYTEARRAY / ENCODE ---
+                        # --- POBIERANIE ---
                         output_pdf = pdf.output(dest='S')
-                        
                         if isinstance(output_pdf, str):
                             pdf_bytes = output_pdf.encode('latin-1', 'replace')
                         else:
                             pdf_bytes = bytes(output_pdf)
                             
-                        # --- BEZPIECZNA NAZWA PLIKU ---
                         bezpieczna_nazwa = czysc_tekst(nazwa_inwestycji)
                         bezpieczna_nazwa = "".join([c if c.isalnum() else "_" for c in bezpieczna_nazwa])
                         nazwa_pliku = f"ProCalc_{bezpieczna_nazwa}.pdf"
