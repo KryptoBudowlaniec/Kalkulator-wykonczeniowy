@@ -675,23 +675,56 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         st.success("Zapisano zmiany w profilu!")
 
 elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
-    st.header("Zarządzanie Subskrypcją ")
+    st.header("Zarządzanie Subskrypcją 🛡️")
     
     col_sub1, col_sub2 = st.columns([2, 1])
+    
     with col_sub1:
-        st.info(f"Twój obecny pakiet: **Premium {st.session_state.pakiet}**")
-        st.write("Konto aktywne i opłacone.")
-        st.write("Twoja subskrypcja odnawia się automatycznie: **12.11.2024**")
-        
+        st.write(f"Twój obecny pakiet: **{st.session_state.get('pakiet', 'Podstawowy')}**")
+
+        if st.session_state.get("pakiet") == "PRO":
+            try:
+                # 1. Sprawdzamy, czy użytkownik ma kod na 365 dni
+                odp = supabase.table("kody_aktywacyjne").select("data_aktywacji").eq("uzytkownik_id", st.session_state.user_id).execute()
+                
+                if len(odp.data) > 0 and odp.data[0].get("data_aktywacji"):
+                    from datetime import datetime, timedelta
+                    data_akt_str = odp.data[0].get("data_aktywacji")
+                    data_aktywacji = datetime.fromisoformat(data_akt_str.replace('Z', '+00:00'))
+                    waznosc = data_aktywacji + timedelta(days=365)
+                    st.success(f"✅ Konto aktywne i opłacone (Prepaid).\n\nTwoja subskrypcja wygasa: **{waznosc.strftime('%d.%m.%Y')}**")
+                else:
+                    # 2. Jeśli nie ma kodu, to znaczy że jest na 7-dniowym trialu
+                    user_res = supabase.auth.get_user()
+                    if user_res and user_res.user:
+                        from datetime import datetime, timedelta
+                        data_str = str(user_res.user.created_at)[:10] 
+                        data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
+                        waznosc = data_zalozenia + timedelta(days=7)
+                        st.info(f"🎁 Aktywna wersja próbna.\n\nTwój darmowy okres testowy wygasa: **{waznosc.strftime('%d.%m.%Y')}**")
+            except Exception as e:
+                st.write("Konto aktywne.")
+        else:
+            st.warning("🔒 Brak aktywnej subskrypcji. Aktywuj kod, aby odzyskać pełny dostęp do kalkulatorów.")
+            
         st.markdown("<br>", unsafe_allow_html=True)
-        st.button("Zarządzaj kartą płatniczą (Stripe)")
-        st.button("Pobierz ostatnie faktury")
+        
+        # --- PRZYGOTOWANE POD STRIPE / PRZYSZŁE PŁATNOŚCI ---
+        st.button("💳 Zarządzaj kartą płatniczą (Stripe)")
+        st.button("📄 Pobierz ostatnie faktury")
         
     with col_sub2:
+        # --- PANEL ANULOWANIA + INFO O KODACH ---
         st.markdown("""
+        <div style="border: 1px solid #E9ECEF; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 15px;">
+            <p style="margin-bottom: 5px; color: #6C757D; font-weight: bold;">Subskrypcja Online</p>
+            <p style="font-size: 12px; margin-bottom: 15px; color: #888;">Zarządzaj swoim planem odnawialnym.</p>
+            <button style="background: transparent; border: 1px solid #FF4B4B; color: #FF4B4B; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;">Anuluj Subskrypcję</button>
+        </div>
+        
         <div style="border: 1px solid #E9ECEF; border-radius: 10px; padding: 20px; text-align: center;">
-            <p style="margin-bottom: 5px; color: #6C757D;">Chcesz zrezygnować?</p>
-            <button style="background: transparent; border: 1px solid #FF4B4B; color: #FF4B4B; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%;">Anuluj Subskrypcję</button>
+            <p style="margin-bottom: 10px; color: #6C757D; font-size: 14px; font-weight: bold;">Masz kod z Allegro/OLX?</p>
+            <p style="font-size: 12px; color: #888;">Zaloguj się ponownie po wygaśnięciu obecnego pakietu, aby go aktywować.</p>
         </div>
         """, unsafe_allow_html=True)
 
