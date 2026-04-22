@@ -336,11 +336,11 @@ if st.session_state.get("zalogowany"):
     
     # Sprawdzamy uprawnienia tylko, jeśli pakiet to nadal "Podstawowy" (np. po świeżym logowaniu)
     if st.session_state.get("pakiet") != "PRO":
+        ma_aktywny_kod = False
+        dzisiaj = datetime.now(timezone.utc)
+        
+        # 1. NAJPIERW SPRAWDZAMY, CZY MA WYKUPIONY KOD NA 365 DNI
         try:
-            ma_aktywny_kod = False
-            dzisiaj = datetime.now(timezone.utc)
-            
-            # 1. NAJPIERW SPRAWDZAMY, CZY MA WYKUPIONY KOD NA 365 DNI
             odp = supabase.table("kody_aktywacyjne").select("*").eq("uzytkownik_id", st.session_state.user_id).execute()
             
             if len(odp.data) > 0:
@@ -355,35 +355,37 @@ if st.session_state.get("zalogowany"):
                         dni_do_konca = (data_aktywacji + timedelta(days=365) - dzisiaj).days
                         st.toast(f"💎 Pakiet PRO aktywny! Pozostało: {dni_do_konca} dni.")
                         st.rerun()
+        except Exception as e:
+            st.error(f"Błąd sprawdzania kodu rocznego: {e}")
 
-# 2. JEŚLI NIE MA KODU -> SPRAWDZAMY DARMOWY TRIAL (7 DNI)
-            if not ma_aktywny_kod:
-                user_res = supabase.auth.get_user()
-                if user_res and user_res.user:
-                    try:
-                        from datetime import datetime, date
+        # 2. JEŚLI NIE MA KODU -> SPRAWDZAMY DARMOWY TRIAL (7 DNI)
+        if not ma_aktywny_kod:
+            user_res = supabase.auth.get_user()
+            if user_res and user_res.user:
+                try:
+                    from datetime import datetime, date
+                    
+                    # Pobieramy datę z Supabase i chamsko ucinamy tylko pierwsze 10 znaków
+                    data_str = str(user_res.user.created_at)[:10] 
+                    
+                    # Tworzymy czysty, bezpieczny obiekt daty (bez stref czasowych)
+                    data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
+                    
+                    # Tworzymy świeżą, dzisiejszą datę (żeby uniknąć konfliktów ze zmiennymi)
+                    dzisiaj_bezpieczne = date.today()
+                    
+                    # Liczymy ile dni minęło
+                    dni_od_zalozenia = (dzisiaj_bezpieczne - data_zalozenia).days
+                    dni_trial = 7 - dni_od_zalozenia
+                    
+                    if dni_trial > 0:
+                        st.session_state.pakiet = "PRO"
+                        st.toast(f"🎁 Wersja próbna PRO. Pozostało darmowych dni: {dni_trial}.")
+                        st.rerun()
                         
-                        # 1. Pobieramy datę z Supabase i chamsko ucinamy tylko pierwsze 10 znaków
-                        # Nawet jeśli wróci "2024-05-24T12:00:00.123Z", zostanie samo "2024-05-24"
-                        data_str = str(user_res.user.created_at)[:10] 
-                        
-                        # 2. Tworzymy czysty, bezpieczny obiekt daty (bez stref czasowych)
-                        data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
-                        
-                        # 3. Tworzymy świeżą, dzisiejszą datę (żeby uniknąć konfliktów ze zmiennymi)
-                        dzisiaj_bezpieczne = date.today()
-                        
-                        # 4. Liczymy ile dni minęło
-                        dni_od_zalozenia = (dzisiaj_bezpieczne - data_zalozenia).days
-                        dni_trial = 7 - dni_od_zalozenia
-                        
-                        if dni_trial > 0:
-                            st.session_state.pakiet = "PRO"
-                            st.toast(f"🎁 Wersja próbna PRO. Pozostało darmowych dni: {dni_trial}.")
-                            st.rerun()
-                            
-                    except Exception as e:
-                        st.error(f"Błąd parsowania daty: {e}")
+                except Exception as e:
+                    st.error(f"Błąd parsowania daty trialu: {e}")
+
     # 3. MODUŁ AKTYWACJI (Dla kont po trialu i bez ważnego kodu)
     if st.session_state.get("pakiet") == "Podstawowy":
         st.warning("🔒 Twój darmowy okres próbny dobiegł końca. Aktywuj kod, aby odzyskać pełny dostęp na 365 dni!")
