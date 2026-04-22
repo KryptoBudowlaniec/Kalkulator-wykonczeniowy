@@ -577,7 +577,29 @@ if st.session_state.get("zalogowany") and st.session_state.get("pakiet") == "PRO
             st.success(f"🔥 Aktywny mnożnik: **+{int((mnoznik_utrudnien - 1) * 100)}%** do wyceny Twojej robocizny.")
         else:
             st.write("Brak aktywnych utrudnień (Stawki standardowe).")
-st.markdown("---")            
+st.markdown("---")
+
+# ==========================================
+    # 📈 GLOBALNA MARŻA O&P (Koszty stałe i Zysk)
+    # ==========================================
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.expander("📈 Marża O&P (Koszty Stałe i Zysk Firmy)", expanded=False):
+        st.info("Zabezpiecz płynność finansową swojej firmy. Ten suwak potajemnie doliczy procent do każdej wyceny, pokrywając koszty operacyjne (ZUS, paliwo, amortyzacja) oraz Twój czysty zysk.")
+        
+        marza_op_procent = st.slider("Ukryta marża O&P (%)", min_value=0, max_value=50, value=0, step=5)
+        
+        # Przeliczamy procent na mnożnik (np. 15% -> 1.15)
+        mnoznik_op = 1.0 + (marza_op_procent / 100.0)
+        
+        # Zapis do pamięci sesji
+        st.session_state.globalny_mnoznik_op = mnoznik_op
+        
+        if marza_op_procent > 0:
+            st.success(f"💼 Aktywna marża firmowa: **+{marza_op_procent}%**. Kwoty we wszystkich kalkulatorach zostaną niewidocznie powiększone.")
+        else:
+            st.write("Marża wyłączona (0%). Wyceniasz po kosztach bezpośrednich.")
+
+
 # --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
 <style>
@@ -1262,6 +1284,20 @@ if branza == "Malowanie":
             
             k_rob_total = (m2_razem * stawka) + koszt_rob_sztukateria
 
+            # ==========================================
+            # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+            # ==========================================
+            # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+
+            # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
+            k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+            
+            # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
+            k_mat_sredni = k_mat_sredni * mnoznik_op
+            # ==========================================
+
             with col_f2:
                 st.subheader("Wyniki i Lista zakupów")
                 
@@ -1703,6 +1739,20 @@ elif branza == "Szpachlowanie":
                 koszt_m_dodatki = (m2_total * 3.5) + koszt_flizeliny
                 koszt_m = (szt_gladzi * dane_g["cena"]) + (szt_gipsu * (dane_gips["cena"] if szt_gipsu > 0 else 0)) + (szt_gruntu * baza_grunty_szp[wybrany_grunt] * 5) + koszt_m_dodatki
                 robocizna = m2_total * stawka_szp
+
+                # ==========================================
+                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+                # ==========================================
+                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+                mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+                mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+    
+                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
+                k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+                
+                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
+                k_mat_sredni = k_mat_sredni * mnoznik_op
+                # ==========================================
                 
                 st.markdown("---")
                 st.success(f"### WARTOŚĆ CAŁKOWITA: **{round(koszt_m + robocizna)} PLN**")
@@ -2011,6 +2061,20 @@ elif branza == "Podłogi":
 
             k_robocizna = (m2_p * stawka_podl) * st.session_state.get('globalny_mnoznik', 1.0)
             usluga_plus_chemia = k_robocizna + koszt_akc 
+
+                # ==========================================
+                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+                # ==========================================
+                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+                mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+                mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+    
+                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
+                k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+                
+                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
+                k_mat_sredni = k_mat_sredni * mnoznik_op
+                # ==========================================
 
             with col_p2:
                 st.subheader("Podsumowanie Kosztorysu")
@@ -2365,6 +2429,20 @@ elif branza == "Tynkowanie":
             koszt_rob_t = m2_rob_pro * stawka_rob_t
             suma_tynki = koszt_mat_t + koszt_rob_t
 
+                            # ==========================================
+                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+                # ==========================================
+                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+    
+                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
+            k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+                
+                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
+            k_mat_sredni = k_mat_sredni * mnoznik_op
+                # ==========================================
+
             with col_t2:
                 st.subheader("Wynik PRO")
                 st.success(f"### RAZEM: **{round(suma_tynki)} PLN**")
@@ -2710,6 +2788,20 @@ elif branza == "Sucha Zabudowa":
                                  (worki_masy * baza_masy_gk[wybrana_masa]) + (rolki_tuff * 150) + (rolki_fliz * 20) + (m2_gk * 15)
                 robocizna = (m2_gk * stawka_gk) * st.session_state.get('globalny_mnoznik', 1.0)
 
+                                # ==========================================
+                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+                # ==========================================
+                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+                mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+                mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+    
+                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
+                k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+                
+                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
+                k_mat_sredni = k_mat_sredni * mnoznik_op
+                # ==========================================
+
                 # Lista zakupów
                 if rodzaj_gk == "Sufit Podwieszany":
                     lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
@@ -2915,6 +3007,20 @@ elif branza == "Elektryka":
     
     total_robocizna_e = (robocizna_baza + robocizna_osprzet + robocizna_rozdzielnica) * mnoznik_trudnosci
 
+                # ==========================================
+                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+                # ==========================================
+                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+    mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+    mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+    
+                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
+    k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+                
+                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
+    k_mat_sredni = k_mat_sredni * mnoznik_op
+                # ==========================================
+    
     # PRZYGOTOWANIE LISTY ZAKUPÓW
     lista_zakupow_ele = [
         ("Kabel 3x2.5 (Gniazda)", f"{round(kabel_25)} mb"),
@@ -4277,6 +4383,20 @@ elif branza == "Efekty Dekoracyjne":
             total_materialy = koszt_bazowy_mat + doplata_mat_dodatki
             total_robocizna = koszt_bazowy_rob + doplata_rob_dodatki
             suma_calkowita = total_materialy + total_robocizna
+
+                            # ==========================================
+                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+                # ==========================================
+                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+    
+                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
+            k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+                
+                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
+            k_mat_sredni = k_mat_sredni * mnoznik_op
+                # ==========================================
 
             # Wyciągamy samą nazwę producenta do wydruku (np. z "Fox Dekorator (Profesjonalny)" robi "Fox Dekorator")
             krotka_nazwa_systemu = wybrana_marka.split(" (")[0]
