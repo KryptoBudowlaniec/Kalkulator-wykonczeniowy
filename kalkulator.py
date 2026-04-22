@@ -5526,7 +5526,7 @@ Projekt realizowany w ramach<br>działalności nierejestrowanej.<br><br>
     
 <div style="min-width: 250px; margin-bottom: 20px; text-align: center;">
 <strong style="color: #1E1E1E; font-size: 14px; text-transform: uppercase;">Kontakt & Pomoc</strong><br><br>
-<a href="https://chat.whatsapp.com/TWOJ_LINK" target="_blank" style="text-decoration: none;">
+<a href="https://chat.whatsapp.com/C5hPUqtv3ia29csbQy5Ffy" target="_blank" style="text-decoration: none;">
 <div style="background-color: #25D366; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);">🧪 Grupa dla Testerów (WA)</div>
 </a><br>
 <a href="https://chat.whatsapp.com/C5hPUqtv3ia29csbQy5Ffy" target="_blank" style="text-decoration: none;">
