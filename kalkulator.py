@@ -1972,116 +1972,117 @@ elif branza == "Podłogi":
         
         st.info("Przejdź do zakładki Kosztorys PRO, aby wyliczyć zapasy, wybrać konkretny klej i wygenerować raport PDF.")
 
-    # ==========================================
+# ==========================================
     # TAB 2: KOSZTORYS PRO
     # ==========================================
     with tab_p2:
-    # --- BLOKADA PRO ---
-    if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
-        st.error("🔒 **Dostęp zablokowany**")
-        st.warning("Zaawansowane wyliczenia zużycia klejów, systemów poziomujących oraz generowanie PDF dostępne są w wersji PRO.")
-        
-        _, col_k, _ = st.columns([1, 2, 1])
-        with col_k:
-            if st.button("Odblokuj dostęp (Logowanie)", use_container_width=True, key="btn_odblokuj_podlogi"):
-                st.session_state.przekierowanie = True  
-                st.rerun()  
-    else:
-        # --- TYLKO DLA ZALOGOWANYCH PRO ---
-        col_p1, col_p2 = st.columns([1, 1.2])
-        
-        with col_p1:
-            st.subheader("Konfiguracja posadzki")
-            m2_p = st.number_input("Dokładny metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m_pro")
+        # --- BLOKADA PRO ---
+        if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
+            st.error("🔒 **Dostęp zablokowany**")
+            st.warning("Zaawansowane wyliczenia zużycia klejów, systemów poziomujących oraz generowanie PDF dostępne są w wersji PRO.")
             
-            system_montazu = st.radio("System montażu:", 
-                                     ["Pływający (Na podkładzie)", 
-                                      "Klejony (Deska na kleju)", 
-                                      "Płytki / Gres (System poziomujący)"])
-            
-            # --- SEKCJA BUDŻET POWIERZONY ---
-            st.markdown("---")
-            st.subheader("💰 Budżet na materiały (Allowance)")
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                budzet_m2_material = st.number_input("Budżet na materiał (zł/m2)", min_value=0, value=100, step=10)
-            with col_b2:
-                czy_uwzglednic_w_sumie = st.checkbox("Dodaj do sumy", value=True)
-
-            if system_montazu == "Płytki / Gres (System poziomujący)":
-                st.markdown("---")
-                st.write("**Parametry płytek i chemia**")
-                c_pl1, c_pl2 = st.columns(2)
-                dl_p = c_pl1.number_input("Długość płytki (cm):", 10, 200, 60)
-                sz_p = c_pl2.number_input("Szerokość płytki (cm):", 10, 200, 60)
-                typ_ukladania = "Płytki (10% zapasu)"
-                m2_paczka = st.number_input("M2 w paczce płytek:", min_value=0.1, value=1.44, step=0.01)
-                wybrany_klej_plytki = st.selectbox("Wybierz klej do gresu:", list(baza_kleje_plytki.keys()))
-            else:
-                st.markdown("---")
-                st.write("**Parametry deski/paneli**")
-                typ_ukladania = st.selectbox("Sposób układania:", ["Zwykły panel (7% zapasu)", "Jodełka (20% zapasu)"])
-                m2_paczka = st.number_input("M2 w paczce paneli/desek:", min_value=0.1, value=2.22, step=0.01)
-            
-            st.markdown("---")
-            domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
-            stawka_podl = st.number_input("Stawka za m2 montażu (zł):", 1, 300, domyslna_stawka)
-
-        # --- LOGIKA OBLICZEŃ (Poza 'with col_p1', ale wewnątrz 'else' pakietu PRO) ---
-        mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
-        mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
-        
-        calkowity_budzet_material = (m2_p * budzet_m2_material) if czy_uwzglednic_w_sumie else 0
-
-        if "Płytki" in system_montazu:
-            zapas = 0.10
+            _, col_k, _ = st.columns([1, 2, 1])
+            with col_k:
+                if st.button("Odblokuj dostęp (Logowanie)", use_container_width=True, key="btn_odblokuj_podlogi"):
+                    st.session_state.przekierowanie = True  
+                    st.rerun()  
         else:
-            zapas = 0.07 if "Zwykły" in typ_ukladania else 0.20
+            # --- TYLKO DLA ZALOGOWANYCH PRO ---
+            col_p1, col_p2 = st.columns([1, 1.2])
             
-        m2_z_zapasem = m2_p * (1 + zapas)
-        paczki_szt = int(m2_z_zapasem / m2_paczka + 0.99)
-        
-        info_zakup = [] 
-        koszt_akc = 0
+            with col_p1:
+                st.subheader("Konfiguracja posadzki")
+                m2_p = st.number_input("Dokładny metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m_pro")
+                
+                system_montazu = st.radio("System montażu:", 
+                                         ["Pływający (Na podkładzie)", 
+                                          "Klejony (Deska na kleju)", 
+                                          "Płytki / Gres (System poziomujący)"])
+                
+                # --- SEKCJA BUDŻET POWIERZONY ---
+                st.markdown("---")
+                st.subheader("💰 Budżet na materiały (Allowance)")
+                col_b1, col_b2 = st.columns(2)
+                with col_b1:
+                    budzet_m2_material = st.number_input("Budżet na materiał (zł/m2)", min_value=0, value=100, step=10, key="budzet_m2_p")
+                with col_b2:
+                    czy_uwzglednic_w_sumie = st.checkbox("Dodaj do sumy", value=True, key="czy_dodac_p")
 
-        if system_montazu == "Pływający (Na podkładzie)":
-            wybrany_mat = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)", "Standard (Pianka 10m2)"])
-            wydajnosci = {"Premium (Rolka 8m2)": 8, "Ecopor (Paczka 7m2)": 7, "Standard (Pianka 10m2)": 10}
-            ceny_p = {"Premium (Rolka 8m2)": 180, "Ecopor (Paczka 7m2)": 55, "Standard (Pianka 10m2)": 35}
-            szt_podkladu = int(m2_p / wydajnosci[wybrany_mat] + 0.99)
-            koszt_akc = szt_podkladu * ceny_p[wybrany_mat]
-            info_zakup.append((f"Podkład {wybrany_mat}", f"{szt_podkladu} szt."))
+                if system_montazu == "Płytki / Gres (System poziomujący)":
+                    st.markdown("---")
+                    st.write("**Parametry płytek i chemia**")
+                    c_pl1, c_pl2 = st.columns(2)
+                    dl_p = c_pl1.number_input("Długość płytki (cm):", 10, 200, 60, key="dl_p_p")
+                    sz_p = c_pl2.number_input("Szerokość płytki (cm):", 10, 200, 60, key="sz_p_p")
+                    typ_ukladania = "Płytki (10% zapasu)"
+                    m2_paczka = st.number_input("M2 w paczce płytek:", min_value=0.1, value=1.44, step=0.01, key="m2_paczka_p")
+                    wybrany_klej_plytki = st.selectbox("Wybierz klej do gresu:", list(baza_kleje_plytki.keys()), key="klej_p_p")
+                else:
+                    st.markdown("---")
+                    st.write("**Parametry deski/paneli**")
+                    typ_ukladania = st.selectbox("Sposób układania:", ["Zwykły panel (7% zapasu)", "Jodełka (20% zapasu)"], key="typ_ukl_p")
+                    m2_paczka = st.number_input("M2 w paczce paneli/desek:", min_value=0.1, value=2.22, step=0.01, key="m2_paczka_deska")
+                
+                st.markdown("---")
+                domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
+                stawka_podl = st.number_input("Stawka za m2 montażu (zł):", 1, 300, domyslna_stawka, key="stawka_p_pro")
 
-        elif system_montazu == "Klejony (Deska na kleju)":
-            wiader_kleju = int(m2_p / 12 + 0.99) 
-            baniek_gruntu = int(m2_p / 30 + 0.99) 
-            koszt_akc = (wiader_kleju * 280) + (baniek_gruntu * 60) 
-            info_zakup.append(("Klej poliuretanowy do podłóg (15kg)", f"{wiader_kleju} wiader"))
-            info_zakup.append(("Grunt podkładowy (5L)", f"{baniek_gruntu} baniek"))
+            # --- LOGIKA OBLICZEŃ (Wewnątrz 'else', ale poza 'with col_p1') ---
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+            
+            calkowity_budzet_material = (m2_p * budzet_m2_material) if czy_uwzglednic_w_sumie else 0
 
-        else: # Płytki / Gres
-            zuzycie_m2 = (1 / ((dl_p/100) * (sz_p/100))) * 4
-            suma_klipsow = int(zuzycie_m2 * m2_p * 1.1)
-            op_klipsy = int(suma_klipsow / 100 + 0.99)
-            kg_kleju_gres = m2_p * 5.0
-            worki_kleju = int(kg_kleju_gres / 25 + 0.99)
-            cena_wybranego_kleju = baza_kleje_plytki[wybrany_klej_plytki]
-            koszt_akc = (op_klipsy * 40) + (worki_kleju * cena_wybranego_kleju)
-            info_zakup.append(("System poziomujący (klipsy)", f"{op_klipsy} op. (po 100 szt.)"))
-            info_zakup.append((f"{wybrany_klej_plytki}", f"{worki_kleju} worków"))
+            zapas = 0.10 if "Płytki" in system_montazu else (0.07 if "Zwykły" in typ_ukladania else 0.20)
+            m2_z_zapasem = m2_p * (1 + zapas)
+            paczki_szt = int(m2_z_zapasem / m2_paczka + 0.99)
+            
+            info_zakup = [] 
+            koszt_akc = 0
 
-        # --- FINALNE NAKŁADANIE MARŻ I BUDŻETÓW ---
-        k_robocizna = (m2_p * stawka_podl) * mnoznik_op * mnoznik_utrudnien
-        koszt_akc = (koszt_akc * mnoznik_op) + calkowity_budzet_material
-        usluga_plus_chemia = k_robocizna + koszt_akc
+            if system_montazu == "Pływający (Na podkładzie)":
+                wybrany_mat = st.selectbox("Rodzaj podkładu:", ["Premium (Rolka 8m2)", "Ecopor (Paczka 7m2)", "Standard (Pianka 10m2)"], key="mat_podklad_p")
+                wydajnosci = {"Premium (Rolka 8m2)": 8, "Ecopor (Paczka 7m2)": 7, "Standard (Pianka 10m2)": 10}
+                ceny_p = {"Premium (Rolka 8m2)": 180, "Ecopor (Paczka 7m2)": 55, "Standard (Pianka 10m2)": 35}
+                szt_podkladu = int(m2_p / wydajnosci[wybrany_mat] + 0.99)
+                koszt_akc = szt_podkladu * ceny_p[wybrany_mat]
+                info_zakup.append((f"Podkład {wybrany_mat}", f"{szt_podkladu} szt."))
+
+            elif system_montazu == "Klejony (Deska na kleju)":
+                wiader_kleju = int(m2_p / 12 + 0.99) 
+                baniek_gruntu = int(m2_p / 30 + 0.99) 
+                koszt_akc = (wiader_kleju * 280) + (baniek_gruntu * 60) 
+                info_zakup.append(("Klej poliuretanowy do podłóg (15kg)", f"{wiader_kleju} wiader"))
+                info_zakup.append(("Grunt podkładowy (5L)", f"{baniek_gruntu} baniek"))
+
+            else: # Płytki / Gres
+                zuzycie_m2 = (1 / ((dl_p/100) * (sz_p/100))) * 4
+                suma_klipsow = int(zuzycie_m2 * m2_p * 1.1)
+                op_klipsy = int(suma_klipsow / 100 + 0.99)
+                kg_kleju_gres = m2_p * 5.0
+                worki_kleju = int(kg_kleju_gres / 25 + 0.99)
+                cena_wybranego_kleju = baza_kleje_plytki[wybrany_klej_plytki]
+                koszt_akc = (op_klipsy * 40) + (worki_kleju * cena_wybranego_kleju)
+                info_zakup.append(("System poziomujący (klipsy)", f"{op_klipsy} op. (po 100 szt.)"))
+                info_zakup.append((f"{wybrany_klej_plytki}", f"{worki_kleju} worków"))
+
+            # --- FINALNE NAKŁADANIE MARŻ I BUDŻETÓW ---
+            k_robocizna = (m2_p * stawka_podl) * mnoznik_op * mnoznik_utrudnien
+            koszt_akc = (koszt_akc * mnoznik_op) + calkowity_budzet_material
+            usluga_plus_chemia = k_robocizna + koszt_akc
+
+            # --- PRAWA KOLUMNA: WYNIKI (To tu był błąd!) ---
+            with col_p2:
                 st.subheader("Podsumowanie Kosztorysu")
                 
                 st.success(f"### KOSZT REALIZACJI: **{round(usluga_plus_chemia)} PLN**")
-                st.caption("Cena obejmuje robociznę oraz niezbędną chemię. Nie zawiera ceny okładziny.")
-
+                
+                if czy_uwzglednic_w_sumie:
+                    st.info(f"💡 Wycena zawiera budżet na okładziny: **{round(calkowity_budzet_material)} PLN** ({budzet_m2_material} zł/m2)")
+                
                 c1, c2 = st.columns(2)
                 c1.metric("Robocizna", f"{round(k_robocizna)} PLN")
-                c2.metric("Chemia / Podkłady", f"{round(koszt_akc)} PLN")
+                c2.metric("Chemia / Podkłady", f"{round(koszt_akc - calkowity_budzet_material)} PLN")
 
                 st.markdown("---")
                 st.subheader("Lista materiałowa")
@@ -2094,8 +2095,6 @@ elif branza == "Podłogi":
                 
                 if "Płytki" in system_montazu:
                     st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm.")
-                
-                st.markdown("---")
 
                 try:
                     from fpdf import FPDF
