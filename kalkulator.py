@@ -360,30 +360,30 @@ if st.session_state.get("zalogowany"):
             if not ma_aktywny_kod:
                 user_res = supabase.auth.get_user()
                 if user_res and user_res.user:
-                    # Pobieramy datę rejestracji (Supabase może zwrócić gotowy obiekt datetime lub tekst)
-                    data_z_bazy = user_res.user.created_at
-                    
-                    # Inteligentne rozpoznawanie formatu daty
-                    if isinstance(data_z_bazy, str):
-                        data_zalozenia = datetime.fromisoformat(data_z_bazy.replace('Z', '+00:00'))
-                    else:
-                        data_zalozenia = data_z_bazy # To już jest gotowy obiekt datetime!
+                    try:
+                        from datetime import datetime, date
                         
-                    # Ubezpieczenie strefy czasowej (aby nie było błędu porównywania stref)
-                    from datetime import timezone
-                    if data_zalozenia.tzinfo is None:
-                        data_zalozenia = data_zalozenia.replace(tzinfo=timezone.utc)
-                    
-                    # Jeśli od rejestracji minęło mniej niż 7 dni
-                    if dzisiaj < data_zalozenia + timedelta(days=7):
-                        st.session_state.pakiet = "PRO"
-                        dni_trial = (data_zalozenia + timedelta(days=7) - dzisiaj).days
-                        dni_trial = max(1, dni_trial) # Zabezpieczenie wizualne na ostatni dzień
-                        st.toast(f"🎁 Wersja próbna PRO. Pozostało darmowych dni: {dni_trial}.")
-                        st.rerun()
+                        # 1. Pobieramy datę z Supabase i chamsko ucinamy tylko pierwsze 10 znaków
+                        # Nawet jeśli wróci "2024-05-24T12:00:00.123Z", zostanie samo "2024-05-24"
+                        data_str = str(user_res.user.created_at)[:10] 
                         
-        except Exception as e:
-            st.error(f"Błąd sprawdzania subskrypcji: {e}")
+                        # 2. Tworzymy czysty, bezpieczny obiekt daty (bez stref czasowych)
+                        data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
+                        
+                        # 3. Tworzymy świeżą, dzisiejszą datę (żeby uniknąć konfliktów ze zmiennymi)
+                        dzisiaj_bezpieczne = date.today()
+                        
+                        # 4. Liczymy ile dni minęło
+                        dni_od_zalozenia = (dzisiaj_bezpieczne - data_zalozenia).days
+                        dni_trial = 7 - dni_od_zalozenia
+                        
+                        if dni_trial > 0:
+                            st.session_state.pakiet = "PRO"
+                            st.toast(f"🎁 Wersja próbna PRO. Pozostało darmowych dni: {dni_trial}.")
+                            st.rerun()
+                            
+                    except Exception as e:
+                        st.error(f"Błąd parsowania daty: {e}")
     # 3. MODUŁ AKTYWACJI (Dla kont po trialu i bez ważnego kodu)
     if st.session_state.get("pakiet") == "Podstawowy":
         st.warning("🔒 Twój darmowy okres próbny dobiegł końca. Aktywuj kod, aby odzyskać pełny dostęp na 365 dni!")
