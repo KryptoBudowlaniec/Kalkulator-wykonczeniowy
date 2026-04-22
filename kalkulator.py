@@ -580,26 +580,22 @@ if st.session_state.get("zalogowany") and st.session_state.get("pakiet") == "PRO
 st.markdown("---")
 
 # ==========================================
-    # 📈 GLOBALNA MARŻA O&P (Koszty stałe i Zysk)
-    # ==========================================
-    st.markdown("<br>", unsafe_allow_html=True)
-    with st.expander("📈 Marża O&P (Koszty Stałe i Zysk Firmy)", expanded=False):
-        st.info("Zabezpiecz płynność finansową swojej firmy. Ten suwak potajemnie doliczy procent do każdej wyceny, pokrywając koszty operacyjne (ZUS, paliwo, amortyzacja) oraz Twój czysty zysk.")
-        
-        marza_op_procent = st.slider("Ukryta marża O&P (%)", min_value=0, max_value=50, value=0, step=5)
-        
-        # Przeliczamy procent na mnożnik (np. 15% -> 1.15)
-        mnoznik_op = 1.0 + (marza_op_procent / 100.0)
-        
-        # Zapis do pamięci sesji
-        st.session_state.globalny_mnoznik_op = mnoznik_op
-        
-        if marza_op_procent > 0:
-            st.success(f"💼 Aktywna marża firmowa: **+{marza_op_procent}%**. Kwoty we wszystkich kalkulatorach zostaną niewidocznie powiększone.")
-        else:
-            st.write("Marża wyłączona (0%). Wyceniasz po kosztach bezpośrednich.")
+# 📈 GLOBALNA MARŻA O&P (Koszty stałe i Zysk)
+# ==========================================
+st.markdown("<br>", unsafe_allow_html=True)
+with st.expander("📈 Marża O&P (Koszty Stałe i Zysk Firmy)", expanded=False):
+    st.info("Zabezpiecz płynność finansową swojej firmy. Ten suwak potajemnie doliczy procent do każdej wyceny, pokrywając koszty operacyjne (ZUS, paliwo, amortyzacja) oraz Twój czysty zysk.")
+    
+    marza_op_procent = st.slider("Ukryta marża O&P (%)", min_value=0, max_value=50, value=0, step=5)
+    
+    mnoznik_op = 1.0 + (marza_op_procent / 100.0)
+    st.session_state.globalny_mnoznik_op = mnoznik_op
+    
+    if marza_op_procent > 0:
+        st.success(f"💼 Aktywna marża firmowa: **+{marza_op_procent}%**. Kwoty we wszystkich kalkulatorach zostaną niewidocznie powiększone.")
+    else:
+        st.write("Marża wyłączona (0%). Wyceniasz po kosztach bezpośrednich.")
 
-# Kreska zamykająca CAŁĄ SEKCJE PRO (dlatego musi być bez wcięcia)
 st.markdown("---")
 
 
