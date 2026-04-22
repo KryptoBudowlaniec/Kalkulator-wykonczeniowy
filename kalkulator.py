@@ -2029,11 +2029,13 @@ elif branza == "Podłogi":
                 domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
                 stawka_podl = st.number_input("Stawka za m2 montażu (zł):", 1, 300, domyslna_stawka)
 
-            # --- LOGIKA OBLICZEŃ (Poprawiona) ---
+            # --- LOGIKA OBLICZEŃ (Wyrównana) ---
+            # Te linijki muszą być w tej samej linii co 'with col_p1'
             mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
             mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
-
-            # Obliczamy budżet powierzony
+            
+            # Obliczamy budżet powierzony (Allowance)
+            # Upewnij się, że zmienne budzet_m2_material i czy_uwzglednic_w_sumie są zdefiniowane wyżej
             calkowity_budzet_material = (m2_p * budzet_m2_material) if czy_uwzglednic_w_sumie else 0
 
             if "Płytki" in system_montazu:
