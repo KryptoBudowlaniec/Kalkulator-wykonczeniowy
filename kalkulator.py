@@ -5502,9 +5502,7 @@ def create_pdf_link(file_path, link_name):
 link_reg = create_pdf_link("Regulamin_ProCalc_v1.pdf", "Regulamin serwisu")
 link_rodo = create_pdf_link("Polityka_Prywatnosci_ProCalc_v2.pdf", "Polityka prywatności (RODO)")
 
-# ==========================================
-# ROZSZERZONY FOOTER (DZIAŁALNOŚĆ NIEREJESTROWANA)
-# ==========================================
+
 # ==========================================
 # ROZSZERZONY FOOTER (DZIAŁALNOŚĆ NIEREJESTROWANA)
 # ==========================================
@@ -5533,7 +5531,7 @@ Projekt realizowany w ramach<br>działalności nierejestrowanej.<br><br>
 <a href="https://chat.whatsapp.com/TWOJ_LINK" target="_blank" style="text-decoration: none;">
 <div style="background-color: #25D366; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);">🧪 Grupa dla Testerów (WA)</div>
 </a><br>
-<a href="https://wa.me/TWOJ_NUMER" target="_blank" style="text-decoration: none;">
+<a href="https://chat.whatsapp.com/C5hPUqtv3ia29csbQy5Ffy" target="_blank" style="text-decoration: none;">
 <div style="background-color: #0E172B; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; display: inline-block; width: 80%; box-shadow: 0 4px 6px rgba(14, 23, 43, 0.2);">🤖 Support / Chat AI</div>
 </a><br>
 <a href="/?p=prywatnosc" target="_self" style="color: #00D395; text-decoration: none; font-weight: 600;">Polityka Prywatności</a> | 
