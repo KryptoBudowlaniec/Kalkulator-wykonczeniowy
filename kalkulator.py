@@ -2059,21 +2059,20 @@ elif branza == "Podłogi":
                 info_zakup.append((f"{wybrany_klej_plytki}", f"{worki_kleju} worków"))
 
             k_robocizna = (m2_p * stawka_podl) * st.session_state.get('globalny_mnoznik', 1.0)
+            # ==========================================
+            # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+            # ==========================================
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+
+            # 2. Powiększamy robociznę podłogową (Zysk O&P + Utrudnienia)
+            k_robocizna = k_robocizna * mnoznik_op * mnoznik_utrudnien
+            
+            # W opcji premium narzucamy marżę O&P na materiały dodatkowe (kleje, klipsy)
+            koszt_akc = koszt_akc * mnoznik_op
+            # ==========================================
             usluga_plus_chemia = k_robocizna + koszt_akc 
 
-                # ==========================================
-                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
-                # ==========================================
-                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
-                mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
-                mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
-    
-                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
-                k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
-                
-                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
-                k_mat_sredni = k_mat_sredni * mnoznik_op
-                # ==========================================
 
             with col_p2:
                 st.subheader("Podsumowanie Kosztorysu")
