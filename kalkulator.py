@@ -599,6 +599,9 @@ st.markdown("---")
         else:
             st.write("Marża wyłączona (0%). Wyceniasz po kosztach bezpośrednich.")
 
+# Kreska zamykająca CAŁĄ SEKCJE PRO (dlatego musi być bez wcięcia)
+st.markdown("---")
+
 
 # --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
