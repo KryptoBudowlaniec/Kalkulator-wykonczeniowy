@@ -1990,7 +1990,7 @@ elif branza == "Podłogi":
             # --- TYLKO DLA ZALOGOWANYCH PRO ---
             col_p1, col_p2 = st.columns([1, 1.2])
             
-            with col_p1:
+    with col_p1:
                 st.subheader("Konfiguracja posadzki")
                 m2_p = st.number_input("Dokładny metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m_pro")
                 
@@ -1999,8 +1999,19 @@ elif branza == "Podłogi":
                                           "Klejony (Deska na kleju)", 
                                           "Płytki / Gres (System poziomujący)"])
                 
+                # --- TUTAJ WKLEJAMY NOWĄ SEKCJĘ PRO ---
+                st.markdown("---")
+                st.subheader("💰 Budżet na materiały (Allowance)")
+                col_b1, col_b2 = st.columns(2)
+                with col_b1:
+                    budzet_m2_material = st.number_input("Budżet na materiał (zł/m2)", min_value=0, value=100, step=10)
+                with col_b2:
+                    czy_uwzglednic_w_sumie = st.checkbox("Dodaj do sumy", value=True)
+                # --------------------------------------
+
                 if system_montazu == "Płytki / Gres (System poziomujący)":
                     st.markdown("---")
+                    # ... reszta Twojego kodu z parametrami płytek ...
                     st.write("**Parametry płytek i chemia**")
                     c_pl1, c_pl2 = st.columns(2)
                     dl_p = c_pl1.number_input("Długość płytki (cm):", 10, 200, 60)
@@ -2018,7 +2029,13 @@ elif branza == "Podłogi":
                 domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
                 stawka_podl = st.number_input("Stawka za m2 montażu (zł):", 1, 300, domyslna_stawka)
 
-            # --- LOGIKA OBLICZEŃ ---
+            # --- LOGIKA OBLICZEŃ (Poprawiona) ---
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+
+            # Obliczamy budżet powierzony
+            calkowity_budzet_material = (m2_p * budzet_m2_material) if czy_uwzglednic_w_sumie else 0
+
             if "Płytki" in system_montazu:
                 zapas = 0.10
             else:
@@ -2066,13 +2083,12 @@ elif branza == "Podłogi":
             mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
 
             # 2. Powiększamy robociznę podłogową (Zysk O&P + Utrudnienia)
-            k_robocizna = k_robocizna * mnoznik_op * mnoznik_utrudnien
+            k_robocizna = (m2_p * stawka_podl) * mnoznik_op * mnoznik_utrudnien
             
             # W opcji premium narzucamy marżę O&P na materiały dodatkowe (kleje, klipsy)
-            koszt_akc = koszt_akc * mnoznik_op
-            # ==========================================
-            usluga_plus_chemia = k_robocizna + koszt_akc 
-
+            koszt_akc = (koszt_akc * mnoznik_op) + calkowity_budzet_material
+            
+            usluga_plus_chemia = k_robocizna + koszt_akc
 
             with col_p2:
                 st.subheader("Podsumowanie Kosztorysu")
