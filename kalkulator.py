@@ -356,13 +356,23 @@ if st.session_state.get("zalogowany"):
                         st.toast(f"💎 Pakiet PRO aktywny! Pozostało: {dni_do_konca} dni.")
                         st.rerun()
 
-            # 2. JEŚLI NIE MA KODU -> SPRAWDZAMY DARMOWY TRIAL (7 DNI)
+# 2. JEŚLI NIE MA KODU -> SPRAWDZAMY DARMOWY TRIAL (7 DNI)
             if not ma_aktywny_kod:
                 user_res = supabase.auth.get_user()
                 if user_res and user_res.user:
-                    # Pobieramy ukrytą datę rejestracji z Supabase
-                    data_zalozenia_str = user_res.user.created_at
-                    data_zalozenia = datetime.fromisoformat(data_zalozenia_str.replace('Z', '+00:00'))
+                    # Pobieramy datę rejestracji (Supabase może zwrócić gotowy obiekt datetime lub tekst)
+                    data_z_bazy = user_res.user.created_at
+                    
+                    # Inteligentne rozpoznawanie formatu daty
+                    if isinstance(data_z_bazy, str):
+                        data_zalozenia = datetime.fromisoformat(data_z_bazy.replace('Z', '+00:00'))
+                    else:
+                        data_zalozenia = data_z_bazy # To już jest gotowy obiekt datetime!
+                        
+                    # Ubezpieczenie strefy czasowej (aby nie było błędu porównywania stref)
+                    from datetime import timezone
+                    if data_zalozenia.tzinfo is None:
+                        data_zalozenia = data_zalozenia.replace(tzinfo=timezone.utc)
                     
                     # Jeśli od rejestracji minęło mniej niż 7 dni
                     if dzisiaj < data_zalozenia + timedelta(days=7):
@@ -374,7 +384,6 @@ if st.session_state.get("zalogowany"):
                         
         except Exception as e:
             st.error(f"Błąd sprawdzania subskrypcji: {e}")
-
     # 3. MODUŁ AKTYWACJI (Dla kont po trialu i bez ważnego kodu)
     if st.session_state.get("pakiet") == "Podstawowy":
         st.warning("🔒 Twój darmowy okres próbny dobiegł końca. Aktywuj kod, aby odzyskać pełny dostęp na 365 dni!")
