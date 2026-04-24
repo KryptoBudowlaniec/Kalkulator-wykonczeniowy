@@ -2763,8 +2763,30 @@ elif branza == "Sucha Zabudowa":
                 st.markdown("---")
                 typ_tasmy = st.radio("Zbrojenie laczy:", ["Tuff-Tape (Calosc)", "Flizelina + Tuff-Tape"], key="gk_tasma_pro")
                 wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()), key="gk_masa_pro")
-                stawka_gk = st.number_input("Stawka robocizny (zl/m2):", 1, 300, 110, key="gk_rob_pro")
-
+                # --- NOWOŚĆ: Widełki cenowe w dymku ---
+                widelki_gk = """
+                **Średnie stawki rynkowe robocizny (Polska):**
+                
+                **Zabudowy sufitów:**
+                • Sufit podwieszany prosty: **100 - 150 zł/m²**
+                • Sufit wielopoziomowy (wnęki, LED): **160 - 250 zł/m²**
+                
+                **Ścianki i przedścianki:**
+                • Przedścianka na stelażu / Klejenie: **60 - 100 zł/m²**
+                • Ścianka działowa (1xGK + wełna): **80 - 120 zł/m²**
+                • Ścianka działowa (2xGK + wełna akustyczna): **130 - 180 zł/m²**
+                
+                **Ważna uwaga do wyceny:**
+                Powyższe stawki standardowo obejmują montaż oraz spoinowanie połączeń i wkrętów (Standard Q1/Q2). 
+                Stawka NIE obejmuje gładzi całopowierzchniowej (Q3/Q4) ani malowania.
+                """
+                
+                stawka_gk = st.number_input(
+                    "Stawka robocizny (zł/m²):", 
+                    min_value=1, max_value=300, value=110, 
+                    key="gk_rob_pro", 
+                    help=widelki_gk
+                )
             # --- LOGIKA MATERIAŁOWA ---
             if m2_gk > 0:
                 nad = 1.10
