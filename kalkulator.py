@@ -3108,7 +3108,7 @@ elif branza == "Elektryka":
         "Premium (np. Berker R.1, Jung, Gira)": 110
     }
 
-    with col_e1:
+with col_e1:
         st.subheader("Parametry instalacji")
         m2_mieszkania = st.number_input("Metraz mieszkania (m2):", min_value=10, value=60)
         mnoznik_m2 = m2_mieszkania / 60
@@ -3118,7 +3118,26 @@ elif branza == "Elektryka":
         typ_scian = st.radio("Material scian:", ["Gazobeton/Cegla", "Zelbet (Wielka Plyta)"])
         n_punkty_tele = 2
         wybrany_standard = st.selectbox("Marka osprzetu:", list(opcje_osprzetu.keys()), index=1)
-        stawka_punkt = st.slider("Stawka montazu osprzetu (zl/szt):", 1, 100, 45)
+        
+        # --- NOWOSC: Sciaga cenowa dla elektryki ---
+        widelki_elektryka = """
+        Srednie stawki rynkowe robocizny (Polska):
+        
+        Instalacje elektryczne:
+        - Bialy montaz (gniazda, wlaczniki): 30 - 60 zl/szt.
+        - Punkt elektryczny (kabel, bruzda, puszka): 100 - 150 zl/punkt
+        - Montaz i zaszycie rozdzielnicy: 1000 - 2500 zl (zaleznie od wielkosci)
+        - Pomiary instalacji: 15 - 30 zl/punkt
+        
+        Wazna uwaga:
+        Praca w zelbecie (Wielka Plyta) jest znacznie bardziej obciazajaca dla sprzetu i narzedzi. Rynkowo dolicza sie od 30% do 50% narzutu do ceny podstawowej za kucie bruzd i otworow pod puszki.
+        """
+        
+        stawka_punkt = st.slider(
+            "Stawka montazu osprzetu (zl/szt):", 
+            min_value=1, max_value=100, value=45,
+            help=widelki_elektryka
+        )
 
     # --- OBLICZENIA ---
     kabel_25 = 150 * mnoznik_m2
@@ -3139,7 +3158,7 @@ elif branza == "Elektryka":
     
     total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
 
-    # ROBOCIZNA
+    # --- ROBOCIZNA ---
     mnoznik_trudnosci = 1.4 if typ_scian == "Zelbet (Wielka Plyta)" else 1.0
     robocizna_baza = (m2_mieszkania * 90) # Podstawa za mb i bruzdy
     robocizna_osprzet = (n_punktow + n_punkty_tele) * stawka_punkt
@@ -3147,19 +3166,16 @@ elif branza == "Elektryka":
     
     total_robocizna_e = (robocizna_baza + robocizna_osprzet + robocizna_rozdzielnica) * mnoznik_trudnosci
 
-                # ==========================================
-                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
-                # ==========================================
-                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+    # ==========================================
+    # APLIKACJA UKRYTYCH MNOZNIKOW (PRO)
+    # ==========================================
     mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
     mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
     
-                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
-    k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
-                
-                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
-    k_mat_sredni = k_mat_sredni * mnoznik_op
-                # ==========================================
+    # NAPRAWA: Zastosowano prawidlowe nazwy zmiennych dla tego modulu
+    total_robocizna_e = total_robocizna_e * mnoznik_op * mnoznik_utrudnien
+    total_material_e = total_material_e * mnoznik_op
+    # ==========================================
     
     # PRZYGOTOWANIE LISTY ZAKUPÓW
     lista_zakupow_ele = [
