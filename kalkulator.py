@@ -2648,7 +2648,7 @@ elif branza == "Sucha Zabudowa":
 
 
             
-        col_g1, col_g2 = st.columns([1, 1.2])
+            col_g1, col_g2 = st.columns([1, 1.2])
 
             with col_g1:
                 st.subheader("Konfiguracja konstrukcji")
