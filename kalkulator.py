@@ -2077,7 +2077,32 @@ elif branza == "Podłogi":
                 
                 st.markdown("---")
                 domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
-                stawka_podl = st.number_input("Stawka za m2 montażu (zł):", 1, 300, domyslna_stawka, key="stawka_p_pro")
+                # --- NOWOŚĆ: Ściąga cenowa dla Podłóg i Płytek ---
+                widelki_podlogi = """
+                Średnie stawki rynkowe robocizny (Polska):
+                
+                Panele i Drewno (Układanie z listwowaniem):
+                - Panele laminowane (standardowe): 35 - 50 zł/m2
+                - Panele winylowe (Click / Pływające): 45 - 65 zł/m2
+                - Jodełka (panele układane pływająco): 70 - 100 zł/m2
+                - Winyl klejony (Dryback, wymaga idealnego podłoża): 80 - 120 zł/m2
+                - Jodełka klasyczna (drewno klejone do podłoża): 130 - 180 zł/m2
+                
+                Płytki podłogowe (Gres / Terakota):
+                - Standardowe formaty (np. 60x60 cm): 120 - 180 zł/m2
+                - Wielki format (np. 120x60 cm i większe): 180 - 250+ zł/m2
+                - Cokoły z płytek (cięte lub gotowe): 35 - 55 zł/mb
+                
+                Ważna uwaga:
+                Powyższe stawki dotyczą samego układania na gotowym podłożu. Prace przygotowawcze, takie jak wylewki samopoziomujące, szlifowanie subitu czy zrywanie starych posadzek, są wyceniane oddzielnie (kalkulator dolicza je w zakładce 'Przygotowanie podłoża').
+                """
+                
+                stawka_podl = st.number_input(
+                    "Stawka za m2 układania (zł):", 
+                    min_value=1, max_value=500, value=45, 
+                    key="stawka_podl_pro",
+                    help=widelki_podlogi
+                )
 
             # --- LOGIKA OBLICZEŃ (Wewnątrz 'else', ale poza 'with col_p1') ---
             mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
