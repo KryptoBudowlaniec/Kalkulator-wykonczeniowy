@@ -2018,6 +2018,33 @@ elif branza == "Podłogi":
             with col_p1:
                 st.subheader("Konfiguracja posadzki")
                 m2_p = st.number_input("Dokładny metraż podłogi (m2):", min_value=0.1, value=20.0, step=0.1, key="pod_m_pro")
+
+                # --- NOWOŚĆ: DEMONTAŻE I PRZYGOTOWANIE PODŁOŻA ---
+                st.markdown("---")
+                with st.expander("🔨 Przygotowanie podłoża i Demontaże (Opcjonalne)", expanded=False):
+                    st.info("Zaznacz prace przygotowawcze. Zużycie wylewki liczone jest automatycznie na podstawie grubości wylewu.")
+                    c_prep1, c_prep2 = st.columns(2)
+                    
+                    with c_prep1:
+                        st.write("**Demontaże i czyszczenie:**")
+                        dem_parkiet = st.checkbox("Zerwanie starego parkietu/desek", key="dem_parkiet_p")
+                        dem_plytki = st.checkbox("Skuwanie starych płytek", key="dem_plytki_p")
+                        szlifowanie = st.checkbox("Szlifowanie posadzki (resztki kleju, subitu)", key="szlifowanie_p")
+                    
+                    with c_prep2:
+                        st.write("**Wyrównanie podłoża:**")
+                        wylewka = st.checkbox("Wylewka samopoziomująca", key="wylewka_p")
+                        
+                        grubosc_wyl = 0
+                        wybrana_wylewka = None
+                        if wylewka:
+                            grubosc_wyl = st.number_input("Średnia grubość wylewki (mm):", min_value=1, max_value=50, value=5, key="grubosc_wyl_p")
+                            wybrana_wylewka = st.selectbox("Rodzaj wylewki:", [
+                                "Standard (np. Atlas SMS 15)", 
+                                "Szybka (np. Ceresit CN 68)", 
+                                "Wzmocniona (np. Mapei Ultraplan)"
+                            ], key="rodzaj_wyl_p")
+                st.markdown("---")
                 
                 system_montazu = st.radio("System montażu:", 
                                          ["Pływający (Na podkładzie)", 
@@ -2091,10 +2118,56 @@ elif branza == "Podłogi":
                 info_zakup.append(("System poziomujący (klipsy)", f"{op_klipsy} op. (po 100 szt.)"))
                 info_zakup.append((f"{wybrany_klej_plytki}", f"{worki_kleju} worków"))
 
-            # --- FINALNE NAKŁADANIE MARŻ I BUDŻETÓW ---
-            k_robocizna = (m2_p * stawka_podl) * mnoznik_op * mnoznik_utrudnien
-            koszt_akc = (koszt_akc * mnoznik_op) + calkowity_budzet_material
+            # --- LOGIKA DEMONTAŻY I WYLEWEK ---
+            koszt_rob_prep = 0
+            koszt_mat_prep = 0
+            
+            # Stawki za robociznę (możesz je dostosować)
+            if dem_parkiet: koszt_rob_prep += (m2_p * 40)
+            if dem_plytki: koszt_rob_prep += (m2_p * 50)
+            if szlifowanie: koszt_rob_prep += (m2_p * 35)
+
+            if wylewka:
+                # Robocizna za wylanie + gruntowanie
+                koszt_rob_prep += (m2_p * 35) 
+                
+                # Grunt (ok 0.2L na m2)
+                litry_gruntu = m2_p * 0.2
+                baniek_gruntu = int(litry_gruntu / 5 + 0.99) # bańki 5L
+                koszt_mat_prep += (baniek_gruntu * 55) # 55 zł za bańkę
+                info_zakup.append(("Grunt pod wylewkę (5L)", f"{baniek_gruntu} szt."))
+                
+                # Wylewka (Średnie zużycie to 1.5 kg na 1 m2 na 1 mm grubości)
+                kg_wylewki = m2_p * 1.5 * grubosc_wyl
+                worki_wylewki = int(kg_wylewki / 25 + 0.99)
+                
+                ceny_wylewek = {
+                    "Standard (np. Atlas SMS 15)": 45, 
+                    "Szybka (np. Ceresit CN 68)": 55, 
+                    "Wzmocniona (np. Mapei Ultraplan)": 75
+                }
+                koszt_mat_prep += (worki_wylewki * ceny_wylewek[wybrana_wylewka])
+                info_zakup.append((f"Wylewka samopoziomująca ({wybrana_wylewka})", f"{worki_wylewki} worków"))
+
+           # --- FINALNE SUMOWANIE I MNOŻNIKI (PRAWIDŁOWA KOLEJNOŚĆ) ---
+            
+            # 1. Zsumowana sucha robocizna (Układanie + Kucie/Wylewka)
+            k_robocizna_baza = (m2_p * stawka_podl) + koszt_rob_prep 
+            
+            # 2. Zsumowany suchy materiał (Chemia podłogowa/Kleje + Grunt/Wylewki)
+            koszt_akc_baza = koszt_akc + koszt_mat_prep
+
+            # 3. Pobieramy ukryte mnożniki PRO
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+
+            # 4. Aplikacja mnożników (Powiększamy robociznę i materiały)
+            k_robocizna = k_robocizna_baza * mnoznik_op * mnoznik_utrudnien
+            koszt_akc = (koszt_akc_baza * mnoznik_op) + calkowity_budzet_material
+            
+            # 5. Wynik końcowy dla podłóg
             usluga_plus_chemia = k_robocizna + koszt_akc
+
 
             # --- PRAWA KOLUMNA: WYNIKI (To tu był błąd!) ---
             with col_p2:
