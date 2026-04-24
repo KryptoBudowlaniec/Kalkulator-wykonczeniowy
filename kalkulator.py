@@ -2191,7 +2191,7 @@ elif branza == "Podłogi":
                 worki_wylewki = int(kg_wylewki / 25 + 0.99)
                 
                 ceny_wylewek = {
-                    "Standard (np. Atlas SMS 15)": 45, 
+                    "Standard (np. Atlas SMS 30)": 45, 
                     "Szybka (np. Ceresit CN 68)": 55, 
                     "Wzmocniona (np. Mapei Ultraplan)": 75
                 }
