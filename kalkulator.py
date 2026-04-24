@@ -4068,7 +4068,7 @@ elif branza == "Drzwi":
                 if doplata_demontaz > 0: st.write(f"- Demontaż starych drzwi: {doplata_demontaz} PLN")
                 st.write(f"**Łącznie za 1 sztukę: {robocizna_jednostkowa} PLN**")
 
-               # --- GENERATOR PDF (DRZWI) ---
+        # --- GENERATOR PDF (DRZWI) ---
         try:
             from fpdf import FPDF
             from datetime import datetime
@@ -4183,18 +4183,25 @@ elif branza == "Drzwi":
                 pdf.set_text_color(100, 100, 100)
                 pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
 
-                # --- BEZPIECZNE POBIERANIE ---
+                # --- BEZPIECZNE ZAPISANIE DO PAMIĘCI ---
                 pdf_bytes = pdf.output(dest="S")
                 safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
                 
-                # ... tu jest pobieranie PDF ...
-            st.download_button(
-                label="Pobierz Kosztorys PDF",
-                data=safe_bytes,
-                file_name=f"Kosztorys_Drzwi_{datetime.now().strftime('%Y%m%d')}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
+                # Zapisujemy do sesji! 
+                st.session_state['pdf_drzwi_gotowy'] = safe_bytes
+                
+            # --- WYSWIETLANIE PRZYCISKU POBIERANIA ---
+            # Ten kod wywoła się tylko, jeśli PDF został już wygenerowany w pamięci
+            if 'pdf_drzwi_gotowy' in st.session_state:
+                st.success("✅ Kosztorys wygenerowany pomyślnie!")
+                st.download_button(
+                    label="Pobierz Kosztorys PDF",
+                    data=st.session_state['pdf_drzwi_gotowy'],
+                    file_name=f"Kosztorys_Drzwi_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+                
         except Exception as e:
             st.error(f"Błąd podczas generowania PDF: {e}")
 
