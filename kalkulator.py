@@ -2064,7 +2064,7 @@ elif branza == "Podłogi":
                             stawka_wylewka = st.number_input("Robocizna wylewka (zł/m2):", 1, 200, 35, key="st_wyl", help=widelki_prep)
                             grubosc_wyl = st.number_input("Średnia grubość wylewki (mm):", min_value=1, max_value=50, value=5, key="grubosc_wyl_p")
                             wybrana_wylewka = st.selectbox("Rodzaj wylewki:", [
-                                "Standard (np. Atlas SMS 15)", 
+                                "Standard (np. Atlas SMS 30)", 
                                 "Szybka (np. Ceresit CN 68)", 
                                 "Wzmocniona (np. Mapei Ultraplan)"
                             ], key="rodzaj_wyl_p")
