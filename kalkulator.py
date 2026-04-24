@@ -2756,6 +2756,11 @@ elif branza == "Sucha Zabudowa":
                     idx = opcje_welny.index(szer_profilu) if szer_profilu in opcje_welny else 0
                     grubosc_welny = st.selectbox("Grubosc welny:", opcje_welny, index=idx, format_func=lambda x: f"{x} mm")
 
+                # --- NOWOŚĆ: Dodatki systemowe ---
+                tasma_akustyczna = st.checkbox("Tasma akustyczna pod profile obwodowe", value=True, help="Liczy rolki 30m na podstawie obwodu", key="gk_tasma_akust")
+                folia_paro = st.checkbox("Folia paroizolacyjna (Zapas 15%)", key="gk_folia")
+
+                st.markdown("---")
                 typ_tasmy = st.radio("Zbrojenie laczy:", ["Tuff-Tape (Calosc)", "Flizelina + Tuff-Tape"], key="gk_tasma_pro")
                 wybrana_masa = st.selectbox("Masa do spoinowania:", list(baza_masy_gk.keys()), key="gk_masa_pro")
                 stawka_gk = st.number_input("Stawka robocizny (zl/m2):", 1, 300, 110, key="gk_rob_pro")
@@ -2791,13 +2796,11 @@ elif branza == "Sucha Zabudowa":
                 # Obliczanie konstrukcji i drutów
                 if rodzaj_gk == "Sufit Podwieszany":
                     koszt_profile = (szt_cd * baza_mat_gk["Profil CD60 (3mb)"]) + (szt_ud * baza_mat_gk["Profil UD27 (3mb)"])
-                    
-                    # Logika Wieszaków i Drutów!
                     if "obrotowe" in typ_wieszaka:
-                        szacunek_cena_drutu = 0.5 + (dl_drutu / 100.0) * 1.2 # Dłuższy drut = drożej
+                        szacunek_cena_drutu = 0.5 + (dl_drutu / 100.0) * 1.2
                         koszt_wieszakow = (szt_wieszaki * 1.2) + (szt_wieszaki * szacunek_cena_drutu)
                     else:
-                        koszt_wieszakow = szt_wieszaki * 1.5 # Standardowe wieszaki ES
+                        koszt_wieszakow = szt_wieszaki * 1.5 
                         
                 elif rodzaj_gk == "Sciana Dzialowa":
                     koszt_profile = (szt_cw * baza_mat_gk.get(f"Profil CW{szer_profilu} (3mb)", 0)) + \
@@ -2818,10 +2821,34 @@ elif branza == "Sucha Zabudowa":
                     elif "Klejenie" in typ_konstrukcji_gk:
                         worki_kleju = int((m2_gk * 5 / 25) + 0.99)
                         dodatkowy_koszt_przed = worki_kleju * 38
-                
-                # Suma materiałów bazowych
+
+                # --- NOWOŚĆ: Koszty folii i taśmy akustycznej ---
+                koszt_tasma_akustyczna = 0
+                rolki_tasmy_akust = 0
+                if tasma_akustyczna:
+                    mb_obwodu = 0
+                    if rodzaj_gk == "Sufit Podwieszany":
+                        for p in st.session_state.pokoje_sufit:
+                            mb_obwodu += (p['dl'] + p['sz']) * 2
+                    elif rodzaj_gk == "Sciana Dzialowa":
+                        mb_obwodu = (szer_sciany + wys_sciany) * 2
+                    elif rodzaj_gk == "Przedscianka (Wyrownanie)":
+                        mb_obwodu = (szer_przed + wys_przed) * 2
+
+                    if mb_obwodu > 0:
+                        rolki_tasmy_akust = int(mb_obwodu / 30) + 1
+                        koszt_tasma_akustyczna = rolki_tasmy_akust * 25 # Ok 25 zł za rolkę
+
+                koszt_folii = 0
+                m2_folii_zapas = 0
+                if folia_paro:
+                    m2_folii_zapas = m2_gk * 1.15 # 15% zapasu na zakłady
+                    koszt_folii = m2_folii_zapas * 3.5 # Folia + taśma dwustronna
+
+                # Suma materiałów bazowych z nowymi dodatkami
                 total_material = koszt_plyt + koszt_profile + koszt_wieszakow + (m2_gk * 16 if izolacja_gk else 0) + \
-                                 (worki_masy * baza_masy_gk[wybrana_masa]) + (rolki_tuff * 150) + (rolki_fliz * 20) + (m2_gk * 15) + dodatkowy_koszt_przed
+                                 (worki_masy * baza_masy_gk[wybrana_masa]) + (rolki_tuff * 150) + (rolki_fliz * 20) + \
+                                 (m2_gk * 15) + dodatkowy_koszt_przed + koszt_tasma_akustyczna + koszt_folii
                 
                 robocizna = (m2_gk * stawka_gk)
 
@@ -2839,14 +2866,11 @@ elif branza == "Sucha Zabudowa":
                 if rodzaj_gk == "Sufit Podwieszany":
                     lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
                     lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
-                    
-                    # Wypisywanie wieszaków i drutu
                     if "obrotowe" in typ_wieszaka:
-                        lista_z.append(("Wieszaki obrotowe ze sprężyną", f"{szt_wieszaki} szt."))
+                        lista_z.append(("Wieszaki obrotowe ze sprezyna", f"{szt_wieszaki} szt."))
                         lista_z.append((f"Drut z oczkiem ({dl_drutu} cm)", f"{szt_wieszaki} szt."))
                     else:
-                        lista_z.append(("Wieszaki ES (Bezpośrednie)", f"{szt_wieszaki} szt."))
-                        
+                        lista_z.append(("Wieszaki ES (Bezposrednie)", f"{szt_wieszaki} szt."))
                     lista_z.append(("Laczniki krzyzowe i wzdluzne CD", f"{laczniki_krzyzowe + laczniki_cd1} szt."))
                 elif rodzaj_gk == "Sciana Dzialowa":
                     lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
@@ -2856,13 +2880,19 @@ elif branza == "Sucha Zabudowa":
                     if "CD/UD" in typ_konstrukcji_gk:
                         lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
                         lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
-                        lista_z.append(("Wieszaki ES (Bezpośrednie)", f"{szt_wieszaki} szt."))
+                        lista_z.append(("Wieszaki ES (Bezposrednie)", f"{szt_wieszaki} szt."))
                     elif "Wolnostojaca" in typ_konstrukcji_gk:
                         lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
                         lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
                     elif "Klejenie" in typ_konstrukcji_gk:
                         lista_z.append(("Klej gipsowy (worek 25kg)", f"{worki_kleju} szt."))
                 
+                # --- Wypisanie nowych dodatków ---
+                if tasma_akustyczna and rolki_tasmy_akust > 0:
+                    lista_z.append(("Tasma akustyczna pod profile (rolka 30m)", f"{rolki_tasmy_akust} szt."))
+                if folia_paro and m2_folii_zapas > 0:
+                    lista_z.append(("Folia paroizolacyjna", f"{round(m2_folii_zapas)} m2"))
+
                 lista_z.append(("Plyty G-K 12.5mm", f"{szt_plyt} szt."))
                 lista_z.append(("Wkrety TN25", f"{int(wkret_25/1000)+1} op."))
                 lista_z.append((f"Masa ({wybrana_masa})", f"{worki_masy} szt."))
