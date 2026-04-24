@@ -1667,8 +1667,27 @@ elif branza == "Szpachlowanie":
                     stawka_bazowa -= 2
                 elif metoda_nakladania == "Natrysk (Agregat)":
                     stawka_bazowa -= 7
-                    
-                stawka_szp = st.number_input("Stawka robocizny (zł/m2):", 1, 300, stawka_bazowa)
+                
+                # --- NOWOŚĆ: Ściąga cenowa dla Gładzi ---
+                widelki_gladzie = """
+                💡 **Średnie stawki rynkowe robocizny (Polska):**
+                
+                🧱 **Gładzie i Szpachlowanie:**
+                • Gładź standard (2 warstwy + szlifowanie): **40 - 60 zł/m²**
+                • Gładź bezpyłowa (np. MultiFinish): **45 - 70 zł/m²**
+                • Szpachlowanie na sufitach: **często +5-10 zł/m²** do stawki ściennej
+                • Wklejanie narożników aluminiowych/kompozytowych: **15 - 25 zł/mb**
+                
+                🛡️ **Uwaga do wyceny:**
+                Standardowa stawka z metra zazwyczaj obejmuje nałożenie warstw masy, szlifowanie oraz odpylenie. 
+                Gruntowanie przed gładzią (oraz po niej, pod malowanie) zazwyczaj dolicza się jako osobną pozycję (ok. 3-6 zł/m²).
+                """
+                
+                stawka_szp = st.number_input(
+                    "Stawka robocizny (zł/m2):", 
+                    min_value=1, max_value=300, value=stawka_bazowa,
+                    help=widelki_gladzie
+                )
 
             # --- LOGIKA MNOŻNIKA ZUŻYCIA ---
             mnoznik_zuzycia = 1.0
