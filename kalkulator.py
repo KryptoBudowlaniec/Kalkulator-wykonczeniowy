@@ -1255,7 +1255,7 @@ if branza == "Malowanie":
 
             l_biala = (m2_sufit / 10) * 2
             l_kolor = (m2_sciany / 10) * 2
-            l_grunt = m2_razem * 0.15
+            l_grunt = m2_razem * 0.065
             szt_akryl = m_uzytkowy / 12
             szt_tasma = (m_uzytkowy / 15) * mnoznik
             
