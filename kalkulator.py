@@ -327,19 +327,22 @@ elif st.session_state.get("zalogowany") == True:
 from datetime import datetime, timezone, timedelta
 
 # =======================================================
-# 4.5. VIP BYPASS (Konto Administratora)
+# 4.5. VIP BYPASS (Konto Administratora) - TWOJA TARCZA
 # =======================================================
 if st.session_state.get("zalogowany") and st.session_state.get("user_email") == "pawelkubiak685@gmail.com":
     st.session_state.pakiet = "PRO"
+    # Nie robimy tutaj rerun, po prostu pozwalamy kodowi iść dalej 
+    # z już ustawionym statusem PRO.
 
 if st.session_state.get("zalogowany"):
     
-    # Sprawdzamy uprawnienia tylko, jeśli pakiet to nadal "Podstawowy" (np. po świeżym logowaniu)
+    # Sprawdzamy uprawnienia TYLKO jeśli użytkownik NIE JEST Twoim mailem 
+    # i NIE MA jeszcze ustawionego PRO (oszczędność czasu i bazy danych)
     if st.session_state.get("pakiet") != "PRO":
         ma_aktywny_kod = False
         dzisiaj = datetime.now(timezone.utc)
         
-        # 1. NAJPIERW SPRAWDZAMY, CZY MA WYKUPIONY KOD NA 365 DNI
+        # 1. NAJPIERW SPRAWDZAMY KOD 365 DNI
         try:
             odp = supabase.table("kody_aktywacyjne").select("*").eq("uzytkownik_id", st.session_state.user_id).execute()
             
@@ -354,35 +357,28 @@ if st.session_state.get("zalogowany"):
                         ma_aktywny_kod = True
                         dni_do_konca = (data_aktywacji + timedelta(days=365) - dzisiaj).days
                         st.toast(f"💎 Pakiet PRO aktywny! Pozostało: {dni_do_konca} dni.")
-                        st.rerun()
+                        st.rerun() # Odświeżamy RAZ, aby odblokować funkcje
         except Exception as e:
             st.error(f"Błąd sprawdzania kodu rocznego: {e}")
 
         # 2. JEŚLI NIE MA KODU -> SPRAWDZAMY DARMOWY TRIAL (7 DNI)
         if not ma_aktywny_kod:
+            # Tutaj logika trialu zostaje bez zmian, bo Twój mail nigdy tu nie wejdzie 
+            # (bo już na górze dostał status PRO i warunek if pakiet != "PRO" go pominie)
             user_res = supabase.auth.get_user()
             if user_res and user_res.user:
                 try:
-                    from datetime import datetime, date
-                    
-                    # Pobieramy datę z Supabase i chamsko ucinamy tylko pierwsze 10 znaków
                     data_str = str(user_res.user.created_at)[:10] 
-                    
-                    # Tworzymy czysty, bezpieczny obiekt daty (bez stref czasowych)
                     data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
-                    
-                    # Tworzymy świeżą, dzisiejszą datę (żeby uniknąć konfliktów ze zmiennymi)
                     dzisiaj_bezpieczne = date.today()
                     
-                    # Liczymy ile dni minęło
                     dni_od_zalozenia = (dzisiaj_bezpieczne - data_zalozenia).days
                     dni_trial = 7 - dni_od_zalozenia
                     
                     if dni_trial > 0:
                         st.session_state.pakiet = "PRO"
                         st.toast(f"🎁 Wersja próbna PRO. Pozostało darmowych dni: {dni_trial}.")
-                        st.rerun()
-                        
+                        st.rerun() 
                 except Exception as e:
                     st.error(f"Błąd parsowania daty trialu: {e}")
 
