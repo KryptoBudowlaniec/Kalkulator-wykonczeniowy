@@ -2648,14 +2648,26 @@ elif branza == "Sucha Zabudowa":
 
 
             
-            col_g1, col_g2 = st.columns([1, 1.2])
+        col_g1, col_g2 = st.columns([1, 1.2])
 
             with col_g1:
                 st.subheader("Konfiguracja konstrukcji")
-                rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Sciana Dzialowa"], key="gk_type_pro")
+                rodzaj_gk = st.radio("Co budujemy?", ["Sufit Podwieszany", "Sciana Dzialowa", "Przedscianka (Wyrownanie)"], key="gk_type_pro")
                 dl_profilu_cd = 3.0
                 
+                # Zmienne domyślne, żeby nie było błędów dla ścian i przedścianek
+                typ_wieszaka = "Wieszaki ES"
+                dl_drutu = 0
+
                 if rodzaj_gk == "Sufit Podwieszany":
+                    st.markdown("---")
+                    typ_wieszaka = st.radio("Typ podwieszenia sufitu:", 
+                                            ["Wieszaki ES (Bezpośrednie, do 12cm)", "Wieszaki obrotowe + Drut (powyżej 12cm)"], 
+                                            key="wieszak_typ_pro")
+                    if "obrotowe" in typ_wieszaka:
+                        dl_drutu = st.selectbox("Długość drutu z oczkiem (cm):", 
+                                                [12.5, 25, 50, 75, 100, 150, 200, 300], index=1, key="drut_dl_pro")
+
                     st.markdown("---")
                     st.write("**Dodaj pomieszczenia do zabudowy sufitu:**")
                     c1, c2, c3 = st.columns([2,1,1])
@@ -2682,47 +2694,31 @@ elif branza == "Sucha Zabudowa":
                                 st.session_state.pokoje_sufit.pop(i)
                                 st.rerun()
                         
-                        # Sumowanie
                         # Sumowanie dla sufitów
                         for p in st.session_state.pokoje_sufit:
                             p_dl, p_sz = p['dl'], p['sz']
                             p_m2 = p_dl * p_sz
                             m2_gk += p_m2
-                            
-                            # Profile UD (po obwodzie + 10% zapasu)
                             szt_ud += int(((p_dl + p_sz) * 2 * 1.1) / 3) + 1
-                            
-                            # Wieszaki (średnio 1 wieszak co 0.7 m2)
                             szt_wieszaki += int(p_m2 / 0.7) + 1
                             
                             if p['typ'] == "Pojedynczy":
-                                # Profile nośne co 40 cm
                                 liczba_linii = int(p_sz / 0.40) + 1
                                 suma_mb_cd = liczba_linii * p_dl
-                                
-                                # Całkowite zapotrzebowanie ze ścinkami (10%)
                                 szt_cd += int((suma_mb_cd * 1.10) / dl_profilu_cd) + 1
                                 laczniki_cd1 += int(suma_mb_cd / dl_profilu_cd)
                                 
                             elif p['typ'] == "Krzyzowy":
-                                # Profile główne (nośne) co ok. 100 cm
                                 liczba_linii_glownych = int(p_sz / 1.0) + 1
                                 suma_mb_glowne = liczba_linii_glownych * p_dl
-                                
-                                # Profile montażowe co 40 cm
                                 liczba_linii_montaz = int(p_dl / 0.40) + 1
                                 suma_mb_montaz = liczba_linii_montaz * p_sz
-                                
                                 suma_mb_cd = suma_mb_glowne + suma_mb_montaz
-                                
-                                # Całkowite zapotrzebowanie ze ścinkami (10%)
                                 szt_cd += int((suma_mb_cd * 1.10) / dl_profilu_cd) + 1
-                                
-                                # Łączniki
                                 laczniki_cd1 += int(suma_mb_cd / dl_profilu_cd)
                                 laczniki_krzyzowe += liczba_linii_glownych * liczba_linii_montaz
-                else:
-                    # Ściana Działowa
+
+                elif rodzaj_gk == "Sciana Dzialowa":
                     c1, c2 = st.columns(2)
                     szer_sciany = c1.number_input("Dlugosc scianki (m):", min_value=0.1, value=4.0, key="wall_l_gk")
                     wys_sciany = c2.number_input("Wysokosc scianki (m):", min_value=0.1, value=2.6, key="wall_h_gk")
@@ -2734,9 +2730,27 @@ elif branza == "Sucha Zabudowa":
                     szt_cw = int((szer_sciany / 0.6) * (wys_sciany / 3) + 1)
                     szt_ua = n_drzwi * 2
 
+                else:
+                    # Przedścianka
+                    c1, c2 = st.columns(2)
+                    szer_przed = c1.number_input("Dlugosc przedscianki (m):", min_value=0.1, value=5.0, key="przed_l_gk")
+                    wys_przed = c2.number_input("Wysokosc (m):", min_value=0.1, value=2.6, key="przed_h_gk")
+                    m2_gk = szer_przed * wys_przed
+                    
+                    typ_konstrukcji_gk = st.selectbox("System montazu:", 
+                        ["Na stelazu CD/UD (profil scienny)", "Klejenie na placki (klej gipsowy)", "Wolnostojaca (profile CW/UW)"],
+                        key="typ_gk_przed")
+                    
+                    if "Wolnostojaca" in typ_konstrukcji_gk:
+                        szer_profilu = st.selectbox("Profil przedscianki (CW/UW):", [50, 75, 100], format_func=lambda x: f"{x} mm", key="przed_prof_gk")
+                    else:
+                        szer_profilu = 50 
+                        
+                    plytowanie = st.radio("Plytowanie:", ["1xGK (Jedna warstwa)", "2xGK (Dwie warstwy)"], key="przed_ply_gk")
+
                 st.markdown("---")
                 st.subheader("Izolacja i Wykonczenie")
-                izolacja_gk = st.checkbox("Wypelnienie welna akustyczna", key="gk_izol_pro")
+                izolacja_gk = st.checkbox("Wypelnienie welna / akustyka", key="gk_izol_pro")
                 if izolacja_gk:
                     opcje_welny = [50, 75, 100, 150]
                     idx = opcje_welny.index(szer_profilu) if szer_profilu in opcje_welny else 0
@@ -2749,7 +2763,12 @@ elif branza == "Sucha Zabudowa":
             # --- LOGIKA MATERIAŁOWA ---
             if m2_gk > 0:
                 nad = 1.10
-                mnoz_p = 2 if "Dwustronnie" in plytowanie else (4 if "4 warstwy" in plytowanie else 1)
+                
+                if rodzaj_gk == "Przedscianka (Wyrownanie)":
+                    mnoz_p = 2 if "2xGK" in plytowanie else 1
+                else:
+                    mnoz_p = 2 if "Dwustronnie" in plytowanie else (4 if "4 warstwy" in plytowanie else 1)
+                
                 szt_plyt = int(((m2_gk * mnoz_p) * nad) / 3.12) + 1
                 wkret_25 = int(m2_gk * 20 * mnoz_p * nad)
                 szt_pchelki = int(m2_gk * 12) if rodzaj_gk == "Sufit Podwieszany" else int(m2_gk * 5)
@@ -2762,45 +2781,91 @@ elif branza == "Sucha Zabudowa":
                 rolki_tuff = int(mb_tuff / 30) + (1 if mb_tuff > 0 else 0)
                 rolki_fliz = int(mb_fliz / 25) + (1 if mb_fliz > 0 else 0)
                 worki_masy = int((m2_gk * 0.5 * mnoz_p) / 25 + 0.99)
+                worki_kleju = 0
+                dodatkowy_koszt_przed = 0
 
                 koszt_plyt = szt_plyt * baza_mat_gk["Plyta GK 12.5mm (szt)"]
-                koszt_profile = (szt_cd * baza_mat_gk["Profil CD60 (3mb)"]) + (szt_ud * baza_mat_gk["Profil UD27 (3mb)"]) + \
-                                (szt_cw * baza_mat_gk.get(f"Profil CW{szer_profilu} (3mb)", 0)) + \
-                                (szt_uw * baza_mat_gk.get(f"Profil UW{szer_profilu} (3mb)", 0)) + \
-                                (szt_ua * baza_mat_gk.get(f"Profil UA{szer_profilu} (3mb)", 0))
+                koszt_profile = 0
+                koszt_wieszakow = 0
                 
-                total_material = koszt_plyt + koszt_profile + (szt_wieszaki * 1.5) + (m2_gk * 16 if izolacja_gk else 0) + \
-                                 (worki_masy * baza_masy_gk[wybrana_masa]) + (rolki_tuff * 150) + (rolki_fliz * 20) + (m2_gk * 15)
-                robocizna = (m2_gk * stawka_gk) * st.session_state.get('globalny_mnoznik', 1.0)
+                # Obliczanie konstrukcji i drutów
+                if rodzaj_gk == "Sufit Podwieszany":
+                    koszt_profile = (szt_cd * baza_mat_gk["Profil CD60 (3mb)"]) + (szt_ud * baza_mat_gk["Profil UD27 (3mb)"])
+                    
+                    # Logika Wieszaków i Drutów!
+                    if "obrotowe" in typ_wieszaka:
+                        szacunek_cena_drutu = 0.5 + (dl_drutu / 100.0) * 1.2 # Dłuższy drut = drożej
+                        koszt_wieszakow = (szt_wieszaki * 1.2) + (szt_wieszaki * szacunek_cena_drutu)
+                    else:
+                        koszt_wieszakow = szt_wieszaki * 1.5 # Standardowe wieszaki ES
+                        
+                elif rodzaj_gk == "Sciana Dzialowa":
+                    koszt_profile = (szt_cw * baza_mat_gk.get(f"Profil CW{szer_profilu} (3mb)", 0)) + \
+                                    (szt_uw * baza_mat_gk.get(f"Profil UW{szer_profilu} (3mb)", 0)) + \
+                                    (szt_ua * baza_mat_gk.get(f"Profil UA{szer_profilu} (3mb)", 0))
+                elif rodzaj_gk == "Przedscianka (Wyrownanie)":
+                    if "CD/UD" in typ_konstrukcji_gk:
+                        szt_cd = int((m2_gk * 3.2 / 3) + 0.99)
+                        szt_ud = int(((szer_przed + wys_przed)*2 / 3) + 0.99)
+                        szt_wieszaki = int(m2_gk * 3.5)
+                        koszt_profile = (szt_cd * baza_mat_gk["Profil CD60 (3mb)"]) + (szt_ud * baza_mat_gk["Profil UD27 (3mb)"])
+                        koszt_wieszakow = szt_wieszaki * 1.5
+                    elif "Wolnostojaca" in typ_konstrukcji_gk:
+                        szt_cw = int((szer_przed / 0.6) * (wys_przed / 3) + 1)
+                        szt_uw = int((szer_przed * 2) / 3 + 1)
+                        koszt_profile = (szt_cw * baza_mat_gk.get(f"Profil CW{szer_profilu} (3mb)", 0)) + \
+                                        (szt_uw * baza_mat_gk.get(f"Profil UW{szer_profilu} (3mb)", 0))
+                    elif "Klejenie" in typ_konstrukcji_gk:
+                        worki_kleju = int((m2_gk * 5 / 25) + 0.99)
+                        dodatkowy_koszt_przed = worki_kleju * 38
+                
+                # Suma materiałów bazowych
+                total_material = koszt_plyt + koszt_profile + koszt_wieszakow + (m2_gk * 16 if izolacja_gk else 0) + \
+                                 (worki_masy * baza_masy_gk[wybrana_masa]) + (rolki_tuff * 150) + (rolki_fliz * 20) + (m2_gk * 15) + dodatkowy_koszt_przed
+                
+                robocizna = (m2_gk * stawka_gk)
 
-                                # ==========================================
+                # ==========================================
                 # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
                 # ==========================================
-                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
                 mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
                 mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
     
-                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
-                k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
-                
-                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
-                k_mat_sredni = k_mat_sredni * mnoznik_op
+                robocizna = robocizna * mnoznik_op * mnoznik_utrudnien
+                total_material = total_material * mnoznik_op
                 # ==========================================
 
-                # Lista zakupów
+                # Generowanie Listy zakupów
                 if rodzaj_gk == "Sufit Podwieszany":
                     lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
                     lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
-                    lista_z.append(("Wieszaki ES/Obrotowe", f"{szt_wieszaki} szt."))
-                else:
+                    
+                    # Wypisywanie wieszaków i drutu
+                    if "obrotowe" in typ_wieszaka:
+                        lista_z.append(("Wieszaki obrotowe ze sprężyną", f"{szt_wieszaki} szt."))
+                        lista_z.append((f"Drut z oczkiem ({dl_drutu} cm)", f"{szt_wieszaki} szt."))
+                    else:
+                        lista_z.append(("Wieszaki ES (Bezpośrednie)", f"{szt_wieszaki} szt."))
+                        
+                    lista_z.append(("Laczniki krzyzowe i wzdluzne CD", f"{laczniki_krzyzowe + laczniki_cd1} szt."))
+                elif rodzaj_gk == "Sciana Dzialowa":
                     lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
                     lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
+                    if szt_ua > 0: lista_z.append((f"Profile UA{szer_profilu} (3m)", f"{szt_ua} szt."))
+                elif rodzaj_gk == "Przedscianka (Wyrownanie)":
+                    if "CD/UD" in typ_konstrukcji_gk:
+                        lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
+                        lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
+                        lista_z.append(("Wieszaki ES (Bezpośrednie)", f"{szt_wieszaki} szt."))
+                    elif "Wolnostojaca" in typ_konstrukcji_gk:
+                        lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
+                        lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
+                    elif "Klejenie" in typ_konstrukcji_gk:
+                        lista_z.append(("Klej gipsowy (worek 25kg)", f"{worki_kleju} szt."))
                 
                 lista_z.append(("Plyty G-K 12.5mm", f"{szt_plyt} szt."))
                 lista_z.append(("Wkrety TN25", f"{int(wkret_25/1000)+1} op."))
                 lista_z.append((f"Masa ({wybrana_masa})", f"{worki_masy} szt."))
-                lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
-                lista_z.append(("Laczniki krzyzowe i wzdluzne CD", f"{laczniki_krzyzowe + laczniki_cd1} szt."))
 
             with col_g2:
                 st.subheader("Podsumowanie")
