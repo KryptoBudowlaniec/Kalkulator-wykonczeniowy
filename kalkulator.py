@@ -1729,11 +1729,12 @@ elif branza == "Szpachlowanie":
                 # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
                 # ==========================================
                 # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+                # PRAWIDŁOWO:
                 mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
                 mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
-    
-                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
-                k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+                
+                # Użyj nazwy zmiennej, która została stworzona wyżej!
+                robocizna = robocizna * mnoznik_op * mnoznik_utrudnien
                 
                 # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
                 k_mat_sredni = k_mat_sredni * mnoznik_op
