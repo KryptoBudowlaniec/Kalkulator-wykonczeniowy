@@ -1737,7 +1737,7 @@ elif branza == "Szpachlowanie":
                 robocizna = robocizna * mnoznik_op * mnoznik_utrudnien
                 
                 # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
-                k_mat_sredni = k_mat_sredni * mnoznik_op
+                koszt_m = koszt_m * mnoznik_op
                 # ==========================================
                 
                 st.markdown("---")
