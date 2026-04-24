@@ -1240,7 +1240,25 @@ if branza == "Malowanie":
                 f_grunt = st.selectbox("Marka Gruntu:", list(baza_grunty.keys()), key="pro_fg")
                 f_tasma = st.selectbox("Rodzaj Taśmy:", list(baza_tasmy.keys()), key="pro_ft")
                 
-                stawka = st.slider("Twoja stawka za m2 robocizny:", 1, 100, 35, key="pro_r_fast")
+                widelki_malowanie = """
+                💡 **Średnie stawki rynkowe robocizny (Polska):**
+                
+                🎨 **Malowanie (Ściany i Sufity):**
+                • Malowanie 2-krotne (standard): **15 - 25 zł/m²**
+                • Gruntowanie + Malowanie 2x: **20 - 35 zł/m²**
+                • Malowanie farbami ceramicznymi/lateksowymi: **często + 2-5 zł/m²**
+                
+                🛡️ **Uwaga na zabezpieczenia:**
+                Stawki z dolnej półki (15 zł) zazwyczaj NIE obejmują skrupulatnego oklejania okien, drzwi i podłóg. Zabezpieczenia liczy się wtedy dodatkowo (ryczałtem lub z metra). Wyższa stawka (np. 25-30 zł) zazwyczaj to zawiera.
+                """
+                
+                # Upewnij się, że klucz (key) zgadza się z Twoim oryginalnym kodem!
+                stawka_mal = st.number_input(
+                    "Stawka za m² malowania (zł):", 
+                    min_value=1, max_value=150, value=20, 
+                    key="stawka_mal_pro", 
+                    help=widelki_malowanie
+                )
 
                 st.markdown("---")
                 st.subheader("Sztukateria")
