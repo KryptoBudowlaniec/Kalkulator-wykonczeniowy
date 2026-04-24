@@ -2407,24 +2407,26 @@ elif branza == "Tynkowanie":
                 lista_zakupow.append(("Narożniki aluminiowe (3m)", f"{szt_naroznik_3m} szt."))
                 lista_zakupow.append(("Taśma malarska (50m)", f"{rolki_tasmy_50m} rolka/i"))
                 lista_zakupow.append(("Folia ochronna okienna", f"{szt_folii_op} op."))
+            
 
             koszt_mat_t += koszt_stolarki
             koszt_rob_t = m2_rob_pro * stawka_rob_t
             suma_tynki = koszt_mat_t + koszt_rob_t
 
-                            # ==========================================
-                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
-                # ==========================================
-                # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+            # ==========================================
+            # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+            # ==========================================
             mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
             mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
     
-                # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
-            k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+            # 1. Powiększamy robociznę tynkarską (Zysk + Utrudnienia)
+            koszt_rob_t = koszt_rob_t * mnoznik_op * mnoznik_utrudnien
                 
-                # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
-            k_mat_sredni = k_mat_sredni * mnoznik_op
-                # ==========================================
+            # 2. Powiększamy materiał (O&P na logistykę i dojazdy)
+            koszt_mat_t = koszt_mat_t * mnoznik_op
+
+            # 3. LICZYMY SUMĘ KOŃCOWĄ (Musi być pod mnożnikami!)
+            suma_tynki = koszt_mat_t + koszt_rob_t
 
             with col_t2:
                 st.subheader("Wynik PRO")
