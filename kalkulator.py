@@ -1285,7 +1285,8 @@ if branza == "Malowanie":
                            (l_grunt * baza_grunty[f_grunt]) + (szt_tasma * baza_tasmy[f_tasma]) + \
                            koszt_mat_sztukateria + 150 
             
-            k_rob_total = (m2_razem * stawka) + koszt_rob_sztukateria
+            # 🔥 TUTAJ BYŁ BŁĄD: Zmieniono 'stawka' na 'stawka_mal'
+            k_rob_total = (m2_razem * stawka_mal) + koszt_rob_sztukateria
 
             # ==========================================
             # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
