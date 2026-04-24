@@ -2021,23 +2021,47 @@ elif branza == "Podłogi":
 
                 # --- NOWOŚĆ: DEMONTAŻE I PRZYGOTOWANIE PODŁOŻA ---
                 st.markdown("---")
-                with st.expander("🔨 Przygotowanie podłoża i Demontaże (Opcjonalne)", expanded=False):
-                    st.info("Zaznacz prace przygotowawcze. Zużycie wylewki liczone jest automatycznie na podstawie grubości wylewu.")
+                with st.expander("Przygotowanie podłoża i Demontaże (Opcjonalne)", expanded=False):
+                    st.info("Zaznacz prace przygotowawcze. Zużycie wylewki liczone jest automatycznie.")
+                    
+                    widelki_prep = """
+                    Srednie stawki rynkowe (Polska):
+                    
+                    - Zerwanie starego parkietu/desek: 30 - 60 zl/m2
+                    - Skuwanie starych plytek: 40 - 70 zl/m2
+                    - Szlifowanie posadzki (klej, subit): 20 - 45 zl/m2
+                    - Wylewka (robocizna: wylanie + gruntowanie): 25 - 45 zl/m2
+                    """
+                    
                     c_prep1, c_prep2 = st.columns(2)
                     
                     with c_prep1:
                         st.write("**Demontaże i czyszczenie:**")
+                        
                         dem_parkiet = st.checkbox("Zerwanie starego parkietu/desek", key="dem_parkiet_p")
+                        stawka_dem_parkiet = 0
+                        if dem_parkiet:
+                            stawka_dem_parkiet = st.number_input("Stawka za zerwanie (zł/m2):", 1, 200, 40, key="st_dem_parkiet", help=widelki_prep)
+                            
                         dem_plytki = st.checkbox("Skuwanie starych płytek", key="dem_plytki_p")
-                        szlifowanie = st.checkbox("Szlifowanie posadzki (resztki kleju, subitu)", key="szlifowanie_p")
+                        stawka_dem_plytki = 0
+                        if dem_plytki:
+                            stawka_dem_plytki = st.number_input("Stawka za skuwanie (zł/m2):", 1, 200, 50, key="st_dem_plytki", help=widelki_prep)
+                            
+                        szlifowanie = st.checkbox("Szlifowanie posadzki (resztki kleju)", key="szlifowanie_p")
+                        stawka_szlifowanie = 0
+                        if szlifowanie:
+                            stawka_szlifowanie = st.number_input("Stawka za szlifowanie (zł/m2):", 1, 200, 35, key="st_szlif", help=widelki_prep)
                     
                     with c_prep2:
                         st.write("**Wyrównanie podłoża:**")
                         wylewka = st.checkbox("Wylewka samopoziomująca", key="wylewka_p")
                         
+                        stawka_wylewka = 0
                         grubosc_wyl = 0
                         wybrana_wylewka = None
                         if wylewka:
+                            stawka_wylewka = st.number_input("Robocizna wylewka (zł/m2):", 1, 200, 35, key="st_wyl", help=widelki_prep)
                             grubosc_wyl = st.number_input("Średnia grubość wylewki (mm):", min_value=1, max_value=50, value=5, key="grubosc_wyl_p")
                             wybrana_wylewka = st.selectbox("Rodzaj wylewki:", [
                                 "Standard (np. Atlas SMS 15)", 
@@ -2053,7 +2077,7 @@ elif branza == "Podłogi":
                 
                 # --- SEKCJA BUDŻET POWIERZONY ---
                 st.markdown("---")
-                st.subheader("💰 Budżet na materiały (Allowance)")
+                st.subheader("Budżet na materiały (Allowance)")
                 col_b1, col_b2 = st.columns(2)
                 with col_b1:
                     budzet_m2_material = st.number_input("Budżet na materiał (zł/m2)", min_value=0, value=100, step=10, key="budzet_m2_p")
@@ -2077,29 +2101,29 @@ elif branza == "Podłogi":
                 
                 st.markdown("---")
                 domyslna_stawka = 120 if "Płytki" in system_montazu else (45 if "Zwykły" in typ_ukladania else 100)
-                # --- NOWOŚĆ: Ściąga cenowa dla Podłóg i Płytek ---
+                
                 widelki_podlogi = """
-                Średnie stawki rynkowe robocizny (Polska):
+                Srednie stawki rynkowe robocizny (Polska):
                 
-                Panele i Drewno (Układanie z listwowaniem):
-                - Panele laminowane (standardowe): 35 - 50 zł/m2
-                - Panele winylowe (Click / Pływające): 45 - 65 zł/m2
-                - Jodełka (panele układane pływająco): 70 - 100 zł/m2
-                - Winyl klejony (Dryback, wymaga idealnego podłoża): 80 - 120 zł/m2
-                - Jodełka klasyczna (drewno klejone do podłoża): 130 - 180 zł/m2
+                Panele i Drewno (Ukladanie z listwowaniem):
+                - Panele laminowane (standardowe): 35 - 50 zl/m2
+                - Panele winylowe (Click / Plywajace): 45 - 65 zl/m2
+                - Jodelka (panele ukladane plywajaco): 70 - 100 zl/m2
+                - Winyl klejony (Dryback, wymaga idealnego podloza): 80 - 120 zl/m2
+                - Jodelka klasyczna (drewno klejone do podloza): 130 - 180 zl/m2
                 
-                Płytki podłogowe (Gres / Terakota):
-                - Standardowe formaty (np. 60x60 cm): 120 - 180 zł/m2
-                - Wielki format (np. 120x60 cm i większe): 180 - 250+ zł/m2
-                - Cokoły z płytek (cięte lub gotowe): 35 - 55 zł/mb
+                Plytki podlogowe (Gres / Terakota):
+                - Standardowe formaty (np. 60x60 cm): 120 - 180 zl/m2
+                - Wielki format (np. 120x60 cm i wieksze): 180 - 250+ zl/m2
+                - Cokoly z plytek (ciete lub gotowe): 35 - 55 zl/mb
                 
-                Ważna uwaga:
-                Powyższe stawki dotyczą samego układania na gotowym podłożu. Prace przygotowawcze, takie jak wylewki samopoziomujące, szlifowanie subitu czy zrywanie starych posadzek, są wyceniane oddzielnie (kalkulator dolicza je w zakładce 'Przygotowanie podłoża').
+                Wazna uwaga:
+                Powyzsze stawki dotycza samego ukladania na gotowym podlozu. Prace przygotowawcze (wylewki, kucie) wycenia sie osobno na gorze kalkulatora.
                 """
                 
                 stawka_podl = st.number_input(
-                    "Stawka za m2 układania (zł):", 
-                    min_value=1, max_value=500, value=45, 
+                    "Stawka za m2 ukladania (zl):", 
+                    min_value=1, max_value=500, value=domyslna_stawka, 
                     key="stawka_podl_pro",
                     help=widelki_podlogi
                 )
@@ -2147,14 +2171,14 @@ elif branza == "Podłogi":
             koszt_rob_prep = 0
             koszt_mat_prep = 0
             
-            # Stawki za robociznę (możesz je dostosować)
-            if dem_parkiet: koszt_rob_prep += (m2_p * 40)
-            if dem_plytki: koszt_rob_prep += (m2_p * 50)
-            if szlifowanie: koszt_rob_prep += (m2_p * 35)
+            # Stawki za robociznę podpięte z interfejsu (dynamiczne)
+            if dem_parkiet: koszt_rob_prep += (m2_p * stawka_dem_parkiet)
+            if dem_plytki: koszt_rob_prep += (m2_p * stawka_dem_plytki)
+            if szlifowanie: koszt_rob_prep += (m2_p * stawka_szlifowanie)
 
             if wylewka:
-                # Robocizna za wylanie + gruntowanie
-                koszt_rob_prep += (m2_p * 35) 
+                # Robocizna za wylanie (dynamiczna) + materiały
+                koszt_rob_prep += (m2_p * stawka_wylewka) 
                 
                 # Grunt (ok 0.2L na m2)
                 litry_gruntu = m2_p * 0.2
@@ -2174,7 +2198,7 @@ elif branza == "Podłogi":
                 koszt_mat_prep += (worki_wylewki * ceny_wylewek[wybrana_wylewka])
                 info_zakup.append((f"Wylewka samopoziomująca ({wybrana_wylewka})", f"{worki_wylewki} worków"))
 
-           # --- FINALNE SUMOWANIE I MNOŻNIKI (PRAWIDŁOWA KOLEJNOŚĆ) ---
+            # --- FINALNE SUMOWANIE I MNOŻNIKI (PRAWIDŁOWA KOLEJNOŚĆ) ---
             
             # 1. Zsumowana sucha robocizna (Układanie + Kucie/Wylewka)
             k_robocizna_baza = (m2_p * stawka_podl) + koszt_rob_prep 
@@ -2192,7 +2216,6 @@ elif branza == "Podłogi":
             
             # 5. Wynik końcowy dla podłóg
             usluga_plus_chemia = k_robocizna + koszt_akc
-
 
             # --- PRAWA KOLUMNA: WYNIKI (To tu był błąd!) ---
             with col_p2:
