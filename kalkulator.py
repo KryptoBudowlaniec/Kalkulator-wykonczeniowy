@@ -5770,9 +5770,9 @@ elif opcja_boczna == "Aplikacja Główna":
         except Exception:
             return f'<span style="color:#e74c3c;">{link_name} (Brak pliku)</span>'
         
-# Przygotowanie linków
-link_reg = create_pdf_link("Regulamin_ProCalc_v1.pdf", "Regulamin serwisu")
-link_rodo = create_pdf_link("Polityka_Prywatnosci_ProCalc_v2.pdf", "Polityka prywatności (RODO)")
+    # Przygotowanie linków
+    link_reg = create_pdf_link("Regulamin_ProCalc_v1.pdf", "Regulamin serwisu")
+    link_rodo = create_pdf_link("Polityka_Prywatnosci_ProCalc_v2.pdf", "Polityka prywatności (RODO)")
 
 
 # ==========================================
