@@ -782,6 +782,12 @@ elif st.session_state.zalogowany and opcja_boczna == "Język i Region":
 # KLUCZOWA ZMIANA: POKAZUJ KALKULATORY TYLKO GDY WYBRANO "Aplikacja Główna"
 # -------------------------------------------------------------------------
 elif opcja_boczna == "Aplikacja Główna":
+
+    st.error(f"🔴 DEBUG - Aplikacja widzi: opcja_boczna = '{opcja_boczna}', branza = '{branza}'")
+    # -------------------------
+    
+    try:
+        _ = branza
     
     # ==========================================
     # GŁÓWNA LOGIKA WYŚWIETLANIA (IF / ELIF)
