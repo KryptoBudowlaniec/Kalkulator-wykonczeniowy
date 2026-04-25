@@ -685,6 +685,31 @@ if st.session_state.zalogowany:
         )
         
         st.markdown("---")
+        
+        # --- ZADANIE 2: USTAWIENIA PRO SCHOWANE POD EXPANDEREM ---
+        # Pokazujemy to TYLKO jeśli: użytkownik ma pakiet PRO ORAZ jest w zakładce "Nawigacja Główna"
+        if st.session_state.get('pakiet') == "PRO" and opcja_boczna == "Nawigacja Główna":
+            # Dodatkowo sprawdzamy czy nie jest na stronie 'Start' - odczytując zmienną z paska URL / sesji
+            branza = st.session_state.get('branza', 'Start') 
+            if branza != "Start":
+                with st.expander("⚙️ USTAWIENIA ZAAWANSOWANE (PRO)", expanded=False):
+                    st.write("Dostosuj narzuty dla tego kosztorysu:")
+                    
+                    st.session_state.globalny_mnoznik_op = st.slider(
+                        "Zysk i Koszty Stałe (O&P)", 
+                        1.0, 2.0, 1.15, 0.05, 
+                        help="Mnożnik nakładany na całość kosztorysu (Robocizna + Materiał)."
+                    )
+                    
+                    st.session_state.globalny_mnoznik = st.slider(
+                        "Dodatek za Utrudnienia", 
+                        1.0, 2.0, 1.0, 0.05,
+                        help="Dodatkowy narzut tylko na robociznę (np. brak windy, praca w nocy)."
+                    )
+                    
+                    st.info("Te parametry wpłyną na końcową cenę w tym module.")
+                st.markdown("---")
+        
         if st.button("Wyloguj się", key="btn_wyloguj_global"):
             st.session_state.zalogowany = False
             st.session_state.pakiet = "Podstawowy"
