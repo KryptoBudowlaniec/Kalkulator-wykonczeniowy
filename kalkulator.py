@@ -697,48 +697,48 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
     else:
         st.warning("🔒 Personalizacja profilu i ofert PDF dostępna jest tylko w pakiecie PRO.")
 
-# ==========================================
-        # 📂 POBIERANIE I WYŚWIETLANIE ZAPISANYCH PROJEKTÓW
-        # ==========================================
-        st.markdown("---")
-        st.header("Twoje Zapisane Kosztorysy")
+    # ==========================================
+    # 📂 POBIERANIE I WYŚWIETLANIE ZAPISANYCH PROJEKTÓW
+    # ==========================================
+    st.markdown("---")
+    st.header("Twoje Zapisane Kosztorysy")
+    
+    try:
+        # 1. Pytamy Supabase: "Daj mi wszystko z tabeli kosztorysy, gdzie ID użytkownika to moje ID"
+        odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).order("created_at", desc=True).execute()
+        projekty = odp.data
         
-        try:
-            # 1. Pytamy Supabase: "Daj mi wszystko z tabeli kosztorysy, gdzie ID użytkownika to moje ID"
-            odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).order("created_at", desc=True).execute()
-            projekty = odp.data
-            
-            if len(projekty) > 0:
-                # 2. Pętla, która rysuje rozwijaną "szufladkę" (expander) dla każdego projektu z bazy
-                for p in projekty:
-                    # Formatyzacja danych do wyświetlenia
-                    data_utworzenia = str(p.get('created_at'))[:10] # Ucina dziwne znaczki czasu, zostawia YYYY-MM-DD
-                    nazwa = p.get('nazwa_projektu', 'Brak nazwy')
-                    branza = p.get('branza', 'Nieznana')
-                    
-                    # 3. Magia JSON! Rozpakowujemy nasz worek z parametrami:
-                    dane = p.get('dane_json', {}) 
-                    koszt = dane.get('koszt_calkowity', 0)
-                    
-                    # Wygląd pojedynczego projektu na liście
-                    with st.expander(f"{nazwa} | {data_utworzenia} | {koszt} zł"):
-                        st.write(f"**Moduł kalkulatora:** {branza}")
-                        
-                        # Wyświetlamy parametry z JSONa w ładnych kafelkach
-                        c1, c2, c3 = st.columns(3)
-                        c1.metric("Całkowita Wycena", f"{koszt} zł")
-                        c2.metric("Marża O&P", f"x {dane.get('marza_op', 1.0)}")
-                        c3.metric("Utrudnienia", f"x {dane.get('mnoznik_utrudnien', 1.0)}")
-                        
-                        # Przycisk usuwania (musi mieć unikalny klucz 'key' z ID projektu z bazy)
-                        if st.button("🗑️ Usuń ten projekt", key=f"del_{p.get('id')}"):
-                            supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
-                            st.rerun() # Odświeża stronę, żeby projekt od razu zniknął z listy
-            else:
-                st.info("Nie masz jeszcze żadnych zapisanych projektów. Zrób pierwszą wycenę i kliknij 'Zapisz do chmury'!")
+        if len(projekty) > 0:
+            # 2. Pętla, która rysuje rozwijaną "szufladkę" (expander) dla każdego projektu z bazy
+            for p in projekty:
+                # Formatyzacja danych do wyświetlenia
+                data_utworzenia = str(p.get('created_at'))[:10] # Ucina dziwne znaczki czasu, zostawia YYYY-MM-DD
+                nazwa = p.get('nazwa_projektu', 'Brak nazwy')
+                branza = p.get('branza', 'Nieznana')
                 
-        except Exception as e:
-            st.error(f"Błąd komunikacji z bazą danych: {e}")
+                # 3. Magia JSON! Rozpakowujemy nasz worek z parametrami:
+                dane = p.get('dane_json', {}) 
+                koszt = dane.get('koszt_calkowity', 0)
+                
+                # Wygląd pojedynczego projektu na liście
+                with st.expander(f"{nazwa} | {data_utworzenia} | {koszt} zł"):
+                    st.write(f"**Moduł kalkulatora:** {branza}")
+                    
+                    # Wyświetlamy parametry z JSONa w ładnych kafelkach
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Całkowita Wycena", f"{koszt} zł")
+                    c2.metric("Marża O&P", f"x {dane.get('marza_op', 1.0)}")
+                    c3.metric("Utrudnienia", f"x {dane.get('mnoznik_utrudnien', 1.0)}")
+                    
+                    # Przycisk usuwania (musi mieć unikalny klucz 'key' z ID projektu z bazy)
+                    if st.button("🗑️ Usuń ten projekt", key=f"del_{p.get('id')}"):
+                        supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
+                        st.rerun() # Odświeża stronę, żeby projekt od razu zniknął z listy
+        else:
+            st.info("Nie masz jeszcze żadnych zapisanych projektów. Zrób pierwszą wycenę i kliknij 'Zapisz do chmury'!")
+            
+    except Exception as e:
+        st.error(f"Błąd komunikacji z bazą danych: {e}")
 
 elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
     st.header("Zarządzanie Subskrypcją ")
