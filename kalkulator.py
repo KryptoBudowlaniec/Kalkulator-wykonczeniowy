@@ -1378,9 +1378,9 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.rerun()
     
                 # --- WYKAZ DODANYCH ELEMENTÓW ---
+                total_m2_walls = 0
                 if st.session_state.pokoje_pro:
                     st.markdown("### Zestawienie szczegółowe")
-                    total_m2_walls = 0
                     for i, s in enumerate(st.session_state.pokoje_pro):
                         p_m2 = s['szer'] * s['wys']
                         total_m2_walls += p_m2
@@ -1416,7 +1416,7 @@ elif opcja_boczna == "Aplikacja Główna":
                                 "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
                                 "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
                                 # TUTAJ MUSISZ WPISAĆ SWOJĄ ZMIENNĄ Z KOSZTEM CAŁKOWITYM (Zamiast 'koszt_calkowity_zmienna'):
-                                "koszt_calkowity": koszt_calkowity_zmienna 
+                                "koszt_calkowity": total_pro 
                             }
                             
                             try:
