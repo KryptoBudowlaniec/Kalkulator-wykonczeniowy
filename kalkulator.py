@@ -789,8 +789,6 @@ elif opcja_boczna == "Aplikacja Główna":
     except NameError:
         branza = "Logowanie"
 
-    # 2. RADAR DEBUGOWANIA (Sprawdzamy co się dzieje)
-    st.error(f"🔴 DEBUG - Aplikacja widzi: opcja_boczna = '{opcja_boczna}', branza = '{branza}'")
     
     # ==========================================
     # GŁÓWNA LOGIKA WYŚWIETLANIA (IF / ELIF)
@@ -805,7 +803,7 @@ elif opcja_boczna == "Aplikacja Główna":
         # ---------------- EKRAN STARTOWY (Nietknięty!) ----------------
         st.markdown("<h1 style='text-align: center; color: #00D395; font-size: 50px; margin-top: 0; font-weight: 800;'>Witaj w ProCalc</h1>", unsafe_allow_html=True)
         st.markdown("<h3 style='text-align: center; font-size: 26px; margin-bottom: 50px; color: #495057;'>Twój Cyfrowy Kosztorysant Wykończeniowy</h3>", unsafe_allow_html=True)
-        st.write("Wybierz odpowiednią kategorię z menu u góry, aby rozpocząć wycenę.")
+    
         
         col_c1, col_center, col_c2 = st.columns([1, 4, 1])
         with col_center:
