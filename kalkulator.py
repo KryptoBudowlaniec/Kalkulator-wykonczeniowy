@@ -783,11 +783,14 @@ elif st.session_state.zalogowany and opcja_boczna == "Język i Region":
 # -------------------------------------------------------------------------
 elif opcja_boczna == "Aplikacja Główna":
 
-    st.error(f"🔴 DEBUG - Aplikacja widzi: opcja_boczna = '{opcja_boczna}', branza = '{branza}'")
-    # -------------------------
-    
+    # 1. PEŁNY SYSTEM RATUNKOWY (Z naprawionym błędem)
     try:
         _ = branza
+    except NameError:
+        branza = "Logowanie"
+
+    # 2. RADAR DEBUGOWANIA (Sprawdzamy co się dzieje)
+    st.error(f"🔴 DEBUG - Aplikacja widzi: opcja_boczna = '{opcja_boczna}', branza = '{branza}'")
     
     # ==========================================
     # GŁÓWNA LOGIKA WYŚWIETLANIA (IF / ELIF)
