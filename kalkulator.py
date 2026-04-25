@@ -574,47 +574,6 @@ if st.session_state.get("zalogowany") and st.session_state.get("pakiet") == "PRO
             st.success("✅ Zapisane! Twoje logo i dane będą widoczne na każdym wygenerowanym PDF-ie.")
 
 
-   # =======================================================
-# 🛠️ TAJNY PANEL PRO (Widoczny tylko dla wykonawcy)
-# =======================================================
-if st.session_state.get("zalogowany") and st.session_state.get("pakiet") == "PRO":
-    st.markdown("### 🛠️ Parametry Ukryte (Tylko dla Ciebie)")
-    
-    # 1. SEKACJA UTRUDNIEŃ
-    with st.expander("🚧 Ukryte Utrudnienia (Mnożnik Robocizny)", expanded=False):
-        st.info("Zaznacz utrudnienia. System podniesie stawki niewidocznie dla klienta.")
-        c_u1, c_u2 = st.columns(2)
-        with c_u1:
-            u_winda = st.checkbox("Brak windy / Wysokie piętro (+10%)", key="u_winda")
-            u_meble = st.checkbox("Mieszkanie umeblowane (+15%)", key="u_meble")
-        with c_u2:
-            u_krzywizny = st.checkbox("Bardzo krzywe ściany (+20%)", key="u_krzywizny")
-            u_dojazdy = st.checkbox("Trudny dojazd (+5%)", key="u_dojazdy")
-        
-        mnoznik_utrudnien = 1.0
-        if u_winda: mnoznik_utrudnien += 0.10
-        if u_meble: mnoznik_utrudnien += 0.15
-        if u_krzywizny: mnoznik_utrudnien += 0.20
-        if u_dojazdy: mnoznik_utrudnien += 0.05
-        
-        st.session_state.globalny_mnoznik = mnoznik_utrudnien
-        if mnoznik_utrudnien > 1.0:
-            st.success(f"🔥 Aktywny mnożnik: **+{int((mnoznik_utrudnien - 1) * 100)}%**")
-
-    # 2. SEKACJA O&P (Teraz poprawnie wcięta i ukryta!)
-    with st.expander("📈 Marża O&P (Koszty Stałe i Zysk Firmy)", expanded=False):
-        st.info("Ten suwak doliczy procent na ZUS, paliwo i Twój czysty zysk.")
-        marza_op_procent = st.slider("Ukryta marża O&P (%)", min_value=0, max_value=50, value=0, step=5, key="op_slider_pro")
-        
-        mnoznik_op = 1.0 + (marza_op_procent / 100.0)
-        st.session_state.globalny_mnoznik_op = mnoznik_op
-        
-        if marza_op_procent > 0:
-            st.success(f"💼 Aktywna marża firmowa: **+{marza_op_procent}%**")
-
-    st.markdown("---") # Kreska oddzielająca panel PRO od kalkulatorów
-
-
 # --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
 <style>
@@ -668,7 +627,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# GLOBALNY PANEL BOCZNY (Poprawiona logika pod st.pills)
+# GLOBALNY PANEL BOCZNY (Poprawiona logika pod st.pills + Twoje utrudnienia)
 # ==========================================
 opcja_boczna = "Aplikacja Główna" # Domyślnie nic nie zasłania
 
@@ -694,23 +653,30 @@ if st.session_state.zalogowany:
             with st.expander("⚙️ USTAWIENIA ZAAWANSOWANE (PRO)", expanded=False):
                 st.write("Dostosuj narzuty dla tego kosztorysu:")
                 
-                st.session_state.globalny_mnoznik_op = st.slider(
-                    "Zysk i Koszty Stałe (O&P)", 
-                    1.0, 2.0, 1.15, 0.05, 
-                    help="Mnożnik nakładany na całość kosztorysu (Robocizna + Materiał)."
-                )
+                # --- TWOJA LOGIKA O&P ---
+                marza_op_procent = st.slider("Ukryta marża O&P (%)", min_value=0, max_value=50, value=0, step=5, key="op_slider_pro")
+                st.session_state.globalny_mnoznik_op = 1.0 + (marza_op_procent / 100.0)
                 
-                st.session_state.globalny_mnoznik = st.slider(
-                    "Dodatek za Utrudnienia", 
-                    1.0, 2.0, 1.0, 0.05,
-                    help="Dodatkowy narzut tylko na robociznę (np. brak windy, praca w nocy)."
-                )
+                st.markdown("**Utrudnienia (Robocizna)**")
+                # --- TWOJE CHECKBOXY Z UTRUDNIENIAMI ---
+                u_winda = st.checkbox("Brak windy / Wysokie piętro (+10%)", key="u_winda")
+                u_meble = st.checkbox("Mieszkanie umeblowane (+15%)", key="u_meble")
+                u_krzywizny = st.checkbox("Bardzo krzywe ściany (+20%)", key="u_krzywizny")
+                u_dojazdy = st.checkbox("Trudny dojazd (+5%)", key="u_dojazdy")
                 
-                st.info("Te parametry wpłyną na końcową cenę w tym module.")
+                mnoznik_utrudnien = 1.0
+                if u_winda: mnoznik_utrudnien += 0.10
+                if u_meble: mnoznik_utrudnien += 0.15
+                if u_krzywizny: mnoznik_utrudnien += 0.20
+                if u_dojazdy: mnoznik_utrudnien += 0.05
+                
+                st.session_state.globalny_mnoznik = mnoznik_utrudnien
+                
+                if marza_op_procent > 0 or mnoznik_utrudnien > 1.0:
+                    st.success("Aktywne mnożniki wpływają na ostateczną cenę w kalkulatorze.")
             st.markdown("---")
         
         if st.button("🚪 Wyloguj się", key="btn_wyloguj_global"):
-            # Wylogowanie czyści wszystko i resetuje aplikację
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.session_state.zalogowany = False
