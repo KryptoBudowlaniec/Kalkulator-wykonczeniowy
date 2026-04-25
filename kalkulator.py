@@ -537,42 +537,6 @@ if nawigacja == "Kalkulatory":
     )
     branza = wybor_kalkulatora
 
-# ==========================================
-# 🟢 TUTAJ WKLEJ GLOBALNY PANEL PERSONALIZACJI PDF 🟢
-# ==========================================
-if st.session_state.get("zalogowany") and st.session_state.get("pakiet") == "PRO":
-    st.markdown("<br>", unsafe_allow_html=True) # Dodaje ładny odstęp pod menu
-    with st.expander("⚙️ Personalizacja Ofert PDF (Wgraj logo i dane firmy)", expanded=False):
-        st.info("Wypełnij poniższe dane. Będą one automatycznie dodawane do KAŻDEGO wygenerowanego kosztorysu (Malowanie, GK, itp.).")
-        
-        col_dane, col_logo_pdf = st.columns(2)
-        with col_dane:
-            firma_nazwa = st.text_input("Nazwa firmy:", value=st.session_state.get('firma_nazwa', ''))
-            firma_adres = st.text_input("Adres (Ulica, Kod, Miasto):", value=st.session_state.get('firma_adres', ''))
-            firma_nip = st.text_input("NIP:", value=st.session_state.get('firma_nip', ''))
-            firma_kontakt = st.text_input("Telefon / E-mail:", value=st.session_state.get('firma_kontakt', ''))
-
-        with col_logo_pdf:
-            wgrane_logo = st.file_uploader("Wgraj logo firmy (PNG lub JPG)", type=['png', 'jpg', 'jpeg'])
-
-        if st.button("💾 Zapisz dane do wszystkich PDF", type="primary"):
-            st.session_state.firma_nazwa = firma_nazwa
-            st.session_state.firma_adres = firma_adres
-            st.session_state.firma_nip = firma_nip
-            st.session_state.firma_kontakt = firma_kontakt
-            
-            if wgrane_logo is not None:
-                try:
-                    ext = wgrane_logo.name.split('.')[-1]
-                    sciezka_logo = f"temp_logo_{st.session_state.user_id}.{ext}"
-                    with open(sciezka_logo, "wb") as f:
-                        f.write(wgrane_logo.getbuffer())
-                    st.session_state.firma_logo = sciezka_logo
-                except Exception as e:
-                    st.error(f"Błąd wgrywania logo: {e}")
-            
-            st.success("✅ Zapisane! Twoje logo i dane będą widoczne na każdym wygenerowanym PDF-ie.")
-
 
 # --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
@@ -690,53 +654,49 @@ if st.session_state.zalogowany:
 # NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY (LUB WYŚWIETLANIE KALKULATORA)
 # ==========================================
 
-if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
+elif st.session_state.zalogowany and opcja_boczna == "Mój Profil":
     st.header("Mój Profil i Dane Firmy")
-    st.write("Uzupełnij dane, które będą używane do wystawiania faktur oraz na nagłówkach Twoich kosztorysów PDF.")
     
-    c1, c2 = st.columns(2)
-    with c1:
-        st.text_input("Imię i Nazwisko / Nazwa Firmy")
-        st.text_input("NIP (Opcjonalnie)")
-        st.text_input("Adres kontaktowy")
-    with c2:
-        st.number_input("Domyślny narzut na materiały (%)", value=10)
-        st.number_input("Twoja bazowa stawka za roboczogodzinę (PLN/h)", value=60)
-        st.text_input("Numer telefonu (do kosztorysów)")
+    if st.session_state.get("pakiet") == "PRO":
+        st.write("Uzupełnij dane, które będą automatycznie widoczne na nagłówkach Twoich kosztorysów PDF.")
         
-    if st.button("Zapisz ustawienia profilu", type="primary"):
-        st.success("Zapisano zmiany w profilu!")
+        col_dane, col_logo_pdf = st.columns(2)
+        
+        with col_dane:
+            st.subheader("📝 Dane firmy do PDF")
+            firma_nazwa = st.text_input("Nazwa firmy:", value=st.session_state.get('firma_nazwa', ''))
+            firma_adres = st.text_input("Adres (Ulica, Kod, Miasto):", value=st.session_state.get('firma_adres', ''))
+            firma_nip = st.text_input("NIP:", value=st.session_state.get('firma_nip', ''))
+            firma_kontakt = st.text_input("Telefon / E-mail:", value=st.session_state.get('firma_kontakt', ''))
 
-elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
-    st.header("Zarządzanie Subskrypcją 🛡️")
-    
-    col_sub1, col_sub2 = st.columns([2, 1])
-    
-    with col_sub1:
-        st.write(f"Twój obecny pakiet: **{st.session_state.get('pakiet', 'Podstawowy')}**")
+        with col_logo_pdf:
+            st.subheader("🖼️ Logo firmowe")
+            wgrane_logo = st.file_uploader("Wgraj logo firmy (PNG lub JPG)", type=['png', 'jpg', 'jpeg'])
+            
+            # Dodatkowe ustawienia globalne dla profilu
+            st.markdown("---")
+            st.number_input("Twoja domyślna stawka za roboczogodzinę (PLN/h)", value=60)
 
-        if st.session_state.get("pakiet") == "PRO":
-            try:
-                odp = supabase.table("kody_aktywacyjne").select("data_aktywacji").eq("uzytkownik_id", st.session_state.user_id).execute()
-                
-                if len(odp.data) > 0 and odp.data[0].get("data_aktywacji"):
-                    from datetime import datetime, timedelta
-                    data_akt_str = odp.data[0].get("data_aktywacji")
-                    data_aktywacji = datetime.fromisoformat(data_akt_str.replace('Z', '+00:00'))
-                    waznosc = data_aktywacji + timedelta(days=365)
-                    st.success(f"✅ Konto aktywne i opłacone (Prepaid).\n\nTwoja subskrypcja wygasa: **{waznosc.strftime('%d.%m.%Y')}**")
-                else:
-                    user_res = supabase.auth.get_user()
-                    if user_res and user_res.user:
-                        from datetime import datetime, timedelta
-                        data_str = str(user_res.user.created_at)[:10] 
-                        data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
-                        waznosc = data_zalozenia + timedelta(days=7)
-                        st.info(f"🎁 Aktywna wersja próbna.\n\nTwój darmowy okres testowy wygasa: **{waznosc.strftime('%d.%m.%Y')}**")
-            except Exception as e:
-                st.write("Konto aktywne.")
-        else:
-            st.warning("🔒 Brak aktywnej subskrypcji. Aktywuj kod, aby odzyskać pełny dostęp do kalkulatorów.")
+        st.markdown("---")
+        if st.button("💾 Zapisz ustawienia profilu i PDF", type="primary", use_container_width=True):
+            st.session_state.firma_nazwa = firma_nazwa
+            st.session_state.firma_adres = firma_adres
+            st.session_state.firma_nip = firma_nip
+            st.session_state.firma_kontakt = firma_kontakt
+            
+            if wgrane_logo is not None:
+                try:
+                    ext = wgrane_logo.name.split('.')[-1]
+                    sciezka_logo = f"temp_logo_{st.session_state.user_id}.{ext}"
+                    with open(sciezka_logo, "wb") as f:
+                        f.write(wgrane_logo.getbuffer())
+                    st.session_state.firma_logo = sciezka_logo
+                except Exception as e:
+                    st.error(f"Błąd wgrywania logo: {e}")
+            
+            st.success("✅ Zapisane! Twoje logo i dane będą widoczne na każdym wygenerowanym PDF-ie.")
+    else:
+        st.warning("🔒 Personalizacja profilu i ofert PDF dostępna jest tylko w pakiecie PRO.")
             
         st.markdown("<br>", unsafe_allow_html=True)
         
