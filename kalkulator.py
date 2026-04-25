@@ -1198,7 +1198,7 @@ elif opcja_boczna == "Aplikacja Główna":
                 st.write("Podaj metraż podłogi, aby otrzymać orientacyjne koszty malowania całego pomieszczenia (ściany + sufity).")
                 
                 # Suwak z metrażem i input dla stawki
-                m2_podloga_fast = st.slider("Metraż mieszkania / pokoju (m2 podłogi):", 1, 1000, 50)
+                m2_podloga_fast = st.slider("Metraż mieszkania / pokoju (m2 podłogi):", 1, 400, 50)
                 stawka_rob_fast = st.number_input("Twoja stawka za m2 robocizny (malowanie):", value=35)
             
                 # Logika uproszczona: 
