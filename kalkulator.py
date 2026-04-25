@@ -651,7 +651,7 @@ if st.session_state.zalogowany:
             st.rerun()
 
 # ==========================================
-# NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY (LUB WYŚWIETLANIE KALKULATORA)
+# NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY
 # ==========================================
 
 elif st.session_state.zalogowany and opcja_boczna == "Mój Profil":
@@ -673,7 +673,6 @@ elif st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             st.subheader("🖼️ Logo firmowe")
             wgrane_logo = st.file_uploader("Wgraj logo firmy (PNG lub JPG)", type=['png', 'jpg', 'jpeg'])
             
-            # Dodatkowe ustawienia globalne dla profilu
             st.markdown("---")
             st.number_input("Twoja domyślna stawka za roboczogodzinę (PLN/h)", value=60)
 
@@ -697,9 +696,39 @@ elif st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             st.success("✅ Zapisane! Twoje logo i dane będą widoczne na każdym wygenerowanym PDF-ie.")
     else:
         st.warning("🔒 Personalizacja profilu i ofert PDF dostępna jest tylko w pakiecie PRO.")
+
+elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
+    st.header("Zarządzanie Subskrypcją 🛡️")
+    
+    col_sub1, col_sub2 = st.columns([2, 1])
+    
+    with col_sub1:
+        st.write(f"Twój obecny pakiet: **{st.session_state.get('pakiet', 'Podstawowy')}**")
+
+        if st.session_state.get("pakiet") == "PRO":
+            try:
+                odp = supabase.table("kody_aktywacyjne").select("data_aktywacji").eq("uzytkownik_id", st.session_state.user_id).execute()
+                
+                if len(odp.data) > 0 and odp.data[0].get("data_aktywacji"):
+                    from datetime import datetime, timedelta
+                    data_akt_str = odp.data[0].get("data_aktywacji")
+                    data_aktywacji = datetime.fromisoformat(data_akt_str.replace('Z', '+00:00'))
+                    waznosc = data_aktywacji + timedelta(days=365)
+                    st.success(f"✅ Konto aktywne i opłacone (Prepaid).\n\nTwoja subskrypcja wygasa: **{waznosc.strftime('%d.%m.%Y')}**")
+                else:
+                    user_res = supabase.auth.get_user()
+                    if user_res and user_res.user:
+                        from datetime import datetime, timedelta
+                        data_str = str(user_res.user.created_at)[:10] 
+                        data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
+                        waznosc = data_zalozenia + timedelta(days=7)
+                        st.info(f"🎁 Aktywna wersja próbna.\n\nTwój darmowy okres testowy wygasa: **{waznosc.strftime('%d.%m.%Y')}**")
+            except Exception as e:
+                st.write("Konto aktywne.")
+        else:
+            st.warning("🔒 Brak aktywnej subskrypcji. Aktywuj kod, aby odzyskać pełny dostęp do kalkulatorów.")
             
         st.markdown("<br>", unsafe_allow_html=True)
-        
         st.button("💳 Zarządzaj kartą płatniczą (Stripe)")
         st.button("📄 Pobierz ostatnie faktury")
         
@@ -753,8 +782,7 @@ elif st.session_state.zalogowany and opcja_boczna == "Język i Region":
 # KLUCZOWA ZMIANA: POKAZUJ KALKULATORY TYLKO GDY WYBRANO "Aplikacja Główna"
 # -------------------------------------------------------------------------
 elif opcja_boczna == "Aplikacja Główna":
-
-
+    
     # ==========================================
     # GŁÓWNA LOGIKA WYŚWIETLANIA (IF / ELIF)
     # ==========================================
