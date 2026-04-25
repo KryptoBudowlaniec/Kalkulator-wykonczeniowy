@@ -1393,6 +1393,48 @@ elif opcja_boczna == "Aplikacja Główna":
                         st.rerun()
                         
                 st.markdown("---")
+
+        # ==========================================
+                # 💾 ZAPISYWANIE PROJEKTU DO SUPABASE
+                # ==========================================
+                st.markdown("---")
+                st.subheader("💾 Zapisz ten kosztorys")
+                
+                # 1. Sprawdzamy czy użytkownik ma uprawnienia do zapisu (tylko zalogowani)
+                if st.session_state.get('zalogowany'):
+                    nazwa_projektu = st.text_input("Nazwa projektu (np. Salon Kowalscy):", key="nazwa_proj_malowanie")
+                    
+                    if st.button("Zapisz do chmury", type="primary", use_container_width=True):
+                        if nazwa_projektu.strip() == "":
+                            st.error("Wpisz nazwę projektu przed zapisem!")
+                        else:
+                            # 2. Pakujemy parametry do formatu JSON 
+                            # UWAGA: Podmieniłem 'pow_scian' na Twoje 'total_m2_walls'!
+                            dane_json = {
+                                "branza": "Malowanie",
+                                "powierzchnia_scian": total_m2_walls, 
+                                "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
+                                "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
+                                # TUTAJ MUSISZ WPISAĆ SWOJĄ ZMIENNĄ Z KOSZTEM CAŁKOWITYM (Zamiast 'koszt_calkowity_zmienna'):
+                                "koszt_calkowity": koszt_calkowity_zmienna 
+                            }
+                            
+                            try:
+                                # 3. Wysyłamy paczkę do bazy danych
+                                supabase.table("kosztorysy").insert({
+                                    "uzytkownik_id": st.session_state.user_id,
+                                    "nazwa_projektu": nazwa_projektu,
+                                    "branza": "Malowanie",
+                                    "dane_json": dane_json
+                                }).execute()
+                                
+                                st.success(f"✅ Projekt '{nazwa_projektu}' został zapisany! Znajdziesz go w Moim Profilu.")
+                            except Exception as e:
+                                st.error(f"Wystąpił błąd podczas zapisu: {e}")
+                else:
+                    st.info("Zaloguj się, aby zapisywać swoje kosztorysy w chmurze.")
+                
+                st.markdown("---")
                 
                 st.subheader("Zarządzanie Projektem")
                 
