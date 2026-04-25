@@ -654,7 +654,7 @@ if st.session_state.zalogowany:
 # NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY
 # ==========================================
 
-elif st.session_state.zalogowany and opcja_boczna == "Mój Profil":
+if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
     st.header("Mój Profil i Dane Firmy")
     
     if st.session_state.get("pakiet") == "PRO":
