@@ -697,8 +697,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
     else:
         st.warning("🔒 Personalizacja profilu i ofert PDF dostępna jest tylko w pakiecie PRO.")
 
-    else:
-        st.warning("🔒 Personalizacja profilu i ofert PDF dostępna jest tylko w pakiecie PRO.")
 
     # ==========================================
     # 📂 POBIERANIE I WYŚWIETLANIE ZAPISANYCH PROJEKTÓW
