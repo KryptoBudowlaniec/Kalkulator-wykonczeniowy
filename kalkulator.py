@@ -52,6 +52,8 @@ import time
 import streamlit.components.v1 as components
 import random
 import string
+from datetime import datetime
+
 
 # --- RADAR DEBUGOWANIA (do usunięcia po naprawieniu) ---
 if st.query_params:
@@ -363,14 +365,14 @@ if st.session_state.get("zalogowany"):
 
         # 2. JEŚLI NIE MA KODU -> SPRAWDZAMY DARMOWY TRIAL (7 DNI)
         if not ma_aktywny_kod:
-            # Tutaj logika trialu zostaje bez zmian, bo Twój mail nigdy tu nie wejdzie 
-            # (bo już na górze dostał status PRO i warunek if pakiet != "PRO" go pominie)
             user_res = supabase.auth.get_user()
             if user_res and user_res.user:
                 try:
                     data_str = str(user_res.user.created_at)[:10] 
                     data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
-                    dzisiaj_bezpieczne = date.today()
+                    
+                    # --- NAPRAWA BŁĘDU TUTAJ ---
+                    dzisiaj_bezpieczne = datetime.now().date() 
                     
                     dni_od_zalozenia = (dzisiaj_bezpieczne - data_zalozenia).days
                     dni_trial = 7 - dni_od_zalozenia
@@ -379,9 +381,37 @@ if st.session_state.get("zalogowany"):
                         st.session_state.pakiet = "PRO"
                         st.toast(f"🎁 Wersja próbna PRO. Pozostało darmowych dni: {dni_trial}.")
                         st.rerun() 
+                    else:
+                        # Jeśli trial się skończył, ustawiamy pakiet na FREE
+                        st.session_state.pakiet = "FREE"
                 except Exception as e:
                     st.error(f"Błąd parsowania daty trialu: {e}")
 
+        # 3. JEŚLI PO WSZYSTKICH SPRAWDZENIACH NADAL NIE MA PRO -> POKAZUJEMY BLOKADĘ
+        if st.session_state.get("pakiet") != "PRO":
+            st.warning("⚠️ Twój darmowy okres próbny PRO dobiegł końca.")
+            st.info("Aby korzystać z zaawansowanych funkcji kalkulatora, aktywuj pełną wersję kodem.")
+            
+            # Miejsce na wpisanie kodu (pewnie już to masz, ale upewnij się, że jest tutaj)
+            nowy_kod = st.text_input("Wpisz kod aktywacyjny:", key="input_kod_blokada")
+            if st.button("Aktywuj dostęp"):
+                # Tutaj Twoja logika sprawdzania kodu...
+                pass
+    
+            # --- DRZWI EWAKUACYJNE (To, o co prosiłeś) ---
+            st.markdown("---")
+            if st.button("🚪 Wyloguj się / Zmień konto", use_container_width=True):
+                # Czyścimy sesję
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                
+                # Wylogowanie z bazy
+                try:
+                    supabase.auth.sign_out()
+                except:
+                    pass
+                    
+                st.rerun()
     # 3. MODUŁ AKTYWACJI (Dla kont po trialu i bez ważnego kodu)
     if st.session_state.get("pakiet") == "Podstawowy":
         st.warning("🔒 Twój darmowy okres próbny dobiegł końca. Aktywuj kod, aby odzyskać pełny dostęp na 365 dni!")
