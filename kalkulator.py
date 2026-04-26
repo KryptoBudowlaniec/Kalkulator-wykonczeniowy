@@ -477,40 +477,41 @@ if "oferta" in st.query_params:
             mat_format = f"{koszt_mat:,.2f}".replace(",", " ")
             
             # 3. WIDOK WIZYTÓWKI (Naprawiony, Styl Joist/Houzz Pro)
+# 3. WIDOK WIZYTÓWKI (Naprawiony - brak wcięć to klucz do działania HTML!)
             st.markdown(f"""
-            <div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e7eb;">
-                <div style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: white; padding: 40px 30px; text-align: center;">
-                    <p style="color: #9ca3af; font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">
-                        Kosztorys Wykonawczy
-                    </p>
-                    <h1 style="margin: 0; color: white; font-size: 32px;">{nazwa}</h1>
-                </div>
-                
-                <div style="padding: 40px 30px;">
-                    <p style="color: #6b7280; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wycena inwestycji:</p>
-                    <div style="font-size: 48px; font-weight: 800; color: #00D395; margin: 10px 0 30px 0;">{koszt_format} zł</div>
-                    
-                    <div style="background: #f9fafb; padding: 25px; border-radius: 8px; border: 1px solid #f3f4f6;">
-                        <h4 style="margin-top: 0; color: #374151; font-size: 18px; margin-bottom: 20px;">Szczegółowe zestawienie kosztów</h4>
-                        
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                            <span style="color: #4b5563;"><strong>Robocizna</strong> (Zakres: {branza})</span>
-                            <span style="color: #111827; font-weight: 600;">{rob_format} zł</span>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                            <span style="color: #4b5563;"><strong>Materiały</strong> (Szacowane koszty)</span>
-                            <span style="color: #111827; font-weight: 600;">{mat_format} zł</span>
-                        </div>
-                        
-                        <div style="padding-top: 15px;">
-                            <span style="color: #6b7280; font-size: 13px;"><strong>Używane technologie:</strong> {technologie}</span>
-                        </div>
-                    </div>
-                </div>
+<div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e7eb;">
+    <div style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: white; padding: 40px 30px; text-align: center;">
+        <p style="color: #9ca3af; font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">
+            Kosztorys Wykonawczy
+        </p>
+        <h1 style="margin: 0; color: white; font-size: 32px;">{nazwa}</h1>
+    </div>
+    
+    <div style="padding: 40px 30px;">
+        <p style="color: #6b7280; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wycena inwestycji:</p>
+        <div style="font-size: 48px; font-weight: 800; color: #00D395; margin: 10px 0 30px 0;">{koszt_format} zł</div>
+        
+        <div style="background: #f9fafb; padding: 25px; border-radius: 8px; border: 1px solid #f3f4f6;">
+            <h4 style="margin-top: 0; color: #374151; font-size: 18px; margin-bottom: 20px;">Szczegółowe zestawienie kosztów</h4>
+            
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="color: #4b5563;"><strong>Robocizna</strong> (Zakres: {branza})</span>
+                <span style="color: #111827; font-weight: 600;">{rob_format} zł</span>
             </div>
-            <br>
-            """, unsafe_allow_html=True)
+            
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="color: #4b5563;"><strong>Materiały</strong> (Szacowane koszty)</span>
+                <span style="color: #111827; font-weight: 600;">{mat_format} zł</span>
+            </div>
+            
+            <div style="padding-top: 15px;">
+                <span style="color: #6b7280; font-size: 13px;"><strong>Używane technologie:</strong> {technologie}</span>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+""", unsafe_allow_html=True)
             
         # 3. WIDOK WIZYTÓWKI (Naprawiony, Styl Joist/Houzz Pro)
             st.markdown(f"""
@@ -838,12 +839,18 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 nazwa = p.get('nazwa_projektu', 'Brak nazwy')
                 branza = p.get('branza', 'Nieznana')
                 
-                # 3. Rozpakowujemy nasz worek z parametrami:
+               
+               # 3. Rozpakowujemy nasz worek z parametrami:
                 dane = p.get('dane_json', {}) 
-                koszt = dane.get('koszt_calkowity', 0)
                 
-                with st.expander(f"{nazwa} | {data_utworzenia} | {koszt} zł"):
+                # Zabezpieczamy i formatujemy kwotę do ładnej postaci (np. 4 238.54)
+                koszt_surowy = float(dane.get('koszt_calkowity', 0))
+                koszt_format = f"{koszt_surowy:,.2f}".replace(",", " ")
+                
+                with st.expander(f"{nazwa} | {data_utworzenia} | {koszt_format} zł"):
                     st.write(f"**Moduł kalkulatora:** {branza}")
+                    
+                    # --- Reszta kodu z generatorem linku i przyciskami (tego nie zmieniaj) ---
                     
                     # ==========================================
                     # 🔗 ZAKTUALIZOWANY GENERATOR LINKU (PROCALC.PL)
