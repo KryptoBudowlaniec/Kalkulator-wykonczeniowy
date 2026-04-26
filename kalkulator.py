@@ -451,126 +451,99 @@ if st.session_state.get("zalogowany"):
         st.stop()
 
 # =======================================================
-# 🚀 WIDOK INTERAKTYWNEJ OFERTY DLA KLIENTA (WERSJA PREMIUM)
+# 🚀 WIDOK INTERAKTYWNEJ OFERTY DLA KLIENTA (WERSJA FINALNA)
 # =======================================================
 if "oferta" in st.query_params:
     oferta_id = st.query_params["oferta"]
     
     try:
+        # Pobieramy dane z bazy
         odp = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
         
         if len(odp.data) > 0:
             projekt = odp.data[0]
             dane = projekt.get('dane_json', {})
             nazwa = projekt.get('nazwa_projektu', 'Kosztorys')
+            branza = projekt.get('branza', '')
+            status = projekt.get('status', 'Oczekująca')
+
+            # --- DEFINICJA ZMIENNYCH (To tutaj brakowało!) ---
+            # 1. Kwota całkowita
+            koszt_surowy = float(dane.get('koszt_calkowity', 0))
+            koszt_format = f"{koszt_surowy:,.2f}".replace(",", " ")
             
-            # 1. NAPRAWA LICZBY (Zaokrąglenie do 2 miejsc po przecinku i ładne spacje)
-# ==========================================
-            # POBIERANIE NOWYCH DANYCH Z JSON (Zabezpieczenie przed błędem w starych projektach)
-            # ==========================================
+            # 2. Rozbicie na Robociznę i Materiał
             koszt_rob = float(dane.get('koszt_robocizny', 0))
             koszt_mat = float(dane.get('koszt_materialow', 0))
-            technologie = dane.get('technologie', 'Standardowe materiały wykończeniowe wg wyceny')
-            
-            # Ładne formatowanie (np. 1 500.00 zł)
             rob_format = f"{koszt_rob:,.2f}".replace(",", " ")
             mat_format = f"{koszt_mat:,.2f}".replace(",", " ")
             
-            # 3. WIDOK WIZYTÓWKI (Naprawiony, Styl Joist/Houzz Pro)
-# 3. WIDOK WIZYTÓWKI (Naprawiony - brak wcięć to klucz do działania HTML!)
+            # 3. Technologie
+            technologie = dane.get('technologie', 'Standardowe materiały wykończeniowe wg wyceny')
+
+            # --- STYLIZACJA CSS ---
+            st.markdown("""
+            <style>
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """, unsafe_allow_html=True)
+
+            # --- WIDOK PREMIUM (Przyklejony do lewej krawędzi dla poprawnego renderowania) ---
             st.markdown(f"""
-<div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e7eb;">
+<div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
     <div style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: white; padding: 40px 30px; text-align: center;">
-        <p style="color: #9ca3af; font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">
-            Kosztorys Wykonawczy
+        <p style="color: #9ca3af; font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; font-size: 12px;">
+            Oficjalna Oferta Wykonawcza
         </p>
-        <h1 style="margin: 0; color: white; font-size: 32px;">{nazwa}</h1>
+        <h1 style="margin: 0; color: white; font-size: 30px;">{nazwa}</h1>
     </div>
     
     <div style="padding: 40px 30px;">
-        <p style="color: #6b7280; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wycena inwestycji:</p>
+        <p style="color: #6b7280; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wartość inwestycji:</p>
         <div style="font-size: 48px; font-weight: 800; color: #00D395; margin: 10px 0 30px 0;">{koszt_format} zł</div>
         
         <div style="background: #f9fafb; padding: 25px; border-radius: 8px; border: 1px solid #f3f4f6;">
-            <h4 style="margin-top: 0; color: #374151; font-size: 18px; margin-bottom: 20px;">Szczegółowe zestawienie kosztów</h4>
+            <h4 style="margin-top: 0; color: #374151; font-size: 18px; margin-bottom: 20px;">Szczegółowy podział kosztów</h4>
             
             <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                <span style="color: #4b5563;"><strong>Robocizna</strong> (Zakres: {branza})</span>
+                <span style="color: #4b5563;">🛠️ <strong>Robocizna</strong> ({branza})</span>
                 <span style="color: #111827; font-weight: 600;">{rob_format} zł</span>
             </div>
             
             <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                <span style="color: #4b5563;"><strong>Materiały</strong> (Szacowane koszty)</span>
+                <span style="color: #4b5563;">🧱 <strong>Materiały</strong> (Szacunkowo)</span>
                 <span style="color: #111827; font-weight: 600;">{mat_format} zł</span>
             </div>
             
             <div style="padding-top: 15px;">
-                <span style="color: #6b7280; font-size: 13px;"><strong>Używane technologie:</strong> {technologie}</span>
+                <span style="color: #6b7280; font-size: 13px;">📌 <strong>Zastosowane systemy:</strong> {technologie}</span>
             </div>
         </div>
     </div>
 </div>
 <br>
 """, unsafe_allow_html=True)
-            
-        # 3. WIDOK WIZYTÓWKI (Naprawiony, Styl Joist/Houzz Pro)
-            st.markdown(f"""
-            <div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e7eb;">
-                <div style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: white; padding: 40px 30px; text-align: center;">
-                    <p style="color: #9ca3af; font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">
-                        Kosztorys Wykonawczy
-                    </p>
-                    <h1 style="margin: 0; color: white; font-size: 32px;">{nazwa}</h1>
-                </div>
-                
-                <div style="padding: 40px 30px;">
-                    <p style="color: #6b7280; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wycena inwestycji:</p>
-                    <div style="font-size: 48px; font-weight: 800; color: #00D395; margin: 10px 0 30px 0;">{koszt_format} zł</div>
-                    
-                    <div style="background: #f9fafb; padding: 25px; border-radius: 8px; border: 1px solid #f3f4f6;">
-                        <h4 style="margin-top: 0; color: #374151; font-size: 18px; margin-bottom: 20px;">Szczegółowe zestawienie kosztów</h4>
-                        
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                            <span style="color: #4b5563;"><strong>Robocizna</strong> (Zakres: {branza})</span>
-                            <span style="color: #111827; font-weight: 600;">(Wymaga aktualizacji bazy)</span>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                            <span style="color: #4b5563;"><strong>Materiały</strong> (Szacowane koszty)</span>
-                            <span style="color: #111827; font-weight: 600;">(Wymaga aktualizacji bazy)</span>
-                        </div>
-                        
-                        <div style="padding-top: 15px;">
-                            <span style="color: #6b7280; font-size: 13px;"><strong>Używane technologie:</strong> (Tu pojawi się lista np. Farba Ceramiczna, Grunt głęboko penetrujący, Folie, Taśmy Blue Dolphin)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <br>
-            """, unsafe_allow_html=True)
-            
-            # --- LOGIKA AKCEPTACJI ---
+
+            # --- PANEL AKCJI ---
             if status != "Zaakceptowana":
-                st.info("💡 W tym miejscu w przyszłości rozwiniemy pełną listę wyliczonych materiałów i pomieszczeń.")
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                if st.button("✅ AKCEPTUJĘ POWYŻSZY KOSZTORYS", type="primary", use_container_width=True):
+                st.info("💡 Kliknięcie przycisku poniżej jest równoznaczne z akceptacją warunków cenowych.")
+                if st.button("✅ AKCEPTUJĘ KOSZTORYS I ZAMAWIAM TERMIN", type="primary", use_container_width=True):
                     supabase.table("kosztorysy").update({"status": "Zaakceptowana"}).eq("id", oferta_id).execute()
-                    st.success("Dziękujemy! Oferta została zaakceptowana. Wykonawca otrzyma powiadomienie.")
+                    st.success("Sukces! Wykonawca został powiadomiony o Twojej akceptacji.")
                     st.balloons()
                     st.rerun()
             else:
-                st.success("✅ Ta oferta została zaakceptowana przez inwestora. Dziękujemy za współpracę!")
-                
+                st.success("✅ Oferta została zaakceptowana. Status: Zamówienie w realizacji.")
+
         else:
-            st.error("Nie znaleziono takiej oferty. Link może być nieprawidłowy lub wygasł.")
-            
+            st.error("Błąd: Nie znaleziono takiej oferty w systemie.")
+
     except Exception as e:
         st.error(f"Błąd ładowania oferty: {e}")
     
-    # Zatrzymujemy ładowanie reszty aplikacji!
-    st.stop()
-# =======================================================
+    st.stop() # Zatrzymujemy resztę aplikacji
 
 
 # =======================================================
