@@ -782,22 +782,22 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     st.write(f"**Moduł kalkulatora:** {branza}")
                     
                     # ==========================================
-                    # 🔗 TUTAJ WKLEJAMY KROK 3 (GENERATOR LINKU)
+                    # 🔗 ZAKTUALIZOWANY GENERATOR LINKU (PROCALC.PL)
                     # ==========================================
                     status = p.get('status', 'Oczekująca')
                     
-                    # Kolorujemy status, żeby ładnie wyglądał
                     if status == "Zaakceptowana":
                         st.success(f"**Status:** ✅ {status}")
                     else:
                         st.info(f"**Status:** ⏳ {status}")
                         
-                    # Pobiera adres URL aplikacji (Później zmienisz na swoją domenę!)
-                    host_url = "https://twoja-aplikacja.streamlit.app" 
+                    # Ustawiamy Twoją docelową domenę
+                    host_url = "https://procalc.pl" 
                     link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
                     
                     st.markdown("**Wyślij ten link klientowi:**")
                     st.code(link_do_oferty, language="http")
+                    
                     st.markdown("---")
                     # ==========================================
                     
