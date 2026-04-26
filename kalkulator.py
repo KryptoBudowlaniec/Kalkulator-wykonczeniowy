@@ -451,50 +451,94 @@ if st.session_state.get("zalogowany"):
         st.stop()
 
 # =======================================================
-# 🚀 WIDOK INTERAKTYWNEJ OFERTY DLA KLIENTA (TRYB CZYTANIA)
+# 🚀 WIDOK INTERAKTYWNEJ OFERTY DLA KLIENTA (WERSJA PREMIUM)
 # =======================================================
-# Sprawdzamy czy w adresie URL jest parametr "oferta"
 if "oferta" in st.query_params:
     oferta_id = st.query_params["oferta"]
     
     try:
-        # Pobieramy dane tego konkretnego projektu z bazy
         odp = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
         
         if len(odp.data) > 0:
             projekt = odp.data[0]
             dane = projekt.get('dane_json', {})
             nazwa = projekt.get('nazwa_projektu', 'Kosztorys')
-            koszt = dane.get('koszt_calkowity', 0)
+            
+            # 1. NAPRAWA LICZBY (Zaokrąglenie do 2 miejsc po przecinku i ładne spacje)
+            koszt = float(dane.get('koszt_calkowity', 0))
+            koszt_format = f"{koszt:,.2f}".replace(",", " ") # Zrobi z tego np. 4 238.54
+            
             branza = projekt.get('branza', '')
             status = projekt.get('status', 'Oczekująca')
             
-            # --- RYSOWANIE PIĘKNEGO WIDOKU DLA KLIENTA ---
-            st.markdown("<h1 style='text-align: center; color: #00D395;'>Interaktywna Oferta</h1>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align: center; color: #495057;'>{nazwa}</h3>", unsafe_allow_html=True)
-            st.markdown("---")
+            # 2. STYLIZACJA PREMIUM (CSS)
+            st.markdown("""
+            <style>
+            /* Ukrywamy domyślne śmieci Streamlita żeby było czysto */
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
             
-            col_k1, col_k2 = st.columns(2)
-            col_k1.metric("Wycena prac", f"{koszt} zł")
-            col_k2.metric("Status oferty", status)
+            /* Karta Oferty */
+            .premium-header {
+                background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+                color: white;
+                padding: 40px 20px;
+                border-radius: 12px 12px 0 0;
+                text-align: center;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            .premium-body {
+                background: white;
+                padding: 40px 30px;
+                border-radius: 0 0 12px 12px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                border: 1px solid #f3f4f6;
+                border-top: none;
+            }
+            .kwota-glowna {
+                font-size: 48px;
+                font-weight: 800;
+                color: #00D395;
+                margin: 15px 0;
+            }
+            </style>
+            """, unsafe_allow_html=True)
             
-            st.write("### Podsumowanie")
-            st.write(f"**Zakres prac:** {branza}")
-            st.info("Tutaj w przyszłości podepniemy dokładną listę pomieszczeń i wyliczonych materiałów.")
-            
-            st.markdown("---")
+            # 3. WIDOK WIZYTÓWKI
+            st.markdown(f"""
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div class="premium-header">
+                    <p style="color: #9ca3af; font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">
+                        Oficjalna Wykonawcza
+                    </p>
+                    <h1 style="margin: 0; color: white; font-size: 32px;">{nazwa}</h1>
+                </div>
+                <div class="premium-body">
+                    <p style="color: #6b7280; font-size: 16px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wycena prac:</p>
+                    <div class="kwota-glowna">{koszt_format} zł</div>
+                    <hr style="border: 0; height: 1px; background: #e5e7eb; margin: 30px 0;">
+                    
+                    <h4 style="color: #374151; margin-bottom: 15px;">📌 Szczegóły zlecenia</h4>
+                    <p style="color: #4b5563; font-size: 16px;"><strong>Zakres prac:</strong> {branza}</p>
+                    <p style="color: #4b5563; font-size: 16px;"><strong>Status dokumentu:</strong> {status}</p>
+                </div>
+            </div>
+            <br>
+            """, unsafe_allow_html=True)
             
             # --- LOGIKA AKCEPTACJI ---
             if status != "Zaakceptowana":
-                st.write("Jeżeli zgadzasz się z powyższą wyceną, kliknij przycisk poniżej, aby zatwierdzić ofertę.")
-                if st.button("✅ AKCEPTUJĘ KOSZTORYS", type="primary", use_container_width=True):
-                    # Zmiana statusu w bazie danych!
+                st.info("💡 W tym miejscu w przyszłości rozwiniemy pełną listę wyliczonych materiałów i pomieszczeń.")
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                if st.button("✅ AKCEPTUJĘ POWYŻSZY KOSZTORYS", type="primary", use_container_width=True):
                     supabase.table("kosztorysy").update({"status": "Zaakceptowana"}).eq("id", oferta_id).execute()
                     st.success("Dziękujemy! Oferta została zaakceptowana. Wykonawca otrzyma powiadomienie.")
-                    st.balloons() # Puszczamy balony na ekranie z radości!
+                    st.balloons()
                     st.rerun()
             else:
-                st.success("✅ Ta oferta została już zaakceptowana. Dziękujemy za współpracę!")
+                st.success("✅ Ta oferta została zaakceptowana przez inwestora. Dziękujemy za współpracę!")
                 
         else:
             st.error("Nie znaleziono takiej oferty. Link może być nieprawidłowy lub wygasł.")
@@ -502,11 +546,10 @@ if "oferta" in st.query_params:
     except Exception as e:
         st.error(f"Błąd ładowania oferty: {e}")
     
-    # ⛔ BARDZO WAŻNE: Zatrzymujemy skrypt! 
-    # Klient nie może zobaczyć Twojego logowania, menu bocznego i kalkulatorów!
-    st.stop() 
+    # Zatrzymujemy ładowanie reszty aplikacji!
+    st.stop()
 # =======================================================
-# (TUTAJ DALEJ ZACZYNA SIĘ TWÓJ NORMALNY KOD APLIKACJI)
+
 
 # =======================================================
 # 6. UKRYTY PANEL ADMINISTRATORA (WIDOCZNY TYLKO DLA CIEBIE)
