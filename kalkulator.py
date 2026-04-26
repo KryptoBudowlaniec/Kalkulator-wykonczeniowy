@@ -781,6 +781,26 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 with st.expander(f"{nazwa} | {data_utworzenia} | {koszt} zł"):
                     st.write(f"**Moduł kalkulatora:** {branza}")
                     
+                    # ==========================================
+                    # 🔗 TUTAJ WKLEJAMY KROK 3 (GENERATOR LINKU)
+                    # ==========================================
+                    status = p.get('status', 'Oczekująca')
+                    
+                    # Kolorujemy status, żeby ładnie wyglądał
+                    if status == "Zaakceptowana":
+                        st.success(f"**Status:** ✅ {status}")
+                    else:
+                        st.info(f"**Status:** ⏳ {status}")
+                        
+                    # Pobiera adres URL aplikacji (Później zmienisz na swoją domenę!)
+                    host_url = "https://twoja-aplikacja.streamlit.app" 
+                    link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
+                    
+                    st.markdown("**Wyślij ten link klientowi:**")
+                    st.code(link_do_oferty, language="http")
+                    st.markdown("---")
+                    # ==========================================
+                    
                     c1, c2, c3 = st.columns(3)
                     c1.metric("Całkowita Wycena", f"{koszt} zł")
                     c2.metric("Marża O&P", f"x {dane.get('marza_op', 1.0)}")
