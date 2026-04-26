@@ -840,7 +840,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 branza = p.get('branza', 'Nieznana')
                 
                
-               # 3. Rozpakowujemy nasz worek z parametrami:
+                # 3. Rozpakowujemy nasz worek z parametrami:
                 dane = p.get('dane_json', {}) 
                 
                 # Zabezpieczamy i formatujemy kwotę do ładnej postaci (np. 4 238.54)
@@ -850,10 +850,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 with st.expander(f"{nazwa} | {data_utworzenia} | {koszt_format} zł"):
                     st.write(f"**Moduł kalkulatora:** {branza}")
                     
-                    # --- Reszta kodu z generatorem linku i przyciskami (tego nie zmieniaj) ---
-                    
                     # ==========================================
-                    # 🔗 ZAKTUALIZOWANY GENERATOR LINKU (PROCALC.PL)
+                    # 🔗 GENERATOR LINKU
                     # ==========================================
                     status = p.get('status', 'Oczekująca')
                     
@@ -862,18 +860,17 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     else:
                         st.info(f"**Status:** ⏳ {status}")
                         
-                    # Ustawiamy Twoją docelową domenę
-                    host_url = "https://procalc.pl" 
+                    # Pamiętaj: do testów używamy localhost, przy starcie zmienisz na procalc.pl
+                    host_url = "http://localhost:8501" 
                     link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
                     
                     st.markdown("**Wyślij ten link klientowi:**")
                     st.code(link_do_oferty, language="http")
-                    
                     st.markdown("---")
-                    # ==========================================
                     
                     c1, c2, c3 = st.columns(3)
-                    c1.metric("Całkowita Wycena", f"{koszt} zł")
+                    # TUTAJ BYŁ BŁĄD - Zmieniono {koszt} na {koszt_format}
+                    c1.metric("Całkowita Wycena", f"{koszt_format} zł") 
                     c2.metric("Marża O&P", f"x {dane.get('marza_op', 1.0)}")
                     c3.metric("Utrudnienia", f"x {dane.get('mnoznik_utrudnien', 1.0)}")
                     
