@@ -805,7 +805,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 koszt_surowy = float(dane.get('koszt_calkowity', 0))
                 koszt_format = f"{koszt_surowy:,.2f}".replace(",", " ")
                 
-                with st.expander(f"🏗️ {nazwa} | 📅 {data_utworzenia} | 💰 {koszt_format} zł"):
+                with st.expander(f"{nazwa} | {data_utworzenia} | {koszt_format} zł"):
                     st.write(f"**Moduł kalkulatora:** {branza}")
                     
                     # --- STATUS I LINK ---
@@ -815,7 +815,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     else:
                         st.info(f"**Status:** ⏳ {status}")
                         
-                    host_url = "http://localhost:8501" # Potem zmienisz na procalc.pl
+                    host_url = "http://procalc.pl" # Potem zmienisz na procalc.pl
                     link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
                     st.markdown("**Link dla klienta:**")
                     st.code(link_do_oferty, language="http")
@@ -837,7 +837,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     
                     with btn_col1:
                         # Przycisk Edytuj - ładuje dane do session_state
-                        if st.button("✏️ Wczytaj do edycji", key=f"edit_{p.get('id')}", use_container_width=True):
+                        if st.button("Wczytaj do edycji", key=f"edit_{p.get('id')}", use_container_width=True):
                             # Wstrzykujemy dane prosto do kluczy (keys) kalkulatora malowania
                             if 'm_uzytkowy' in dane: st.session_state['pro_m_fast'] = dane['m_uzytkowy']
                             if 'stan_f' in dane: st.session_state['pro_s_fast'] = dane['stan_f']
