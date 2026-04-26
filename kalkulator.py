@@ -329,6 +329,23 @@ elif st.session_state.get("zalogowany") == True:
 from datetime import datetime, timezone, timedelta
 
 # =======================================================
+# 🚀 ODBIORNIK SYGNAŁU Z PROFILU (Wklej to TUTAJ)
+# =======================================================
+if st.session_state.get('przelacz_na_malowanie'):
+    # 1. Chowa panel boczny profilu
+    st.session_state['globalny_sidebar'] = "Aplikacja Główna" 
+    
+    # 2. Przełącza górne menu na "Kalkulatory"
+    st.session_state['main_nav'] = "Kalkulatory"           
+    
+    # 3. Wybiera konkretną branżę wewnątrz kalkulatorów
+    st.session_state['sub_nav'] = "Malowanie"              
+    
+    # 4. Czyścimy sygnał, żeby nie zapętlić aplikacji
+    st.session_state['przelacz_na_malowanie'] = False         
+# =======================================================
+                    
+# =======================================================
 # 4.5. VIP BYPASS (Konto Administratora) - TWOJA TARCZA
 # =======================================================
 if st.session_state.get("zalogowany") and st.session_state.get("user_email") == "pawelkubiak685@gmail.com":
