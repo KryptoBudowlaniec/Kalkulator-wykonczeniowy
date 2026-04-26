@@ -451,6 +451,64 @@ if st.session_state.get("zalogowany"):
         st.stop()
 
 # =======================================================
+# 🚀 WIDOK INTERAKTYWNEJ OFERTY DLA KLIENTA (TRYB CZYTANIA)
+# =======================================================
+# Sprawdzamy czy w adresie URL jest parametr "oferta"
+if "oferta" in st.query_params:
+    oferta_id = st.query_params["oferta"]
+    
+    try:
+        # Pobieramy dane tego konkretnego projektu z bazy
+        odp = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
+        
+        if len(odp.data) > 0:
+            projekt = odp.data[0]
+            dane = projekt.get('dane_json', {})
+            nazwa = projekt.get('nazwa_projektu', 'Kosztorys')
+            koszt = dane.get('koszt_calkowity', 0)
+            branza = projekt.get('branza', '')
+            status = projekt.get('status', 'Oczekująca')
+            
+            # --- RYSOWANIE PIĘKNEGO WIDOKU DLA KLIENTA ---
+            st.markdown("<h1 style='text-align: center; color: #00D395;'>Interaktywna Oferta</h1>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center; color: #495057;'>{nazwa}</h3>", unsafe_allow_html=True)
+            st.markdown("---")
+            
+            col_k1, col_k2 = st.columns(2)
+            col_k1.metric("Wycena prac", f"{koszt} zł")
+            col_k2.metric("Status oferty", status)
+            
+            st.write("### Podsumowanie")
+            st.write(f"**Zakres prac:** {branza}")
+            st.info("Tutaj w przyszłości podepniemy dokładną listę pomieszczeń i wyliczonych materiałów.")
+            
+            st.markdown("---")
+            
+            # --- LOGIKA AKCEPTACJI ---
+            if status != "Zaakceptowana":
+                st.write("Jeżeli zgadzasz się z powyższą wyceną, kliknij przycisk poniżej, aby zatwierdzić ofertę.")
+                if st.button("✅ AKCEPTUJĘ KOSZTORYS", type="primary", use_container_width=True):
+                    # Zmiana statusu w bazie danych!
+                    supabase.table("kosztorysy").update({"status": "Zaakceptowana"}).eq("id", oferta_id).execute()
+                    st.success("Dziękujemy! Oferta została zaakceptowana. Wykonawca otrzyma powiadomienie.")
+                    st.balloons() # Puszczamy balony na ekranie z radości!
+                    st.rerun()
+            else:
+                st.success("✅ Ta oferta została już zaakceptowana. Dziękujemy za współpracę!")
+                
+        else:
+            st.error("Nie znaleziono takiej oferty. Link może być nieprawidłowy lub wygasł.")
+            
+    except Exception as e:
+        st.error(f"Błąd ładowania oferty: {e}")
+    
+    # ⛔ BARDZO WAŻNE: Zatrzymujemy skrypt! 
+    # Klient nie może zobaczyć Twojego logowania, menu bocznego i kalkulatorów!
+    st.stop() 
+# =======================================================
+# (TUTAJ DALEJ ZACZYNA SIĘ TWÓJ NORMALNY KOD APLIKACJI)
+
+# =======================================================
 # 6. UKRYTY PANEL ADMINISTRATORA (WIDOCZNY TYLKO DLA CIEBIE)
 # =======================================================
 # Zmień adres e-mail na swój główny, jeśli używasz innego!
