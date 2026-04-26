@@ -837,7 +837,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     
                     with btn_col1:
                         if st.button("✏️ Wczytaj do edycji", key=f"edit_{p.get('id')}", use_container_width=True):
-                            # 1. Wstrzykujemy dane do suwaków (to już mamy)
+                            # 1. Wstrzykujemy pozycje suwaków
                             if 'm_uzytkowy' in dane: st.session_state['pro_m_fast'] = dane['m_uzytkowy']
                             if 'stan_f' in dane: st.session_state['pro_s_fast'] = dane['stan_f']
                             if 'f_biala' in dane: st.session_state['pro_fb'] = dane['f_biala']
@@ -849,14 +849,14 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                             if 'typ_sztukaterii' in dane: st.session_state['pro_tsz_fast'] = dane['typ_sztukaterii']
                             if 'pokoje_pro' in dane: st.session_state['pokoje_pro'] = dane['pokoje_pro']
                             
-                            # 2. Zapamiętujemy ID projektu, żeby móc go nadpisać zamiast tworzyć nowy
+                            # 2. Tryb Edycji i Nazwa Projektu
                             st.session_state['id_edytowanego_projektu'] = p.get('id')
                             st.session_state['tryb_edycji'] = True
+                            st.session_state['nazwa_proj_malowanie_input'] = nazwa
 
-                            # 3. MAGICZNE PRZEKIEROWANIE
-                            # Zakładamy, że Twoje menu ma key="nawigacja_boczna" a pille "kalkulator_pills"
-                            st.session_state['nawigacja_boczna'] = "Aplikacja Główna"
-                            st.session_state['kalkulator_pills'] = "Malowanie"
+                            # 3. MAGICZNE PRZEKIEROWANIE (Teraz używa Twoich prawdziwych kluczy!)
+                            st.session_state['globalny_sidebar'] = "Aplikacja Główna" # Chowa panel profilu
+                            st.session_state['sub_nav'] = "Malowanie" # Przełącza pigułkę na Malowanie
                             
                             st.rerun()
         else:
@@ -1577,7 +1577,12 @@ elif opcja_boczna == "Aplikacja Główna":
 
                 # 1. Sprawdzamy czy użytkownik ma uprawnienia do zapisu (tylko zalogowani)
                 if st.session_state.get('zalogowany'):
-                    nazwa_projektu = st.text_input("Nazwa projektu (np. Salon Kowalscy):", key="nazwa_proj_malowanie")
+                    # 👇 TUTAJ JEST TA LINIJKA DO PODMIANY 👇
+                    nazwa_projektu = st.text_input(
+                        "Nazwa projektu (np. Salon Kowalscy):", 
+                        key="nazwa_proj_malowanie_input"
+                    )
+                    # ========
                     
                     # Definiujemy wygląd i tekst głównego przycisku
                     label_przycisku = "💾 Zaktualizuj zmiany w chmurze" if jest_edycja else "💾 Zapisz do chmury"
