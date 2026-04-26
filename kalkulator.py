@@ -465,44 +465,51 @@ if "oferta" in st.query_params:
             nazwa = projekt.get('nazwa_projektu', 'Kosztorys')
             
             # 1. NAPRAWA LICZBY (Zaokrąglenie do 2 miejsc po przecinku i ładne spacje)
-            koszt = float(dane.get('koszt_calkowity', 0))
-            koszt_format = f"{koszt:,.2f}".replace(",", " ") # Zrobi z tego np. 4 238.54
+# ==========================================
+            # POBIERANIE NOWYCH DANYCH Z JSON (Zabezpieczenie przed błędem w starych projektach)
+            # ==========================================
+            koszt_rob = float(dane.get('koszt_robocizny', 0))
+            koszt_mat = float(dane.get('koszt_materialow', 0))
+            technologie = dane.get('technologie', 'Standardowe materiały wykończeniowe wg wyceny')
             
-            branza = projekt.get('branza', '')
-            status = projekt.get('status', 'Oczekująca')
+            # Ładne formatowanie (np. 1 500.00 zł)
+            rob_format = f"{koszt_rob:,.2f}".replace(",", " ")
+            mat_format = f"{koszt_mat:,.2f}".replace(",", " ")
             
-            # 2. STYLIZACJA PREMIUM (CSS)
-            st.markdown("""
-            <style>
-            /* Ukrywamy domyślne śmieci Streamlita żeby było czysto */
-            #MainMenu {visibility: hidden;}
-            header {visibility: hidden;}
-            footer {visibility: hidden;}
-            
-            /* Karta Oferty */
-            .premium-header {
-                background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-                color: white;
-                padding: 40px 20px;
-                border-radius: 12px 12px 0 0;
-                text-align: center;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            }
-            .premium-body {
-                background: white;
-                padding: 40px 30px;
-                border-radius: 0 0 12px 12px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-                border: 1px solid #f3f4f6;
-                border-top: none;
-            }
-            .kwota-glowna {
-                font-size: 48px;
-                font-weight: 800;
-                color: #00D395;
-                margin: 15px 0;
-            }
-            </style>
+            # 3. WIDOK WIZYTÓWKI (Naprawiony, Styl Joist/Houzz Pro)
+            st.markdown(f"""
+            <div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e7eb;">
+                <div style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: white; padding: 40px 30px; text-align: center;">
+                    <p style="color: #9ca3af; font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">
+                        Kosztorys Wykonawczy
+                    </p>
+                    <h1 style="margin: 0; color: white; font-size: 32px;">{nazwa}</h1>
+                </div>
+                
+                <div style="padding: 40px 30px;">
+                    <p style="color: #6b7280; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wycena inwestycji:</p>
+                    <div style="font-size: 48px; font-weight: 800; color: #00D395; margin: 10px 0 30px 0;">{koszt_format} zł</div>
+                    
+                    <div style="background: #f9fafb; padding: 25px; border-radius: 8px; border: 1px solid #f3f4f6;">
+                        <h4 style="margin-top: 0; color: #374151; font-size: 18px; margin-bottom: 20px;">Szczegółowe zestawienie kosztów</h4>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #4b5563;"><strong>Robocizna</strong> (Zakres: {branza})</span>
+                            <span style="color: #111827; font-weight: 600;">{rob_format} zł</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #4b5563;"><strong>Materiały</strong> (Szacowane koszty)</span>
+                            <span style="color: #111827; font-weight: 600;">{mat_format} zł</span>
+                        </div>
+                        
+                        <div style="padding-top: 15px;">
+                            <span style="color: #6b7280; font-size: 13px;"><strong>Używane technologie:</strong> {technologie}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
             """, unsafe_allow_html=True)
             
         # 3. WIDOK WIZYTÓWKI (Naprawiony, Styl Joist/Houzz Pro)
@@ -1584,13 +1591,17 @@ elif opcja_boczna == "Aplikacja Główna":
                         else:
                             # 2. Pakujemy parametry do formatu JSON 
                             # UWAGA: Podmieniłem 'pow_scian' na Twoje 'total_m2_walls'!
+                            
                             dane_json = {
                                 "branza": "Malowanie",
                                 "powierzchnia_scian": total_m2_walls, 
                                 "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
                                 "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
-                                # TUTAJ MUSISZ WPISAĆ SWOJĄ ZMIENNĄ Z KOSZTEM CAŁKOWITYM (Zamiast 'koszt_calkowity_zmienna'):
-                                "koszt_calkowity": total_pro 
+                                "koszt_calkowity": total_pro,
+                                # === NOWE DANE DLA KLIENTA ===
+                                "koszt_robocizny": k_rob_total,
+                                "koszt_materialow": k_mat_sredni,
+                                "technologie": f"Farba do sufitów: {f_biala} | Farba ścienna: {f_kolor}"
                             }
                             
                             try:
