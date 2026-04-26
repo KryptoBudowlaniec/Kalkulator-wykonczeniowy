@@ -861,7 +861,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         st.info(f"**Status:** ⏳ {status}")
                         
                     # Pamiętaj: do testów używamy localhost, przy starcie zmienisz na procalc.pl
-                    host_url = "http://localhost:8501" 
+                    host_url = "http://procalc.pl" 
                     link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
                     
                     st.markdown("**Wyślij ten link klientowi:**")
