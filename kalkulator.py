@@ -674,6 +674,13 @@ st.markdown("""
 # ==========================================
 # GLOBALNY PANEL BOCZNY (Poprawiona logika pod st.pills + Twoje utrudnienia)
 # ==========================================
+
+# --- 🚀 ODBIORNIK SYGNAŁU Z PROFILU ---
+if st.session_state.get('przelacz_na_malowanie'):
+    st.session_state['globalny_sidebar'] = "Aplikacja Główna"
+    st.session_state['sub_nav'] = "Malowanie"
+    st.session_state['przelacz_na_malowanie'] = False # Kasujemy sygnał, żeby nie zacięło się w pętli
+# --------------------------------------
 opcja_boczna = "Aplikacja Główna" # Domyślnie nic nie zasłania
 
 if st.session_state.zalogowany:
@@ -854,9 +861,9 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                             st.session_state['tryb_edycji'] = True
                             st.session_state['nazwa_proj_malowanie_input'] = nazwa
 
-                            # 3. MAGICZNE PRZEKIEROWANIE (Teraz używa Twoich prawdziwych kluczy!)
-                            st.session_state['globalny_sidebar'] = "Aplikacja Główna" # Chowa panel profilu
-                            st.session_state['sub_nav'] = "Malowanie" # Przełącza pigułkę na Malowanie
+                            # 3. MAGICZNE PRZEKIEROWANIE (NAPRAWIONE)
+                            # Zamiast na siłę kręcić menu, wysyłamy sygnał na górę strony
+                            st.session_state['przelacz_na_malowanie'] = True 
                             
                             st.rerun()
         else:
