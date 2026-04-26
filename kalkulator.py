@@ -827,14 +827,45 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     st.markdown("---")
                     
                     c1, c2, c3 = st.columns(3)
-                    # TUTAJ BYŁ BŁĄD - Zmieniono {koszt} na {koszt_format}
-                    c1.metric("Całkowita Wycena", f"{koszt_format} zł") 
+                    c1.metric("Całkowita Wycena", f"{koszt_format} zł")
                     c2.metric("Marża O&P", f"x {dane.get('marza_op', 1.0)}")
                     c3.metric("Utrudnienia", f"x {dane.get('mnoznik_utrudnien', 1.0)}")
                     
-                    if st.button("🗑️ Usuń ten projekt", key=f"del_{p.get('id')}"):
-                        supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
-                        st.rerun()
+                    st.markdown("---")
+                    
+                    st.markdown("---")
+                    
+                    # ==========================================
+                    # ✏️ PRZYCISKI ZARZĄDZANIA (EDYCJA I USUWANIE)
+                    # ==========================================
+                    btn_col1, btn_col2 = st.columns(2)
+                    
+                    with btn_col1:
+                        if st.button("✏️ Wczytaj do edycji", key=f"edit_{p.get('id')}", use_container_width=True):
+                            # Wstrzykujemy zapamiętane pozycje prosto do suwaków!
+                            if 'm_uzytkowy' in dane: st.session_state['pro_m_fast'] = dane['m_uzytkowy']
+                            if 'stan_f' in dane: st.session_state['pro_s_fast'] = dane['stan_f']
+                            if 'f_biala' in dane: st.session_state['pro_fb'] = dane['f_biala']
+                            if 'f_kolor' in dane: st.session_state['pro_fk'] = dane['f_kolor']
+                            if 'f_grunt' in dane: st.session_state['pro_fg'] = dane['f_grunt']
+                            if 'f_tasma' in dane: st.session_state['pro_ft'] = dane['f_tasma']
+                            if 'stawka_mal' in dane: st.session_state['stawka_mal_pro'] = dane['stawka_mal']
+                            if 'mb_sztukaterii' in dane: st.session_state['pro_sz_fast'] = dane['mb_sztukaterii']
+                            if 'typ_sztukaterii' in dane: st.session_state['pro_tsz_fast'] = dane['typ_sztukaterii']
+                            
+                            # Odtwarzamy dodane ściany
+                            if 'pokoje_pro' in dane: st.session_state['pokoje_pro'] = dane['pokoje_pro']
+                            
+                            # Uzupełniamy nazwę projektu
+                            st.session_state['nazwa_proj_malowanie'] = nazwa
+                            
+                            # Wyświetlamy ładne, znikające powiadomienie
+                            st.toast("✅ Projekt wczytany! Przejdź do kalkulatora Malowanie na górze ekranu.", icon="🚀")
+                            
+                    with btn_col2:
+                        if st.button("🗑️ Usuń ten projekt", key=f"del_{p.get('id')}", type="secondary", use_container_width=True):
+                            supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
+                            st.rerun()
         else:
             st.info("Nie masz jeszcze żadnych zapisanych projektów. Zrób pierwszą wycenę i kliknij 'Zapisz do chmury'!")
             
@@ -1560,10 +1591,21 @@ elif opcja_boczna == "Aplikacja Główna":
                                 "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
                                 "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
                                 "koszt_calkowity": total_pro,
-                                # === NOWE DANE DLA KLIENTA ===
                                 "koszt_robocizny": k_rob_total,
                                 "koszt_materialow": k_mat_sredni,
-                                "technologie": f"Farba do sufitów: {f_biala} | Farba ścienna: {f_kolor}"
+                                "technologie": f"Farba do sufitów: {f_biala} | Farba ścienna: {f_kolor}",
+                                
+                                # === ZAPIS POZYCJI SUWAKÓW DO EDYCJI ===
+                                "m_uzytkowy": float(m_uzytkowy),
+                                "stan_f": stan_f,
+                                "f_biala": f_biala,
+                                "f_kolor": f_kolor,
+                                "f_grunt": f_grunt,
+                                "f_tasma": f_tasma,
+                                "stawka_mal": float(stawka_mal),
+                                "mb_sztukaterii": float(mb_sztukaterii),
+                                "typ_sztukaterii": typ_sztukaterii,
+                                "pokoje_pro": st.session_state.pokoje_pro
                             }
                             
                             try:
