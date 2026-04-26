@@ -836,9 +836,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     btn_col1, btn_col2 = st.columns(2)
                     
                     with btn_col1:
-                        # Przycisk Edytuj - ładuje dane do session_state
-                        if st.button("Wczytaj do edycji", key=f"edit_{p.get('id')}", use_container_width=True):
-                            # Wstrzykujemy dane prosto do kluczy (keys) kalkulatora malowania
+                        if st.button("✏️ Wczytaj do edycji", key=f"edit_{p.get('id')}", use_container_width=True):
+                            # 1. Wstrzykujemy dane do suwaków (to już mamy)
                             if 'm_uzytkowy' in dane: st.session_state['pro_m_fast'] = dane['m_uzytkowy']
                             if 'stan_f' in dane: st.session_state['pro_s_fast'] = dane['stan_f']
                             if 'f_biala' in dane: st.session_state['pro_fb'] = dane['f_biala']
@@ -850,12 +849,15 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                             if 'typ_sztukaterii' in dane: st.session_state['pro_tsz_fast'] = dane['typ_sztukaterii']
                             if 'pokoje_pro' in dane: st.session_state['pokoje_pro'] = dane['pokoje_pro']
                             
-                            st.toast("✅ Projekt wczytany! Przejdź do kalkulatora Malowanie.", icon="🚀")
+                            # 2. Zapamiętujemy ID projektu, żeby móc go nadpisać zamiast tworzyć nowy
+                            st.session_state['id_edytowanego_projektu'] = p.get('id')
+                            st.session_state['tryb_edycji'] = True
+
+                            # 3. MAGICZNE PRZEKIEROWANIE
+                            # Zakładamy, że Twoje menu ma key="nawigacja_boczna" a pille "kalkulator_pills"
+                            st.session_state['nawigacja_boczna'] = "Aplikacja Główna"
+                            st.session_state['kalkulator_pills'] = "Malowanie"
                             
-                    with btn_col2:
-                        # Przycisk Usuń
-                        if st.button("🗑️ Usuń projekt", key=f"del_{p.get('id')}", type="secondary", use_container_width=True):
-                            supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
                             st.rerun()
         else:
             st.info("Nie masz jeszcze żadnych zapisanych projektów. Zrób pierwszą wycenę i kliknij 'Zapisz do chmury'!")
@@ -1560,57 +1562,95 @@ elif opcja_boczna == "Aplikacja Główna":
                 st.markdown("---")
 
         # ==========================================
-                # 💾 ZAPISYWANIE PROJEKTU DO SUPABASE
+               # 💾 ZAPISYWANIE PROJEKTU DO SUPABASE
                 # ==========================================
                 st.markdown("---")
-                st.subheader("💾 Zapisz ten kosztorys")
                 
+                # Sprawdzamy, czy użytkownik jest w trybie edycji (wczytał projekt z profilu)
+                jest_edycja = st.session_state.get('tryb_edycji', False)
+                
+                if jest_edycja:
+                    st.subheader("✏️ Edytujesz zapisany kosztorys")
+                    st.info("Wprowadź zmiany w suwakach i kliknij 'Zaktualizuj zmiany', aby nadpisać projekt.")
+                else:
+                    st.subheader("💾 Zapisz nowy kosztorys")
+
                 # 1. Sprawdzamy czy użytkownik ma uprawnienia do zapisu (tylko zalogowani)
                 if st.session_state.get('zalogowany'):
                     nazwa_projektu = st.text_input("Nazwa projektu (np. Salon Kowalscy):", key="nazwa_proj_malowanie")
                     
-                    if st.button("Zapisz do chmury", type="primary", use_container_width=True):
-                        if nazwa_projektu.strip() == "":
-                            st.error("Wpisz nazwę projektu przed zapisem!")
-                        else:
-                            # 2. Pakujemy parametry do formatu JSON 
-                            # UWAGA: Podmieniłem 'pow_scian' na Twoje 'total_m2_walls'!
-                            
-                            dane_json = {
-                                "branza": "Malowanie",
-                                "powierzchnia_scian": total_m2_walls, 
-                                "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
-                                "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
-                                "koszt_calkowity": total_pro,
-                                "koszt_robocizny": k_rob_total,
-                                "koszt_materialow": k_mat_sredni,
-                                "technologie": f"Farba do sufitów: {f_biala} | Farba ścienna: {f_kolor}",
-                                
-                                # === ZAPIS POZYCJI SUWAKÓW DO EDYCJI ===
-                                "m_uzytkowy": float(m_uzytkowy),
-                                "stan_f": stan_f,
-                                "f_biala": f_biala,
-                                "f_kolor": f_kolor,
-                                "f_grunt": f_grunt,
-                                "f_tasma": f_tasma,
-                                "stawka_mal": float(stawka_mal),
-                                "mb_sztukaterii": float(mb_sztukaterii),
-                                "typ_sztukaterii": typ_sztukaterii,
-                                "pokoje_pro": st.session_state.pokoje_pro
-                            }
-                            
-                            try:
-                                # 3. Wysyłamy paczkę do bazy danych
-                                supabase.table("kosztorysy").insert({
-                                    "uzytkownik_id": st.session_state.user_id,
-                                    "nazwa_projektu": nazwa_projektu,
+                    # Definiujemy wygląd i tekst głównego przycisku
+                    label_przycisku = "💾 Zaktualizuj zmiany w chmurze" if jest_edycja else "💾 Zapisz do chmury"
+                    
+                    col_save1, col_save2 = st.columns([2, 1])
+
+                    with col_save1:
+                        if st.button(label_przycisku, type="primary", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę projektu przed zapisem!")
+                            else:
+                                # 2. Pakujemy parametry do formatu JSON (Pełny przepis na projekt)
+                                dane_json = {
                                     "branza": "Malowanie",
-                                    "dane_json": dane_json
-                                }).execute()
+                                    "powierzchnia_scian": total_m2_walls, 
+                                    "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
+                                    "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
+                                    "koszt_calkowity": total_pro,
+                                    "koszt_robocizny": k_rob_total,
+                                    "koszt_materialow": k_mat_sredni,
+                                    "technologie": f"Farba do sufitów: {f_biala} | Farba ścienna: {f_kolor}",
+                                    
+                                    # === ZAPIS POZYCJI SUWAKÓW DO EDYCJI ===
+                                    "m_uzytkowy": float(m_uzytkowy),
+                                    "stan_f": stan_f,
+                                    "f_biala": f_biala,
+                                    "f_kolor": f_kolor,
+                                    "f_grunt": f_grunt,
+                                    "f_tasma": f_tasma,
+                                    "stawka_mal": float(stawka_mal),
+                                    "mb_sztukaterii": float(mb_sztukaterii),
+                                    "typ_sztukaterii": typ_sztukaterii,
+                                    "pokoje_pro": st.session_state.pokoje_pro
+                                }
                                 
-                                st.success(f"✅ Projekt '{nazwa_projektu}' został zapisany! Znajdziesz go w Moim Profilu.")
-                            except Exception as e:
-                                st.error(f"Wystąpił błąd podczas zapisu: {e}")
+                                try:
+                                    if jest_edycja:
+                                        # AKTUALIZACJA (UPDATE)
+                                        projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                        supabase.table("kosztorysy").update({
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "dane_json": dane_json
+                                        }).eq("id", projekt_id).execute()
+                                        
+                                        st.success(f"✅ Zmiany w projekcie '{nazwa_projektu}' zostały zapisane!")
+                                        
+                                        # Czyścimy tryb edycji po sukcesie
+                                        st.session_state['tryb_edycji'] = False
+                                        st.session_state['id_edytowanego_projektu'] = None
+                                    else:
+                                        # NOWY WPIS (INSERT)
+                                        supabase.table("kosztorysy").insert({
+                                            "uzytkownik_id": st.session_state.user_id,
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "branza": "Malowanie",
+                                            "dane_json": dane_json
+                                        }).execute()
+                                        st.success(f"✅ Projekt '{nazwa_projektu}' został zapisany jako nowy!")
+                                    
+                                    # Odświeżamy aplikację, aby wyczyścić stan
+                                    st.rerun()
+
+                                except Exception as e:
+                                    st.error(f"Wystąpił błąd podczas komunikacji z bazą: {e}")
+
+                    # Dodajemy przycisk anulowania, jeśli jesteśmy w trybie edycji
+                    if jest_edycja:
+                        with col_save2:
+                            if st.button("🆕 Anuluj (Zapisz jako nowy)", use_container_width=True):
+                                st.session_state['tryb_edycji'] = False
+                                st.session_state['id_edytowanego_projektu'] = None
+                                st.rerun()
+
                 else:
                     st.info("Zaloguj się, aby zapisywać swoje kosztorysy w chmurze.")
                 
