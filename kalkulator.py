@@ -805,44 +805,40 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 koszt_surowy = float(dane.get('koszt_calkowity', 0))
                 koszt_format = f"{koszt_surowy:,.2f}".replace(",", " ")
                 
-                with st.expander(f"{nazwa} | {data_utworzenia} | {koszt_format} zł"):
+                with st.expander(f"🏗️ {nazwa} | 📅 {data_utworzenia} | 💰 {koszt_format} zł"):
                     st.write(f"**Moduł kalkulatora:** {branza}")
                     
-                    # ==========================================
-                    # 🔗 GENERATOR LINKU
-                    # ==========================================
+                    # --- STATUS I LINK ---
                     status = p.get('status', 'Oczekująca')
-                    
                     if status == "Zaakceptowana":
                         st.success(f"**Status:** ✅ {status}")
                     else:
                         st.info(f"**Status:** ⏳ {status}")
                         
-                    # Pamiętaj: do testów używamy localhost, przy starcie zmienisz na procalc.pl
-                    host_url = "http://procalc.pl" 
+                    host_url = "http://localhost:8501" # Potem zmienisz na procalc.pl
                     link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
-                    
-                    st.markdown("**Wyślij ten link klientowi:**")
+                    st.markdown("**Link dla klienta:**")
                     st.code(link_do_oferty, language="http")
+                    
                     st.markdown("---")
                     
+                    # --- METRYKI ---
                     c1, c2, c3 = st.columns(3)
-                    c1.metric("Całkowita Wycena", f"{koszt_format} zł")
+                    c1.metric("Wycena", f"{koszt_format} zł")
                     c2.metric("Marża O&P", f"x {dane.get('marza_op', 1.0)}")
                     c3.metric("Utrudnienia", f"x {dane.get('mnoznik_utrudnien', 1.0)}")
                     
-                    st.markdown("---")
-                    
-                    st.markdown("---")
-                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+
                     # ==========================================
                     # ✏️ PRZYCISKI ZARZĄDZANIA (EDYCJA I USUWANIE)
                     # ==========================================
                     btn_col1, btn_col2 = st.columns(2)
                     
                     with btn_col1:
+                        # Przycisk Edytuj - ładuje dane do session_state
                         if st.button("✏️ Wczytaj do edycji", key=f"edit_{p.get('id')}", use_container_width=True):
-                            # Wstrzykujemy zapamiętane pozycje prosto do suwaków!
+                            # Wstrzykujemy dane prosto do kluczy (keys) kalkulatora malowania
                             if 'm_uzytkowy' in dane: st.session_state['pro_m_fast'] = dane['m_uzytkowy']
                             if 'stan_f' in dane: st.session_state['pro_s_fast'] = dane['stan_f']
                             if 'f_biala' in dane: st.session_state['pro_fb'] = dane['f_biala']
@@ -852,18 +848,13 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                             if 'stawka_mal' in dane: st.session_state['stawka_mal_pro'] = dane['stawka_mal']
                             if 'mb_sztukaterii' in dane: st.session_state['pro_sz_fast'] = dane['mb_sztukaterii']
                             if 'typ_sztukaterii' in dane: st.session_state['pro_tsz_fast'] = dane['typ_sztukaterii']
-                            
-                            # Odtwarzamy dodane ściany
                             if 'pokoje_pro' in dane: st.session_state['pokoje_pro'] = dane['pokoje_pro']
                             
-                            # Uzupełniamy nazwę projektu
-                            st.session_state['nazwa_proj_malowanie'] = nazwa
-                            
-                            # Wyświetlamy ładne, znikające powiadomienie
-                            st.toast("✅ Projekt wczytany! Przejdź do kalkulatora Malowanie na górze ekranu.", icon="🚀")
+                            st.toast("✅ Projekt wczytany! Przejdź do kalkulatora Malowanie.", icon="🚀")
                             
                     with btn_col2:
-                        if st.button("🗑️ Usuń ten projekt", key=f"del_{p.get('id')}", type="secondary", use_container_width=True):
+                        # Przycisk Usuń
+                        if st.button("🗑️ Usuń projekt", key=f"del_{p.get('id')}", type="secondary", use_container_width=True):
                             supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
                             st.rerun()
         else:
