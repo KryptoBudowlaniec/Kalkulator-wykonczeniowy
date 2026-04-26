@@ -505,23 +505,37 @@ if "oferta" in st.query_params:
             </style>
             """, unsafe_allow_html=True)
             
-            # 3. WIDOK WIZYTÓWKI
+        # 3. WIDOK WIZYTÓWKI (Naprawiony, Styl Joist/Houzz Pro)
             st.markdown(f"""
-            <div style="max-width: 800px; margin: 0 auto;">
-                <div class="premium-header">
+            <div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e7eb;">
+                <div style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: white; padding: 40px 30px; text-align: center;">
                     <p style="color: #9ca3af; font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">
-                        Oficjalna Wykonawcza
+                        Kosztorys Wykonawczy
                     </p>
                     <h1 style="margin: 0; color: white; font-size: 32px;">{nazwa}</h1>
                 </div>
-                <div class="premium-body">
-                    <p style="color: #6b7280; font-size: 16px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wycena prac:</p>
-                    <div class="kwota-glowna">{koszt_format} zł</div>
-                    <hr style="border: 0; height: 1px; background: #e5e7eb; margin: 30px 0;">
+                
+                <div style="padding: 40px 30px;">
+                    <p style="color: #6b7280; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Całkowita wycena inwestycji:</p>
+                    <div style="font-size: 48px; font-weight: 800; color: #00D395; margin: 10px 0 30px 0;">{koszt_format} zł</div>
                     
-                    <h4 style="color: #374151; margin-bottom: 15px;">📌 Szczegóły zlecenia</h4>
-                    <p style="color: #4b5563; font-size: 16px;"><strong>Zakres prac:</strong> {branza}</p>
-                    <p style="color: #4b5563; font-size: 16px;"><strong>Status dokumentu:</strong> {status}</p>
+                    <div style="background: #f9fafb; padding: 25px; border-radius: 8px; border: 1px solid #f3f4f6;">
+                        <h4 style="margin-top: 0; color: #374151; font-size: 18px; margin-bottom: 20px;">Szczegółowe zestawienie kosztów</h4>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #4b5563;"><strong>Robocizna</strong> (Zakres: {branza})</span>
+                            <span style="color: #111827; font-weight: 600;">(Wymaga aktualizacji bazy)</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #4b5563;"><strong>Materiały</strong> (Szacowane koszty)</span>
+                            <span style="color: #111827; font-weight: 600;">(Wymaga aktualizacji bazy)</span>
+                        </div>
+                        
+                        <div style="padding-top: 15px;">
+                            <span style="color: #6b7280; font-size: 13px;"><strong>Używane technologie:</strong> (Tu pojawi się lista np. Farba Ceramiczna, Grunt głęboko penetrujący, Folie, Taśmy Blue Dolphin)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <br>
