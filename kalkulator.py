@@ -5228,110 +5228,110 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
                                 
     elif branza == "🛒 Koszyk":
-    st.header("🛒 Twój Koszyk Kosztorysów")
-    
-    # Zabezpieczenie na wypadek braku koszyka w pamięci (np. po twardym resecie)
-    if 'koszyk_projektow' not in st.session_state:
-        st.session_state.koszyk_projektow = []
+        st.header("🛒 Twój Koszyk Kosztorysów")
         
-    if not st.session_state.koszyk_projektow:
-        st.info("💡 Twój koszyk jest pusty. Przejdź do kalkulatorów, skonfiguruj wycenę i kliknij 'Dodaj do wspólnego koszyka'.")
-    else:
-        suma_calkowita = 0
-        suma_robocizna = 0
-        suma_materialy = 0
-        
-        # 1. LISTA DODANYCH ETAPÓW
-        st.markdown("### 📋 Elementy Twojej wyceny:")
-        for i, etap in enumerate(st.session_state.koszyk_projektow):
-            suma_calkowita += etap['koszt_calkowity']
-            suma_robocizna += etap['koszt_robocizny']
-            suma_materialy += etap['koszt_materialow']
+        # Zabezpieczenie na wypadek braku koszyka w pamięci (np. po twardym resecie)
+        if 'koszyk_projektow' not in st.session_state:
+            st.session_state.koszyk_projektow = []
             
-            # Ładne formatowanie kwot
-            kwota_etapu = f"{etap['koszt_calkowity']:,.2f}".replace(",", " ")
+        if not st.session_state.koszyk_projektow:
+            st.info("💡 Twój koszyk jest pusty. Przejdź do kalkulatorów, skonfiguruj wycenę i kliknij 'Dodaj do wspólnego koszyka'.")
+        else:
+            suma_calkowita = 0
+            suma_robocizna = 0
+            suma_materialy = 0
             
-            with st.expander(f"🛠️ Etap {i+1}: {etap['nazwa_etapu']} | {etap['branza']} | {kwota_etapu} zł", expanded=True):
-                c1, c2 = st.columns(2)
-                c1.write(f"**Robocizna:** {etap['koszt_robocizny']:,.2f} zł".replace(",", " "))
-                c2.write(f"**Materiały:** {etap['koszt_materialow']:,.2f} zł".replace(",", " "))
-                st.write(f"📌 *Szczegóły:* {etap.get('detale', '')}")
+            # 1. LISTA DODANYCH ETAPÓW
+            st.markdown("### 📋 Elementy Twojej wyceny:")
+            for i, etap in enumerate(st.session_state.koszyk_projektow):
+                suma_calkowita += etap['koszt_calkowity']
+                suma_robocizna += etap['koszt_robocizny']
+                suma_materialy += etap['koszt_materialow']
                 
-                # Przycisk usuwania z koszyka
-                if st.button(f"🗑️ Usuń ten etap", key=f"del_etap_{i}"):
-                    st.session_state.koszyk_projektow.pop(i)
-                    st.rerun()
-
-        st.markdown("---")
-        
-        # 2. PODSUMOWANIE FINANSOWE CAŁOŚCI
-        st.markdown("### 💰 Podsumowanie całego projektu")
-        col_sum1, col_sum2, col_sum3 = st.columns(3)
-        col_sum1.metric("Wartość całkowita", f"{suma_calkowita:,.2f} zł".replace(",", " "))
-        col_sum2.metric("Łączna Robocizna", f"{suma_robocizna:,.2f} zł".replace(",", " "))
-        col_sum3.metric("Szacowane Materiały", f"{suma_materialy:,.2f} zł".replace(",", " "))
-        
-        st.markdown("---")
-        
-        # 3. ZBIORCZA LISTA ZAKUPÓW (Twój wymóg!)
-        st.markdown("### 📋 Super-Lista Zakupów (Logistyka)")
-        st.info("Aplikacja automatycznie sumuje wszystkie materiały z dodanych etapów.")
-        
-        zbiorcze_materialy = {}
-        for etap in st.session_state.koszyk_projektow:
-            for mat in etap.get("materialy_lista", []):
-                # Klucz po nazwie, żeby system zsumował to samo (np. 10L gruntu z malowania i 5L ze szpachlowania)
-                klucz = f"{mat['nazwa']}_{mat['jed']}"
-                if klucz in zbiorcze_materialy:
-                    zbiorcze_materialy[klucz]['ilosc'] += mat['ilosc']
-                else:
-                    zbiorcze_materialy[klucz] = {"nazwa": mat['nazwa'], "ilosc": mat['ilosc'], "jed": mat['jed']}
-        
-        if zbiorcze_materialy:
-            for k, v in zbiorcze_materialy.items():
-                st.write(f"- {v['nazwa']}: **{round(v['ilosc'], 1)} {v['jed']}**")
-        else:
-            st.write("Brak materiałów na liście (wyceny zawierały tylko robociznę).")
-            
-        st.markdown("---")
-        
-        # 4. ZAPIS GŁÓWNY DO SUPABASE
-        st.markdown("### 💾 Zapisz kosztorys i wygeneruj ofertę")
-        if st.session_state.get('zalogowany'):
-            nazwa_glownego_projektu = st.text_input("Nazwa GŁÓWNA dla klienta (np. Remont Domu Kowalskich):", key="nazwa_koszyk_input")
-            
-            if st.button("🚀 ZAPISZ CAŁY KOSZTORYS DO CHMURY", type="primary", use_container_width=True):
-                if not nazwa_glownego_projektu.strip():
-                    st.error("Podaj główną nazwę projektu!")
-                else:
-                    # Pakujemy ten potężny zestaw w jeden oficjalny format
-                    dane_do_bazy = {
-                        "koszt_calkowity_projektu": suma_calkowita,
-                        "etapy": st.session_state.koszyk_projektow,
-                        "zbiorcza_lista_zakupow": list(zbiorcze_materialy.values())
-                    }
+                # Ładne formatowanie kwot
+                kwota_etapu = f"{etap['koszt_calkowity']:,.2f}".replace(",", " ")
+                
+                with st.expander(f"🛠️ Etap {i+1}: {etap['nazwa_etapu']} | {etap['branza']} | {kwota_etapu} zł", expanded=True):
+                    c1, c2 = st.columns(2)
+                    c1.write(f"**Robocizna:** {etap['koszt_robocizny']:,.2f} zł".replace(",", " "))
+                    c2.write(f"**Materiały:** {etap['koszt_materialow']:,.2f} zł".replace(",", " "))
+                    st.write(f"📌 *Szczegóły:* {etap.get('detale', '')}")
                     
-                    try:
-                        supabase.table("kosztorysy").insert({
-                            "uzytkownik_id": st.session_state.user_id,
-                            "nazwa_projektu": nazwa_glownego_projektu,
-                            "branza": "Kosztorys Wieloetapowy",
-                            "dane_json": dane_do_bazy
-                        }).execute()
-                        
-                        st.success("✅ Projekt pomyślnie zapisany w chmurze! Link dla klienta znajdziesz w 'Moim Profilu'.")
-                        st.balloons()
-                        
-                        # Wypompowujemy stary koszyk, bo projekt jest już bezpieczny w chmurze
-                        st.session_state.koszyk_projektow = []
-                        import time
-                        time.sleep(2)
+                    # Przycisk usuwania z koszyka
+                    if st.button(f"🗑️ Usuń ten etap", key=f"del_etap_{i}"):
+                        st.session_state.koszyk_projektow.pop(i)
                         st.rerun()
+    
+            st.markdown("---")
+            
+            # 2. PODSUMOWANIE FINANSOWE CAŁOŚCI
+            st.markdown("### 💰 Podsumowanie całego projektu")
+            col_sum1, col_sum2, col_sum3 = st.columns(3)
+            col_sum1.metric("Wartość całkowita", f"{suma_calkowita:,.2f} zł".replace(",", " "))
+            col_sum2.metric("Łączna Robocizna", f"{suma_robocizna:,.2f} zł".replace(",", " "))
+            col_sum3.metric("Szacowane Materiały", f"{suma_materialy:,.2f} zł".replace(",", " "))
+            
+            st.markdown("---")
+            
+            # 3. ZBIORCZA LISTA ZAKUPÓW (Twój wymóg!)
+            st.markdown("### 📋 Super-Lista Zakupów (Logistyka)")
+            st.info("Aplikacja automatycznie sumuje wszystkie materiały z dodanych etapów.")
+            
+            zbiorcze_materialy = {}
+            for etap in st.session_state.koszyk_projektow:
+                for mat in etap.get("materialy_lista", []):
+                    # Klucz po nazwie, żeby system zsumował to samo (np. 10L gruntu z malowania i 5L ze szpachlowania)
+                    klucz = f"{mat['nazwa']}_{mat['jed']}"
+                    if klucz in zbiorcze_materialy:
+                        zbiorcze_materialy[klucz]['ilosc'] += mat['ilosc']
+                    else:
+                        zbiorcze_materialy[klucz] = {"nazwa": mat['nazwa'], "ilosc": mat['ilosc'], "jed": mat['jed']}
+            
+            if zbiorcze_materialy:
+                for k, v in zbiorcze_materialy.items():
+                    st.write(f"- {v['nazwa']}: **{round(v['ilosc'], 1)} {v['jed']}**")
+            else:
+                st.write("Brak materiałów na liście (wyceny zawierały tylko robociznę).")
+                
+            st.markdown("---")
+            
+            # 4. ZAPIS GŁÓWNY DO SUPABASE
+            st.markdown("### 💾 Zapisz kosztorys i wygeneruj ofertę")
+            if st.session_state.get('zalogowany'):
+                nazwa_glownego_projektu = st.text_input("Nazwa GŁÓWNA dla klienta (np. Remont Domu Kowalskich):", key="nazwa_koszyk_input")
+                
+                if st.button("🚀 ZAPISZ CAŁY KOSZTORYS DO CHMURY", type="primary", use_container_width=True):
+                    if not nazwa_glownego_projektu.strip():
+                        st.error("Podaj główną nazwę projektu!")
+                    else:
+                        # Pakujemy ten potężny zestaw w jeden oficjalny format
+                        dane_do_bazy = {
+                            "koszt_calkowity_projektu": suma_calkowita,
+                            "etapy": st.session_state.koszyk_projektow,
+                            "zbiorcza_lista_zakupow": list(zbiorcze_materialy.values())
+                        }
                         
-                    except Exception as e:
-                        st.error(f"Błąd zapisu do bazy danych: {e}")
-        else:
-            st.info("Zaloguj się, aby zapisać projekt.")
+                        try:
+                            supabase.table("kosztorysy").insert({
+                                "uzytkownik_id": st.session_state.user_id,
+                                "nazwa_projektu": nazwa_glownego_projektu,
+                                "branza": "Kosztorys Wieloetapowy",
+                                "dane_json": dane_do_bazy
+                            }).execute()
+                            
+                            st.success("✅ Projekt pomyślnie zapisany w chmurze! Link dla klienta znajdziesz w 'Moim Profilu'.")
+                            st.balloons()
+                            
+                            # Wypompowujemy stary koszyk, bo projekt jest już bezpieczny w chmurze
+                            st.session_state.koszyk_projektow = []
+                            import time
+                            time.sleep(2)
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"Błąd zapisu do bazy danych: {e}")
+            else:
+                st.info("Zaloguj się, aby zapisać projekt.")
     
     # ==========================================
     # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
