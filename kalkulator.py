@@ -1647,7 +1647,6 @@ elif opcja_boczna == "Aplikacja Główna":
                             else:
                                 st.session_state.koszyk_projektow.append(dane_json)
                                 st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
-                                st.balloons()
                                 import time
                                 time.sleep(1) # Sekunda na zobaczenie balonów
                                 st.rerun()
