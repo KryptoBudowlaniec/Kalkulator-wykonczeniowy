@@ -1585,103 +1585,117 @@ elif opcja_boczna == "Aplikacja Główna":
                         
                 st.markdown("---")
 
-        # ==========================================
-               # 💾 ZAPISYWANIE PROJEKTU DO SUPABASE
+                # ==========================================
+                # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY)
                 # ==========================================
                 st.markdown("---")
                 
-                # Sprawdzamy, czy użytkownik jest w trybie edycji (wczytał projekt z profilu)
+                # --- 1. PRZYGOTOWANIE DANYCH DO ZBIORCZEJ LISTY ZAKUPÓW ---
+                lista_zakupow_etapu = [
+                    {"nazwa": f"Farba Biała ({f_biala})", "ilosc": round(l_biala, 1), "jed": "L"},
+                    {"nazwa": f"Farba Kolor ({f_kolor})", "ilosc": round(l_kolor, 1), "jed": "L"},
+                    {"nazwa": f"Grunt ({f_grunt})", "ilosc": round(l_grunt, 1), "jed": "L"},
+                    {"nazwa": f"Taśma ({f_tasma})", "ilosc": round(szt_tasma + 0.5), "jed": "szt"},
+                    {"nazwa": "Akryl szpachlowy", "ilosc": round(szt_akryl + 0.5), "jed": "szt"}
+                ]
+                if mb_sztukaterii > 0:
+                    lista_zakupow_etapu.append({"nazwa": "Klej Mamut", "ilosc": int(mb_sztukaterii/8 + 1), "jed": "szt"})
+
                 jest_edycja = st.session_state.get('tryb_edycji', False)
                 
                 if jest_edycja:
                     st.subheader("✏️ Edytujesz zapisany kosztorys")
-                    st.info("Wprowadź zmiany w suwakach i kliknij 'Zaktualizuj zmiany', aby nadpisać projekt.")
                 else:
-                    st.subheader("💾 Zapisz nowy kosztorys")
+                    st.subheader("💾 Opcje zapisu kosztorysu")
 
-                # 1. Sprawdzamy czy użytkownik ma uprawnienia do zapisu (tylko zalogowani)
+                # 2. PANEL ZAPISU (Tylko dla zalogowanych)
                 if st.session_state.get('zalogowany'):
-                    # 👇 TUTAJ JEST TA LINIJKA DO PODMIANY 👇
-                    nazwa_projektu = st.text_input(
-                        "Nazwa projektu (np. Salon Kowalscy):", 
-                        key="nazwa_proj_malowanie_input"
-                    )
-                    # ========
+                    nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Salon Kowalscy):", key="nazwa_proj_malowanie_input")
                     
-                    # Definiujemy wygląd i tekst głównego przycisku
-                    label_przycisku = "💾 Zaktualizuj zmiany w chmurze" if jest_edycja else "💾 Zapisz do chmury"
-                    
-                    col_save1, col_save2 = st.columns([2, 1])
+                    # 📦 BUDUJEMY WOREK Z DANYMI (Jeden standard dla Koszyka i Chmury)
+                    dane_json = {
+                        "branza": "Malowanie",
+                        "nazwa_etapu": nazwa_projektu,
+                        "powierzchnia_scian": total_m2_walls, 
+                        "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
+                        "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
+                        "koszt_calkowity": total_pro,
+                        "koszt_robocizny": k_rob_total,
+                        "koszt_materialow": k_mat_sredni,
+                        "technologie": f"Farba do sufitów: {f_biala} | Farba ścienna: {f_kolor}",
+                        "materialy_lista": lista_zakupow_etapu, # <--- NASZA ZBIORCZA LISTA!
+                        
+                        # === SUWAKI DO EDYCJI ===
+                        "m_uzytkowy": float(m_uzytkowy),
+                        "stan_f": stan_f,
+                        "f_biala": f_biala,
+                        "f_kolor": f_kolor,
+                        "f_grunt": f_grunt,
+                        "f_tasma": f_tasma,
+                        "stawka_mal": float(stawka_mal),
+                        "mb_sztukaterii": float(mb_sztukaterii),
+                        "typ_sztukaterii": typ_sztukaterii,
+                        "pokoje_pro": st.session_state.pokoje_pro
+                    }
 
+                    col_save1, col_save2 = st.columns(2)
+
+                    # --- PRZYCISK A: DODAJ DO KOSZYKA ---
                     with col_save1:
+                        if st.button("🛒 Dodaj do wspólnego koszyka", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę etapu!")
+                            else:
+                                st.session_state.koszyk_projektow.append(dane_json)
+                                st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                                st.balloons()
+                                import time
+                                time.sleep(1) # Sekunda na zobaczenie balonów
+                                st.rerun()
+
+                    # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+                    with col_save2:
+                        label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
                         if st.button(label_przycisku, type="primary", use_container_width=True):
                             if nazwa_projektu.strip() == "":
-                                st.error("Wpisz nazwę projektu przed zapisem!")
+                                st.error("Wpisz nazwę projektu!")
                             else:
-                                # 2. Pakujemy parametry do formatu JSON (Pełny przepis na projekt)
-                                dane_json = {
-                                    "branza": "Malowanie",
-                                    "powierzchnia_scian": total_m2_walls, 
-                                    "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
-                                    "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
-                                    "koszt_calkowity": total_pro,
-                                    "koszt_robocizny": k_rob_total,
-                                    "koszt_materialow": k_mat_sredni,
-                                    "technologie": f"Farba do sufitów: {f_biala} | Farba ścienna: {f_kolor}",
-                                    
-                                    # === ZAPIS POZYCJI SUWAKÓW DO EDYCJI ===
-                                    "m_uzytkowy": float(m_uzytkowy),
-                                    "stan_f": stan_f,
-                                    "f_biala": f_biala,
-                                    "f_kolor": f_kolor,
-                                    "f_grunt": f_grunt,
-                                    "f_tasma": f_tasma,
-                                    "stawka_mal": float(stawka_mal),
-                                    "mb_sztukaterii": float(mb_sztukaterii),
-                                    "typ_sztukaterii": typ_sztukaterii,
-                                    "pokoje_pro": st.session_state.pokoje_pro
-                                }
-                                
                                 try:
+                                    # BUDUJEMY STRUKTURĘ "NOWEGO TYPU" DLA KLIENTA (Nawet jak to tylko 1 etap)
+                                    dane_do_bazy = {
+                                        "koszt_calkowity_projektu": total_pro,
+                                        "etapy": [dane_json] 
+                                    }
+                                    
                                     if jest_edycja:
-                                        # AKTUALIZACJA (UPDATE)
                                         projekt_id = st.session_state.get('id_edytowanego_projektu')
                                         supabase.table("kosztorysy").update({
                                             "nazwa_projektu": nazwa_projektu,
-                                            "dane_json": dane_json
+                                            "dane_json": dane_do_bazy
                                         }).eq("id", projekt_id).execute()
-                                        
-                                        st.success(f"✅ Zmiany w projekcie '{nazwa_projektu}' zostały zapisane!")
-                                        
-                                        # Czyścimy tryb edycji po sukcesie
+                                        st.success(f"✅ Zmiany zapisane!")
                                         st.session_state['tryb_edycji'] = False
                                         st.session_state['id_edytowanego_projektu'] = None
                                     else:
-                                        # NOWY WPIS (INSERT)
                                         supabase.table("kosztorysy").insert({
                                             "uzytkownik_id": st.session_state.user_id,
                                             "nazwa_projektu": nazwa_projektu,
-                                            "branza": "Malowanie",
-                                            "dane_json": dane_json
+                                            "branza": "Malowanie", # Traktujemy to jako główny temat
+                                            "dane_json": dane_do_bazy
                                         }).execute()
-                                        st.success(f"✅ Projekt '{nazwa_projektu}' został zapisany jako nowy!")
-                                    
-                                    # Odświeżamy aplikację, aby wyczyścić stan
+                                        st.success(f"✅ Projekt zapisany jako nowy!")
                                     st.rerun()
-
                                 except Exception as e:
-                                    st.error(f"Wystąpił błąd podczas komunikacji z bazą: {e}")
+                                    st.error(f"Błąd komunikacji z bazą: {e}")
 
-                    # Dodajemy przycisk anulowania, jeśli jesteśmy w trybie edycji
+                    # --- PRZYCISK ANULOWANIA EDYCJI ---
                     if jest_edycja:
-                        with col_save2:
-                            if st.button("🆕 Anuluj (Zapisz jako nowy)", use_container_width=True):
-                                st.session_state['tryb_edycji'] = False
-                                st.session_state['id_edytowanego_projektu'] = None
-                                st.rerun()
-
+                        if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", use_container_width=True):
+                            st.session_state['tryb_edycji'] = False
+                            st.session_state['id_edytowanego_projektu'] = None
+                            st.rerun()
                 else:
-                    st.info("Zaloguj się, aby zapisywać swoje kosztorysy w chmurze.")
+                    st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                 
                 st.markdown("---")
                 
