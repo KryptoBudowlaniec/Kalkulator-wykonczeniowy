@@ -533,7 +533,6 @@ if "oferta" in st.query_params:
             if status != "Zaakceptowana":
                 if st.button("✅ AKCEPTUJĘ I REZERWUJĘ TERMIN", type="primary", use_container_width=True):
                     supabase.table("kosztorysy").update({"status": "Zaakceptowana"}).eq("id", oferta_id).execute()
-                    st.balloons()
                     st.success("Dziękujemy! Twoja akceptacja została przesłana do wykonawcy.")
                     st.rerun()
             else:
