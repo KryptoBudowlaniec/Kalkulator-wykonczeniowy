@@ -5318,7 +5318,7 @@ elif opcja_boczna == "Aplikacja Główna":
                             }).execute()
                             
                             st.success("✅ Projekt pomyślnie zapisany w chmurze! Link dla klienta znajdziesz w 'Moim Profilu'.")
-                            st.balloons()
+                            
                             
                             # Wypompowujemy stary koszyk, bo projekt jest już bezpieczny w chmurze
                             st.session_state.koszyk_projektow = []
