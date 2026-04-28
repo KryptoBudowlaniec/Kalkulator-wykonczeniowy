@@ -3078,6 +3078,121 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.subheader("Zestawienie materiałowe")
                     for przedmiot, ilosc in lista_zakupow:
                         st.write(f"• **{przedmiot}:** {ilosc}")
+
+                    # 👇 Wcięcie celowo cofnięte (na równi z col_t1, col_t2), żeby wyjść z prawej kolumny 👇
+                
+                # ==========================================
+                # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - TYNKOWANIE
+                # ==========================================
+                st.markdown("---")
+                
+                # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA (Tłumaczymy to na format koszykowy)
+                lista_zakupow_etapu = []
+                if dane_t["typ"] == "mokry":
+                    lista_zakupow_etapu.append({"nazwa": f"Tynk {wybrany_tynk}", "ilosc": worki_t, "jed": "worki"})
+                    lista_zakupow_etapu.append({"nazwa": f"Grunt kwarcowy {wybrany_grunt_t} (20kg)", "ilosc": wiadra_gruntu, "jed": "wiadra"})
+                else:
+                    lista_zakupow_etapu.append({"nazwa": "Płyty GK (1.2x2.6m)", "ilosc": liczba_plyt, "jed": "szt."})
+                    lista_zakupow_etapu.append({"nazwa": "Klej gipsowy do płyt", "ilosc": worki_kleju, "jed": "worki"})
+                    lista_zakupow_etapu.append({"nazwa": f"Masa spoinowa {wybrana_masa}", "ilosc": worki_masy, "jed": "szt."})
+                    if typ_tasmy == "Wszystko Tuff-Tape (Pancerne)":
+                        lista_zakupow_etapu.append({"nazwa": "Taśma Tuff-Tape (30m)", "ilosc": rolki_tuff, "jed": "rolki"})
+                    else:
+                        lista_zakupow_etapu.append({"nazwa": "Taśma Tuff-Tape (30m)", "ilosc": rolki_tuff, "jed": "rolki"})
+                        lista_zakupow_etapu.append({"nazwa": "Taśma flizelina (25m)", "ilosc": rolki_fliz, "jed": "rolki"})
+
+                if total_mb_naroznikow > 0:
+                    lista_zakupow_etapu.append({"nazwa": "Narożniki aluminiowe (3m)", "ilosc": szt_naroznik_3m, "jed": "szt."})
+                    lista_zakupow_etapu.append({"nazwa": "Taśma malarska (50m)", "ilosc": rolki_tasmy_50m, "jed": "rolki"})
+                    lista_zakupow_etapu.append({"nazwa": "Folia ochronna okienna", "ilosc": szt_folii_op, "jed": "op."})
+
+                jest_edycja = st.session_state.get('tryb_edycji', False)
+                
+                if jest_edycja:
+                    st.subheader("✏️ Edytujesz zapisany kosztorys")
+                else:
+                    st.subheader("💾 Opcje zapisu kosztorysu")
+
+                # 2. PANEL ZAPISU (Tylko dla zalogowanych)
+                if st.session_state.get('zalogowany'):
+                    nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Tynki Parter):", key="nazwa_proj_tynki_input")
+                    
+                    # 📦 BUDUJEMY WOREK Z DANYMI
+                    dane_json = {
+                        "branza": "Tynkowanie",
+                        "nazwa_etapu": nazwa_projektu,
+                        "powierzchnia_scian": round(m2_rob_pro, 1), 
+                        "marza_op": mnoznik_op,
+                        "mnoznik_utrudnien": mnoznik_utrudnien,
+                        "koszt_calkowity": round(suma_tynki, 2),
+                        "koszt_robocizny": round(koszt_rob_t, 2),
+                        "koszt_materialow": round(koszt_mat_t, 2),
+                        "technologie": f"System: {wybrany_tynk}",
+                        "materialy_lista": lista_zakupow_etapu,
+                        "detale": f"Stawka robocizny: {stawka_rob_t} zł/m2 | Pow. robocza: {round(m2_rob_pro, 1)}m2",
+                        
+                        # === SUWAKI DO EDYCJI (podstawa) ===
+                        "m2_podl_pro": float(m2_podl_pro),
+                        "wybrany_tynk": wybrany_tynk,
+                        "stawka_rob_t": float(stawka_rob_t)
+                    }
+
+                    col_save1, col_save2 = st.columns(2)
+
+                    # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+                    with col_save1:
+                        if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_tyn_koszyk", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę etapu!")
+                            else:
+                                st.session_state.koszyk_projektow.append(dane_json)
+                                st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                                import time
+                                time.sleep(1)
+                                st.rerun()
+
+                    # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+                    with col_save2:
+                        label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                        if st.button(label_przycisku, key="btn_tyn_chmura", type="primary", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę projektu!")
+                            else:
+                                try:
+                                    dane_do_bazy = {
+                                        "koszt_calkowity_projektu": round(suma_tynki, 2),
+                                        "etapy": [dane_json] 
+                                    }
+                                    
+                                    if jest_edycja:
+                                        projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                        supabase.table("kosztorysy").update({
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "dane_json": dane_do_bazy
+                                        }).eq("id", projekt_id).execute()
+                                        st.success(f"✅ Zmiany zapisane!")
+                                        st.session_state['tryb_edycji'] = False
+                                        st.session_state['id_edytowanego_projektu'] = None
+                                    else:
+                                        supabase.table("kosztorysy").insert({
+                                            "uzytkownik_id": st.session_state.user_id,
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "branza": "Tynkowanie",
+                                            "dane_json": dane_do_bazy
+                                        }).execute()
+                                        st.success(f"✅ Projekt zapisany jako nowy!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Błąd komunikacji z bazą: {e}")
+
+                    # --- PRZYCISK ANULOWANIA EDYCJI ---
+                    if jest_edycja:
+                        if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_tyn_anuluj", use_container_width=True):
+                            st.session_state['tryb_edycji'] = False
+                            st.session_state['id_edytowanego_projektu'] = None
+                            st.rerun()
+                else:
+                    st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
     
                     # --- GENERATOR PDF (TYNKOWANIE) ---
                     try:
