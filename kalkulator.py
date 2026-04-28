@@ -3628,6 +3628,66 @@ elif opcja_boczna == "Aplikacja Główna":
                     robocizna = (m2_gk * stawka_gk)
 
                     # ==========================================
+                    # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+                    # ==========================================
+                    mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+                    mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+        
+                    robocizna = robocizna * mnoznik_op * mnoznik_utrudnien
+                    total_material = total_material * mnoznik_op
+                    # ==========================================
+    
+                    # Generowanie Listy zakupów
+                    if rodzaj_gk == "Sufit Podwieszany":
+                        lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
+                        lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
+                        if "obrotowe" in typ_wieszaka:
+                            lista_z.append(("Wieszaki obrotowe ze sprezyna", f"{szt_wieszaki} szt."))
+                            lista_z.append((f"Drut z oczkiem ({dl_drutu} cm)", f"{szt_wieszaki} szt."))
+                        else:
+                            lista_z.append(("Wieszaki ES (Bezposrednie)", f"{szt_wieszaki} szt."))
+                        lista_z.append(("Laczniki krzyzowe i wzdluzne CD", f"{laczniki_krzyzowe + laczniki_cd1} szt."))
+                    elif rodzaj_gk == "Sciana Dzialowa":
+                        lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
+                        lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
+                        if szt_ua > 0: lista_z.append((f"Profile UA{szer_profilu} (3m)", f"{szt_ua} szt."))
+                    elif rodzaj_gk == "Przedscianka (Wyrownanie)":
+                        if "CD/UD" in typ_konstrukcji_gk:
+                            lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
+                            lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
+                            lista_z.append(("Wieszaki ES (Bezposrednie)", f"{szt_wieszaki} szt."))
+                        elif "Wolnostojaca" in typ_konstrukcji_gk:
+                            lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
+                            lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
+                        elif "Klejenie" in typ_konstrukcji_gk:
+                            lista_z.append(("Klej gipsowy (worek 25kg)", f"{worki_kleju} szt."))
+                    
+                    # --- Wypisanie nowych dodatków ---
+                    if tasma_akustyczna and rolki_tasmy_akust > 0:
+                        lista_z.append(("Tasma akustyczna pod profile (rolka 30m)", f"{rolki_tasmy_akust} szt."))
+                    if folia_paro and m2_folii_zapas > 0:
+                        lista_z.append(("Folia paroizolacyjna", f"{round(m2_folii_zapas)} m2"))
+    
+                    lista_z.append(("Plyty G-K 12.5mm", f"{szt_plyt} szt."))
+                    lista_z.append(("Wkrety TN25", f"{int(wkret_25/1000)+1} op."))
+                    lista_z.append((f"Masa ({wybrana_masa})", f"{worki_masy} szt."))
+    
+                with col_g2:
+                    st.subheader("Podsumowanie")
+                    st.success(f"### RAZEM: **{round(total_material + robocizna)} PLN**")
+                    c_r1, c_r2 = st.columns(2)
+                    c_r1.metric("Robocizna", f"{round(robocizna)} PLN")
+                    c_r2.metric("Materialy", f"{round(total_material)} PLN")
+                    
+                    st.markdown("---")
+                    st.subheader("Lista zakupow")
+                    if m2_gk > 0:
+                        for poz, ilosc in lista_z:
+                            st.write(f"• **{poz}:** {ilosc}")
+                    else:
+                        st.info("Dodaj metraz, aby wygenerowac zestawienie.")
+
+                                        # ==========================================
                 # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - SUCHA ZABUDOWA
                 # ==========================================
                 if m2_gk > 0:
@@ -3743,66 +3803,6 @@ elif opcja_boczna == "Aplikacja Główna":
                                 st.rerun()
                     else:
                         st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
-    
-                    # ==========================================
-                    # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
-                    # ==========================================
-                    mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
-                    mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
-        
-                    robocizna = robocizna * mnoznik_op * mnoznik_utrudnien
-                    total_material = total_material * mnoznik_op
-                    # ==========================================
-    
-                    # Generowanie Listy zakupów
-                    if rodzaj_gk == "Sufit Podwieszany":
-                        lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
-                        lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
-                        if "obrotowe" in typ_wieszaka:
-                            lista_z.append(("Wieszaki obrotowe ze sprezyna", f"{szt_wieszaki} szt."))
-                            lista_z.append((f"Drut z oczkiem ({dl_drutu} cm)", f"{szt_wieszaki} szt."))
-                        else:
-                            lista_z.append(("Wieszaki ES (Bezposrednie)", f"{szt_wieszaki} szt."))
-                        lista_z.append(("Laczniki krzyzowe i wzdluzne CD", f"{laczniki_krzyzowe + laczniki_cd1} szt."))
-                    elif rodzaj_gk == "Sciana Dzialowa":
-                        lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
-                        lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
-                        if szt_ua > 0: lista_z.append((f"Profile UA{szer_profilu} (3m)", f"{szt_ua} szt."))
-                    elif rodzaj_gk == "Przedscianka (Wyrownanie)":
-                        if "CD/UD" in typ_konstrukcji_gk:
-                            lista_z.append(("Profile CD60 (3m)", f"{szt_cd} szt."))
-                            lista_z.append(("Profile UD27 (3m)", f"{szt_ud} szt."))
-                            lista_z.append(("Wieszaki ES (Bezposrednie)", f"{szt_wieszaki} szt."))
-                        elif "Wolnostojaca" in typ_konstrukcji_gk:
-                            lista_z.append((f"Profile CW{szer_profilu} (3m)", f"{szt_cw} szt."))
-                            lista_z.append((f"Profile UW{szer_profilu} (3m)", f"{szt_uw} szt."))
-                        elif "Klejenie" in typ_konstrukcji_gk:
-                            lista_z.append(("Klej gipsowy (worek 25kg)", f"{worki_kleju} szt."))
-                    
-                    # --- Wypisanie nowych dodatków ---
-                    if tasma_akustyczna and rolki_tasmy_akust > 0:
-                        lista_z.append(("Tasma akustyczna pod profile (rolka 30m)", f"{rolki_tasmy_akust} szt."))
-                    if folia_paro and m2_folii_zapas > 0:
-                        lista_z.append(("Folia paroizolacyjna", f"{round(m2_folii_zapas)} m2"))
-    
-                    lista_z.append(("Plyty G-K 12.5mm", f"{szt_plyt} szt."))
-                    lista_z.append(("Wkrety TN25", f"{int(wkret_25/1000)+1} op."))
-                    lista_z.append((f"Masa ({wybrana_masa})", f"{worki_masy} szt."))
-    
-                with col_g2:
-                    st.subheader("Podsumowanie")
-                    st.success(f"### RAZEM: **{round(total_material + robocizna)} PLN**")
-                    c_r1, c_r2 = st.columns(2)
-                    c_r1.metric("Robocizna", f"{round(robocizna)} PLN")
-                    c_r2.metric("Materialy", f"{round(total_material)} PLN")
-                    
-                    st.markdown("---")
-                    st.subheader("Lista zakupow")
-                    if m2_gk > 0:
-                        for poz, ilosc in lista_z:
-                            st.write(f"• **{poz}:** {ilosc}")
-                    else:
-                        st.info("Dodaj metraz, aby wygenerowac zestawienie.")
                     
                    # --- GENERATOR PDF (SYSTEMY G-K) ---
                     try:
