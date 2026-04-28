@@ -3672,7 +3672,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     lista_z.append(("Wkrety TN25", f"{int(wkret_25/1000)+1} op."))
                     lista_z.append((f"Masa ({wybrana_masa})", f"{worki_masy} szt."))
     
-with col_g2:
+                with col_g2:
                     st.subheader("Podsumowanie")
                     st.success(f"### RAZEM: **{round(total_material + robocizna)} PLN**")
                     c_r1, c_r2 = st.columns(2)
