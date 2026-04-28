@@ -4040,7 +4040,117 @@ elif opcja_boczna == "Aplikacja Główna":
                 
             st.markdown("---")
             st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podlogach.")
+    st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podlogach.")
     
+        # 👇 TUTAJ WYCHODZIMY Z PRAWEJ KOLUMNY (Wcięcie cofnięte na poziom 'with col_e2:') 👇
+        
+        # ==========================================
+        # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - ELEKTRYKA
+        # ==========================================
+        st.markdown("---")
+        
+        # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA (Tłumaczymy na standard koszyka)
+        lista_zakupow_etapu = [
+            {"nazwa": "Kabel 3x2.5 (Gniazda)", "ilosc": round(kabel_25), "jed": "mb"},
+            {"nazwa": "Kabel 3x1.5 (Swiatlo)", "ilosc": round(kabel_15), "jed": "mb"},
+            {"nazwa": "Kabel 4x1.5 (Schodowe/Sila)", "ilosc": round(kabel_4x15), "jed": "mb"},
+            {"nazwa": "Kabel antenowy RG6 (TV)", "ilosc": round(kabel_tv), "jed": "mb"},
+            {"nazwa": "Kabel LAN kat. 6 (Internet)", "ilosc": round(kabel_lan), "jed": "mb"},
+            {"nazwa": "Rozdzielnica + bezpieczniki", "ilosc": 1, "jed": "kpl"},
+            {"nazwa": f"Osprzet ({wybrany_standard})", "ilosc": n_punktow, "jed": "szt."},
+            {"nazwa": "Uchwyty mocujace (paczki 100 szt.)", "ilosc": paczki_mocowania, "jed": "op."},
+            {"nazwa": "Dodatkowe puszki LAN/RTV", "ilosc": n_punkty_tele, "jed": "szt."}
+        ]
+
+        jest_edycja = st.session_state.get('tryb_edycji', False)
+        
+        if jest_edycja:
+            st.subheader("✏️ Edytujesz zapisany kosztorys")
+        else:
+            st.subheader("💾 Opcje zapisu kosztorysu")
+
+        # 2. PANEL ZAPISU (Tylko dla zalogowanych)
+        if st.session_state.get('zalogowany'):
+            nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Instalacja parter):", key="nazwa_proj_ele_input")
+            
+            # 📦 BUDUJEMY WOREK Z DANYMI
+            dane_json = {
+                "branza": "Elektryka",
+                "nazwa_etapu": nazwa_projektu,
+                "powierzchnia_scian": float(m2_mieszkania), 
+                "marza_op": mnoznik_op,
+                "mnoznik_utrudnien": mnoznik_utrudnien,
+                "koszt_calkowity": round(total_e, 2),
+                "koszt_robocizny": round(total_robocizna_e, 2),
+                "koszt_materialow": round(total_material_e, 2),
+                "technologie": f"Osprzęt: {wybrany_standard} | Ściany: {typ_scian}",
+                "materialy_lista": lista_zakupow_etapu,
+                "detale": f"Liczba punktów: {n_punktow} szt.",
+                
+                # === SUWAKI DO EDYCJI (podstawa) ===
+                "m2_mieszkania": float(m2_mieszkania),
+                "n_punktow": int(n_punktow),
+                "typ_scian": typ_scian,
+                "wybrany_standard": wybrany_standard,
+                "stawka_punkt": float(stawka_punkt)
+            }
+
+            col_save1, col_save2 = st.columns(2)
+
+            # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+            with col_save1:
+                if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_ele_koszyk", use_container_width=True):
+                    if nazwa_projektu.strip() == "":
+                        st.error("Wpisz nazwę etapu!")
+                    else:
+                        st.session_state.koszyk_projektow.append(dane_json)
+                        st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                        import time
+                        time.sleep(1)
+                        st.rerun()
+
+            # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+            with col_save2:
+                label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                if st.button(label_przycisku, key="btn_ele_chmura", type="primary", use_container_width=True):
+                    if nazwa_projektu.strip() == "":
+                        st.error("Wpisz nazwę projektu!")
+                    else:
+                        try:
+                            dane_do_bazy = {
+                                "koszt_calkowity_projektu": round(total_e, 2),
+                                "etapy": [dane_json] 
+                            }
+                            
+                            if jest_edycja:
+                                projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                supabase.table("kosztorysy").update({
+                                    "nazwa_projektu": nazwa_projektu,
+                                    "dane_json": dane_do_bazy
+                                }).eq("id", projekt_id).execute()
+                                st.success(f"✅ Zmiany zapisane!")
+                                st.session_state['tryb_edycji'] = False
+                                st.session_state['id_edytowanego_projektu'] = None
+                            else:
+                                supabase.table("kosztorysy").insert({
+                                    "uzytkownik_id": st.session_state.user_id,
+                                    "nazwa_projektu": nazwa_projektu,
+                                    "branza": "Elektryka",
+                                    "dane_json": dane_do_bazy
+                                }).execute()
+                                st.success(f"✅ Projekt zapisany jako nowy!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd komunikacji z bazą: {e}")
+
+            # --- PRZYCISK ANULOWANIA EDYCJI ---
+            if jest_edycja:
+                if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_ele_anuluj", use_container_width=True):
+                    st.session_state['tryb_edycji'] = False
+                    st.session_state['id_edytowanego_projektu'] = None
+                    st.rerun()
+        else:
+            st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
             # --- GENERATOR PDF ELEKTRYKA ---
             try:
                 from fpdf import FPDF
