@@ -5826,21 +5826,23 @@ elif opcja_boczna == "Aplikacja Główna":
                 total_robocizna = koszt_bazowy_rob + doplata_rob_dodatki
                 suma_calkowita = total_materialy + total_robocizna
     
-                                # ==========================================
-                    # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
-                    # ==========================================
-                    # 1. Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1, czyli nic nie zmieniają)
+                # ==========================================
+                # 📈 APLIKACJA UKRYTYCH MNOŻNIKÓW (PRO)
+                # ==========================================
+                # Pobieramy suwaki z pamięci (jak ktoś ma darmowe, to mnożą x1)
                 mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
                 mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
         
-                    # 2. Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia w jednym!)
-                k_rob_total = k_rob_total * mnoznik_op * mnoznik_utrudnien
+                # Powiększamy robociznę (Zysk O&P + Kara za Utrudnienia)
+                total_robocizna = total_robocizna * mnoznik_op * mnoznik_utrudnien
                     
-                    # W opcji premium możemy też narzucić marżę O&P na materiały, żeby zarobić na dojazdach po towar:
-                k_mat_sredni = k_mat_sredni * mnoznik_op
-                    # ==========================================
+                # W opcji premium możemy też narzucić marżę O&P na materiały:
+                total_materialy = total_materialy * mnoznik_op
+                
+                suma_calkowita = total_materialy + total_robocizna
+                # ==========================================
     
-                # Wyciągamy samą nazwę producenta do wydruku (np. z "Fox Dekorator (Profesjonalny)" robi "Fox Dekorator")
+                # Wyciągamy samą nazwę producenta do wydruku 
                 krotka_nazwa_systemu = wybrana_marka.split(" (")[0]
     
                 # --- GENEROWANIE LISTY ZAKUPÓW NA PODSTAWIE NORM ---
@@ -5892,6 +5894,118 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.subheader("Wymagane materiały (Normy zużycia)")
                     for nazwa, ilosc in lista_zakupow:
                         st.write(f"• **{nazwa}:** {ilosc}")
+    
+                # 👇 WYCHODZIMY Z PRAWEJ KOLUMNY 👇
+                
+                # ==========================================
+                # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - EFEKTY DEKORACYJNE
+                # ==========================================
+                st.markdown("---")
+                
+                # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA
+                lista_zakupow_etapu = []
+                for nazwa, ilosc in lista_zakupow:
+                    ilosc_str = str(ilosc).split(" ")[0].replace("~","")
+                    try:
+                        num_ilosc = float(ilosc_str)
+                    except ValueError:
+                        num_ilosc = 1.0 
+                        
+                    jednostka = str(ilosc).replace(ilosc_str, "").strip()
+                    if jednostka == "": jednostka = "szt."
+                    
+                    lista_zakupow_etapu.append({
+                        "nazwa": nazwa,
+                        "ilosc": num_ilosc,
+                        "jed": jednostka
+                    })
+
+                jest_edycja = st.session_state.get('tryb_edycji', False)
+                
+                if jest_edycja:
+                    st.subheader("✏️ Edytujesz zapisany kosztorys")
+                else:
+                    st.subheader("💾 Opcje zapisu kosztorysu")
+
+                # 2. PANEL ZAPISU (Tylko dla zalogowanych)
+                if st.session_state.get('zalogowany'):
+                    nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Ściana TV Salon):", key="nazwa_proj_deko_input")
+                    
+                    # 📦 BUDUJEMY WOREK Z DANYMI
+                    dane_json = {
+                        "branza": "Efekty Dekoracyjne",
+                        "nazwa_etapu": nazwa_projektu,
+                        "powierzchnia_scian": float(m2_pro),
+                        "marza_op": mnoznik_op,
+                        "mnoznik_utrudnien": mnoznik_utrudnien,
+                        "koszt_calkowity": round(suma_calkowita, 2),
+                        "koszt_robocizny": round(total_robocizna, 2),
+                        "koszt_materialow": round(total_materialy, 2),
+                        "technologie": f"Efekt: {wybrany_efekt} | System: {krotka_nazwa_systemu}",
+                        "materialy_lista": lista_zakupow_etapu,
+                        "detale": f"Przygotowanie: {'Tak' if przygotowanie else 'Nie'} | Zabezpieczenie: {'Tak' if zabezpieczenie else 'Nie'}",
+                        
+                        # === SUWAKI DO EDYCJI (podstawa) ===
+                        "deko_m2_pro": float(m2_pro),
+                        "deko_typ_pro": wybrany_efekt
+                    }
+
+                    col_save1, col_save2 = st.columns(2)
+
+                    # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+                    with col_save1:
+                        if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_deko_koszyk", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę etapu!")
+                            else:
+                                st.session_state.koszyk_projektow.append(dane_json)
+                                st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                                import time
+                                time.sleep(1)
+                                st.rerun()
+
+                    # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+                    with col_save2:
+                        label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                        if st.button(label_przycisku, key="btn_deko_chmura", type="primary", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę projektu!")
+                            else:
+                                try:
+                                    dane_do_bazy = {
+                                        "koszt_calkowity_projektu": round(suma_calkowita, 2),
+                                        "etapy": [dane_json] 
+                                    }
+                                    
+                                    if jest_edycja:
+                                        projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                        supabase.table("kosztorysy").update({
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "dane_json": dane_do_bazy
+                                        }).eq("id", projekt_id).execute()
+                                        st.success(f"✅ Zmiany zapisane!")
+                                        st.session_state['tryb_edycji'] = False
+                                        st.session_state['id_edytowanego_projektu'] = None
+                                    else:
+                                        supabase.table("kosztorysy").insert({
+                                            "uzytkownik_id": st.session_state.user_id,
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "branza": "Efekty Dekoracyjne",
+                                            "dane_json": dane_do_bazy
+                                        }).execute()
+                                        st.success(f"✅ Projekt zapisany jako nowy!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Błąd komunikacji z bazą: {e}")
+
+                    # --- PRZYCISK ANULOWANIA EDYCJI ---
+                    if jest_edycja:
+                        if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_deko_anuluj", use_container_width=True):
+                            st.session_state['tryb_edycji'] = False
+                            st.session_state['id_edytowanego_projektu'] = None
+                            st.rerun()
+                else:
+                    st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
     
                     # --- GENERATOR PDF (EFEKTY DEKORACYJNE) ---
             try:
