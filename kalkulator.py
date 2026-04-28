@@ -2176,110 +2176,110 @@ elif opcja_boczna == "Aplikacja Główna":
                         st.write(f"🔸 **Krążki ścierne P180/220:** {szt_krazkow} szt.")
                         st.write(f"🔸 **Narożniki, folie, akcesoria:** ~{round(koszt_m_dodatki - koszt_flizeliny)} zł")
 
-                            # ==========================================
-                        # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - SZPACHLOWANIE
                         # ==========================================
-                        st.markdown("---")
+                    # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - SZPACHLOWANIE
+                    # ==========================================
+                    st.markdown("---")
+                    
+                    # 1. PRZYGOTOWANIE LISTY ZAKUPÓW (Zmienne wyciągnięte z Twoich obliczeń)
+                    lista_zakupow_etapu = []
+                    if system_szpachlowania == "Mocny start (Gips + Gładź)":
+                        lista_zakupow_etapu.append({"nazwa": f"Gips startowy ({wybrany_gips})", "ilosc": szt_gipsu, "jed": "szt."})
                         
-                        # 1. PRZYGOTOWANIE LISTY ZAKUPÓW (Zmienne wyciągnięte z Twoich obliczeń)
-                        lista_zakupow_etapu = []
-                        if system_szpachlowania == "Mocny start (Gips + Gładź)":
-                            lista_zakupow_etapu.append({"nazwa": f"Gips startowy ({wybrany_gips})", "ilosc": szt_gipsu, "jed": "szt."})
+                    lista_zakupow_etapu.append({"nazwa": f"Gładź finiszowa ({wybrana_g})", "ilosc": szt_gladzi, "jed": "szt."})
+                    lista_zakupow_etapu.append({"nazwa": f"Grunt ({wybrany_grunt}) 5L", "ilosc": szt_gruntu, "jed": "szt."})
+                    lista_zakupow_etapu.append({"nazwa": "Krążki ścierne P180/220", "ilosc": szt_krazkow, "jed": "szt."})
+                    
+                    if uzyj_flizeliny:
+                        lista_zakupow_etapu.append({"nazwa": "Flizelina do zbrojenia (rolka 25m)", "ilosc": szt_flizeliny, "jed": "szt."})
+
+                    jest_edycja = st.session_state.get('tryb_edycji', False)
+                    
+                    if jest_edycja:
+                        st.subheader("✏️ Edytujesz zapisany kosztorys")
+                    else:
+                        st.subheader("💾 Opcje zapisu kosztorysu")
+
+                    # 2. PANEL ZAPISU (Tylko dla zalogowanych)
+                    if st.session_state.get('zalogowany'):
+                        nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Szpachlowanie Salonu):", key="nazwa_proj_szpachlowanie_input")
+                        
+                        # 📦 BUDUJEMY WOREK Z DANYMI
+                        dane_json = {
+                            "branza": "Szpachlowanie",
+                            "nazwa_etapu": nazwa_projektu,
+                            "powierzchnia_scian": round(m2_total, 1), 
+                            "marza_op": mnoznik_op,
+                            "mnoznik_utrudnien": mnoznik_utrudnien,
+                            "koszt_calkowity": round(koszt_m + robocizna, 2),
+                            "koszt_robocizny": round(robocizna, 2),
+                            "koszt_materialow": round(koszt_m, 2),
+                            "technologie": f"Metoda: {metoda_nakladania} | Wariant: {system_szpachlowania}",
+                            "materialy_lista": lista_zakupow_etapu,
+                            "detale": f"Liczba warstw: {l_warstw} | Flizelina: {'Tak' if uzyj_flizeliny else 'Nie'}",
                             
-                        lista_zakupow_etapu.append({"nazwa": f"Gładź finiszowa ({wybrana_g})", "ilosc": szt_gladzi, "jed": "szt."})
-                        lista_zakupow_etapu.append({"nazwa": f"Grunt ({wybrany_grunt}) 5L", "ilosc": szt_gruntu, "jed": "szt."})
-                        lista_zakupow_etapu.append({"nazwa": "Krążki ścierne P180/220", "ilosc": szt_krazkow, "jed": "szt."})
-                        
-                        if uzyj_flizeliny:
-                            lista_zakupow_etapu.append({"nazwa": "Flizelina do zbrojenia (rolka 25m)", "ilosc": szt_flizeliny, "jed": "szt."})
-    
-                        jest_edycja = st.session_state.get('tryb_edycji', False)
-                        
-                        if jest_edycja:
-                            st.subheader("✏️ Edytujesz zapisany kosztorys")
-                        else:
-                            st.subheader("💾 Opcje zapisu kosztorysu")
-    
-                        # 2. PANEL ZAPISU (Tylko dla zalogowanych)
-                        if st.session_state.get('zalogowany'):
-                            nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Szpachlowanie Salonu):", key="nazwa_proj_szpachlowanie_input")
-                            
-                            # 📦 BUDUJEMY WOREK Z DANYMI
-                            dane_json = {
-                                "branza": "Szpachlowanie",
-                                "nazwa_etapu": nazwa_projektu,
-                                "powierzchnia_scian": round(m2_total, 1), 
-                                "marza_op": mnoznik_op,
-                                "mnoznik_utrudnien": mnoznik_utrudnien,
-                                "koszt_calkowity": round(koszt_m + robocizna, 2),
-                                "koszt_robocizny": round(robocizna, 2),
-                                "koszt_materialow": round(koszt_m, 2),
-                                "technologie": f"Metoda: {metoda_nakladania} | Wariant: {system_szpachlowania}",
-                                "materialy_lista": lista_zakupow_etapu,
-                                "detale": f"Liczba warstw: {l_warstw} | Flizelina: {'Tak' if uzyj_flizeliny else 'Nie'}",
-                                
-                                # === SUWAKI DO EDYCJI (podstawa) ===
-                                "stawka_szp": float(stawka_szp)
-                            }
-    
-                            col_save1, col_save2 = st.columns(2)
-    
-                            # --- PRZYCISK A: DODAJ DO KOSZYKA ---
-                            with col_save1:
-                                if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_szp_koszyk", use_container_width=True):
-                                    if nazwa_projektu.strip() == "":
-                                        st.error("Wpisz nazwę etapu!")
-                                    else:
-                                        st.session_state.koszyk_projektow.append(dane_json)
-                                        st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
-                                        import time
-                                        time.sleep(1)
-                                        st.rerun()
-    
-                            # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
-                            with col_save2:
-                                label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
-                                if st.button(label_przycisku, key="btn_szp_chmura", type="primary", use_container_width=True):
-                                    if nazwa_projektu.strip() == "":
-                                        st.error("Wpisz nazwę projektu!")
-                                    else:
-                                        try:
-                                            dane_do_bazy = {
-                                                "koszt_calkowity_projektu": round(koszt_m + robocizna, 2),
-                                                "etapy": [dane_json] 
-                                            }
-                                            
-                                            if jest_edycja:
-                                                projekt_id = st.session_state.get('id_edytowanego_projektu')
-                                                supabase.table("kosztorysy").update({
-                                                    "nazwa_projektu": nazwa_projektu,
-                                                    "dane_json": dane_do_bazy
-                                                }).eq("id", projekt_id).execute()
-                                                st.success(f"✅ Zmiany zapisane!")
-                                                st.session_state['tryb_edycji'] = False
-                                                st.session_state['id_edytowanego_projektu'] = None
-                                            else:
-                                                supabase.table("kosztorysy").insert({
-                                                    "uzytkownik_id": st.session_state.user_id,
-                                                    "nazwa_projektu": nazwa_projektu,
-                                                    "branza": "Szpachlowanie",
-                                                    "dane_json": dane_do_bazy
-                                                }).execute()
-                                                st.success(f"✅ Projekt zapisany jako nowy!")
-                                            st.rerun()
-                                        except Exception as e:
-                                            st.error(f"Błąd komunikacji z bazą: {e}")
-    
-                            # --- PRZYCISK ANULOWANIA EDYCJI ---
-                            if jest_edycja:
-                                if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_szp_anuluj", use_container_width=True):
-                                    st.session_state['tryb_edycji'] = False
-                                    st.session_state['id_edytowanego_projektu'] = None
+                            # === SUWAKI DO EDYCJI (podstawa) ===
+                            "stawka_szp": float(stawka_szp)
+                        }
+
+                        col_save1, col_save2 = st.columns(2)
+
+                        # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+                        with col_save1:
+                            if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_szp_koszyk", use_container_width=True):
+                                if nazwa_projektu.strip() == "":
+                                    st.error("Wpisz nazwę etapu!")
+                                else:
+                                    st.session_state.koszyk_projektow.append(dane_json)
+                                    st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                                    import time
+                                    time.sleep(1)
                                     st.rerun()
-                        else:
-                            st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
-                        
-                        st.markdown("---")
+
+                        # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+                        with col_save2:
+                            label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                            if st.button(label_przycisku, key="btn_szp_chmura", type="primary", use_container_width=True):
+                                if nazwa_projektu.strip() == "":
+                                    st.error("Wpisz nazwę projektu!")
+                                else:
+                                    try:
+                                        dane_do_bazy = {
+                                            "koszt_calkowity_projektu": round(koszt_m + robocizna, 2),
+                                            "etapy": [dane_json] 
+                                        }
+                                        
+                                        if jest_edycja:
+                                            projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                            supabase.table("kosztorysy").update({
+                                                "nazwa_projektu": nazwa_projektu,
+                                                "dane_json": dane_do_bazy
+                                            }).eq("id", projekt_id).execute()
+                                            st.success(f"✅ Zmiany zapisane!")
+                                            st.session_state['tryb_edycji'] = False
+                                            st.session_state['id_edytowanego_projektu'] = None
+                                        else:
+                                            supabase.table("kosztorysy").insert({
+                                                "uzytkownik_id": st.session_state.user_id,
+                                                "nazwa_projektu": nazwa_projektu,
+                                                "branza": "Szpachlowanie",
+                                                "dane_json": dane_do_bazy
+                                            }).execute()
+                                            st.success(f"✅ Projekt zapisany jako nowy!")
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"Błąd komunikacji z bazą: {e}")
+
+                        # --- PRZYCISK ANULOWANIA EDYCJI ---
+                        if jest_edycja:
+                            if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_szp_anuluj", use_container_width=True):
+                                st.session_state['tryb_edycji'] = False
+                                st.session_state['id_edytowanego_projektu'] = None
+                                st.rerun()
+                    else:
+                        st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
+                    
+                    st.markdown("---")
                         
                     # ==========================================
                     # PDF GENERATION
