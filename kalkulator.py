@@ -468,83 +468,105 @@ if st.session_state.get("zalogowany"):
         st.stop()
 
 # =======================================================
-# 🚀 WIDOK INTERAKTYWNEJ OFERTY DLA KLIENTA (FINALNA NAPRAWA)
+# 🚀 UNIWERSALNY WIDOK OFERTY DLA KLIENTA
 # =======================================================
-if "oferta" in st.query_params:
-    oferta_id = st.query_params["oferta"]
+query_params = st.query_params
+if "oferta" in query_params:
+    oferta_id = query_params["oferta"]
     
     try:
-        odp = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
+        # Pobieramy dane z bazy
+        res = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
         
-        if len(odp.data) > 0:
-            p = odp.data[0]
-            dane = p.get('dane_json', {})
-            nazwa = p.get('nazwa_projektu', 'Kosztorys')
-            branza = p.get('branza', 'Wykończenia')
-            status = p.get('status', 'Oczekująca')
-
-            # 1. PRZYGOTOWANIE LICZB (Zabezpieczenie przed zerami)
-            k_total = float(dane.get('koszt_calkowity', 0))
-            k_rob = float(dane.get('koszt_robocizny', 0))
-            k_mat = float(dane.get('koszt_materialow', 0))
-            tech = dane.get('technologie', 'Standardowe materiały wykończeniowe')
-
-            # Formaty: 4 238.54 zł
-            fmt_total = f"{k_total:,.2f}".replace(",", " ")
-            fmt_rob = f"{k_rob:,.2f}".replace(",", " ")
-            fmt_mat = f"{k_mat:,.2f}".replace(",", " ")
-
-            # 2. CZYSZCZENIE INTERFEJSU
-            st.markdown("<style>#MainMenu, header, footer {visibility: hidden;}</style>", unsafe_allow_html=True)
-
-            # 3. WIDOK PREMIUM (MUSI BYĆ PRZY LEWEJ KRAWĘDZI!)
-            html_code = f"""
-<div style="max-width: 700px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #eee; font-family: sans-serif;">
-    <div style="background: #111827; color: white; padding: 40px 20px; text-align: center;">
-        <div style="text-transform: uppercase; letter-spacing: 2px; font-size: 10px; color: #10b981; margin-bottom: 10px; font-weight: bold;">Oficjalny Kosztorys</div>
-        <h1 style="margin: 0; font-size: 28px;">{nazwa}</h1>
-    </div>
-    <div style="padding: 30px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <p style="color: #6b7280; font-size: 14px; margin-bottom: 5px;">Wartość całkowita brutto:</p>
-            <div style="font-size: 42px; font-weight: 800; color: #10b981;">{fmt_total} zł</div>
-        </div>
-        <div style="background: #f8fafc; border-radius: 10px; padding: 20px; border: 1px solid #e2e8f0;">
-            <h4 style="margin: 0 0 15px 0; color: #1e293b; border-bottom: 2px solid #10b981; display: inline-block; padding-bottom: 5px;">Zestawienie prac</h4>
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #cbd5e1;">
-                <span style="color: #64748b;">Robocizna ({branza})</span>
-                <span style="font-weight: bold; color: #1e293b;">{fmt_rob} zł</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #cbd5e1;">
-                <span style="color: #64748b;">Materiały (Szacunkowo)</span>
-                <span style="font-weight: bold; color: #1e293b;">{fmt_mat} zł</span>
-            </div>
-            <div style="margin-top: 15px; font-size: 12px; color: #94a3b8;">
-                <strong>Technologie:</strong> {tech}
-            </div>
-        </div>
-    </div>
-</div>
-"""
-            st.markdown(html_code, unsafe_allow_html=True)
-
-            # --- PRZYCISK AKCEPTACJI ---
-            st.markdown("<br>", unsafe_allow_html=True)
-            if status != "Zaakceptowana":
-                if st.button("✅ AKCEPTUJĘ I REZERWUJĘ TERMIN", type="primary", use_container_width=True):
-                    supabase.table("kosztorysy").update({"status": "Zaakceptowana"}).eq("id", oferta_id).execute()
-                    st.success("Dziękujemy! Twoja akceptacja została przesłana do wykonawcy.")
-                    st.rerun()
+        if len(res.data) > 0:
+            projekt = res.data[0]
+            dane = projekt.get("dane_json", {})
+            nazwa_klienta = projekt.get("nazwa_projektu", "Wycena Prac")
+            
+            # --- LOGIKA ROZPOZNAWANIA FORMATU (Stary vs Nowy) ---
+            if "etapy" in dane:
+                # NOWY FORMAT (Koszykowy)
+                etapy = dane["etapy"]
+                suma_total = dane.get("koszt_calkowity_projektu", 0)
             else:
-                st.success("✅ Oferta została już zaakceptowana.")
+                # STARY FORMAT (Pojedynczy etap)
+                # Pakujemy stare dane w format etapu, żeby reszta kodu działała identycznie
+                etapy = [dane]
+                suma_total = dane.get("koszt_calkowity", 0)
 
-        else:
-            st.error("Błąd: Oferta nie istnieje.")
+            # --- RENDEROWANIE HTML ---
+            st.markdown(f"""
+            <style>
+                .main {{ background-color: #f8f9fa; }}
+                .offer-container {{
+                    background: white; padding: 40px; border-radius: 15px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 800px; margin: auto;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                }}
+                .header {{ border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }}
+                .total-badge {{
+                    background: #1E3A8A; color: white; padding: 15px 25px;
+                    border-radius: 10px; font-size: 24px; font-weight: bold; display: inline-block;
+                }}
+                .stage-box {{
+                    border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px;
+                    margin-bottom: 15px; background: #fff;
+                }}
+                .stage-title {{ color: #111827; font-size: 18px; font-weight: bold; margin-bottom: 10px; }}
+                .tech-info {{ font-size: 14px; color: #6b7280; line-height: 1.6; }}
+                .footer-contact {{ background: #f3f4f6; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: center; }}
+            </style>
+            
+            <div class="offer-container">
+                <div class="header">
+                    <h1 style="margin:0; color:#111827;">OFERTA REMONTOWA</h1>
+                    <p style="color:#6b7280;">Projekt: <strong>{nazwa_klienta}</strong></p>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <p style="margin-bottom:10px; color:#6b7280;">Wartość całkowita inwestycji:</p>
+                    <div class="total-badge">{suma_total:,.2f} zł</div>
+                </div>
+                
+                <h3 style="color:#111827; border-left: 4px solid #1E3A8A; padding-left: 15px;">Zakres prac i etapy:</h3>
+            """, unsafe_allow_html=True)
+
+            # Pętla generująca etapy (Działa dla 1 lub wielu etapów)
+            for i, etap in enumerate(etapy):
+                nazwa_e = etap.get("nazwa_etapu", etap.get("branza", f"Etap {i+1}"))
+                koszt_e = etap.get("koszt_calkowity", 0)
+                tech = etap.get("technologie", "Standard wykonania ProCalc")
+                detale = etap.get("detale", "")
+                
+                st.markdown(f"""
+                <div class="stage-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="stage-title">{i+1}. {nazwa_e}</span>
+                        <span style="font-weight:bold; color:#1E3A8A;">{koszt_e:,.2f} zł</span>
+                    </div>
+                    <div class="tech-info">
+                        <p style="margin:5px 0;"><strong>Technologia:</strong> {tech}</p>
+                        <p style="margin:5px 0;">{detale}</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+                <div class="footer-contact">
+                    <p style="margin:0; font-weight:bold;">Masz pytania do wyceny?</p>
+                    <p style="margin:5px 0;">Skontaktuj się z wykonawcą bezpośrednio.</p>
+                </div>
+                <div style="text-align:center; font-size:12px; color:#9ca3af; margin-top:20px;">
+                    Wygenerowano automatycznie przez ProCalc - System Precyzyjnych Wycen
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.stop() # Zatrzymujemy resztę aplikacji, żeby pokazać tylko ofertę
             
     except Exception as e:
-        st.error(f"Problem techniczny: {e}")
-    
-    st.stop()
+        st.error(f"Nie udało się wczytać oferty: {e}")
+
 
 
 # =======================================================
