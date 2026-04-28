@@ -4040,8 +4040,7 @@ elif opcja_boczna == "Aplikacja Główna":
                 
             st.markdown("---")
             st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podlogach.")
-    st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podlogach.")
-    
+       
         # 👇 TUTAJ WYCHODZIMY Z PRAWEJ KOLUMNY (Wcięcie cofnięte na poziom 'with col_e2:') 👇
         
         # ==========================================
