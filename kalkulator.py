@@ -5509,26 +5509,38 @@ elif opcja_boczna == "Aplikacja Główna":
                 dane_kleju = baza_kleje_tapety[wybrany_klej]
                 szt_kleju = math.ceil(m2_scian / 15) # Założenie: 1 opakowanie na 15 m2
     
-            # ==========================================
-            # OBLICZENIA FINANSOWE
+# ==========================================
+            # OBLICZENIA FINANSOWE I UKRYTE MNOŻNIKI (PRO)
             # ==========================================
             robocizna_tapetowanie = m2_scian * stawka_tapetowanie
             robocizna_zrywanie = m2_scian * stawka_zrywanie if zrywanie_starej else 0
             robocizna_grunt = m2_scian * 5 if gruntowanie else 0
             
-            suma_robocizna = robocizna_tapetowanie + robocizna_zrywanie + robocizna_grunt
+            suma_robocizna_baza = robocizna_tapetowanie + robocizna_zrywanie + robocizna_grunt
             
             koszt_kleju = szt_kleju * dane_kleju["cena"]
             szt_gruntu = math.ceil((m2_scian * 0.15) / 5) if gruntowanie else 0
             koszt_gruntu = szt_gruntu * 40
             
-            suma_materialy = koszt_kleju + koszt_gruntu
-    
+            suma_materialy_baza = koszt_kleju + koszt_gruntu
+
+            # 📈 Aplikacja ukrytych mnożników
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+            
+            suma_robocizna = suma_robocizna_baza * mnoznik_op * mnoznik_utrudnien
+            suma_materialy = suma_materialy_baza * mnoznik_op
+            suma_calkowita = suma_robocizna + suma_materialy
+
             # ==========================================
             # WYŚWIETLANIE WYNIKÓW
             # ==========================================
             st.markdown("---")
-            st.success(f"### RAZEM ROBOCIZNA: **{round(suma_robocizna)} PLN**")
+            st.success(f"### KOSZT CAŁKOWITY: **{round(suma_calkowita)} PLN**")
+            
+            c_res1, c_res2 = st.columns(2)
+            c_res1.metric("Robocizna", f"{round(suma_robocizna)} PLN")
+            c_res2.metric("Chemia robocza", f"{round(suma_materialy)} PLN")
             
             if "Fototapeta" not in rodzaj_tapety:
                 st.markdown("### Analiza zużycia tapety")
@@ -5558,8 +5570,112 @@ elif opcja_boczna == "Aplikacja Główna":
                 st.write(f"🔸 **Klej:** {wybrany_klej.split(' - ')[0]} - {szt_kleju} op.")
                 if gruntowanie:
                     st.write(f"🔸 **Grunt głęboko penetrujący (5L):** {szt_gruntu} szt.")
+
+            # 👇 WYCHODZIMY Z ZAKŁADEK I KOLUMN 👇
+            
+            # ==========================================
+            # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - TAPETOWANIE
+            # ==========================================
+            st.markdown("---")
+            
+            # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA
+            lista_zakupow_etapu = []
+            if "Fototapeta" not in rodzaj_tapety:
+                lista_zakupow_etapu.append({"nazwa": f"Tapeta {rodzaj_tapety} (zapas ujęty)", "ilosc": potrzebne_rolki, "jed": "rolek"})
+            else:
+                lista_zakupow_etapu.append({"nazwa": "Fototapeta na wymiar", "ilosc": round(m2_scian, 1), "jed": "m²"})
                 
-            st.markdown(f"*Szacowany koszt chemii roboczej (klej, grunt): ~{round(suma_materialy)} zł*")
+            lista_zakupow_etapu.append({"nazwa": f"Klej ({wybrany_klej.split(' - ')[0]})", "ilosc": szt_kleju, "jed": "op."})
+            
+            if gruntowanie:
+                lista_zakupow_etapu.append({"nazwa": "Grunt głęboko penetrujący (5L)", "ilosc": szt_gruntu, "jed": "szt."})
+
+            jest_edycja = st.session_state.get('tryb_edycji', False)
+            
+            if jest_edycja:
+                st.subheader("✏️ Edytujesz zapisany kosztorys")
+            else:
+                st.subheader("💾 Opcje zapisu kosztorysu")
+
+            # 2. PANEL ZAPISU (Tylko dla zalogowanych)
+            if st.session_state.get('zalogowany'):
+                nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Tapeta Sypialnia Główna):", key="nazwa_proj_tapeta_input")
+                
+                # 📦 BUDUJEMY WOREK Z DANYMI
+                dane_json = {
+                    "branza": "Tapetowanie",
+                    "nazwa_etapu": nazwa_projektu,
+                    "powierzchnia_scian": round(m2_scian, 1),
+                    "marza_op": mnoznik_op,
+                    "mnoznik_utrudnien": mnoznik_utrudnien,
+                    "koszt_calkowity": round(suma_calkowita, 2),
+                    "koszt_robocizny": round(suma_robocizna, 2),
+                    "koszt_materialow": round(suma_materialy, 2),
+                    "technologie": f"Rodzaj: {rodzaj_tapety}",
+                    "materialy_lista": lista_zakupow_etapu,
+                    "detale": f"Zrywanie: {'Tak' if zrywanie_starej else 'Nie'} | Pasy z rolki: {pasy_z_rolki}",
+                    
+                    # === SUWAKI DO EDYCJI (podstawa) ===
+                    "tapeta_obwod": float(obwod),
+                    "tapeta_wysokosc": float(wysokosc)
+                }
+
+                col_save1, col_save2 = st.columns(2)
+
+                # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+                with col_save1:
+                    if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_tapeta_koszyk", use_container_width=True):
+                        if nazwa_projektu.strip() == "":
+                            st.error("Wpisz nazwę etapu!")
+                        else:
+                            st.session_state.koszyk_projektow.append(dane_json)
+                            st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                            import time
+                            time.sleep(1)
+                            st.rerun()
+
+                # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+                with col_save2:
+                    label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                    if st.button(label_przycisku, key="btn_tapeta_chmura", type="primary", use_container_width=True):
+                        if nazwa_projektu.strip() == "":
+                            st.error("Wpisz nazwę projektu!")
+                        else:
+                            try:
+                                dane_do_bazy = {
+                                    "koszt_calkowity_projektu": round(suma_calkowita, 2),
+                                    "etapy": [dane_json] 
+                                }
+                                
+                                if jest_edycja:
+                                    projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                    supabase.table("kosztorysy").update({
+                                        "nazwa_projektu": nazwa_projektu,
+                                        "dane_json": dane_do_bazy
+                                    }).eq("id", projekt_id).execute()
+                                    st.success(f"✅ Zmiany zapisane!")
+                                    st.session_state['tryb_edycji'] = False
+                                    st.session_state['id_edytowanego_projektu'] = None
+                                else:
+                                    supabase.table("kosztorysy").insert({
+                                        "uzytkownik_id": st.session_state.user_id,
+                                        "nazwa_projektu": nazwa_projektu,
+                                        "branza": "Tapetowanie",
+                                        "dane_json": dane_do_bazy
+                                    }).execute()
+                                    st.success(f"✅ Projekt zapisany jako nowy!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Błąd komunikacji z bazą: {e}")
+
+                # --- PRZYCISK ANULOWANIA EDYCJI ---
+                if jest_edycja:
+                    if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_tapeta_anuluj", use_container_width=True):
+                        st.session_state['tryb_edycji'] = False
+                        st.session_state['id_edytowanego_projektu'] = None
+                        st.rerun()
+            else:
+                st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
     
             # --- GENERATOR PDF (TAPETOWANIE) ---
             st.markdown("---")
