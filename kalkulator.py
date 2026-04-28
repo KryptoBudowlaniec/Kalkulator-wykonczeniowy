@@ -3672,7 +3672,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     lista_z.append(("Wkrety TN25", f"{int(wkret_25/1000)+1} op."))
                     lista_z.append((f"Masa ({wybrana_masa})", f"{worki_masy} szt."))
     
-                with col_g2:
+with col_g2:
                     st.subheader("Podsumowanie")
                     st.success(f"### RAZEM: **{round(total_material + robocizna)} PLN**")
                     c_r1, c_r2 = st.columns(2)
@@ -3687,122 +3687,124 @@ elif opcja_boczna == "Aplikacja Główna":
                     else:
                         st.info("Dodaj metraz, aby wygenerowac zestawienie.")
 
-                                        # ==========================================
-                    # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - SUCHA ZABUDOWA
-                    # ==========================================
-                    if m2_gk > 0:
-                        st.markdown("---")
+                # 👇 TUTAJ WYCHODZIMY Z PRAWEJ KOLUMNY (Cofnięte wcięcie) 👇
+
+                # ==========================================
+                # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - SUCHA ZABUDOWA
+                # ==========================================
+                if m2_gk > 0:
+                    st.markdown("---")
+                    
+                    # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA
+                    lista_zakupow_etapu = [
+                        {"nazwa": "Płyta GK (standard 1.2x2.6m)", "ilosc": szt_plyt, "jed": "szt."}
+                    ]
+                    
+                    if szt_cd > 0: lista_zakupow_etapu.append({"nazwa": "Profil CD60 (3mb)", "ilosc": szt_cd, "jed": "szt."})
+                    if szt_ud > 0: lista_zakupow_etapu.append({"nazwa": "Profil UD27 (3mb)", "ilosc": szt_ud, "jed": "szt."})
+                    if szt_cw > 0: lista_zakupow_etapu.append({"nazwa": f"Profil CW{szer_profilu} (3mb)", "ilosc": szt_cw, "jed": "szt."})
+                    if szt_uw > 0: lista_zakupow_etapu.append({"nazwa": f"Profil UW{szer_profilu} (3mb)", "ilosc": szt_uw, "jed": "szt."})
+                    if szt_ua > 0: lista_zakupow_etapu.append({"nazwa": f"Profil ościeżnicowy UA{szer_profilu} (3mb)", "ilosc": szt_ua, "jed": "szt."})
+                    
+                    if szt_wieszaki > 0: lista_zakupow_etapu.append({"nazwa": typ_wieszaka, "ilosc": szt_wieszaki, "jed": "szt."})
+                    if worki_masy > 0: lista_zakupow_etapu.append({"nazwa": f"Masa spoinowa {wybrana_masa}", "ilosc": worki_masy, "jed": "worki"})
+                    if worki_kleju > 0: lista_zakupow_etapu.append({"nazwa": "Klej gipsowy", "ilosc": worki_kleju, "jed": "worki"})
+                    
+                    if rolki_tuff > 0: lista_zakupow_etapu.append({"nazwa": "Taśma zbrojąca Tuff-Tape (30m)", "ilosc": rolki_tuff, "jed": "rolki"})
+                    if rolki_fliz > 0: lista_zakupow_etapu.append({"nazwa": "Taśma flizelina (25m)", "ilosc": rolki_fliz, "jed": "rolki"})
+                    
+                    if izolacja_gk: lista_zakupow_etapu.append({"nazwa": f"Wełna mineralna/akustyczna {grubosc_welny}mm", "ilosc": round(m2_gk * 1.1), "jed": "m2"})
+                    if rolki_tasmy_akust > 0: lista_zakupow_etapu.append({"nazwa": "Taśma akustyczna pod profile", "ilosc": rolki_tasmy_akust, "jed": "rolki"})
+                    if m2_folii_zapas > 0: lista_zakupow_etapu.append({"nazwa": "Folia paroizolacyjna", "ilosc": round(m2_folii_zapas), "jed": "m2"})
+                    
+                    lista_zakupow_etapu.append({"nazwa": "Wkręty (blacha/drewno) + kołki rozporowe", "ilosc": 1, "jed": "kpl"})
+
+                    jest_edycja = st.session_state.get('tryb_edycji', False)
+                    
+                    if jest_edycja:
+                        st.subheader("✏️ Edytujesz zapisany kosztorys")
+                    else:
+                        st.subheader("💾 Opcje zapisu kosztorysu")
+
+                    # 2. PANEL ZAPISU (Tylko dla zalogowanych)
+                    if st.session_state.get('zalogowany'):
+                        nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Sufity Poddasze):", key="nazwa_proj_gk_input")
                         
-                        # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA
-                        lista_zakupow_etapu = [
-                            {"nazwa": "Płyta GK (standard 1.2x2.6m)", "ilosc": szt_plyt, "jed": "szt."}
-                        ]
-                        
-                        if szt_cd > 0: lista_zakupow_etapu.append({"nazwa": "Profil CD60 (3mb)", "ilosc": szt_cd, "jed": "szt."})
-                        if szt_ud > 0: lista_zakupow_etapu.append({"nazwa": "Profil UD27 (3mb)", "ilosc": szt_ud, "jed": "szt."})
-                        if szt_cw > 0: lista_zakupow_etapu.append({"nazwa": f"Profil CW{szer_profilu} (3mb)", "ilosc": szt_cw, "jed": "szt."})
-                        if szt_uw > 0: lista_zakupow_etapu.append({"nazwa": f"Profil UW{szer_profilu} (3mb)", "ilosc": szt_uw, "jed": "szt."})
-                        if szt_ua > 0: lista_zakupow_etapu.append({"nazwa": f"Profil ościeżnicowy UA{szer_profilu} (3mb)", "ilosc": szt_ua, "jed": "szt."})
-                        
-                        if szt_wieszaki > 0: lista_zakupow_etapu.append({"nazwa": typ_wieszaka, "ilosc": szt_wieszaki, "jed": "szt."})
-                        if worki_masy > 0: lista_zakupow_etapu.append({"nazwa": f"Masa spoinowa {wybrana_masa}", "ilosc": worki_masy, "jed": "worki"})
-                        if worki_kleju > 0: lista_zakupow_etapu.append({"nazwa": "Klej gipsowy", "ilosc": worki_kleju, "jed": "worki"})
-                        
-                        if rolki_tuff > 0: lista_zakupow_etapu.append({"nazwa": "Taśma zbrojąca Tuff-Tape (30m)", "ilosc": rolki_tuff, "jed": "rolki"})
-                        if rolki_fliz > 0: lista_zakupow_etapu.append({"nazwa": "Taśma flizelina (25m)", "ilosc": rolki_fliz, "jed": "rolki"})
-                        
-                        if izolacja_gk: lista_zakupow_etapu.append({"nazwa": f"Wełna mineralna/akustyczna {grubosc_welny}mm", "ilosc": round(m2_gk * 1.1), "jed": "m2"})
-                        if rolki_tasmy_akust > 0: lista_zakupow_etapu.append({"nazwa": "Taśma akustyczna pod profile", "ilosc": rolki_tasmy_akust, "jed": "rolki"})
-                        if m2_folii_zapas > 0: lista_zakupow_etapu.append({"nazwa": "Folia paroizolacyjna", "ilosc": round(m2_folii_zapas), "jed": "m2"})
-                        
-                        lista_zakupow_etapu.append({"nazwa": "Wkręty (blacha/drewno) + kołki rozporowe", "ilosc": 1, "jed": "kpl"})
-    
-                        jest_edycja = st.session_state.get('tryb_edycji', False)
-                        
-                        if jest_edycja:
-                            st.subheader("✏️ Edytujesz zapisany kosztorys")
-                        else:
-                            st.subheader("💾 Opcje zapisu kosztorysu")
-    
-                        # 2. PANEL ZAPISU (Tylko dla zalogowanych)
-                        if st.session_state.get('zalogowany'):
-                            nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Sufity Poddasze):", key="nazwa_proj_gk_input")
+                        # 📦 BUDUJEMY WOREK Z DANYMI
+                        dane_json = {
+                            "branza": "Sucha Zabudowa",
+                            "nazwa_etapu": nazwa_projektu,
+                            "powierzchnia_scian": round(m2_gk, 1), 
+                            "marza_op": mnoznik_op,
+                            "mnoznik_utrudnien": mnoznik_utrudnien,
+                            "koszt_calkowity": round(suma_gk, 2) if 'suma_gk' in locals() else round(total_material + robocizna, 2),
+                            "koszt_robocizny": round(robocizna, 2),
+                            "koszt_materialow": round(total_material, 2),
+                            "technologie": f"Konstrukcja: {rodzaj_gk} | {plytowanie}",
+                            "materialy_lista": lista_zakupow_etapu,
+                            "detale": f"Izolacja: {'Tak' if izolacja_gk else 'Nie'} | Zbrojenie: {typ_tasmy}",
                             
-                            # 📦 BUDUJEMY WOREK Z DANYMI
-                            dane_json = {
-                                "branza": "Sucha Zabudowa",
-                                "nazwa_etapu": nazwa_projektu,
-                                "powierzchnia_scian": round(m2_gk, 1), 
-                                "marza_op": mnoznik_op,
-                                "mnoznik_utrudnien": mnoznik_utrudnien,
-                                "koszt_calkowity": round(suma_gk, 2),
-                                "koszt_robocizny": round(koszt_rob_gk, 2),
-                                "koszt_materialow": round(koszt_mat_gk, 2),
-                                "technologie": f"Konstrukcja: {rodzaj_gk} | {plytowanie}",
-                                "materialy_lista": lista_zakupow_etapu,
-                                "detale": f"Izolacja: {'Tak' if izolacja_gk else 'Nie'} | Zbrojenie: {typ_tasmy}",
-                                
-                                # === SUWAKI DO EDYCJI (podstawa) ===
-                                "gk_type_pro": rodzaj_gk,
-                                "gk_rob_pro": float(stawka_gk)
-                            }
-    
-                            col_save1, col_save2 = st.columns(2)
-    
-                            # --- PRZYCISK A: DODAJ DO KOSZYKA ---
-                            with col_save1:
-                                if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_gk_koszyk", use_container_width=True):
-                                    if nazwa_projektu.strip() == "":
-                                        st.error("Wpisz nazwę etapu!")
-                                    else:
-                                        st.session_state.koszyk_projektow.append(dane_json)
-                                        st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
-                                        import time
-                                        time.sleep(1)
-                                        st.rerun()
-    
-                            # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
-                            with col_save2:
-                                label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
-                                if st.button(label_przycisku, key="btn_gk_chmura", type="primary", use_container_width=True):
-                                    if nazwa_projektu.strip() == "":
-                                        st.error("Wpisz nazwę projektu!")
-                                    else:
-                                        try:
-                                            dane_do_bazy = {
-                                                "koszt_calkowity_projektu": round(suma_gk, 2),
-                                                "etapy": [dane_json] 
-                                            }
-                                            
-                                            if jest_edycja:
-                                                projekt_id = st.session_state.get('id_edytowanego_projektu')
-                                                supabase.table("kosztorysy").update({
-                                                    "nazwa_projektu": nazwa_projektu,
-                                                    "dane_json": dane_do_bazy
-                                                }).eq("id", projekt_id).execute()
-                                                st.success(f"✅ Zmiany zapisane!")
-                                                st.session_state['tryb_edycji'] = False
-                                                st.session_state['id_edytowanego_projektu'] = None
-                                            else:
-                                                supabase.table("kosztorysy").insert({
-                                                    "uzytkownik_id": st.session_state.user_id,
-                                                    "nazwa_projektu": nazwa_projektu,
-                                                    "branza": "Sucha Zabudowa",
-                                                    "dane_json": dane_do_bazy
-                                                }).execute()
-                                                st.success(f"✅ Projekt zapisany jako nowy!")
-                                            st.rerun()
-                                        except Exception as e:
-                                            st.error(f"Błąd komunikacji z bazą: {e}")
-    
-                            # --- PRZYCISK ANULOWANIA EDYCJI ---
-                            if jest_edycja:
-                                if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_gk_anuluj", use_container_width=True):
-                                    st.session_state['tryb_edycji'] = False
-                                    st.session_state['id_edytowanego_projektu'] = None
+                            # === SUWAKI DO EDYCJI (podstawa) ===
+                            "gk_type_pro": rodzaj_gk,
+                            "gk_rob_pro": float(stawka_gk)
+                        }
+
+                        col_save1, col_save2 = st.columns(2)
+
+                        # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+                        with col_save1:
+                            if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_gk_koszyk", use_container_width=True):
+                                if nazwa_projektu.strip() == "":
+                                    st.error("Wpisz nazwę etapu!")
+                                else:
+                                    st.session_state.koszyk_projektow.append(dane_json)
+                                    st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                                    import time
+                                    time.sleep(1)
                                     st.rerun()
-                        else:
-                            st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
+
+                        # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+                        with col_save2:
+                            label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                            if st.button(label_przycisku, key="btn_gk_chmura", type="primary", use_container_width=True):
+                                if nazwa_projektu.strip() == "":
+                                    st.error("Wpisz nazwę projektu!")
+                                else:
+                                    try:
+                                        dane_do_bazy = {
+                                            "koszt_calkowity_projektu": dane_json["koszt_calkowity"],
+                                            "etapy": [dane_json] 
+                                        }
+                                        
+                                        if jest_edycja:
+                                            projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                            supabase.table("kosztorysy").update({
+                                                "nazwa_projektu": nazwa_projektu,
+                                                "dane_json": dane_do_bazy
+                                            }).eq("id", projekt_id).execute()
+                                            st.success(f"✅ Zmiany zapisane!")
+                                            st.session_state['tryb_edycji'] = False
+                                            st.session_state['id_edytowanego_projektu'] = None
+                                        else:
+                                            supabase.table("kosztorysy").insert({
+                                                "uzytkownik_id": st.session_state.user_id,
+                                                "nazwa_projektu": nazwa_projektu,
+                                                "branza": "Sucha Zabudowa",
+                                                "dane_json": dane_do_bazy
+                                            }).execute()
+                                            st.success(f"✅ Projekt zapisany jako nowy!")
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"Błąd komunikacji z bazą: {e}")
+
+                        # --- PRZYCISK ANULOWANIA EDYCJI ---
+                        if jest_edycja:
+                            if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_gk_anuluj", use_container_width=True):
+                                st.session_state['tryb_edycji'] = False
+                                st.session_state['id_edytowanego_projektu'] = None
+                                st.rerun()
+                    else:
+                        st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                     
                    # --- GENERATOR PDF (SYSTEMY G-K) ---
                     try:
