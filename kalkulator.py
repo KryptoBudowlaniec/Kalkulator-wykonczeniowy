@@ -2720,7 +2720,119 @@ elif opcja_boczna == "Aplikacja Główna":
                     
                     if "Płytki" in system_montazu:
                         st.info(f"Wyliczono system poziomujący dla formatu {dl_p}x{sz_p} cm.")
-    
+                # ==========================================
+                # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - PODŁOGI
+                # ==========================================
+                st.markdown("---")
+                
+                # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA
+                lista_zakupow_etapu = [
+                    {"nazwa": f"Okładzina główna (zapas {int(zapas*100)}%)", "ilosc": paczki_szt, "jed": "paczki"}
+                ]
+                
+                # Tłumaczymy Twoją listę na format naszego słownika
+                for nazwa, ilosc in info_zakup:
+                    ilosc_str = str(ilosc).split(" ")[0].replace("~","")
+                    try:
+                        num_ilosc = float(ilosc_str)
+                    except ValueError:
+                        num_ilosc = 1.0 
+                        
+                    jednostka = str(ilosc).replace(ilosc_str, "").strip()
+                    if jednostka == "": jednostka = "op."
+                    
+                    lista_zakupow_etapu.append({
+                        "nazwa": nazwa,
+                        "ilosc": num_ilosc,
+                        "jed": jednostka
+                    })
+
+                jest_edycja = st.session_state.get('tryb_edycji', False)
+                
+                if jest_edycja:
+                    st.subheader("✏️ Edytujesz zapisany kosztorys")
+                else:
+                    st.subheader("💾 Opcje zapisu kosztorysu")
+
+                # 2. PANEL ZAPISU (Tylko dla zalogowanych)
+                if st.session_state.get('zalogowany'):
+                    nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Podłogi Salon):", key="nazwa_proj_podlogi_input")
+                    
+                    # 📦 BUDUJEMY WOREK Z DANYMI
+                    dane_json = {
+                        "branza": "Podłogi",
+                        "nazwa_etapu": nazwa_projektu,
+                        "powierzchnia_scian": round(m2_p, 1), 
+                        "marza_op": mnoznik_op,
+                        "mnoznik_utrudnien": mnoznik_utrudnien,
+                        "koszt_calkowity": round(usluga_plus_chemia, 2),
+                        "koszt_robocizny": round(k_robocizna, 2),
+                        "koszt_materialow": round(koszt_akc, 2),
+                        "technologie": f"System: {system_montazu}",
+                        "materialy_lista": lista_zakupow_etapu,
+                        "detale": f"Zrywanie/Kucie: {'Tak' if dem_parkiet or dem_plytki else 'Nie'} | Wylewka: {'Tak' if wylewka else 'Nie'}",
+                        
+                        # === SUWAKI DO EDYCJI (podstawa) ===
+                        "pod_m_pro": float(m2_p),
+                        "stawka_podl_pro": float(stawka_podl)
+                    }
+
+                    col_save1, col_save2 = st.columns(2)
+
+                    # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+                    with col_save1:
+                        if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_podl_koszyk", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę etapu!")
+                            else:
+                                st.session_state.koszyk_projektow.append(dane_json)
+                                st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                                import time
+                                time.sleep(1)
+                                st.rerun()
+
+                    # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+                    with col_save2:
+                        label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                        if st.button(label_przycisku, key="btn_podl_chmura", type="primary", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę projektu!")
+                            else:
+                                try:
+                                    dane_do_bazy = {
+                                        "koszt_calkowity_projektu": round(usluga_plus_chemia, 2),
+                                        "etapy": [dane_json] 
+                                    }
+                                    
+                                    if jest_edycja:
+                                        projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                        supabase.table("kosztorysy").update({
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "dane_json": dane_do_bazy
+                                        }).eq("id", projekt_id).execute()
+                                        st.success(f"✅ Zmiany zapisane!")
+                                        st.session_state['tryb_edycji'] = False
+                                        st.session_state['id_edytowanego_projektu'] = None
+                                    else:
+                                        supabase.table("kosztorysy").insert({
+                                            "uzytkownik_id": st.session_state.user_id,
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "branza": "Podłogi",
+                                            "dane_json": dane_do_bazy
+                                        }).execute()
+                                        st.success(f"✅ Projekt zapisany jako nowy!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Błąd komunikacji z bazą: {e}")
+
+                    # --- PRZYCISK ANULOWANIA EDYCJI ---
+                    if jest_edycja:
+                        if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_podl_anuluj", use_container_width=True):
+                            st.session_state['tryb_edycji'] = False
+                            st.session_state['id_edytowanego_projektu'] = None
+                            st.rerun()
+                else:
+                    st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                     try:
                         from fpdf import FPDF
                         from datetime import datetime
