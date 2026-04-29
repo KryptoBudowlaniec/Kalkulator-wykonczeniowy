@@ -1072,6 +1072,15 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         del st.session_state['aktywny_projekt_do_pdf']
                         st.rerun()
 
+                    st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("✖️ Zamknij podgląd PDF", key="close_pdf", use_container_width=True):
+                    del st.session_state['aktywny_projekt_do_pdf']
+                    st.rerun()
+
+        # 👇 TEGO FRAGMENTU ZABRAKŁO 👇
+        except Exception as e:
+            st.error(f"Błąd komunikacji z bazą danych: {e}")
+
 # ==========================================
 # (TUTAJ POWINIEN BYĆ TWÓJ KOD OD np. elif opcja_boczna == "Moja Subskrypcja":)
 # ==========================================
