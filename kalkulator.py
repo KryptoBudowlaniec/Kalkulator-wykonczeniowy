@@ -1296,7 +1296,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     with btn_col1:
                         if branza_projektu != "Kosztorys Wieloetapowy":
                             if st.button("✏️ Edytuj", key=f"edit_{p.get('id')}", use_container_width=True):
-                                # Wstrzykiwanie suwaków
                                 if 'm_uzytkowy' in dane: st.session_state['pro_m_fast'] = dane['m_uzytkowy']
                                 if 'stan_f' in dane: st.session_state['pro_s_fast'] = dane['stan_f']
                                 if 'f_biala' in dane: st.session_state['pro_fb'] = dane['f_biala']
@@ -1328,7 +1327,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                             supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
                             st.rerun()
 
-            # --- SEKCJA GENEROWANIA PDF (POJAWIA SIĘ NA DOLE PO KLIKNIĘCIU) ---
+            # --- SEKCJA GENEROWANIA PDF (WYCIĄGNIĘTA POZA PĘTLĘ) ---
             if 'aktywny_projekt_do_pdf' in st.session_state:
                 st.markdown("---")
                 aktyw = st.session_state['aktywny_projekt_do_pdf']
@@ -1336,7 +1335,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 
                 st.subheader(f"📄 Przygotowanie oferty PDF: {aktyw.get('nazwa_projektu')}")
                 
-                # 1. Tłumacz polskich znaków 
                 def usun_pl(tekst):
                     if not isinstance(tekst, str): return str(tekst)
                     pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z',
@@ -1345,7 +1343,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         tekst = tekst.replace(k, v)
                     return tekst
 
-                # 2. Przycisk wyzwalający generowanie
                 if st.button("🚀 Wygeneruj plik PDF", type="primary", use_container_width=True):
                     try:
                         from fpdf import FPDF
@@ -1356,7 +1353,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         pdf.add_page()
                         pdf.set_font("Arial", size=12) 
                         
-                        # --- NAGŁÓWEK ---
                         if st.session_state.get('firma_logo') and os.path.exists(st.session_state.firma_logo):
                             pdf.image(st.session_state.firma_logo, x=10, y=8, w=40)
                             pdf.ln(20)
@@ -1369,7 +1365,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         pdf.cell(200, 6, txt=f"Kontakt: {usun_pl(st.session_state.get('firma_kontakt', ''))}", ln=True, align='R')
                         pdf.ln(10)
                         
-                        # --- TYTUŁ DOKUMENTU ---
                         pdf.set_font("Arial", "B", 16)
                         pdf.cell(200, 10, txt=usun_pl(f"OFERTA KOSZTORYSOWA: {aktyw.get('nazwa_projektu', '')}"), ln=True, align='C')
                         pdf.set_font("Arial", "", 10)
@@ -1377,7 +1372,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         pdf.cell(200, 6, txt=f"Data wygenerowania: {data_dzis}", ln=True, align='C')
                         pdf.ln(10)
                         
-                        # --- 1. PODSUMOWANIE FINANSOWE ---
                         pdf.set_font("Arial", "B", 12)
                         pdf.cell(200, 10, txt="1. PODSUMOWANIE FINANSOWE", ln=True)
                         pdf.set_font("Arial", "", 11)
@@ -1398,7 +1392,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         pdf.cell(90, 8, txt=f"{koszt_mat:,.2f} PLN".replace(',',' '), border=1, ln=True, align='R')
                         pdf.ln(10)
                         
-                        # --- 2. ZAKRES PRAC ---
                         pdf.set_font("Arial", "B", 12)
                         pdf.cell(200, 10, txt="2. ZAKRES PRAC", ln=True)
                         pdf.set_font("Arial", "", 10)
@@ -1413,7 +1406,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                             pdf.cell(190, 6, txt=usun_pl(f"- Detale: {dane_proj.get('detale', '')}"), ln=True)
                         pdf.ln(10)
                         
-                        # --- 3. LISTA MATERIAŁOWA ---
                         pdf.set_font("Arial", "B", 12)
                         pdf.cell(200, 10, txt="3. LISTA MATERIALOWA (LOGISTYKA ZAKUPOWA)", ln=True)
                         pdf.set_font("Arial", "", 10)
@@ -1430,7 +1422,6 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         else:
                             pdf.cell(190, 6, txt="Brak szczegolowej listy zakupow dla tego projektu.", ln=True)
                             
-                        # --- ZAPIS DOKUMENTU ---
                         nazwa_pliku = usun_pl(f"Oferta_{aktyw.get('nazwa_projektu', 'projekt').replace(' ', '_')}.pdf")
                         pdf.output(nazwa_pliku)
                         
