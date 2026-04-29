@@ -646,16 +646,24 @@ else:
 # --- OBSŁUGA PODMENU KALKULATORY ---
 if nawigacja == "Kalkulatory":
     st.markdown("<br>", unsafe_allow_html=True)
+    
+    # --- MAGICZNE PRZEKIEROWANIE DO EDYCJI ---
+    # Jeśli kliknęliśmy "Edytuj" w profilu, zmieniamy domyślną zakładkę
+    domyslna_branza = "Malowanie"
+    if st.session_state.get('przelacz_na_malowanie'):
+        domyslna_branza = "Malowanie"
+        st.session_state['przelacz_na_malowanie'] = False # Wyłączamy flagę po użyciu
+    # -----------------------------------------
+
     # Wyświetlamy pillsy tylko w sekcji kalkulatorów
     wybor_kalkulatora = st.pills(
         "Wybierz branżę:", 
         ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Łazienka", "Podłogi", "Drzwi", "Efekty Dekoracyjne", "Tapetowanie", "🛒 Koszyk"],
         selection_mode="single",
-        default="Malowanie",
+        default=domyslna_branza,  # <--- TUTAJ UŻYWAMY ZMIENNEJ PRZEKIEROWANIA
         key="sub_nav"
     )
     branza = wybor_kalkulatora
-
 
 # --- STYLE CSS (Twoje, nietknięte!) ---
 st.markdown("""
