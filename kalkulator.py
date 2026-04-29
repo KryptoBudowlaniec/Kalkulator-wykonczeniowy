@@ -1092,6 +1092,82 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         pdf.set_font("Arial", "", 10)
                         
                         if aktyw.get('branza') == "Kosztorys Wieloetapowy":
+              # --- SEKCJA GENEROWANIA PDF (POJAWIA SIĘ NA DOLE PO KLIKNIĘCIU) ---
+            if 'aktywny_projekt_do_pdf' in st.session_state:
+                st.markdown("---")
+                aktyw = st.session_state['aktywny_projekt_do_pdf']
+                dane_proj = aktyw.get('dane_json', {})
+                
+                st.subheader(f"📄 Przygotowanie oferty PDF: {aktyw.get('nazwa_projektu')}")
+                
+                # 1. Tłumacz polskich znaków 
+                def usun_pl(tekst):
+                    if not isinstance(tekst, str): return str(tekst)
+                    pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z',
+                                'Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                    for k, v in pl_znaki.items():
+                        tekst = tekst.replace(k, v)
+                    return tekst
+
+                # 2. Przycisk wyzwalający generowanie
+                if st.button("🚀 Wygeneruj plik PDF", type="primary", use_container_width=True):
+                    try:
+                        from fpdf import FPDF
+                        import datetime
+                        import os
+                        
+                        pdf = FPDF()
+                        pdf.add_page()
+                        pdf.set_font("Arial", size=12) 
+                        
+                        # --- NAGŁÓWEK ---
+                        if st.session_state.get('firma_logo') and os.path.exists(st.session_state.firma_logo):
+                            pdf.image(st.session_state.firma_logo, x=10, y=8, w=40)
+                            pdf.ln(20)
+                        
+                        pdf.set_font("Arial", "B", 14)
+                        pdf.cell(200, 10, txt=usun_pl(st.session_state.get('firma_nazwa', 'Oferta Kosztorysowa')), ln=True, align='R')
+                        pdf.set_font("Arial", "", 10)
+                        pdf.cell(200, 6, txt=usun_pl(st.session_state.get('firma_adres', '')), ln=True, align='R')
+                        pdf.cell(200, 6, txt=f"NIP: {usun_pl(st.session_state.get('firma_nip', ''))}", ln=True, align='R')
+                        pdf.cell(200, 6, txt=f"Kontakt: {usun_pl(st.session_state.get('firma_kontakt', ''))}", ln=True, align='R')
+                        pdf.ln(10)
+                        
+                        # --- TYTUŁ DOKUMENTU ---
+                        pdf.set_font("Arial", "B", 16)
+                        pdf.cell(200, 10, txt=usun_pl(f"OFERTA KOSZTORYSOWA: {aktyw.get('nazwa_projektu', '')}"), ln=True, align='C')
+                        pdf.set_font("Arial", "", 10)
+                        data_dzis = datetime.datetime.now().strftime("%Y-%m-%d")
+                        pdf.cell(200, 6, txt=f"Data wygenerowania: {data_dzis}", ln=True, align='C')
+                        pdf.ln(10)
+                        
+                        # --- 1. PODSUMOWANIE FINANSOWE ---
+                        pdf.set_font("Arial", "B", 12)
+                        pdf.cell(200, 10, txt="1. PODSUMOWANIE FINANSOWE", ln=True)
+                        pdf.set_font("Arial", "", 11)
+                        
+                        koszt_calkowity = dane_proj.get('koszt_calkowity_projektu', dane_proj.get('koszt_calkowity', 0))
+                        koszt_rob = dane_proj.get('koszt_robocizny', 0)
+                        koszt_mat = dane_proj.get('koszt_materialow', 0)
+                        
+                        pdf.cell(100, 8, txt="Calkowity koszt realizacji:", border=1)
+                        pdf.set_font("Arial", "B", 11)
+                        pdf.cell(90, 8, txt=f"{koszt_calkowity:,.2f} PLN".replace(',',' '), border=1, ln=True, align='R')
+                        
+                        pdf.set_font("Arial", "", 10)
+                        pdf.cell(100, 8, txt="Szacowany koszt robocizny:", border=1)
+                        pdf.cell(90, 8, txt=f"{koszt_rob:,.2f} PLN".replace(',',' '), border=1, ln=True, align='R')
+                        
+                        pdf.cell(100, 8, txt="Szacowany koszt chemii/materialow:", border=1)
+                        pdf.cell(90, 8, txt=f"{koszt_mat:,.2f} PLN".replace(',',' '), border=1, ln=True, align='R')
+                        pdf.ln(10)
+                        
+                        # --- 2. ZAKRES PRAC ---
+                        pdf.set_font("Arial", "B", 12)
+                        pdf.cell(200, 10, txt="2. ZAKRES PRAC", ln=True)
+                        pdf.set_font("Arial", "", 10)
+                        
+                        if aktyw.get('branza') == "Kosztorys Wieloetapowy":
                             for etap in dane_proj.get('etapy', []):
                                 pdf.cell(190, 6, txt=usun_pl(f"- {etap.get('nazwa_etapu', '')} ({etap.get('branza', '')}) | {etap.get('koszt_calkowity', 0)} PLN"), ln=True)
                         else:
@@ -1140,6 +1216,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 if st.button("✖️ Zamknij podgląd PDF", key="close_pdf", use_container_width=True):
                     del st.session_state['aktywny_projekt_do_pdf']
                     st.rerun()
+                
 
     except Exception as e:
         st.error(f"Błąd komunikacji z bazą danych: {e}")
