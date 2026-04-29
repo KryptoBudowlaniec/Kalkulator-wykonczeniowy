@@ -824,118 +824,128 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         st.warning("🔒 Personalizacja profilu i ofert PDF dostępna jest tylko w pakiecie PRO.")
 
 
-    # ==========================================
-    # 📂 POBIERANIE I WYŚWIETLANIE ZAPISANYCH PROJEKTÓW
-    # ==========================================
-    st.markdown("---")
-    st.header("Twoje Zapisane Kosztorysy")
+# ==========================================
+# 📂 POBIERANIE I WYŚWIETLANIE ZAPISANYCH PROJEKTÓW
+# ==========================================
+elif branza == "Panel Inwestora": # LUB "Mój Profil" (Zależnie jak to nazwałeś)
+    st.header("🗄️ Twoje Zapisane Kosztorysy")
     
-    try:
-        # 1. Pytamy Supabase: "Daj mi wszystko z tabeli kosztorysy..."
-        odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).order("created_at", desc=True).execute()
-        projekty = odp.data
-        
-        if len(projekty) > 0:
-            # 2. Pętla, która rysuje rozwijaną "szufladkę"
-            for p in projekty:
-                data_utworzenia = str(p.get('created_at'))[:10]
-                nazwa = p.get('nazwa_projektu', 'Brak nazwy')
-                branza = p.get('branza', 'Nieznana')
-                
-                # 3. Rozpakowujemy nasz worek z parametrami:
-                dane = p.get('dane_json', {}) 
-                
-                # --- NOWA LOGIKA KWOTY (Zwykły projekt vs Koszyk) ---
-                if branza == "Kosztorys Wieloetapowy":
-                    koszt_surowy = float(dane.get('koszt_calkowity_projektu', 0))
-                else:
-                    koszt_surowy = float(dane.get('koszt_calkowity', 0))
-                    
-                koszt_format = f"{koszt_surowy:,.2f}".replace(",", " ")
-                
-                with st.expander(f"{nazwa} | {data_utworzenia} | {koszt_format} zł"):
-                    
-                    # --- LOGIKA WYŚWIETLANIA DANYCH W PROFILU ---
-                    if branza == "Kosztorys Wieloetapowy":
-                        st.info("📂 To jest projekt zbiorczy (Wielobranżowy)")
-                        
-                        # Wyświetlamy zbiorczą listę zakupów
-                        if "zbiorcza_lista_zakupow" in dane:
-                            with st.expander("🛠️ ZBIORCZA LISTA ZAKUPÓW (Logistyka)", expanded=False):
-                                for mat in dane["zbiorcza_lista_zakupow"]:
-                                    st.write(f"- {mat['nazwa']}: **{round(mat['ilosc'], 1)} {mat['jed']}**")
-                        
-                        # Wyświetlamy składowe etapy
-                        with st.expander("📋 Podgląd etapów projektu", expanded=False):
-                            for e in dane.get("etapy", []):
-                                st.write(f"🔸 **{e.get('nazwa_etapu', 'Etap')}** ({e.get('branza', '')}): {e.get('koszt_calkowity', 0):,.2f} zł".replace(",", " "))
-                    else:
-                        # Stary widok dla pojedynczych branż
-                        st.write(f"**Moduł kalkulatora:** {branza}")
-                    
-                    # --- STATUS I LINK ---
-                    status = p.get('status', 'Oczekująca')
-                    if status == "Zaakceptowana":
-                        st.success(f"**Status:** ✅ {status}")
-                    else:
-                        st.info(f"**Status:** ⏳ {status}")
-                        
-                    host_url = "http://procalc.pl" # Potem zmienisz na procalc.pl
-                    link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
-                    st.markdown("**Link dla klienta:**")
-                    st.code(link_do_oferty, language="http")
-                    
-                    st.markdown("---")
-                    
-                    # --- METRYKI ---
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("Wycena", f"{koszt_format} zł")
-                    if branza != "Kosztorys Wieloetapowy":
-                        c2.metric("Marża O&P", f"x {dane.get('marza_op', 1.0)}")
-                        c3.metric("Utrudnienia", f"x {dane.get('mnoznik_utrudnien', 1.0)}")
-                    
-                    st.markdown("<br>", unsafe_allow_html=True)
+    if not st.session_state.get('zalogowany'):
+        st.warning("Zaloguj się, aby zarządzać swoimi projektami.")
+    else:
+        try:
+            # 1. Pobieramy listę projektów z bazy
+            odpowiedz = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).order("created_at", desc=True).execute()
+            projekty = odpowiedz.data
 
-                    # ==========================================
-                    # ✏️ PRZYCISKI ZARZĄDZANIA (EDYCJA I USUWANIE)
-                    # ==========================================
-                    btn_col1, btn_col2 = st.columns(2)
+            if not projekty:
+                st.info("Nie masz jeszcze żadnych zapisanych projektów.")
+            else:
+                # 2. Pętla rysująca projekty
+                for p in projekty:
+                    data_utworzenia = str(p.get('created_at'))[:10]
+                    nazwa = p.get('nazwa_projektu', 'Brak nazwy')
+                    branza_projektu = p.get('branza', 'Nieznana')
+                    dane = p.get('dane_json', {}) 
                     
-                    with btn_col1:
-                        # Przycisk edycji pokazujemy TYLKO dla pojedynczych projektów (starych)
-                        if branza != "Kosztorys Wieloetapowy":
-                            if st.button("✏️ Wczytaj do edycji", key=f"edit_{p.get('id')}", use_container_width=True):
-                                # Wstrzykujemy pozycje suwaków
-                                if 'm_uzytkowy' in dane: st.session_state['pro_m_fast'] = dane['m_uzytkowy']
-                                if 'stan_f' in dane: st.session_state['pro_s_fast'] = dane['stan_f']
-                                if 'f_biala' in dane: st.session_state['pro_fb'] = dane['f_biala']
-                                if 'f_kolor' in dane: st.session_state['pro_fk'] = dane['f_kolor']
-                                if 'f_grunt' in dane: st.session_state['pro_fg'] = dane['f_grunt']
-                                if 'f_tasma' in dane: st.session_state['pro_ft'] = dane['f_tasma']
-                                if 'stawka_mal' in dane: st.session_state['stawka_mal_pro'] = dane['stawka_mal']
-                                if 'mb_sztukaterii' in dane: st.session_state['pro_sz_fast'] = dane['mb_sztukaterii']
-                                if 'typ_sztukaterii' in dane: st.session_state['pro_tsz_fast'] = dane['typ_sztukaterii']
-                                if 'pokoje_pro' in dane: st.session_state['pokoje_pro'] = dane['pokoje_pro']
-                                
-                                # Tryb Edycji i Nazwa Projektu
-                                st.session_state['id_edytowanego_projektu'] = p.get('id')
-                                st.session_state['tryb_edycji'] = True
-                                st.session_state['nazwa_proj_malowanie_input'] = nazwa
-
-                                # MAGICZNE PRZEKIEROWANIE
-                                st.session_state['przelacz_na_malowanie'] = True 
-                                st.rerun()
+                    # Logika kwoty
+                    if branza_projektu == "Kosztorys Wieloetapowy":
+                        koszt_surowy = float(dane.get('koszt_calkowity_projektu', 0))
+                    else:
+                        koszt_surowy = float(dane.get('koszt_calkowity', 0))
+                        
+                    koszt_format = f"{koszt_surowy:,.2f}".replace(",", " ")
+                    
+                    with st.expander(f"📅 {data_utworzenia} | 🏠 {nazwa} | 💰 {koszt_format} zł"):
+                        
+                        # --- WYŚWIETLANIE SZCZEGÓŁÓW ---
+                        if branza_projektu == "Kosztorys Wieloetapowy":
+                            st.info("📂 To jest projekt zbiorczy (Wielobranżowy)")
+                            if "zbiorcza_lista_zakupow" in dane:
+                                with st.expander("🛠️ ZBIORCZA LISTA ZAKUPÓW (Logistyka)", expanded=False):
+                                    for mat in dane["zbiorcza_lista_zakupow"]:
+                                        st.write(f"- {mat['nazwa']}: **{round(mat['ilosc'], 1)} {mat['jed']}**")
+                            with st.expander("📋 Podgląd etapów projektu", expanded=False):
+                                for e in dane.get("etapy", []):
+                                    st.write(f"🔸 **{e.get('nazwa_etapu', 'Etap')}** ({e.get('branza', '')}): {e.get('koszt_calkowity', 0):,.2f} zł".replace(",", " "))
                         else:
-                            st.info("Zarządzanie projektem zbiorczym")
+                            st.write(f"**Moduł kalkulatora:** {branza_projektu}")
+                        
+                        # --- STATUS I LINK ---
+                        status = p.get('status', 'Oczekująca')
+                        if status == "Zaakceptowana":
+                            st.success(f"**Status:** ✅ {status}")
+                        else:
+                            st.info(f"**Status:** ⏳ {status}")
                             
-                    with btn_col2:
-                        # Przycisk Usuń (działa zawsze)
-                        if st.button("🗑️ Usuń projekt", key=f"del_{p.get('id')}", type="secondary", use_container_width=True):
-                            supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
-                            st.rerun()
-            
-    except Exception as e:
-        st.error(f"Błąd komunikacji z bazą danych: {e}")
+                        host_url = "http://procalc.pl"
+                        link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
+                        st.markdown("**Link dla klienta:**")
+                        st.code(link_do_oferty, language="http")
+                        st.markdown("---")
+                        
+                        # --- METRYKI ---
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Wycena", f"{koszt_format} zł")
+                        if branza_projektu != "Kosztorys Wieloetapowy":
+                            c2.metric("Marża O&P", f"x {dane.get('marza_op', 1.0)}")
+                            c3.metric("Utrudnienia", f"x {dane.get('mnoznik_utrudnien', 1.0)}")
+                        st.markdown("<br>", unsafe_allow_html=True)
+
+                        # ==========================================
+                        # ✏️ PRZYCISKI ZARZĄDZANIA (3 KOLUMNY)
+                        # ==========================================
+                        btn_col1, btn_col2, btn_col3 = st.columns(3)
+                        
+                        # Przycisk 1: EDYCJA (Tylko dla starych projektów)
+                        with btn_col1:
+                            if branza_projektu != "Kosztorys Wieloetapowy":
+                                if st.button("✏️ Edytuj", key=f"edit_{p.get('id')}", use_container_width=True):
+                                    # Wstrzykiwanie suwaków
+                                    if 'm_uzytkowy' in dane: st.session_state['pro_m_fast'] = dane['m_uzytkowy']
+                                    if 'stan_f' in dane: st.session_state['pro_s_fast'] = dane['stan_f']
+                                    if 'f_biala' in dane: st.session_state['pro_fb'] = dane['f_biala']
+                                    if 'f_kolor' in dane: st.session_state['pro_fk'] = dane['f_kolor']
+                                    if 'f_grunt' in dane: st.session_state['pro_fg'] = dane['f_grunt']
+                                    if 'f_tasma' in dane: st.session_state['pro_ft'] = dane['f_tasma']
+                                    if 'stawka_mal' in dane: st.session_state['stawka_mal_pro'] = dane['stawka_mal']
+                                    if 'mb_sztukaterii' in dane: st.session_state['pro_sz_fast'] = dane['mb_sztukaterii']
+                                    if 'typ_sztukaterii' in dane: st.session_state['pro_tsz_fast'] = dane['typ_sztukaterii']
+                                    if 'pokoje_pro' in dane: st.session_state['pokoje_pro'] = dane['pokoje_pro']
+                                    
+                                    st.session_state['id_edytowanego_projektu'] = p.get('id')
+                                    st.session_state['tryb_edycji'] = True
+                                    st.session_state['nazwa_proj_malowanie_input'] = nazwa
+                                    st.session_state['przelacz_na_malowanie'] = True 
+                                    st.rerun()
+                            else:
+                                st.write("") # Puste miejsce, żeby nie psuć siatki
+
+                        # Przycisk 2: GENERUJ PDF (Dla wszystkich)
+                        with btn_col2:
+                            if st.button("📄 Otwórz PDF", key=f"pdf_{p.get('id')}", use_container_width=True):
+                                st.session_state['aktywny_projekt_do_pdf'] = p
+                                st.rerun()
+
+                        # Przycisk 3: USUŃ (Dla wszystkich)
+                        with btn_col3:
+                            if st.button("🗑️ Usuń", key=f"del_{p.get('id')}", type="secondary", use_container_width=True):
+                                supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
+                                st.rerun()
+
+                # --- SEKCJA GENEROWANIA PDF (POJAWIA SIĘ NA DOLE PO KLIKNIĘCIU) ---
+                if 'aktywny_projekt_do_pdf' in st.session_state:
+                    st.markdown("---")
+                    aktywny = st.session_state['aktywny_projekt_do_pdf']
+                    st.subheader(f"📄 Przygotowanie oferty PDF: {aktywny.get('nazwa_projektu')}")
+                    st.info("Tutaj podepniemy mechanizm generowania pliku PDF na podstawie danych z bazy!")
+                    
+                    if st.button("✖️ Zamknij podgląd", key="close_pdf"):
+                        del st.session_state['aktywny_projekt_do_pdf']
+                        st.rerun()
+
+        except Exception as e:
+            st.error(f"Błąd komunikacji z bazą danych: {e}")
 elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
     st.header("Zarządzanie Subskrypcją ")
     
