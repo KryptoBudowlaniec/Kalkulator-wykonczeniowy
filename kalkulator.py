@@ -941,6 +941,7 @@ elif branza == "Panel Inwestora": # LUB "Mój Profil" (Zależnie jak to nazwałe
                                 supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
                                 st.rerun()
 
+                # 👇 SEKCJA PDF WYCIĄGNIĘTA POZA PĘTLĘ (TUTAJ BYŁ BŁĄD) 👇
                 # --- SEKCJA GENEROWANIA PDF (POJAWIA SIĘ NA DOLE PO KLIKNIĘCIU) ---
                 if 'aktywny_projekt_do_pdf' in st.session_state:
                     st.markdown("---")
@@ -954,6 +955,8 @@ elif branza == "Panel Inwestora": # LUB "Mój Profil" (Zależnie jak to nazwałe
 
         except Exception as e:
             st.error(f"Błąd komunikacji z bazą danych: {e}")
+
+
 elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
     st.header("Zarządzanie Subskrypcją ")
     
