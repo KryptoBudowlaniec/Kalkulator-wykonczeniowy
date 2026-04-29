@@ -788,35 +788,33 @@ if st.session_state.zalogowany:
 # NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY
 # ==========================================
 
+# ==========================================
+# NADPISYWANIE WIDOKU PRZEZ PANEL BOCZNY (MÓJ PROFIL)
+# ==========================================
 if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
-    st.header("Mój Profil i Dane Firmy")
+    st.header("👤 Mój Profil i Dane Firmy")
     
-    if st.session_state.get("pakiet") == "PRO":
-        st.write("Uzupełnij dane, które będą automatycznie widoczne na nagłówkach Twoich kosztorysów PDF.")
-        
+    # --- CZĘŚĆ 1: DANE FIRMY (ROZWIJANE) ---
+    with st.expander("⚙️ Ustawienia firmy i logo do PDF", expanded=False):
+        st.info("Te dane pojawią się na nagłówku każdej oferty PDF.")
         col_dane, col_logo_pdf = st.columns(2)
         
         with col_dane:
-            st.subheader("Dane firmy do PDF")
             firma_nazwa = st.text_input("Nazwa firmy:", value=st.session_state.get('firma_nazwa', ''))
-            firma_adres = st.text_input("Adres (Ulica, Kod, Miasto):", value=st.session_state.get('firma_adres', ''))
+            firma_adres = st.text_input("Adres:", value=st.session_state.get('firma_adres', ''))
             firma_nip = st.text_input("NIP:", value=st.session_state.get('firma_nip', ''))
-            firma_kontakt = st.text_input("Telefon / E-mail:", value=st.session_state.get('firma_kontakt', ''))
+            firma_kontakt = st.text_input("Kontakt (Tel/Email):", value=st.session_state.get('firma_kontakt', ''))
 
         with col_logo_pdf:
-            st.subheader("Logo firmowe")
-            wgrane_logo = st.file_uploader("Wgraj logo firmy (PNG lub JPG)", type=['png', 'jpg', 'jpeg'])
-            
+            wgrane_logo = st.file_uploader("Logo firmy (PNG/JPG)", type=['png', 'jpg', 'jpeg'])
             st.markdown("---")
-            st.number_input("Twoja domyślna stawka za roboczogodzinę (PLN/h)", value=60)
+            st.number_input("Stawka roboczogodziny (PLN/h):", value=60)
 
-        st.markdown("---")
-        if st.button("💾 Zapisz ustawienia profilu i PDF", type="primary", use_container_width=True):
+        if st.button("💾 Zapisz dane firmy", type="primary", use_container_width=True):
             st.session_state.firma_nazwa = firma_nazwa
             st.session_state.firma_adres = firma_adres
             st.session_state.firma_nip = firma_nip
             st.session_state.firma_kontakt = firma_kontakt
-            
             if wgrane_logo is not None:
                 try:
                     ext = wgrane_logo.name.split('.')[-1]
@@ -826,10 +824,69 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     st.session_state.firma_logo = sciezka_logo
                 except Exception as e:
                     st.error(f"Błąd wgrywania logo: {e}")
-            
-            st.success("✅ Zapisane! Twoje logo i dane będą widoczne na każdym wygenerowanym PDF-ie.")
-    else:
-        st.warning("🔒 Personalizacja profilu i ofert PDF dostępna jest tylko w pakiecie PRO.")
+            st.success("✅ Dane zaktualizowane!")
+
+    # --- CZĘŚĆ 2: TWOJE ZAPISANE PROJEKTY (LISTA) ---
+    st.markdown("---")
+    st.header("🗄️ Zarządzanie Kosztorysami")
+    
+    try:
+        # Pobieramy projekty zalogowanego usera
+        odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).order("created_at", desc=True).execute()
+        projekty = odp.data
+
+        if not projekty:
+            st.info("Nie masz jeszcze zapisanych projektów.")
+        else:
+            for p in projekty:
+                data_u = str(p.get('created_at'))[:10]
+                nazwa = p.get('nazwa_projektu', 'Brak nazwy')
+                branza_p = p.get('branza', 'Nieznana')
+                dane = p.get('dane_json', {}) 
+                
+                # Wyliczanie kwoty do wyświetlenia na pasku
+                if branza_p == "Kosztorys Wieloetapowy":
+                    kwota = float(dane.get('koszt_calkowity_projektu', 0))
+                else:
+                    kwota = float(dane.get('koszt_calkowity', 0))
+                
+                with st.expander(f"📅 {data_u} | 🏠 {nazwa} | 💰 {kwota:,.2f} zł".replace(",", " ")):
+                    st.write(f"**Branża:** {branza_p}")
+                    st.code(f"http://procalc.pl/?oferta={p.get('id')}", language="http")
+                    
+                    c1, c2, c3 = st.columns(3)
+                    with c1:
+                        # PRZYCISK EDYCJI
+                        if branza_p != "Kosztorys Wieloetapowy":
+                            if st.button("✏️ Edytuj", key=f"ed_{p['id']}", use_container_width=True):
+                                st.session_state['id_edytowanego_projektu'] = p['id']
+                                st.session_state['tryb_edycji'] = True
+                                st.session_state['przelacz_na_malowanie'] = True # Przekierowanie
+                                st.rerun()
+                    with c2:
+                        # PRZYCISK PDF
+                        if st.button("📄 Drukuj PDF", key=f"pdf_{p['id']}", use_container_width=True):
+                            st.session_state['aktywny_projekt_do_pdf'] = p
+                            st.rerun()
+                    with c3:
+                        # PRZYCISK USUŃ
+                        if st.button("🗑️ Usuń", key=f"del_{p['id']}", type="secondary", use_container_width=True):
+                            supabase.table("kosztorysy").delete().eq("id", p['id']).execute()
+                            st.rerun()
+
+            # --- SEKCJA GENEROWANIA PDF (Na dole, po kliknięciu) ---
+            if 'aktywny_projekt_do_pdf' in st.session_state:
+                st.markdown("---")
+                aktyw = st.session_state['aktywny_projekt_do_pdf']
+                st.subheader(f"🖨️ Generator PDF: {aktyw['nazwa_projektu']}")
+                st.info("Gotowe do podpięcia logiki PDF!")
+                
+                if st.button("✖️ Zamknij podgląd", key="cls_pdf"):
+                    del st.session_state['aktywny_projekt_do_pdf']
+                    st.rerun()
+
+    except Exception as e:
+        st.error(f"Błąd bazy danych: {e}")
 
 
 # ==========================================
