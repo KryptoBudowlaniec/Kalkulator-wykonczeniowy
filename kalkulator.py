@@ -1280,9 +1280,9 @@ elif opcja_boczna == "Aplikacja Główna":
         with col_p1:
             st.markdown('<div class="pricing-card"><h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">Podstawowy</h3><div class="pricing-price">0 zł</div><div class="pricing-sub">Zawsze za darmo</div><ul class="card-list" style="margin-top: 10px !important;"><li>Dostęp do Szybkich Wycen</li><li>Podstawowe algorytmy zużycia</li><li>Brak możliwości zapisu projektów</li><li>Brak generatora ofert PDF</li></ul></div>', unsafe_allow_html=True)
         with col_p2:
-            st.markdown('<div class="pricing-card"><h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">PRO (Miesiąc)</h3><div class="pricing-price">19 zł <span style="font-size: 20px; color: #6C757D;">/ mc</span></div><div class="pricing-sub">Elastyczna subskrypcja z możliwością rezygnacji</div><ul class="card-list" style="margin-top: 10px !important;"><li><b>Wszystko z wersji Podstawowej</b></li><li>Precyzyjne listy zakupowe PRO</li><li>Nielimitowane generowanie PDF</li><li>Zapisywanie i edycja kosztorysów</li><li>Zaawansowany kalkulator (ROI)</li></ul></div>', unsafe_allow_html=True)
+            st.markdown('<div class="pricing-card"><h3 style="color: #1E1E1E; font-weight: 800; margin-bottom: 0;">PRO (Miesiąc)</h3><div class="pricing-price">39 zł <span style="font-size: 20px; color: #6C757D;">/ mc</span></div><div class="pricing-sub">Elastyczna subskrypcja z możliwością rezygnacji</div><ul class="card-list" style="margin-top: 10px !important;"><li><b>Wszystko z wersji Podstawowej</b></li><li>Precyzyjne listy zakupowe PRO</li><li>Nielimitowane generowanie PDF</li><li>Zapisywanie i edycja kosztorysów</li><li>Zaawansowany kalkulator (ROI)</li></ul></div>', unsafe_allow_html=True)
         with col_p3:
-            st.markdown('<div class="pricing-card pricing-pro"><div class="pricing-badge">NAJLEPSZY WYBÓR</div><h3 style="color: #00D395; font-weight: 800; margin-bottom: 0;">PRO (Rok)</h3><div class="pricing-price">190 zł <span style="font-size: 20px; color: #6C757D;">/ rok</span></div><div class="pricing-sub"><b>Oszczędzasz 38 zł</b><br>(2 miesiące całkowicie GRATIS!)</div><ul class="card-list" style="margin-top: 10px !important;"><li><b>Wszystko to, co w pakiecie Miesiąc</b></li><li>Gwarancja stałej, niższej ceny</li><li>Priorytetowe wsparcie mailowe</li><li>Wcześniejszy dostęp do nowości</li></ul></div>', unsafe_allow_html=True)
+            st.markdown('<div class="pricing-card pricing-pro"><div class="pricing-badge">NAJLEPSZY WYBÓR</div><h3 style="color: #00D395; font-weight: 800; margin-bottom: 0;">PRO (Rok)</h3><div class="pricing-price">390 zł <span style="font-size: 20px; color: #6C757D;">/ rok</span></div><div class="pricing-sub"><b>Oszczędzasz 38 zł</b><br>(2 miesiące całkowicie GRATIS!)</div><ul class="card-list" style="margin-top: 10px !important;"><li><b>Wszystko to, co w pakiecie Miesiąc</b></li><li>Gwarancja stałej, niższej ceny</li><li>Priorytetowe wsparcie mailowe</li><li>Wcześniejszy dostęp do nowości</li></ul></div>', unsafe_allow_html=True)
     
         st.markdown("<br><br><h2 style='text-align: center;'>Często Zadawane Pytania</h2>", unsafe_allow_html=True)
         col_f1, col_faq, col_f2 = st.columns([1, 2.5, 1])
@@ -1342,18 +1342,41 @@ elif opcja_boczna == "Aplikacja Główna":
             
         st.markdown("<br><br>", unsafe_allow_html=True)
             
-        st.header("Plan Rozwoju Aplikacji (Roadmap)")
-        col_dev1, col_dev2 = st.columns(2)
+# ==========================================
+        # NOWY ROADMAP (Z TWOJEGO PDF PRO)
+        # ==========================================
+        st.markdown("---")
+        st.header("🚀 Kierunek Rozwoju ProCalc")
+        st.markdown("_Inspirujemy się najlepszymi systemami SaaS na świecie, aby dostarczyć polskim wykonawcom narzędzie najwyższej klasy._")
         
-        with col_dev1:
-            st.markdown("#### W TRAKCIE (Koncept/Dev)")
-            st.info("**Live Progress (CRM)**\n\nInteraktywna checklista etapów prac.")
-            st.info("**Dokumentacja Foto**\n\nMożliwość wgrywania zdjęć z budowy.")
+        col_roadmap1, col_roadmap2 = st.columns(2)
+        
+        with col_roadmap1:
+            st.markdown("### 🛠️ W TRAKCIE (Priorytety)")
             
-        with col_dev2:
-            st.markdown("#### DO ZROBIENIA (Plany)")
-            st.success("**Efekty Dekoracyjne** – Beton architektoniczny, stiuk.")
-            st.success("**Baza Danych (Cloud)** – Integracja z Firebase (zapisywanie projektów).")
+            with st.expander("📦 Inteligentny System Koszyka", expanded=True):
+                st.write("""
+                **Multi-Wycena:** Możliwość łączenia wielu branż (malowanie, panele, łazienka) w jeden zbiorczy projekt z ujednoliconą listą zakupową.
+                """)
+                st.progress(85) # Wizualny pasek postępu
+
+            with st.expander("⚙️ Centralny System Stawek", expanded=True):
+                st.write("""
+                **Globalny Cennik:** Jeden panel do zarządzania stawkami roboczogodziny i marżami, który automatycznie aktualizuje wszystkie 9 kalkulatorów.
+                """)
+                st.progress(40)
+
+        with col_roadmap2:
+            st.markdown("### 📅 NADCHODZĄCE (Q3 / Q4)")
+            
+            st.info("📈 **CRM i Zarządzanie Sprzedażą**\n\nŚledzenie statusu ofert (Wysłane/Zaakceptowane) oraz system powiadomień o otwarciu linku przez klienta.")
+            
+            st.success("📸 **Dokumentacja i Prawo**\n\nGaleria zdjęć z budowy przypisana do projektu oraz automatyczny generator Umów o Dzieło i Protokołów Odbioru.")
+            
+            st.warning("💰 **Dashboard Finansowy**\n\nPanel szefa pokazujący rentowność firmy, zysk netto z projektów oraz integracja z płatnościami Stripe/Przelewy24.")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.caption("Naszym celem jest skrócenie czasu Twojej pracy biurowej o 80% przy jednoczesnym wzroście profesjonalizmu Twoich ofert.")
     
     
     # ==========================================
@@ -3429,125 +3452,86 @@ elif opcja_boczna == "Aplikacja Główna":
                 else:
                     st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
     
-                    # --- GENERATOR PDF (TYNKOWANIE) ---
-                    try:
-                        from fpdf import FPDF
-                        from datetime import datetime
-                        import os
-    
-                        # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
-                        def czysc_tekst(tekst):
-                            if not tekst: return ""
-                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
-                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                            return tekst.encode('latin-1', 'replace').decode('latin-1')
-    
-                        if st.button("Generuj Raport PDF", use_container_width=True, key="btn_pdf_tyn"):
-                            pdf = FPDF()
-                            pdf.add_page()
-                            
-                            # 2. KONFIGURACJA CZCIONKI INTER
-                            font_path = "Inter-Regular.ttf"
-                            if os.path.exists(font_path):
-                                pdf.add_font("Inter", "", font_path)
-                                pdf.set_font("Inter", size=12)
-                                font_exists = True
-                            else:
-                                pdf.set_font("Arial", size=12)
-                                font_exists = False
-    
-                            # =======================================================
-                            # --- SPERSONALIZOWANY NAGŁÓWEK ---
-                            # =======================================================
-                            
-                            # LOGO (po lewej)
-                            logo_path = st.session_state.get('firma_logo')
-                            if logo_path and os.path.exists(logo_path):
-                                pdf.image(logo_path, x=10, y=8, w=35)
-                            elif os.path.exists("logo.png"): # Backup dla domyślnego logo
-                                pdf.image("logo.png", x=10, y=8, w=35)
-                            
-                            # DANE FIRMY (po prawej)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                            
-                            f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
-                            f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
-                            f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
-                            f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
-                            
-                            pdf.set_xy(110, 8) 
-                            tekst_firmy = f"{f_nazwa}\n"
-                            if f_adres: tekst_firmy += f"{f_adres}\n"
-                            if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
-                            if f_kontakt: tekst_firmy += f"{f_kontakt}"
-                            
-                            pdf.multi_cell(90, 5, tekst_firmy, align='R')
-    
-                            # TYTUŁ RAPORTU (na środku, niżej)
-                            pdf.set_y(35)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=16)
-                            pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: TYNKI I SUCHY TYNK", ln=True, align='C')
-    
-                            # --- LINIA SEPARATORA ---
-                            pdf.set_draw_color(0, 0, 0)
-                            pdf.line(10, 50, 200, 50) 
-                            pdf.ln(5)
-                            # =======================================================
-    
-                            # --- DANE PROJEKTU ---
-                            pdf.set_y(55)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                            data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
-                            pdf.cell(0, 8, f"Data: {data_str} | Powierzchnia prac: {round(m2_rob_pro, 1)} m2", ln=True)
-                            pdf.ln(5)
-    
-                            # --- TABELA FINANSOWA ---
-                            pdf.set_fill_color(245, 245, 245)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=12)
-                            
-                            pdf.cell(95, 10, " Robocizna:", 1)
-                            pdf.cell(95, 10, f" {round(koszt_rob_t)} PLN", 1, 1)
-                            pdf.cell(95, 10, " Materialy:", 1)
-                            pdf.cell(95, 10, f" {round(koszt_mat_t)} PLN", 1, 1)
-                            
-                            pdf.set_font("Inter" if font_exists else "Arial", size=13)
-                            pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
-                            pdf.cell(95, 12, f" {round(suma_tynki)} PLN", 1, 1, 'L', True)
-    
-                            pdf.ln(10)
-                            
-                            # --- LISTA MATERIAŁOWA ---
-                            pdf.set_font("Inter" if font_exists else "Arial", size=12)
-                            pdf.cell(0, 10, "LISTA MATERIALOW DO ZAMOWIENIA:", ln=True)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                            
-                            for przedmiot, ilosc in lista_zakupow:
-                                pdf.cell(0, 7, f"- {czysc_tekst(przedmiot)}: {czysc_tekst(ilosc)}", ln=True)
-    
-                            
-                            # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
-                            dodaj_tarcze_ochronna(pdf, font_exists)
-                            # ==========================================
-    
-                            # --- STOPKA ---
-                            pdf.set_y(-25)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=8)
-                            pdf.set_text_color(100, 100, 100)
-                            pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
-    
-                            # --- BEZPIECZNE POBIERANIE ---
-                            pdf_bytes = pdf.output(dest="S")
-                            safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
-                            
-                            st.download_button(
-                                label="Pobierz Raport PDF",
-                                data=safe_bytes,
-                                file_name=f"Kosztorys_Tynki_{datetime.now().strftime('%Y%m%d')}.pdf",
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
-                    except Exception as e:
-                        st.error(f"Problem z PDF: {e}")
+# --- GENERATOR PDF (TYNKOWANIE) ---
+                # Przesunięte w lewo - teraz jest dostępne dla każdego (zalogowanego i nie)
+                st.markdown("---")
+                st.subheader("📄 Eksport do pliku")
+                
+                try:
+                    from fpdf import FPDF
+                    from datetime import datetime
+                    import os
+
+                    def czysc_tekst(tekst):
+                        if not tekst: return ""
+                        pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                        for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                        return tekst
+
+                    # Tworzymy PDF od razu po kliknięciu jednego przycisku
+                    if st.button("🚀 Przygotuj i pobierz PDF", key="btn_pdf_tyn_main", use_container_width=True, type="primary"):
+                        pdf = FPDF()
+                        pdf.add_page()
+                        
+                        # Czcionka
+                        pdf.set_font("Arial", size=12)
+                        
+                        # --- NAGŁÓWEK FIRMY ---
+                        f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                        pdf.set_font("Arial", "B", 14)
+                        pdf.cell(0, 10, f_nazwa, ln=True, align='R')
+                        pdf.set_font("Arial", size=10)
+                        pdf.cell(0, 5, czysc_tekst(st.session_state.get('firma_kontakt', '')), ln=True, align='R')
+                        pdf.ln(10)
+
+                        # --- TYTUŁ ---
+                        pdf.set_font("Arial", "B", 16)
+                        pdf.cell(0, 15, "KOSZTORYS: TYNKOWANIE", ln=True, align='C')
+                        pdf.set_font("Arial", size=10)
+                        pdf.cell(0, 8, f"Data: {datetime.now().strftime('%d.%m.%Y')} | Powierzchnia: {round(m2_rob_pro, 1)} m2", ln=True, align='C')
+                        pdf.ln(10)
+
+                        # --- FINANSE ---
+                        pdf.set_fill_color(240, 240, 240)
+                        pdf.set_font("Arial", "B", 12)
+                        pdf.cell(95, 10, " Element", 1, 0, 'L', True)
+                        pdf.cell(95, 10, " Kwota", 1, 1, 'L', True)
+                        
+                        pdf.set_font("Arial", size=12)
+                        pdf.cell(95, 10, " Robocizna", 1)
+                        pdf.cell(95, 10, f" {round(koszt_rob_t, 2)} PLN", 1, 1, 'R')
+                        pdf.cell(95, 10, " Materialy", 1)
+                        pdf.cell(95, 10, f" {round(koszt_mat_t, 2)} PLN", 1, 1, 'R')
+                        
+                        pdf.set_font("Arial", "B", 12)
+                        pdf.cell(95, 12, " SUMA:", 1)
+                        pdf.cell(95, 12, f" {round(suma_tynki, 2)} PLN", 1, 1, 'R')
+                        pdf.ln(10)
+
+                        # --- LISTA MATERIAŁÓW ---
+                        pdf.set_font("Arial", "B", 12)
+                        pdf.cell(0, 10, "LISTA ZAKUPOWA:", ln=True)
+                        pdf.set_font("Arial", size=10)
+                        
+                        # Używamy zmiennej lista_zakupow_etapu, którą zdefiniowałeś wyżej
+                        for item in lista_zakupow_etapu:
+                            tekst_mat = f"- {item['nazwa']}: {item['ilosc']} {item['jed']}"
+                            pdf.cell(0, 7, czysc_tekst(tekst_mat), ln=True)
+
+                        # Generowanie bajtów i przycisk pobierania
+                        pdf_output = pdf.output(dest='S').encode('latin-1')
+                        
+                        st.download_button(
+                            label="📥 KLIKNIJ TUTAJ, ABY ZAPISAĆ PLIK",
+                            data=pdf_output,
+                            file_name=f"Kosztorys_Tynki_{datetime.now().strftime('%Y%m%d')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                        st.success("✅ Plik PDF został wygenerowany! Kliknij powyższy przycisk, aby go pobrać.")
+
+                except Exception as e:
+                    st.error(f"Problem z generatorem PDF: {e}")
                     
     # --- SEKCJA: SUCHA ZABUDOWA ---
     elif branza == "Sucha Zabudowa":
