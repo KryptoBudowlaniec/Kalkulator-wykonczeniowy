@@ -4148,42 +4148,40 @@ elif opcja_boczna == "Aplikacja Główna":
                     except Exception as e:
                         st.error(f"Problem z PDF: {e}")
                 
-        # --- SEKCJA: ELEKTRYKA ---
-    elif branza == "Elektryka":
-            st.header("Instalacja Elektryczna")
-            
-            col_e1, col_e2 = st.columns([1, 1.2])
+elif branza == "Elektryka":
+        st.header("⚡ Instalacja Elektryczna")
         
-                # --- KONFIGURACJA MAREK OSPRZĘTU ---
-    # --- KONFIGURACJA MAREK OSPRZĘTU ---
-            opcje_osprzetu = {
-                "Ekonomiczny (np. Simon 10, Adelid)": 15,
-                "Standard (np. Simon 54, Legrand Niloe)": 45,
-                "Premium (np. Berker R.1, Jung, Gira)": 110
-            }
-    
-            with col_e1:
-                st.subheader("Parametry instalacji")
-                m2_mieszkania = st.number_input("Metraz mieszkania (m2):", min_value=10, value=60)
-                mnoznik_m2 = m2_mieszkania / 60
-                typ_scian = st.radio("Material scian:", ["Gazobeton/Cegla", "Zelbet (Wielka Plyta)"])
+        col_e1, col_e2 = st.columns([1, 1.2])
+
+        # --- KONFIGURACJA MAREK OSPRZĘTU ---
+        opcje_osprzetu = {
+            "Ekonomiczny (np. Simon 10, Adelid)": 15,
+            "Standard (np. Simon 54, Legrand Niloe)": 45,
+            "Premium (np. Berker R.1, Jung, Gira)": 110
+        }
+
+        with col_e1:
+            st.subheader("Parametry instalacji")
+            m2_mieszkania = st.number_input("Metraz mieszkania (m2):", min_value=10, value=60)
+            mnoznik_m2 = m2_mieszkania / 60
+            typ_scian = st.radio("Material scian:", ["Gazobeton/Cegla", "Zelbet (Wielka Plyta)"])
+            
+            st.markdown("---")
+            st.markdown("#### Detale punktów elektrycznych")
+            
+            # Sub-kolumny dla lepszego wyglądu
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                gniazda_poj = st.number_input("Gniazdka pojedyncze", 0, value=15, key="el_gn_poj")
+                gniazda_podw = st.number_input("Gniazdka podwójne", 0, value=10, key="el_gn_podw")
+                gniazda_sila = st.number_input("Gniazda siłowe (400V)", 0, value=1, key="el_gn_sila")
+                punkty_lan_tv = st.number_input("Punkty LAN / TV", 0, value=3, key="el_lan")
                 
-                st.markdown("---")
-                st.markdown("#### Detale punktów elektrycznych")
+            with col_p2:
+                wypusty_sw = st.number_input("Wypusty ośw. (lampy)", 0, value=12, key="el_wyp")
+                wlaczniki_poj = st.number_input("Włączniki pojedyncze", 0, value=8, key="el_wl_poj")
+                wlaczniki_podw = st.number_input("Wł. podwójne/schod.", 0, value=4, key="el_wl_podw")
                 
-                # Sub-kolumny dla lepszego wyglądu
-                col_p1, col_p2 = st.columns(2)
-                with col_p1:
-                    gniazda_poj = st.number_input("Gniazdka pojedyncze", 0, value=15, key="el_gn_poj")
-                    gniazda_podw = st.number_input("Gniazdka podwójne", 0, value=10, key="el_gn_podw")
-                    gniazda_sila = st.number_input("Gniazda siłowe (400V)", 0, value=1, key="el_gn_sila")
-                    punkty_lan_tv = st.number_input("Punkty LAN / TV", 0, value=3, key="el_lan")
-                    
-                with col_p2:
-                    wypusty_sw = st.number_input("Wypusty ośw. (lampy)", 0, value=12, key="el_wyp")
-                    wlaczniki_poj = st.number_input("Włączniki pojedyncze", 0, value=8, key="el_wl_poj")
-                    wlaczniki_podw = st.number_input("Wł. podwójne/schod.", 0, value=4, key="el_wl_podw")
-                    
             st.markdown("---")
             wybrany_standard = st.selectbox("Marka osprzetu:", list(opcje_osprzetu.keys()), index=1)
             
@@ -4239,24 +4237,9 @@ elif opcja_boczna == "Aplikacja Główna":
             total_robocizna_e = total_robocizna_e * mnoznik_op * mnoznik_utrudnien
             total_material_e = total_material_e * mnoznik_op
             # ==========================================
-    
-                # --- ROBOCIZNA ---
-                mnoznik_trudnosci = 1.4 if typ_scian == "Zelbet (Wielka Plyta)" else 1.0
-                robocizna_baza = (m2_mieszkania * 90) # Podstawa za mb i bruzdy
-                robocizna_osprzet = n_wszystkich_punktow * stawka_punkt
-                robocizna_rozdzielnica = 1500
-                
-                total_robocizna_e = (robocizna_baza + robocizna_osprzet + robocizna_rozdzielnica) * mnoznik_trudnosci
-    
-                # ==========================================
-                # APLIKACJA UKRYTYCH MNOZNIKOW (PRO)
-                # ==========================================
-                mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
-                mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
-                
-                total_robocizna_e = total_robocizna_e * mnoznik_op * mnoznik_utrudnien
-                total_material_e = total_material_e * mnoznik_op
-                # ==========================================
+
+        # PRZYGOTOWANIE LISTY ZAKUPÓW
+        lista_zakupow_ele = [
     
             # PRZYGOTOWANIE LISTY ZAKUPÓW
             lista_zakupow_ele = [
