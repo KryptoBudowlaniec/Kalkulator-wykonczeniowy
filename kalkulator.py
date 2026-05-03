@@ -4501,8 +4501,8 @@ elif branza == "Elektryka":
                         mime="application/pdf",
                         use_container_width=True
                     )
-            except Exception as e:
-                st.error(f"Problem z generowaniem PDF: {e}")
+        except Exception as e:
+            st.error(f"Problem z generowaniem PDF: {e}")
         
     elif branza == "Łazienka":
         # --- 1. BAZY MATERIAŁOWE (ŁAZIENKA) ---
