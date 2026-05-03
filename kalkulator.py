@@ -4257,259 +4257,258 @@ elif opcja_boczna == "Aplikacja Główna":
             ]
     
             with col_e2:
-                st.subheader("Kosztorys Elektryki")
-                total_e = total_material_e + total_robocizna_e
-                st.success(f"### RAZEM: **{round(total_e):,} PLN**".replace(",", " "))
-                
-                c1, c2 = st.columns(2)
-                c1.metric("Materialy", f"{round(total_material_e):,} PLN".replace(",", " "))
-                c2.metric("Robocizna", f"{round(total_robocizna_e):,} PLN".replace(",", " "))
-    
-                st.markdown("---")
-                st.subheader("Wykaz materialow do kupna")
-                
-                for przedmiot, ilosc in lista_zakupow_ele:
-                    # Nie pokazujemy w liście tych elementów, których wybrano 0
-                    if not ilosc.startswith("0"): 
-                        st.write(f"• **{przedmiot}:** {ilosc}")
-                    
-                st.markdown("---")
-                st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo.")
-                
-            # 👇 PONIŻEJ ZACZYNA SIĘ KOD KOSZYKA / PDF 👇
+            st.subheader("Kosztorys Elektryki")
+            total_e = total_material_e + total_robocizna_e
+            st.success(f"### RAZEM: **{round(total_e):,} PLN**".replace(",", " "))
             
-    # ==========================================
-            # 💾 ZAPISYWANIE I KOSZYK - ELEKTRYKA
-            # ==========================================
+            c1, c2 = st.columns(2)
+            c1.metric("Materialy", f"{round(total_material_e):,} PLN".replace(",", " "))
+            c2.metric("Robocizna", f"{round(total_robocizna_e):,} PLN".replace(",", " "))
+
             st.markdown("---")
+            st.subheader("Wykaz materialow do kupna")
             
-            # 1. AUTOMATYCZNE TŁUMACZENIE LISTY ZAKUPÓW DO KOSZYKA
-            lista_zakupow_etapu = []
-            for przedmiot, ilosc_str in lista_zakupow_ele:
-                if not ilosc_str.startswith("0"): # Pomijamy rzeczy, których jest 0
-                    # Sprytny podział np. "15 szt." na liczbę 15 i jednostkę "szt."
-                    czesci = ilosc_str.split(" ")
-                    wartosc = czesci[0]
-                    jednostka = czesci[1] if len(czesci) > 1 else "szt."
-                    
-                    try:
-                        wartosc_num = float(wartosc) if '.' in wartosc else int(wartosc)
-                    except ValueError:
-                        wartosc_num = 1 # Zabezpieczenie np. dla "1 kpl"
-                        
-                    lista_zakupow_etapu.append({"nazwa": przedmiot, "ilosc": wartosc_num, "jed": jednostka})
-    
-            jest_edycja = st.session_state.get('tryb_edycji', False)
-            
-            if jest_edycja:
-                st.subheader("✏️ Edytujesz zapisany kosztorys")
-            else:
-                st.subheader("💾 Opcje zapisu kosztorysu")
-    
-            # 2. PANEL ZAPISU
-            if st.session_state.get('zalogowany'):
-                nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Elektryka Parter):", key="nazwa_proj_ele_input")
+            for przedmiot, ilosc in lista_zakupow_ele:
+                # Nie pokazujemy w liście tych elementów, których wybrano 0
+                if not ilosc.startswith("0"): 
+                    st.write(f"• **{przedmiot}:** {ilosc}")
                 
-                # 📦 BUDUJEMY WOREK Z DANYMI
-                dane_json = {
-                    "branza": "Elektryka",
-                    "nazwa_etapu": nazwa_projektu,
-                    "powierzchnia_scian": m2_mieszkania, 
-                    "marza_op": mnoznik_op,
-                    "mnoznik_utrudnien": mnoznik_utrudnien,
-                    "koszt_calkowity": round(total_e, 2),
-                    "koszt_robocizny": round(total_robocizna_e, 2),
-                    "koszt_materialow": round(total_material_e, 2),
-                    "technologie": f"Osprzęt: {wybrany_standard}",
-                    "materialy_lista": lista_zakupow_etapu, # Wstawiamy naszą nową, automatyczną listę!
-                    "detale": f"Liczba punktów całkowita: {n_wszystkich_punktow} szt. | Stawka punkt: {stawka_punkt} zł",
-                        
-                        # === SUWAKI DO EDYCJI (podstawa) ===
-                        "m2_mieszkania": float(m2_mieszkania),
-                        "n_punktow": int(n_wszystkich_punktow),
-                        "typ_scian": typ_scian,
-                        "wybrany_standard": wybrany_standard,
-                        "stawka_punkt": float(stawka_punkt)
-                    }
+            st.markdown("---")
+            st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo.")
+            
+        # ==========================================
+        # 👇 TUTAJ WYCHODZIMY Z KOLUMNY (Wcięcie równe z 'with col_e2:') 👇
+        # ==========================================
+
+        # ==========================================
+        # 💾 ZAPISYWANIE I KOSZYK - ELEKTRYKA
+        # ==========================================
+        st.markdown("---")
         
-                    col_save1, col_save2 = st.columns(2)
-        
-                    # --- PRZYCISK A: DODAJ DO KOSZYKA ---
-                    with col_save1:
-                        if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_ele_koszyk", use_container_width=True):
-                            if nazwa_projektu.strip() == "":
-                                st.error("Wpisz nazwę etapu!")
-                            else:
-                                st.session_state.koszyk_projektow.append(dane_json)
-                                st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
-                                import time
-                                time.sleep(1)
-                                st.rerun()
-        
-                    # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
-                    with col_save2:
-                        label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
-                        if st.button(label_przycisku, key="btn_ele_chmura", type="primary", use_container_width=True):
-                            if nazwa_projektu.strip() == "":
-                                st.error("Wpisz nazwę projektu!")
-                            else:
-                                try:
-                                    dane_do_bazy = {
-                                        "koszt_calkowity_projektu": round(total_e, 2),
-                                        "etapy": [dane_json] 
-                                    }
-                                    
-                                    if jest_edycja:
-                                        projekt_id = st.session_state.get('id_edytowanego_projektu')
-                                        supabase.table("kosztorysy").update({
-                                            "nazwa_projektu": nazwa_projektu,
-                                            "dane_json": dane_do_bazy
-                                        }).eq("id", projekt_id).execute()
-                                        st.success(f"✅ Zmiany zapisane!")
-                                        st.session_state['tryb_edycji'] = False
-                                        st.session_state['id_edytowanego_projektu'] = None
-                                    else:
-                                        supabase.table("kosztorysy").insert({
-                                            "uzytkownik_id": st.session_state.user_id,
-                                            "nazwa_projektu": nazwa_projektu,
-                                            "branza": "Elektryka",
-                                            "dane_json": dane_do_bazy
-                                        }).execute()
-                                        st.success(f"✅ Projekt zapisany jako nowy!")
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"Błąd komunikacji z bazą: {e}")
-        
-                    # --- PRZYCISK ANULOWANIA EDYCJI ---
-                    if jest_edycja:
-                        if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_ele_anuluj", use_container_width=True):
-                            st.session_state['tryb_edycji'] = False
-                            st.session_state['id_edytowanego_projektu'] = None
-                            st.rerun()
-                else:
-                    st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
+        # 1. AUTOMATYCZNE TŁUMACZENIE LISTY ZAKUPÓW DO KOSZYKA
+        lista_zakupow_etapu = []
+        for przedmiot, ilosc_str in lista_zakupow_ele:
+            if not ilosc_str.startswith("0"): 
+                czesci = ilosc_str.split(" ")
+                wartosc = czesci[0]
+                jednostka = czesci[1] if len(czesci) > 1 else "szt."
+                
+                try:
+                    wartosc_num = float(wartosc) if '.' in wartosc else int(wartosc)
+                except ValueError:
+                    wartosc_num = 1 
                     
-                    # --- GENERATOR PDF (ELEKTRYKA) ---
-                    try:
-                        from fpdf import FPDF
-                        from datetime import datetime
-                        import os
+                lista_zakupow_etapu.append({"nazwa": przedmiot, "ilosc": wartosc_num, "jed": jednostka})
+
+        jest_edycja = st.session_state.get('tryb_edycji', False)
+        
+        if jest_edycja:
+            st.subheader("✏️ Edytujesz zapisany kosztorys")
+        else:
+            st.subheader("💾 Opcje zapisu kosztorysu")
+
+        # 2. PANEL ZAPISU
+        if st.session_state.get('zalogowany'):
+            nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Elektryka Parter):", key="nazwa_proj_ele_input")
             
-                        # --- 1. FUNKCJA CZYSZCZĄCA (Musi być pod ręką) ---
-                        def czysc_tekst(tekst):
-                            if not tekst: return ""
-                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
-                            tekst = str(tekst)
-                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                            # Kodowanie pod bibliotekę FPDF (latin-1)
-                            return tekst.encode('latin-1', 'replace').decode('latin-1')
-            
-                        if st.button("Generuj Kosztorys PDF", use_container_width=True, key="ele_pdf_btn"):
-                            pdf = FPDF()
-                            pdf.add_page()
+            # 📦 BUDUJEMY WOREK Z DANYMI
+            dane_json = {
+                "branza": "Elektryka",
+                "nazwa_etapu": nazwa_projektu,
+                "powierzchnia_scian": m2_mieszkania, 
+                "marza_op": mnoznik_op,
+                "mnoznik_utrudnien": mnoznik_utrudnien,
+                "koszt_calkowity": round(total_e, 2),
+                "koszt_robocizny": round(total_robocizna_e, 2),
+                "koszt_materialow": round(total_material_e, 2),
+                "technologie": f"Osprzęt: {wybrany_standard}",
+                "materialy_lista": lista_zakupow_etapu, 
+                "detale": f"Liczba punktów całkowita: {n_wszystkich_punktow} szt. | Stawka punkt: {stawka_punkt} zł",
+                    
+                # === SUWAKI DO EDYCJI ===
+                "m2_mieszkania": float(m2_mieszkania),
+                "n_punktow": int(n_wszystkich_punktow),
+                "typ_scian": typ_scian,
+                "wybrany_standard": wybrany_standard,
+                "stawka_punkt": float(stawka_punkt)
+            }
+
+            col_save1, col_save2 = st.columns(2)
+
+            # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+            with col_save1:
+                if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_ele_koszyk", use_container_width=True):
+                    if nazwa_projektu.strip() == "":
+                        st.error("Wpisz nazwę etapu!")
+                    else:
+                        st.session_state.koszyk_projektow.append(dane_json)
+                        st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                        import time
+                        time.sleep(1)
+                        st.rerun()
+
+            # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+            with col_save2:
+                label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                if st.button(label_przycisku, key="btn_ele_chmura", type="primary", use_container_width=True):
+                    if nazwa_projektu.strip() == "":
+                        st.error("Wpisz nazwę projektu!")
+                    else:
+                        try:
+                            dane_do_bazy = {
+                                "koszt_calkowity_projektu": round(total_e, 2),
+                                "etapy": [dane_json] 
+                            }
                             
-                            # 2. KONFIGURACJA CZCIONKI
-                            font_path = "Inter-Regular.ttf"
-                            if os.path.exists(font_path):
-                                pdf.add_font("Inter", "", font_path)
-                                pdf.set_font("Inter", size=12)
-                                font_exists = True
+                            if jest_edycja:
+                                projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                supabase.table("kosztorysy").update({
+                                    "nazwa_projektu": nazwa_projektu,
+                                    "dane_json": dane_do_bazy
+                                }).eq("id", projekt_id).execute()
+                                st.success(f"✅ Zmiany zapisane!")
+                                st.session_state['tryb_edycji'] = False
+                                st.session_state['id_edytowanego_projektu'] = None
                             else:
-                                pdf.set_font("Arial", size=12)
-                                font_exists = False
+                                supabase.table("kosztorysy").insert({
+                                    "uzytkownik_id": st.session_state.user_id,
+                                    "nazwa_projektu": nazwa_projektu,
+                                    "branza": "Elektryka",
+                                    "dane_json": dane_do_bazy
+                                }).execute()
+                                st.success(f"✅ Projekt zapisany jako nowy!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd komunikacji z bazą: {e}")
+
+            # --- PRZYCISK ANULOWANIA EDYCJI ---
+            if jest_edycja:
+                if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_ele_anuluj", use_container_width=True):
+                    st.session_state['tryb_edycji'] = False
+                    st.session_state['id_edytowanego_projektu'] = None
+                    st.rerun()
+        else:
+            st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
             
-                            # --- NAGŁÓWEK FIRMY ---
-                            logo_path = st.session_state.get('firma_logo')
-                            if logo_path and os.path.exists(logo_path):
-                                pdf.image(logo_path, x=10, y=8, w=35)
-                            
-                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                            f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
-                            f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
-                            f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
-                            f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
-                            
-                            pdf.set_xy(110, 8) 
-                            tekst_firmy = f"{f_nazwa}\n"
-                            if f_adres: tekst_firmy += f"{f_adres}\n"
-                            if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
-                            if f_kontakt: tekst_firmy += f"{f_kontakt}"
-                            pdf.multi_cell(90, 5, tekst_firmy, align='R')
-            
-                            # TYTUŁ
-                            pdf.set_y(35)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=16)
-                            pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: INSTALACJA ELEKTRYCZNA", ln=True, align='C')
-                            pdf.line(10, 50, 200, 50) 
-                            pdf.ln(5)
-            
-                            # DANE PROJEKTU
-                            pdf.set_y(55)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                            data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
-                            pdf.cell(0, 8, f"Data: {data_str} | Metraz lokalu: {m2_mieszkania} m2", ln=True)
-                            pdf.ln(5)
-            
-                            # TABELA FINANSOWA
-                            pdf.set_fill_color(245, 245, 245)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=12)
-                            
-                            pdf.cell(95, 10, " Robocizna:", 1)
-                            pdf.cell(95, 10, f" {round(total_robocizna_e):,} PLN ".replace(","," "), 1, 1, 'R')
-                            pdf.cell(95, 10, " Materialy:", 1)
-                            pdf.cell(95, 10, f" {round(total_material_e):,} PLN ".replace(","," "), 1, 1, 'R')
-            
-                            pdf.set_font("Inter" if font_exists else "Arial", size=13)
-                            pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
-                            pdf.cell(95, 12, f" {round(total_e):,} PLN ".replace(","," "), 1, 1, 'R', True)
-            
-                            pdf.ln(10)
-                            
-                            # SZCZEGÓŁY I LISTA MATERIAŁOWA
-                            pdf.set_font("Inter" if font_exists else "Arial", size=12)
-                            pdf.cell(0, 10, "SZCZEGOLY PROJEKTU I MATERIALY:", ln=True)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                            
-                            pdf.cell(0, 7, f"- Typ scian: {czysc_tekst(typ_scian)}", ln=True)
-                            # TUTAJ POPRAWKA: n_wszystkich_punktow zamiast n_punktow
-                            pdf.cell(0, 7, f"- Liczba punktow do osadzenia (razem): {n_wszystkich_punktow}", ln=True)
-                            pdf.ln(3)
-            
-                            for przedmiot, ilosc in lista_zakupow_ele:
-                                # Pomijamy pozycje, których jest 0
-                                if not ilosc.startswith("0"):
-                                    pdf.cell(0, 7, f"- {czysc_tekst(przedmiot)}: {czysc_tekst(ilosc)}", ln=True)
-                            
-                            pdf.ln(5)
-                            pdf.set_text_color(100, 100, 100)
-                            pdf.cell(0, 7, "* Wycena nie uwzglednia zakupu lamp i opraw oswietleniowych.", ln=True)
-            
-                            # TARCZA OCHRONNA (jeśli masz tę funkcję w kodzie)
-                            try:
-                                dodaj_tarcze_ochronna(pdf, font_exists)
-                            except:
-                                pass
-                            
-                            # STOPKA
-                            pdf.set_y(-25)
-                            pdf.set_font("Inter" if font_exists else "Arial", size=8)
-                            pdf.set_text_color(100, 100, 100)
-                            pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
-            
-                            # POBIERANIE
-                            pdf_bytes = pdf.output(dest="S")
-                            if isinstance(pdf_bytes, str):
-                                pdf_bytes = pdf_bytes.encode('latin-1')
-                            
-                            st.download_button(
-                                label="📥 Pobierz Raport PDF",
-                                data=pdf_bytes,
-                                file_name=f"Kosztorys_Elektryka_{datetime.now().strftime('%Y%m%d')}.pdf",
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
-                    except Exception as e:
-                        st.error(f"Problem z generowaniem PDF: {e}")
+        # ==========================================
+        # --- GENERATOR PDF (ELEKTRYKA) ---
+        # ==========================================
+        try:
+            from fpdf import FPDF
+            from datetime import datetime
+            import os
+
+            def czysc_tekst(tekst):
+                if not tekst: return ""
+                pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
+                tekst = str(tekst)
+                for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
+                return tekst.encode('latin-1', 'replace').decode('latin-1')
+
+            if st.button("Generuj Kosztorys PDF", use_container_width=True, key="ele_pdf_btn"):
+                pdf = FPDF()
+                pdf.add_page()
+                
+                # KONFIGURACJA CZCIONKI
+                font_path = "Inter-Regular.ttf"
+                if os.path.exists(font_path):
+                    pdf.add_font("Inter", "", font_path)
+                    pdf.set_font("Inter", size=12)
+                    font_exists = True
+                else:
+                    pdf.set_font("Arial", size=12)
+                    font_exists = False
+
+                # NAGŁÓWEK FIRMY
+                logo_path = st.session_state.get('firma_logo')
+                if logo_path and os.path.exists(logo_path):
+                    pdf.image(logo_path, x=10, y=8, w=35)
+                
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
+                f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
+                f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
+                f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
+                
+                pdf.set_xy(110, 8) 
+                tekst_firmy = f"{f_nazwa}\n"
+                if f_adres: tekst_firmy += f"{f_adres}\n"
+                if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
+                if f_kontakt: tekst_firmy += f"{f_kontakt}"
+                pdf.multi_cell(90, 5, tekst_firmy, align='R')
+
+                # TYTUŁ
+                pdf.set_y(35)
+                pdf.set_font("Inter" if font_exists else "Arial", size=16)
+                pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: INSTALACJA ELEKTRYCZNA", ln=True, align='C')
+                pdf.line(10, 50, 200, 50) 
+                pdf.ln(5)
+
+                # DANE PROJEKTU
+                pdf.set_y(55)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+                pdf.cell(0, 8, f"Data: {data_str} | Metraz lokalu: {m2_mieszkania} m2", ln=True)
+                pdf.ln(5)
+
+                # TABELA FINANSOWA
+                pdf.set_fill_color(245, 245, 245)
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                
+                pdf.cell(95, 10, " Robocizna:", 1)
+                pdf.cell(95, 10, f" {round(total_robocizna_e):,} PLN ".replace(","," "), 1, 1, 'R')
+                pdf.cell(95, 10, " Materialy:", 1)
+                pdf.cell(95, 10, f" {round(total_material_e):,} PLN ".replace(","," "), 1, 1, 'R')
+
+                pdf.set_font("Inter" if font_exists else "Arial", size=13)
+                pdf.cell(95, 12, " SUMA CALKOWITA:", 1, 0, 'L', True)
+                pdf.cell(95, 12, f" {round(total_e):,} PLN ".replace(","," "), 1, 1, 'R', True)
+
+                pdf.ln(10)
+                
+                # SZCZEGÓŁY I LISTA MATERIAŁOWA
+                pdf.set_font("Inter" if font_exists else "Arial", size=12)
+                pdf.cell(0, 10, "SZCZEGOLY PROJEKTU I MATERIALY:", ln=True)
+                pdf.set_font("Inter" if font_exists else "Arial", size=10)
+                
+                pdf.cell(0, 7, f"- Typ scian: {czysc_tekst(typ_scian)}", ln=True)
+                pdf.cell(0, 7, f"- Liczba punktow do osadzenia (razem): {n_wszystkich_punktow}", ln=True)
+                pdf.ln(3)
+
+                for przedmiot, ilosc in lista_zakupow_ele:
+                    if not ilosc.startswith("0"):
+                        pdf.cell(0, 7, f"- {czysc_tekst(przedmiot)}: {czysc_tekst(ilosc)}", ln=True)
+                
+                pdf.ln(5)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 7, "* Wycena nie uwzglednia zakupu lamp i opraw oswietleniowych.", ln=True)
+
+                # TARCZA OCHRONNA (jeśli funkcja istnieje)
+                try:
+                    dodaj_tarcze_ochronna(pdf, font_exists)
+                except:
+                    pass
+                
+                # STOPKA
+                pdf.set_y(-25)
+                pdf.set_font("Inter" if font_exists else "Arial", size=8)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
+
+                # POBIERANIE
+                pdf_bytes = pdf.output(dest="S")
+                if isinstance(pdf_bytes, str):
+                    pdf_bytes = pdf_bytes.encode('latin-1')
+                
+                st.download_button(
+                    label="📥 Pobierz Raport PDF",
+                    data=pdf_bytes,
+                    file_name=f"Kosztorys_Elektryka_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+        except Exception as e:
+            st.error(f"Problem z generowaniem PDF: {e}")
         
     elif branza == "Łazienka":
         # --- 1. BAZY MATERIAŁOWE (ŁAZIENKA) ---
