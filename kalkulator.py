@@ -4148,7 +4148,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     except Exception as e:
                         st.error(f"Problem z PDF: {e}")
                 
-elif branza == "Elektryka":
+    elif branza == "Elektryka":
         st.header("⚡ Instalacja Elektryczna")
         
         col_e1, col_e2 = st.columns([1, 1.2])
@@ -4495,7 +4495,7 @@ elif branza == "Elektryka":
                     pdf_bytes = pdf_bytes.encode('latin-1')
                 
                 st.download_button(
-                    label="Pobierz Raport PDF",
+                    label="📥 Pobierz Raport PDF",
                     data=pdf_bytes,
                     file_name=f"Kosztorys_Elektryka_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
@@ -4503,7 +4503,7 @@ elif branza == "Elektryka":
                 )
         except Exception as e:
             st.error(f"Problem z generowaniem PDF: {e}")
-        
+
     elif branza == "Łazienka":
         # --- 1. BAZY MATERIAŁOWE (ŁAZIENKA) ---
         baza_kleje = {
