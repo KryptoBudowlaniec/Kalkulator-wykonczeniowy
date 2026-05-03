@@ -4149,118 +4149,134 @@ elif opcja_boczna == "Aplikacja Główna":
                         st.error(f"Problem z PDF: {e}")
                 
     # --- SEKCJA: ELEKTRYKA ---
-    elif branza == "Elektryka":
-        st.header("Instalacja Elektryczna (Mieszkanie)")
+elif branza == "Elektryka":
+        st.header("Instalacja Elektryczna")
         
         col_e1, col_e2 = st.columns([1, 1.2])
-    
-        # --- KONFIGURACJA MAREK OSPRZĘTU (Zaktualizowane) ---
+
+        # --- KONFIGURACJA MAREK OSPRZĘTU ---
         opcje_osprzetu = {
             "Ekonomiczny (np. Simon 10, Adelid)": 15,
             "Standard (np. Simon 54, Legrand Niloe)": 45,
             "Premium (np. Berker R.1, Jung, Gira)": 110
         }
-    
+
         with col_e1:
             st.subheader("Parametry instalacji")
             m2_mieszkania = st.number_input("Metraz mieszkania (m2):", min_value=10, value=60)
             mnoznik_m2 = m2_mieszkania / 60
-            st.markdown("---")
-            sugerowane_punkty = int(m2_mieszkania * 0.75)
-            n_punktow = st.slider("Liczba punktow (gniazda/wlaczniki):", 10, 150, sugerowane_punkty) 
             typ_scian = st.radio("Material scian:", ["Gazobeton/Cegla", "Zelbet (Wielka Plyta)"])
-            n_punkty_tele = 2
+            
+            st.markdown("---")
+            st.markdown("#### Detale punktów elektrycznych")
+            
+            # Sub-kolumny dla lepszego wyglądu
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                gniazda_poj = st.number_input("Gniazdka pojedyncze", 0, value=15, key="el_gn_poj")
+                gniazda_podw = st.number_input("Gniazdka podwójne", 0, value=10, key="el_gn_podw")
+                gniazda_sila = st.number_input("Gniazda siłowe (400V)", 0, value=1, key="el_gn_sila")
+                punkty_lan_tv = st.number_input("Punkty LAN / TV", 0, value=3, key="el_lan")
+                
+            with col_p2:
+                wypusty_sw = st.number_input("Wypusty ośw. (lampy)", 0, value=12, key="el_wyp")
+                wlaczniki_poj = st.number_input("Włączniki pojedyncze", 0, value=8, key="el_wl_poj")
+                wlaczniki_podw = st.number_input("Wł. podwójne/schod.", 0, value=4, key="el_wl_podw")
+                
+            st.markdown("---")
             wybrany_standard = st.selectbox("Marka osprzetu:", list(opcje_osprzetu.keys()), index=1)
-                    
-            # --- NOWOSC: Sciaga cenowa dla elektryki (Bez emoji) ---
+            
             widelki_elektryka = """
             Srednie stawki rynkowe robocizny (Polska):
-                    
-            Instalacje elektryczne:
             - Bialy montaz (gniazda, wlaczniki): 30 - 60 zl/szt.
             - Punkt elektryczny (kabel, bruzda, puszka): 100 - 150 zl/punkt
             - Montaz i zaszycie rozdzielnicy: 1000 - 2500 zl (zaleznie od wielkosci)
-            - Pomiary instalacji: 15 - 30 zl/punkt
-                    
+            
             Wazna uwaga:
-            Praca w zelbecie (Wielka Plyta) jest znacznie bardziej obciazajaca dla sprzetu i narzedzi. Rynkowo dolicza sie od 30% do 50% narzutu do ceny podstawowej za kucie bruzd i otworow pod puszki.
+            Praca w zelbecie (Wielka Plyta) jest znacznie bardziej obciazajaca. Rynkowo dolicza sie od 30% do 50% narzutu.
             """
-                    
             stawka_punkt = st.number_input(
                 "Stawka montazu osprzetu (zl/szt):", 
                 min_value=1, max_value=300, value=45,
                 help=widelki_elektryka
             )
-    
-            # --- OBLICZENIA (Zrownane wcieciem z 'with col_e1:') ---
+
+            # --- OBLICZENIA ---
+            n_punktow_zwyklych = gniazda_poj + gniazda_podw + wlaczniki_poj + wlaczniki_podw
+            n_wszystkich_punktow = n_punktow_zwyklych + gniazda_sila + wypusty_sw + punkty_lan_tv
+
             kabel_25 = 150 * mnoznik_m2
             kabel_15 = 100 * mnoznik_m2
             kabel_4x15 = 30 * mnoznik_m2
-            kabel_tv = 30 * mnoznik_m2
-            kabel_lan = 50 * mnoznik_m2
-                
+            kabel_tv = 15 * punkty_lan_tv 
+            kabel_lan = 20 * punkty_lan_tv
+            
             szt_mocowania = int((kabel_25 + kabel_15 + kabel_4x15 + kabel_tv + kabel_lan) * 3)
             paczki_mocowania = int(szt_mocowania / 100) + 1
-                
+            
             srednia_cena_szt = opcje_osprzetu[wybrany_standard]
             koszt_rozdzielnicy_mat = 1800 
-    
+
             mat_kable = (kabel_25 * 5.20) + (kabel_15 * 3.80) + (kabel_4x15 * 6.50) + (kabel_tv * 2.50) + (kabel_lan * 3.00)
-            mat_osprzet = n_punktow * srednia_cena_szt
+            mat_osprzet = n_punktow_zwyklych * srednia_cena_szt
             mat_mocowania = paczki_mocowania * 25.0
-                
+            
             total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
-    
+
             # --- ROBOCIZNA ---
             mnoznik_trudnosci = 1.4 if typ_scian == "Zelbet (Wielka Plyta)" else 1.0
             robocizna_baza = (m2_mieszkania * 90) # Podstawa za mb i bruzdy
-            robocizna_osprzet = (n_punktow + n_punkty_tele) * stawka_punkt
+            robocizna_osprzet = n_wszystkich_punktow * stawka_punkt
             robocizna_rozdzielnica = 1500
-                
+            
             total_robocizna_e = (robocizna_baza + robocizna_osprzet + robocizna_rozdzielnica) * mnoznik_trudnosci
-    
+
             # ==========================================
             # APLIKACJA UKRYTYCH MNOZNIKOW (PRO)
             # ==========================================
             mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
             mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
-                
+            
             total_robocizna_e = total_robocizna_e * mnoznik_op * mnoznik_utrudnien
             total_material_e = total_material_e * mnoznik_op
             # ==========================================
-        
+
         # PRZYGOTOWANIE LISTY ZAKUPÓW
         lista_zakupow_ele = [
             ("Kabel 3x2.5 (Gniazda)", f"{round(kabel_25)} mb"),
             ("Kabel 3x1.5 (Swiatlo)", f"{round(kabel_15)} mb"),
             ("Kabel 4x1.5 (Schodowe/Sila)", f"{round(kabel_4x15)} mb"),
-            ("Kabel antenowy RG6 (TV)", f"{round(kabel_tv)} mb"),
-            ("Kabel LAN kat. 6 (Internet)", f"{round(kabel_lan)} mb"),
-            ("Rozdzielnica + 10-15 bezpiecznikow (Eaton/Hager)", "1 kpl"),
-            (f"Osprzet ({wybrany_standard})", f"{n_punktow} szt."),
-            ("Uchwyty mocujace (paczki 100 szt.)", f"{paczki_mocowania} op."),
-            ("Dodatkowe puszki/gniazda LAN/RTV", f"{n_punkty_tele} szt.")
+            ("Rozdzielnica + bezpieczniki", "1 kpl"),
+            (f"Gniazda pojedyncze ({wybrany_standard})", f"{gniazda_poj} szt."),
+            (f"Gniazda podwójne ({wybrany_standard})", f"{gniazda_podw} szt."),
+            (f"Włączniki pojedyncze ({wybrany_standard})", f"{wlaczniki_poj} szt."),
+            (f"Włączniki podwójne/schodowe ({wybrany_standard})", f"{wlaczniki_podw} szt."),
+            ("Gniazdo siłowe 400V", f"{gniazda_sila} szt."),
+            ("Kabel LAN / TV / Alarm", f"{punkty_lan_tv} szt."),
+            ("Uchwyty mocujace (paczki 100 szt.)", f"{paczki_mocowania} op.")
         ]
-    
+
         with col_e2:
             st.subheader("Kosztorys Elektryki")
             total_e = total_material_e + total_robocizna_e
-            st.success(f"### RAZEM: **{round(total_e)} PLN**")
+            st.success(f"### RAZEM: **{round(total_e):,} PLN**".replace(",", " "))
             
             c1, c2 = st.columns(2)
-            c1.metric("Materialy", f"{round(total_material_e)} PLN")
-            c2.metric("Robocizna", f"{round(total_robocizna_e)} PLN")
-    
+            c1.metric("Materialy", f"{round(total_material_e):,} PLN".replace(",", " "))
+            c2.metric("Robocizna", f"{round(total_robocizna_e):,} PLN".replace(",", " "))
+
             st.markdown("---")
             st.subheader("Wykaz materialow do kupna")
             
             for przedmiot, ilosc in lista_zakupow_ele:
-                st.write(f"• **{przedmiot}:** {ilosc}")
+                # Nie pokazujemy w liście tych elementów, których wybrano 0
+                if not ilosc.startswith("0"): 
+                    st.write(f"• **{przedmiot}:** {ilosc}")
                 
             st.markdown("---")
-            st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo dla instalacji prowadzonej w tynku/podlogach.")
-       
-        # 👇 TUTAJ WYCHODZIMY Z PRAWEJ KOLUMNY (Wcięcie cofnięte na poziom 'with col_e2:') 👇
+            st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo.")
+            
+        # 👇 PONIŻEJ ZACZYNA SIĘ KOD KOSZYKA / PDF 👇
         
         # ==========================================
         # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - ELEKTRYKA
