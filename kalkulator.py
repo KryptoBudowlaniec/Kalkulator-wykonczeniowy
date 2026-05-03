@@ -4257,28 +4257,26 @@ elif opcja_boczna == "Aplikacja Główna":
             ]
     
             with col_e2:
-            st.subheader("Kosztorys Elektryki")
-            total_e = total_material_e + total_robocizna_e
-            st.success(f"### RAZEM: **{round(total_e):,} PLN**".replace(",", " "))
-            
-            c1, c2 = st.columns(2)
-            c1.metric("Materialy", f"{round(total_material_e):,} PLN".replace(",", " "))
-            c2.metric("Robocizna", f"{round(total_robocizna_e):,} PLN".replace(",", " "))
-
-            st.markdown("---")
-            st.subheader("Wykaz materialow do kupna")
-            
-            for przedmiot, ilosc in lista_zakupow_ele:
-                # Nie pokazujemy w liście tych elementów, których wybrano 0
-                if not ilosc.startswith("0"): 
-                    st.write(f"• **{przedmiot}:** {ilosc}")
+                st.subheader("Kosztorys Elektryki")
+                total_e = total_material_e + total_robocizna_e
+                st.success(f"### RAZEM: **{round(total_e):,} PLN**".replace(",", " "))
                 
-            st.markdown("---")
-            st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo.")
+                c1, c2 = st.columns(2)
+                c1.metric("Materialy", f"{round(total_material_e):,} PLN".replace(",", " "))
+                c2.metric("Robocizna", f"{round(total_robocizna_e):,} PLN".replace(",", " "))
+    
+                st.markdown("---")
+                st.subheader("Wykaz materialow do kupna")
+                
+                for przedmiot, ilosc in lista_zakupow_ele:
+                    # Nie pokazujemy w liście tych elementów, których wybrano 0
+                    if not ilosc.startswith("0"): 
+                        st.write(f"• **{przedmiot}:** {ilosc}")
+                
+                st.markdown("---")
+                st.info("UWAGA: Wycena nie uwzglednia zakupu opraw oswietleniowych (lamp). Ilosc kabla liczona szacunkowo.")
             
-        # ==========================================
-        # 👇 TUTAJ WYCHODZIMY Z KOLUMNY (Wcięcie równe z 'with col_e2:') 👇
-        # ==========================================
+
 
         # ==========================================
         # 💾 ZAPISYWANIE I KOSZYK - ELEKTRYKA
