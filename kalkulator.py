@@ -4278,48 +4278,51 @@ elif opcja_boczna == "Aplikacja Główna":
                 
             # 👇 PONIŻEJ ZACZYNA SIĘ KOD KOSZYKA / PDF 👇
             
-            # ==========================================
-            # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - ELEKTRYKA
-            # ==========================================
-            st.markdown("---")
-            
-            # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA (Tłumaczymy na standard koszyka)
-            lista_zakupow_etapu = [
-                {"nazwa": "Kabel 3x2.5 (Gniazda)", "ilosc": round(kabel_25), "jed": "mb"},
-                {"nazwa": "Kabel 3x1.5 (Swiatlo)", "ilosc": round(kabel_15), "jed": "mb"},
-                {"nazwa": "Kabel 4x1.5 (Schodowe/Sila)", "ilosc": round(kabel_4x15), "jed": "mb"},
-                {"nazwa": "Kabel antenowy RG6 (TV)", "ilosc": round(kabel_tv), "jed": "mb"},
-                {"nazwa": "Kabel LAN kat. 6 (Internet)", "ilosc": round(kabel_lan), "jed": "mb"},
-                {"nazwa": "Rozdzielnica + bezpieczniki", "ilosc": 1, "jed": "kpl"},
-                {"nazwa": f"Osprzet ({wybrany_standard})", "ilosc": n_punktow, "jed": "szt."},
-                {"nazwa": "Uchwyty mocujace (paczki 100 szt.)", "ilosc": paczki_mocowania, "jed": "op."},
-                {"nazwa": "Dodatkowe puszki LAN/RTV", "ilosc": n_punkty_tele, "jed": "szt."}
-            ]
-    
-            jest_edycja = st.session_state.get('tryb_edycji', False)
-            
-            if jest_edycja:
-                st.subheader("✏️ Edytujesz zapisany kosztorys")
-            else:
-                st.subheader("💾 Opcje zapisu kosztorysu")
-    
-            # 2. PANEL ZAPISU (Tylko dla zalogowanych)
-            if st.session_state.get('zalogowany'):
-                nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Instalacja parter):", key="nazwa_proj_ele_input")
+# ==========================================
+        # 💾 ZAPISYWANIE I KOSZYK - ELEKTRYKA
+        # ==========================================
+        st.markdown("---")
+        
+        # 1. AUTOMATYCZNE TŁUMACZENIE LISTY ZAKUPÓW DO KOSZYKA
+        lista_zakupow_etapu = []
+        for przedmiot, ilosc_str in lista_zakupow_ele:
+            if not ilosc_str.startswith("0"): # Pomijamy rzeczy, których jest 0
+                # Sprytny podział np. "15 szt." na liczbę 15 i jednostkę "szt."
+                czesci = ilosc_str.split(" ")
+                wartosc = czesci[0]
+                jednostka = czesci[1] if len(czesci) > 1 else "szt."
                 
-                # 📦 BUDUJEMY WOREK Z DANYMI
-                dane_json = {
-                    "branza": "Elektryka",
-                    "nazwa_etapu": nazwa_projektu,
-                    "powierzchnia_scian": float(m2_mieszkania), 
-                    "marza_op": mnoznik_op,
-                    "mnoznik_utrudnien": mnoznik_utrudnien,
-                    "koszt_calkowity": round(total_e, 2),
-                    "koszt_robocizny": round(total_robocizna_e, 2),
-                    "koszt_materialow": round(total_material_e, 2),
-                    "technologie": f"Osprzęt: {wybrany_standard} | Ściany: {typ_scian}",
-                    "materialy_lista": lista_zakupow_etapu,
-                    "detale": f"Liczba punktów: {n_punktow} szt.",
+                try:
+                    wartosc_num = float(wartosc) if '.' in wartosc else int(wartosc)
+                except ValueError:
+                    wartosc_num = 1 # Zabezpieczenie np. dla "1 kpl"
+                    
+                lista_zakupow_etapu.append({"nazwa": przedmiot, "ilosc": wartosc_num, "jed": jednostka})
+
+        jest_edycja = st.session_state.get('tryb_edycji', False)
+        
+        if jest_edycja:
+            st.subheader("✏️ Edytujesz zapisany kosztorys")
+        else:
+            st.subheader("💾 Opcje zapisu kosztorysu")
+
+        # 2. PANEL ZAPISU
+        if st.session_state.get('zalogowany'):
+            nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Elektryka Parter):", key="nazwa_proj_ele_input")
+            
+            # 📦 BUDUJEMY WOREK Z DANYMI
+            dane_json = {
+                "branza": "Elektryka",
+                "nazwa_etapu": nazwa_projektu,
+                "powierzchnia_scian": m2_mieszkania, 
+                "marza_op": mnoznik_op,
+                "mnoznik_utrudnien": mnoznik_utrudnien,
+                "koszt_calkowity": round(total_e, 2),
+                "koszt_robocizny": round(total_robocizna_e, 2),
+                "koszt_materialow": round(total_material_e, 2),
+                "technologie": f"Osprzęt: {wybrany_standard}",
+                "materialy_lista": lista_zakupow_etapu, # Wstawiamy naszą nową, automatyczną listę!
+                "detale": f"Liczba punktów całkowita: {n_wszystkich_punktow} szt. | Stawka punkt: {stawka_punkt} zł",
                     
                     # === SUWAKI DO EDYCJI (podstawa) ===
                     "m2_mieszkania": float(m2_mieszkania),
