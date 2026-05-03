@@ -5476,46 +5476,6 @@ elif opcja_boczna == "Aplikacja Główna":
             except Exception as e:
                 st.error(f"Błąd podczas generowania PDF: {e}")
     
-        # ==========================================
-        # 💾 ZAPIS DO CHMURY (Wyrównane do lewej!)
-        # ==========================================
-        st.markdown("---")
-        st.subheader("💾 Zapisz Kosztorys w Chmurze")
-        st.caption("Zapisz ten projekt, aby mieć do niego dostęp z dowolnego urządzenia.")
-        
-        nazwa_projektu = st.text_input("Nazwa projektu (np. Mieszkanie na Złotej 44):", key="nazwa_proj_drzwi")
-        
-        if st.button("Zapisz Projekt", use_container_width=True, type="primary"):
-            if not nazwa_projektu:
-                st.warning("⚠️ Podaj nazwę projektu przed zapisaniem.")
-            elif 'user_id' not in st.session_state or not st.session_state.user_id:
-                st.error("❌ Błąd krytyczny: Zgubiłeś sesję! Wyloguj się i zaloguj ponownie.")
-            else:
-                try:
-                    # 1. Pakujemy wszystkie ważne dane
-                    dane_do_zapisu = {
-                        "szt_drzwi": szt_drzwi,
-                        "wybrany_model": wybrany_model,
-                        "szerokosc_muru": szerokosc_muru,
-                        "podciecie": podciecie,
-                        "demontaz": demontaz,
-                        "koszt_materialow": total_materialy,
-                        "koszt_robocizny": total_robocizna,
-                        "suma_calkowita": suma_calkowita
-                    }
-                    
-                    # 2. Wysyłamy paczkę do bazy Supabase
-                    response = supabase.table("projekty").insert({
-                        "user_id": st.session_state.user_id, 
-                        "nazwa_projektu": nazwa_projektu,
-                        "branza": "Drzwi",
-                        "dane_json": dane_do_zapisu
-                    }).execute()
-                    
-                    st.success(f"✅ Projekt '{nazwa_projektu}' został bezpiecznie zapisany w chmurze!")
-                except Exception as e:
-                    st.error(f"❌ Wystąpił błąd podczas zapisywania: {e}")
-    
     
     elif branza == "Tapetowanie":
         # --- 1. BAZY MATERIAŁOWE (TAPETY) ---
