@@ -4238,8 +4238,6 @@ elif branza == "Elektryka":
             total_material_e = total_material_e * mnoznik_op
             # ==========================================
 
-        # PRZYGOTOWANIE LISTY ZAKUPÓW
-        lista_zakupow_ele = [
     
             # PRZYGOTOWANIE LISTY ZAKUPÓW
             lista_zakupow_ele = [
