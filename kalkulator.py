@@ -4184,45 +4184,61 @@ elif opcja_boczna == "Aplikacja Główna":
                     wlaczniki_poj = st.number_input("Włączniki pojedyncze", 0, value=8, key="el_wl_poj")
                     wlaczniki_podw = st.number_input("Wł. podwójne/schod.", 0, value=4, key="el_wl_podw")
                     
-                st.markdown("---")
-                wybrany_standard = st.selectbox("Marka osprzetu:", list(opcje_osprzetu.keys()), index=1)
+            st.markdown("---")
+            wybrany_standard = st.selectbox("Marka osprzetu:", list(opcje_osprzetu.keys()), index=1)
+            
+            # --- ZMIANA: SUWAKI ROBOCIZNY ---
+            st.markdown("#### Wycena Twojej pracy (Robocizna)")
+            col_rob1, col_rob2 = st.columns(2)
+            
+            with col_rob1:
+                stawka_bruzdy_m2 = st.number_input("Układanie kabli i bruzdy (zł/m2):", min_value=0, value=50, step=10, help="Możesz wpisać 0, jeśli wolisz wyceniać całą pracę tylko od liczby punktów.")
+                stawka_rozdzielnica = st.number_input("Montaż rozdzielnicy (zł):", min_value=0, value=800, step=100)
                 
-                widelki_elektryka = """
-                Srednie stawki rynkowe robocizny (Polska):
-                - Bialy montaz (gniazda, wlaczniki): 30 - 60 zl/szt.
-                - Punkt elektryczny (kabel, bruzda, puszka): 100 - 150 zl/punkt
-                - Montaz i zaszycie rozdzielnicy: 1000 - 2500 zl (zaleznie od wielkosci)
-                
-                Wazna uwaga:
-                Praca w zelbecie (Wielka Plyta) jest znacznie bardziej obciazajaca. Rynkowo dolicza sie od 30% do 50% narzutu.
-                """
-                stawka_punkt = st.number_input(
-                    "Stawka montazu osprzetu (zl/szt):", 
-                    min_value=1, max_value=300, value=45,
-                    help=widelki_elektryka
-                )
-    
-                # --- OBLICZENIA ---
-                n_punktow_zwyklych = gniazda_poj + gniazda_podw + wlaczniki_poj + wlaczniki_podw
-                n_wszystkich_punktow = n_punktow_zwyklych + gniazda_sila + wypusty_sw + punkty_lan_tv
-    
-                kabel_25 = 150 * mnoznik_m2
-                kabel_15 = 100 * mnoznik_m2
-                kabel_4x15 = 30 * mnoznik_m2
-                kabel_tv = 15 * punkty_lan_tv 
-                kabel_lan = 20 * punkty_lan_tv
-                
-                szt_mocowania = int((kabel_25 + kabel_15 + kabel_4x15 + kabel_tv + kabel_lan) * 3)
-                paczki_mocowania = int(szt_mocowania / 100) + 1
-                
-                srednia_cena_szt = opcje_osprzetu[wybrany_standard]
-                koszt_rozdzielnicy_mat = 1800 
-    
-                mat_kable = (kabel_25 * 5.20) + (kabel_15 * 3.80) + (kabel_4x15 * 6.50) + (kabel_tv * 2.50) + (kabel_lan * 3.00)
-                mat_osprzet = n_punktow_zwyklych * srednia_cena_szt
-                mat_mocowania = paczki_mocowania * 25.0
-                
-                total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
+            with col_rob2:
+                stawka_punkt = st.number_input("Biały montaż (zł/szt):", min_value=0, value=45, step=5)
+
+            # --- OBLICZENIA ---
+            n_punktow_zwyklych = gniazda_poj + gniazda_podw + wlaczniki_poj + wlaczniki_podw
+            n_wszystkich_punktow = n_punktow_zwyklych + gniazda_sila + wypusty_sw + punkty_lan_tv
+
+            kabel_25 = 150 * mnoznik_m2
+            kabel_15 = 100 * mnoznik_m2
+            kabel_4x15 = 30 * mnoznik_m2
+            kabel_tv = 15 * punkty_lan_tv 
+            kabel_lan = 20 * punkty_lan_tv
+            
+            szt_mocowania = int((kabel_25 + kabel_15 + kabel_4x15 + kabel_tv + kabel_lan) * 3)
+            paczki_mocowania = int(szt_mocowania / 100) + 1
+            
+            srednia_cena_szt = opcje_osprzetu[wybrany_standard]
+            koszt_rozdzielnicy_mat = 1800 
+
+            mat_kable = (kabel_25 * 5.20) + (kabel_15 * 3.80) + (kabel_4x15 * 6.50) + (kabel_tv * 2.50) + (kabel_lan * 3.00)
+            mat_osprzet = n_punktow_zwyklych * srednia_cena_szt
+            mat_mocowania = paczki_mocowania * 25.0
+            
+            total_material_e = mat_kable + mat_osprzet + koszt_rozdzielnicy_mat + mat_mocowania
+
+            # --- ROBOCIZNA (DYNAMICZNA) ---
+            mnoznik_trudnosci = 1.4 if typ_scian == "Zelbet (Wielka Plyta)" else 1.0
+            
+            # Teraz robocizna liczy się na podstawie tego, co wykonawca wpisał w nowych oknach!
+            robocizna_baza = m2_mieszkania * stawka_bruzdy_m2
+            robocizna_osprzet = n_wszystkich_punktow * stawka_punkt
+            robocizna_rozdzielnica = stawka_rozdzielnica
+            
+            total_robocizna_e = (robocizna_baza + robocizna_osprzet + robocizna_rozdzielnica) * mnoznik_trudnosci
+
+            # ==========================================
+            # APLIKACJA UKRYTYCH MNOZNIKOW (PRO)
+            # ==========================================
+            mnoznik_op = st.session_state.get('globalny_mnoznik_op', 1.0)
+            mnoznik_utrudnien = st.session_state.get('globalny_mnoznik', 1.0)
+            
+            total_robocizna_e = total_robocizna_e * mnoznik_op * mnoznik_utrudnien
+            total_material_e = total_material_e * mnoznik_op
+            # ==========================================
     
                 # --- ROBOCIZNA ---
                 mnoznik_trudnosci = 1.4 if typ_scian == "Zelbet (Wielka Plyta)" else 1.0
