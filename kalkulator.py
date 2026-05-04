@@ -113,72 +113,149 @@ def usun_polskie_znaki(tekst):
         tekst = tekst.replace(pl, lat)
     return tekst
 
-def wygeneruj_pdf_oferte(nazwa_projektu, dane_json):
-    """Generuje PDF z ukrytymi cenami materiałów i zaktualizowanym rabatem."""
+def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
+    """Generuje NOWOCZESNY i KOLOROWY PDF z profesjonalnym układem."""
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_auto_page_break(auto=True, margin=20)
     
-    # NAGŁÓWEK
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "KOSZTORYS OFERTOWY", ln=True, align='C')
-    pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Projekt: {usun_polskie_znaki(nazwa_projektu)}", ln=True, align='C')
-    pdf.ln(10)
+    # --- KOLORY FIRMOWE ---
+    PRIMARY_COLOR = (41, 128, 185) # Elegancki niebieski
+    TEXT_COLOR = (44, 62, 80)    # Ciemnoszary (prawie czarny)
+    BG_LIGHT = (236, 240, 241)   # Bardzo jasny szary do tła sekcji
     
-    # ZAKRES PRAC (TYLKO ROBOCIZNA)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, "1. ZAKRES PRAC (ROBOCIZNA):", ln=True)
-    pdf.set_font("Arial", '', 11)
+    # --- NAGŁÓWEK Z KOLOROWYM PASKIEM ---
+    pdf.set_fill_color(*PRIMARY_COLOR)
+    pdf.rect(0, 0, 210, 40, 'F') # Górna belka
+    pdf.image("logo.png", x=160, y=5, w=35)
     
-    for i, etap in enumerate(dane_json.get('etapy', [])):
-        pdf.set_font("Arial", 'B', 11)
-        koszt_rob_etapu = f"{etap.get('koszt_robocizny', 0):.2f} PLN"
-        tytul_etapu = usun_polskie_znaki(f"{i+1}. {etap.get('nazwa_etapu')} ({etap.get('branza')}) - Robocizna: {koszt_rob_etapu}")
-        pdf.cell(0, 8, tytul_etapu, ln=True)
-        
-        pdf.set_font("Arial", '', 10)
-        detale = usun_polskie_znaki(etap.get('detale', ''))
-        pdf.multi_cell(0, 6, f"Szczegoly: {detale}")
-        pdf.ln(3)
-        
-    # PODSUMOWANIE FINANSOWE
-    pdf.ln(5)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, "2. PODSUMOWANIE FINANSOWE:", ln=True)
-    pdf.set_font("Arial", '', 11)
-    
-    suma_robocizna = dane_json.get('suma_robocizna', dane_json.get('koszt_calkowity_projektu', 0))
-    rabat = dane_json.get('rabat_kwota', 0)
-    do_zaplaty = dane_json.get('robocizna_po_rabacie', suma_robocizna)
-    
-    pdf.cell(0, 8, f"Wartosc prac (robocizna): {suma_robocizna:.2f} PLN", ln=True)
-    if rabat > 0:
-        pdf.cell(0, 8, f"Udzielony rabat: -{rabat:.2f} PLN", ln=True)
-    
-    pdf.set_font("Arial", 'B', 13)
-    pdf.cell(0, 10, f"RAZEM DO ZAPLATY (Robocizna): {do_zaplaty:.2f} PLN", ln=True)
-    pdf.ln(10)
-    
-    # LISTA ZAKUPÓW (BEZ CEN)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, "3. ZBIORCZA LISTA ZAKUPOW (MATERIALY):", ln=True)
+    pdf.set_text_color(255, 255, 255) # Biały tekst na belce
+    pdf.set_font("Arial", 'B', 22)
+    pdf.cell(0, 15, usun_polskie_znaki("OFERTA KOSZTORYSOWA"), ln=True, align='L')
     pdf.set_font("Arial", '', 10)
-    info_mat = "Ponizsza lista to zapotrzebowanie na materialy. Ceny materialow leza po stronie inwestora i nie sa ujęte w ofercie."
-    pdf.multi_cell(0, 6, usun_polskie_znaki(info_mat))
+    data_dzis = datetime.now().strftime("%d.%m.%Y")
+    pdf.cell(0, 5, f"Data wystawienia: {data_dzis}", ln=True, align='L')
+    
+    pdf.ln(15) # Odstęp od belki
+    pdf.set_text_color(*TEXT_COLOR)
+    
+    # --- DANE PROJEKTU (W RAMCE) ---
+    pdf.set_font("Arial", 'B', 14)
+    pdf.set_draw_color(*PRIMARY_COLOR)
+    pdf.set_line_width(0.5)
+    pdf.cell(0, 10, f"Inwestycja: {usun_polskie_znaki(nazwa_projektu)}", border='B', ln=True)
+    pdf.ln(5)
+
+    # --- 1. ZAKRES PRAC (TABELA) ---
+    pdf.set_fill_color(*PRIMARY_COLOR)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font("Arial", 'B', 11)
+    
+    # Nagłówek tabeli
+    pdf.cell(140, 10, usun_polskie_znaki(" Opis etapu / Branza"), 0, 0, 'L', True)
+    pdf.cell(50, 10, usun_polskie_znaki("Wartosc "), 0, 1, 'R', True)
+    
+    pdf.set_text_color(*TEXT_COLOR)
+    pdf.set_font("Arial", '', 10)
+    
+    etapy = dane_json.get('etapy', [])
+    fill = False
+    if etapy:
+        for i, etap in enumerate(etapy):
+            # Naprzemienne tło wierszy (Zebra)
+            pdf.set_fill_color(*BG_LIGHT) if fill else pdf.set_fill_color(255, 255, 255)
+            
+            if tryb == "robocizna":
+                kwota = f"{etap.get('koszt_robocizny', 0):,.2f} PLN"
+            else:
+                kwota = f"{etap.get('koszt_calkowity', 0):,.2f} PLN"
+                
+            nazwa_e = usun_polskie_znaki(f"{etap.get('nazwa_etapu')} ({etap.get('branza')})")
+            pdf.cell(140, 8, f" {nazwa_e}", 0, 0, 'L', True)
+            pdf.cell(50, 8, f"{kwota} ", 0, 1, 'R', True)
+            fill = not fill
+    pdf.ln(5)
+
+    # --- 2. PODSUMOWANIE (PODKREŚLONE) ---
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, usun_polskie_znaki("PODSUMOWANIE FINANSOWE"), ln=True)
+    
+    rabat = dane_json.get('rabat_kwota', 0)
+    suma_rob = dane_json.get('suma_robocizna', 0)
+    suma_mat = dane_json.get('suma_materialy', 0)
+    
+    # Ramka z podsumowaniem
+    pdf.set_fill_color(*BG_LIGHT)
+    pdf.rect(110, pdf.get_y(), 90, 35, 'F')
+    
+    pdf.set_font("Arial", '', 11)
+    if tryb == "robocizna":
+        pdf.set_x(115)
+        pdf.cell(50, 8, "Suma robocizna:")
+        pdf.cell(30, 8, f"{suma_rob:,.2f} PLN", ln=True, align='R')
+        if rabat > 0:
+            pdf.set_x(115)
+            pdf.set_text_color(200, 0, 0)
+            pdf.cell(50, 8, "Rabat:")
+            pdf.cell(30, 8, f"-{rabat:,.2f} PLN", ln=True, align='R')
+            pdf.set_text_color(*TEXT_COLOR)
+        
+        pdf.ln(2)
+        pdf.set_x(115)
+        pdf.set_font("Arial", 'B', 13)
+        do_zap = dane_json.get('robocizna_po_rabacie', suma_rob - rabat)
+        pdf.cell(50, 10, "DO ZAPLATY:")
+        pdf.cell(30, 10, f"{do_zap:,.2f} PLN", ln=True, align='R')
+    else:
+        pdf.set_x(115)
+        pdf.cell(50, 7, "Robocizna:")
+        pdf.cell(30, 7, f"{suma_rob:,.2f} PLN", ln=True, align='R')
+        pdf.set_x(115)
+        pdf.cell(50, 7, "Materialy:")
+        pdf.cell(30, 7, f"{suma_mat:,.2f} PLN", ln=True, align='R')
+        if rabat > 0:
+            pdf.set_x(115)
+            pdf.set_text_color(200, 0, 0)
+            pdf.cell(50, 7, "Rabat:")
+            pdf.cell(30, 7, f"-{rabat:,.2f} PLN", ln=True, align='R')
+            pdf.set_text_color(*TEXT_COLOR)
+        
+        pdf.set_x(115)
+        pdf.set_font("Arial", 'B', 13)
+        total = (suma_rob + suma_mat) - rabat
+        pdf.cell(50, 10, "LACZNIE:")
+        pdf.cell(30, 10, f"{total:,.2f} PLN", ln=True, align='R')
+
+    pdf.ln(15)
+    
+    # --- 3. LOGISTYKA MATERIAŁOWA ---
+    pdf.set_text_color(*PRIMARY_COLOR)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, usun_polskie_znaki("LOGISTYKA I ZAPOTRZEBOWANIE MATERIAŁOWE"), ln=True)
+    pdf.set_text_color(*TEXT_COLOR)
+    pdf.set_font("Arial", 'I', 9)
+    info = "Ceny materialow maja charakter szacunkowy. Ostateczny koszt zakupu zalezy od wybranych punktow sprzedazy."
+    if tryb == "robocizna":
+        info = "UWAGA: Powyzsza oferta obejmuje WYŁACZNIE koszt robocizny. Materialy inwestor zapewnia we wlasnym zakresie."
+    pdf.multi_cell(0, 5, usun_polskie_znaki(info))
     pdf.ln(5)
     
-    lista_zakupow = dane_json.get('zbiorcza_lista_zakupow', [])
-    if lista_zakupow:
-        for mat in lista_zakupow:
-            nazwa_mat = usun_polskie_znaki(mat.get('nazwa', ''))
-            ilosc = round(mat.get('ilosc', 0), 1)
-            jed = usun_polskie_znaki(mat.get('jed', ''))
-            pdf.cell(0, 7, f"- {nazwa_mat}: {ilosc} {jed}", ln=True)
-    else:
-        pdf.cell(0, 7, "Brak materialow na liscie.", ln=True)
-        
-    # ZAPIS DO PLIKU TYMCZASOWEGO
+    # Lista zakupów w dwóch kolumnach (nowoczesny układ)
+    pdf.set_font("Arial", '', 10)
+    lista_mat = dane_json.get('zbiorcza_lista_zakupow', [])
+    
+    col_width = 90
+    for i, mat in enumerate(lista_mat):
+        text = f"- {mat.get('nazwa')}: {round(mat.get('ilosc'),1)} {mat.get('jed')}"
+        pdf.cell(col_width, 6, usun_polskie_znaki(text))
+        if i % 2 != 0: pdf.ln(6) # Nowa linia co drugi element
+
+    # --- STOPKA ---
+    pdf.set_y(-30)
+    pdf.set_font("Arial", 'I', 8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, usun_polskie_znaki("Wygenerowano w systemie ProCalc - Profesjonalne Kosztorysy Budowlane"), 0, 0, 'C')
+    
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
     pdf.output(temp_file.name)
     return temp_file.name
@@ -955,28 +1032,36 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         aktyw = st.session_state['aktywny_projekt_do_pdf']
         dane_proj = aktyw.get('dane_json', {})
         
-        st.info("Panel przygotowania PDF został otwarty! Kliknij Wygeneruj, aby pobrać plik.")
+        st.info("👇 Wybierz opcje oferty i wygeneruj plik.")
         with st.container(border=True):
-            st.subheader(f"Oferta: {aktyw.get('nazwa_projektu')}")
+            st.subheader(f"📄 Oferta: {aktyw.get('nazwa_projektu')}")
             
-            if st.button("Wygeneruj plik PDF", type="primary", use_container_width=True):
-                with st.spinner("Generowanie profesjonalnej oferty..."):
+            # --- NOWOŚĆ: WYBÓR TRYBU OFERTY ---
+            opcja_oferty = st.radio(
+                "Co chcesz pokazać klientowi w wycenie?",
+                options=["Tylko robocizna (Materiały jako lista zakupów dla klienta)", "Pełny kosztorys (Robocizna + Materiały)"],
+                index=0
+            )
+            # Tłumaczymy wybór na parametr dla naszej funkcji
+            tryb_wybrany = "robocizna" if "Tylko robocizna" in opcja_oferty else "pelny"
+            
+            if st.button("🚀 Wygeneruj plik PDF", type="primary", use_container_width=True):
+                with st.spinner("Przygotowuję profesjonalny dokument..."):
                     try:
-                        # TUTAJ MAGICZNA KOMENDA: Wysyłamy dane do funkcji na górze pliku!
-                        sciezka_pdf = wygeneruj_pdf_oferte(aktyw.get('nazwa_projektu', 'Projekt'), dane_proj)
+                        # Przekazujemy wybrany tryb do funkcji!
+                        sciezka_pdf = wygeneruj_pdf_oferte(aktyw.get('nazwa_projektu', 'Projekt'), dane_proj, tryb=tryb_wybrany)
                         nazwa_pliku = usun_polskie_znaki(f"Oferta_{aktyw.get('nazwa_projektu', 'projekt').replace(' ', '_')}.pdf")
                         
-                        # Pokazujemy przycisk do pobrania
                         with open(sciezka_pdf, "rb") as file:
                             st.download_button(
-                                label="POBIERZ OFERTĘ (PDF)",
+                                label="⬇️ POBIERZ OFERTĘ (PDF)",
                                 data=file,
                                 file_name=nazwa_pliku,
                                 mime="application/pdf",
                                 type="primary",
                                 use_container_width=True
                             )
-                        st.success("✅ PDF gotowy! Kliknij przycisk powyżej, aby go zapisać.")
+                        st.success("✅ PDF gotowy! Dokument uwzględnia wybraną formę wyceny.")
                         
                     except Exception as e:
                         st.error(f"Błąd generatora PDF: {e}")
