@@ -53,11 +53,8 @@ import streamlit.components.v1 as components
 import random
 import string
 from datetime import datetime
+import streamlit.components.v1 as components
 
-
-# --- RADAR DEBUGOWANIA (do usunięcia po naprawieniu) ---
-if st.query_params:
-    st.warning(f"🔍 RADAR WYKRYŁ W ADRESIE: {dict(st.query_params)}")
     
 # 1. KONFIGURACJA GŁÓWNA (SEO i Favicon)
 st.set_page_config(
@@ -71,7 +68,10 @@ st.set_page_config(
         'About': "# ProCalc\nTwój cyfrowy kosztorysant wykończeniowy. Oblicz materiały z precyzją fachowca."
     }
 )
-import streamlit.components.v1 as components
+# Zabezpieczenie na wypadek braku koszyka w pamięci (np. po twardym resecie)
+if 'koszyk_projektow' not in st.session_state:
+    st.session_state.koszyk_projektow = []
+
 
 # --- LOGIKA WYŚWIETLANIA PODSTRON ---
 params = st.query_params
@@ -6325,9 +6325,6 @@ elif opcja_boczna == "Aplikacja Główna":
     elif branza == "🛒 Koszyk":
         st.header("🛒 Twój Koszyk Kosztorysów")
         
-        # Zabezpieczenie na wypadek braku koszyka w pamięci (np. po twardym resecie)
-        if 'koszyk_projektow' not in st.session_state:
-            st.session_state.koszyk_projektow = []
             
         if not st.session_state.koszyk_projektow:
             st.info("💡 Twój koszyk jest pusty. Przejdź do kalkulatorów, skonfiguruj wycenę i kliknij 'Dodaj do wspólnego koszyka'.")
@@ -6392,41 +6389,45 @@ elif opcja_boczna == "Aplikacja Główna":
             
             # 4. ZAPIS GŁÓWNY DO SUPABASE
             st.markdown("### 💾 Zapisz kosztorys i wygeneruj ofertę")
+            
             if st.session_state.get('zalogowany'):
-                nazwa_glownego_projektu = st.text_input("Nazwa GŁÓWNA dla klienta (np. Remont Domu Kowalskich):", key="nazwa_koszyk_input")
-                
-                if st.button("ZAPISZ CAŁY KOSZTORYS DO CHMURY", type="primary", use_container_width=True):
-                    if not nazwa_glownego_projektu.strip():
-                        st.error("Podaj główną nazwę projektu!")
-                    else:
-                        # Pakujemy ten potężny zestaw w jeden oficjalny format
-                        dane_do_bazy = {
-                            "koszt_calkowity_projektu": suma_calkowita,
-                            "etapy": st.session_state.koszyk_projektow,
-                            "zbiorcza_lista_zakupow": list(zbiorcze_materialy.values())
-                        }
-                        
-                        try:
-                            supabase.table("kosztorysy").insert({
-                                "uzytkownik_id": st.session_state.user_id,
-                                "nazwa_projektu": nazwa_glownego_projektu,
-                                "branza": "Kosztorys Wieloetapowy",
-                                "dane_json": dane_do_bazy
-                            }).execute()
+                # ==========================================
+                # 🛡️ STRAŻNIK ABONAMENTU PRO
+                # ==========================================
+                if sprawdz_dostep_pro():
+                    nazwa_glownego_projektu = st.text_input("Nazwa GŁÓWNA dla klienta (np. Remont Domu Kowalskich):", key="nazwa_koszyk_input")
+                    
+                    if st.button("ZAPISZ CAŁY KOSZTORYS DO CHMURY", type="primary", use_container_width=True):
+                        if not nazwa_glownego_projektu.strip():
+                            st.error("Podaj główną nazwę projektu!")
+                        else:
+                            # Pakujemy ten potężny zestaw w jeden oficjalny format
+                            dane_do_bazy = {
+                                "koszt_calkowity_projektu": suma_calkowita,
+                                "etapy": st.session_state.koszyk_projektow,
+                                "zbiorcza_lista_zakupow": list(zbiorcze_materialy.values())
+                            }
                             
-                            st.success("✅ Projekt pomyślnie zapisany w chmurze! Link dla klienta znajdziesz w 'Moim Profilu'.")
-                            
-                            
-                            # Wypompowujemy stary koszyk, bo projekt jest już bezpieczny w chmurze
-                            st.session_state.koszyk_projektow = []
-                            import time
-                            time.sleep(2)
-                            st.rerun()
-                            
-                        except Exception as e:
-                            st.error(f"Błąd zapisu do bazy danych: {e}")
+                            try:
+                                supabase.table("kosztorysy").insert({
+                                    "uzytkownik_id": st.session_state.user_id,
+                                    "nazwa_projektu": nazwa_glownego_projektu,
+                                    "branza": "Kosztorys Wieloetapowy",
+                                    "dane_json": dane_do_bazy
+                                }).execute()
+                                
+                                st.success("✅ Projekt pomyślnie zapisany w chmurze! Link dla klienta znajdziesz w 'Moim Profilu'.")
+                                
+                                # Wypompowujemy stary koszyk, bo projekt jest już bezpieczny w chmurze
+                                st.session_state.koszyk_projektow = []
+                                import time
+                                time.sleep(2)
+                                st.rerun()
+                                
+                            except Exception as e:
+                                st.error(f"Błąd zapisu do bazy danych: {e}")
             else:
-                st.info("Zaloguj się, aby zapisać projekt.")
+                st.info("Zaloguj się, aby zapisać i wyeksportować cały projekt.")
     
     # ==========================================
     # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
