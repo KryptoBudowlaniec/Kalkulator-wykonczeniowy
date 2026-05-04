@@ -669,16 +669,30 @@ if "oferta" in query_params:
             dane = projekt.get("dane_json", {})
             nazwa_klienta = projekt.get("nazwa_projektu", "Wycena Prac")
             
-            # --- LOGIKA ROZPOZNAWANIA FORMATU (Stary vs Nowy) ---
+            # --- LOGIKA ROZPOZNAWANIA FORMATU I KWOT ---
             if "etapy" in dane:
-                # NOWY FORMAT (Koszykowy)
+                # NOWY FORMAT (Koszykowy z obsługą rabatów)
                 etapy = dane["etapy"]
-                suma_total = dane.get("koszt_calkowity_projektu", 0)
+                
+                ukryj_ceny = dane.get('ukryj_ceny_materialow', False)
+                rabat = dane.get('rabat_kwota', 0)
+                suma_rob = dane.get('suma_robocizna', sum(e.get('koszt_robocizny', 0) for e in etapy))
+                suma_calkowita = dane.get('koszt_calkowity_projektu', sum(e.get('koszt_calkowity', 0) for e in etapy))
+                
+                if ukryj_ceny:
+                    suma_do_pokazania = dane.get('robocizna_po_rabacie', suma_rob - rabat)
+                    opis_kwoty = "Wartość robocizny (do zapłaty):"
+                else:
+                    suma_do_pokazania = suma_calkowita - rabat
+                    opis_kwoty = "Całkowita wartość inwestycji:"
             else:
                 # STARY FORMAT (Pojedynczy etap)
-                # Pakujemy stare dane w format etapu, żeby reszta kodu działała identycznie
                 etapy = [dane]
-                suma_total = dane.get("koszt_calkowity", 0)
+                suma_do_pokazania = dane.get("koszt_calkowity", 0)
+                opis_kwoty = "Wartość całkowita inwestycji:"
+
+            # Formatowanie kwoty w ładny sposób (np. 15 000,00)
+            kwota_wyswietlana = f"{suma_do_pokazania:,.2f}".replace(",", " ")
 
             # --- RENDEROWANIE HTML ---
             st.markdown(f"""
@@ -710,13 +724,12 @@ if "oferta" in query_params:
                 </div>
                 
                 <div style="text-align: center; margin-bottom: 40px;">
-                    <p style="margin-bottom:10px; color:#6b7280;">Wartość całkowita inwestycji:</p>
-                    <div class="total-badge">{suma_total:,.2f} zł</div>
+                    <p style="margin-bottom:10px; color:#6b7280; font-weight: bold;">{opis_kwoty}</p>
+                    <div class="total-badge">{kwota_wyswietlana} zł</div>
                 </div>
                 
                 <h3 style="color:#111827; border-left: 4px solid #1E3A8A; padding-left: 15px;">Zakres prac i etapy:</h3>
             """, unsafe_allow_html=True)
-
             # Pętla generująca etapy (Działa dla 1 lub wielu etapów)
             for i, etap in enumerate(etapy):
                 nazwa_e = etap.get("nazwa_etapu", etap.get("branza", f"Etap {i+1}"))
