@@ -82,7 +82,7 @@ def sprawdz_dostep_pro():
     uzytkownik_email = st.session_state.get('user_email', '')
     
     # 2. LISTA ADMINÓW (Konta, które omijają płatność - wpisz tu swój email, którym się logujesz!)
-    ADMINI = ["biuro@procalc.pl", "twoj-prywatny@gmail.com"] 
+    ADMINI = ["biuro@procalc.pl", "pawelkubiak685@gmail.com"] 
     
     # 3. Sprawdzamy, czy użytkownik opłacił Stripe (domyślnie False)
     is_pro = st.session_state.get('uzytkownik_premium', False)
