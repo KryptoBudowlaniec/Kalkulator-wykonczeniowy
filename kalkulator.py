@@ -6393,6 +6393,17 @@ elif opcja_boczna == "Aplikacja Główna":
             
             st.markdown("---")
             
+            # --- NOWOŚĆ: POLE RABATU ---
+            st.markdown("### 💰 Negocjacje i Rabat")
+            rabat_kwota = st.number_input("Udziel rabatu (PLN):", min_value=0.0, max_value=float(suma_calkowita), step=50.0, value=0.0)
+            
+            suma_po_rabacie = suma_calkowita - rabat_kwota
+            
+            if rabat_kwota > 0:
+                st.success(f"🎉 Wartość po rabacie: **{suma_po_rabacie:,.2f} zł**".replace(",", " "))
+            
+            st.markdown("---")
+            
             # 3. ZBIORCZA LISTA ZAKUPÓW (Twój wymóg!)
             st.markdown("### Super-Lista Zakupów (Logistyka)")
             st.info("Aplikacja automatycznie sumuje wszystkie materiały z dodanych etapów.")
@@ -6426,12 +6437,15 @@ elif opcja_boczna == "Aplikacja Główna":
                     nazwa_glownego_projektu = st.text_input("Nazwa GŁÓWNA dla klienta (np. Remont Domu Kowalskich):", key="nazwa_koszyk_input")
                     
                     if st.button("ZAPISZ CAŁY KOSZTORYS DO CHMURY", type="primary", use_container_width=True):
+                        
                         if not nazwa_glownego_projektu.strip():
                             st.error("Podaj główną nazwę projektu!")
                         else:
-                            # Pakujemy ten potężny zestaw w jeden oficjalny format
+                            # Tuta tworzymy zaktualizowany słownik
                             dane_do_bazy = {
                                 "koszt_calkowity_projektu": suma_calkowita,
+                                "rabat_kwota": rabat_kwota,
+                                "do_zaplaty_po_rabacie": suma_po_rabacie,
                                 "etapy": st.session_state.koszyk_projektow,
                                 "zbiorcza_lista_zakupow": list(zbiorcze_materialy.values())
                             }
@@ -6441,22 +6455,18 @@ elif opcja_boczna == "Aplikacja Główna":
                                     "uzytkownik_id": st.session_state.user_id,
                                     "nazwa_projektu": nazwa_glownego_projektu,
                                     "branza": "Kosztorys Wieloetapowy",
-                                    "dane_json": dane_do_bazy
+                                    "dane_json": dane_do_bazy # Tutaj ląduje nasz słownik
                                 }).execute()
                                 
-                                st.success("✅ Projekt pomyślnie zapisany w chmurze! Link dla klienta znajdziesz w 'Moim Profilu'.")
-                                
-                                # Wypompowujemy stary koszyk, bo projekt jest już bezpieczny w chmurze
+                                st.success("✅ Projekt pomyślnie zapisany!")
                                 st.session_state.koszyk_projektow = []
-                                import time
-                                time.sleep(2)
                                 st.rerun()
-                                
                             except Exception as e:
-                                st.error(f"Błąd zapisu do bazy danych: {e}")
+                                st.error(f"Błąd zapisu: {e}")
+                                
             else:
                 st.info("Zaloguj się, aby zapisać i wyeksportować cały projekt.")
-    
+                        
     # ==========================================
     # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
     # ==========================================
