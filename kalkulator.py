@@ -72,7 +72,35 @@ st.set_page_config(
 if 'koszyk_projektow' not in st.session_state:
     st.session_state.koszyk_projektow = []
 
-
+# ==========================================
+# 🛡️ STRAŻNIK ABONAMENTU PRO
+# ==========================================
+def sprawdz_dostep_pro():
+    """Funkcja sprawdzająca czy użytkownik ma dostęp do funkcji Premium."""
+    
+    # 1. Pobieramy email zalogowanego użytkownika
+    uzytkownik_email = st.session_state.get('user_email', '')
+    
+    # 2. LISTA ADMINÓW (Konta, które omijają płatność - wpisz tu swój email, którym się logujesz!)
+    ADMINI = ["biuro@procalc.pl", "twoj-prywatny@gmail.com"] 
+    
+    # 3. Sprawdzamy, czy użytkownik opłacił Stripe (domyślnie False)
+    is_pro = st.session_state.get('uzytkownik_premium', False)
+    
+    # 4. LOGIKA: Wpuszczamy Admina LUB kogoś kto zapłacił
+    if uzytkownik_email in ADMINI or is_pro:
+        return True
+        
+    # 5. Blokada dla darmowych użytkowników
+    st.warning("🔒 Funkcja zapisu i eksportu dostępna tylko dla subskrybentów ProCalc PRO.")
+    st.info("Przejdź na wyższy poziom: nielimitowany zapis w chmurze, oferty PDF z Twoim logo i pełen dostęp do wszystkich modułów.")
+    
+    if st.button("🚀 Aktywuj dostęp PRO", use_container_width=True, type="primary"):
+        # Tutaj wstawimy wkrótce prawdziwy link do płatności Stripe
+        st.link_button("Przejdź do bezpiecznej płatności (Karta/BLIK)", "https://stripe.com")
+        
+    return False
+# ==========================================
 # --- LOGIKA WYŚWIETLANIA PODSTRON ---
 params = st.query_params
 if "p" in params:
