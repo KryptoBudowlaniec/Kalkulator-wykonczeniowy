@@ -113,18 +113,31 @@ def usun_polskie_znaki(tekst):
         tekst = tekst.replace(pl, lat)
     return tekst
 
+# --- KLASA DLA AUTOMATYCZNEJ STOPKI ---
+class ProCalcPDF(FPDF):
+    def footer(self):
+        # Przejdź na 1.5 cm od dołu strony
+        self.set_y(-15)
+        # Ustaw czcionkę
+        self.set_font("Arial", 'I', 8)
+        self.set_text_color(150, 150, 150)
+        # Numeracja stron + Twój napis
+        tekst_stopki = f"Wygenerowano w systemie ProCalc - Profesjonalne Kosztorysy Budowlane | Strona {self.page_no()}"
+        self.cell(0, 10, usun_polskie_znaki(tekst_stopki), 0, 0, 'C')
+
 def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
-    """Generuje NOWOCZESNY PDF z bezpiecznym liczeniem sum i jedną listą materiałów."""
-    pdf = FPDF()
+    """Generuje profesjonalny PDF z automatyczną stopką na każdej stronie."""
+    # ZMIANA: Używamy naszej nowej klasy zamiast zwykłego FPDF()
+    pdf = ProCalcPDF() 
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=20)
     
     # --- KOLORY FIRMOWE ---
     PRIMARY_COLOR = (41, 128, 185) # Elegancki niebieski
-    TEXT_COLOR = (44, 62, 80)      # Ciemnoszary (prawie czarny)
+    TEXT_COLOR = (44, 62, 80)      # Ciemnoszary
     BG_LIGHT = (236, 240, 241)     # Jasnoszary do ramek
     
-    # --- AUTOMATYCZNE PRZELICZANIE (Ratunek dla starych projektów) ---
+    # --- AUTOMATYCZNE PRZELICZANIE ---
     etapy = dane_json.get('etapy', [])
     if etapy:
         suma_rob = sum(e.get('koszt_robocizny', e.get('koszt_calkowity', 0)) for e in etapy)
@@ -138,7 +151,7 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     # --- NAGŁÓWEK ---
     pdf.set_fill_color(*PRIMARY_COLOR)
     pdf.rect(0, 0, 210, 40, 'F')
-    pdf.image("logo2.png", x=160, y=5, w=35)
+    pdf.image("logo.png", x=160, y=5, w=35)
     
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Arial", 'B', 22)
@@ -157,11 +170,10 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     pdf.cell(0, 10, f"Inwestycja: {usun_polskie_znaki(nazwa_projektu)}", border='B', ln=True)
     pdf.ln(5)
 
-    # --- 1. ZAKRES PRAC (TABELA) ---
+    # --- 1. ZAKRES PRAC ---
     pdf.set_fill_color(*PRIMARY_COLOR)
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Arial", 'B', 11)
-    
     pdf.cell(140, 10, usun_polskie_znaki(" Opis etapu / Branza"), 0, 0, 'L', True)
     pdf.cell(50, 10, usun_polskie_znaki("Wartosc "), 0, 1, 'R', True)
     
@@ -171,82 +183,49 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     fill = False
     if etapy:
         for i, etap in enumerate(etapy):
-            # POPRAWKA: Klasyczny IF chroni przed Streamlit Magic
-            if fill:
-                pdf.set_fill_color(*BG_LIGHT)
-            else:
-                pdf.set_fill_color(255, 255, 255)
+            if fill: pdf.set_fill_color(*BG_LIGHT)
+            else: pdf.set_fill_color(255, 255, 255)
             
-            if tryb == "robocizna":
-                kwota = f"{etap.get('koszt_robocizny', 0):,.2f} PLN"
-            else:
-                kwota = f"{etap.get('koszt_calkowity', 0):,.2f} PLN"
-                
+            kwota = f"{etap.get('koszt_robocizny' if tryb == 'robocizna' else 'koszt_calkowity', 0):,.2f} PLN"
             nazwa_e = usun_polskie_znaki(f"{etap.get('nazwa_etapu')} ({etap.get('branza')})")
-            
-            # Obcięcie za długiej nazwy etapu
             if len(nazwa_e) > 65: nazwa_e = nazwa_e[:62] + "..."
                 
             pdf.cell(140, 8, f" {nazwa_e}", 0, 0, 'L', True)
             pdf.cell(50, 8, f"{kwota} ", 0, 1, 'R', True)
             fill = not fill
-    else:
-        # Dla projektów z jednego modułu
-        if tryb == "robocizna":
-            kwota = f"{suma_rob:,.2f} PLN"
-        else:
-            kwota = f"{suma_rob + suma_mat:,.2f} PLN"
-        nazwa_e = usun_polskie_znaki(dane_json.get('branza', 'Prace wykonczeniowe'))
-        pdf.cell(140, 8, f" 1. {nazwa_e}", 0, 0, 'L')
-        pdf.cell(50, 8, f"{kwota} ", 0, 1, 'R')
-        
     pdf.ln(5)
 
     # --- 2. PODSUMOWANIE FINANSOWE ---
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 10, usun_polskie_znaki("PODSUMOWANIE FINANSOWE"), ln=True)
-    
     pdf.set_fill_color(*BG_LIGHT)
     pdf.rect(110, pdf.get_y(), 90, 35, 'F')
     
     pdf.set_font("Arial", '', 11)
+    pdf.set_x(115)
     if tryb == "robocizna":
-        pdf.set_x(115)
         pdf.cell(50, 8, "Suma robocizny:")
         pdf.cell(30, 8, f"{suma_rob:,.2f} PLN", ln=True, align='R')
-        if rabat > 0:
-            pdf.set_x(115)
-            pdf.set_text_color(200, 0, 0)
-            pdf.cell(50, 8, "Udzielony rabat:")
-            pdf.cell(30, 8, f"-{rabat:,.2f} PLN", ln=True, align='R')
-            pdf.set_text_color(*TEXT_COLOR)
-        
-        pdf.ln(2)
-        pdf.set_x(115)
-        pdf.set_font("Arial", 'B', 13)
-        do_zap = suma_rob - rabat
-        pdf.cell(50, 10, "LACZNIE:")
-        pdf.cell(30, 10, f"{do_zap:,.2f} PLN", ln=True, align='R')
     else:
-        pdf.set_x(115)
         pdf.cell(50, 7, "Suma robocizny:")
         pdf.cell(30, 7, f"{suma_rob:,.2f} PLN", ln=True, align='R')
         pdf.set_x(115)
         pdf.cell(50, 7, "Szacowane materialy:")
         pdf.cell(30, 7, f"{suma_mat:,.2f} PLN", ln=True, align='R')
-        if rabat > 0:
-            pdf.set_x(115)
-            pdf.set_text_color(200, 0, 0)
-            pdf.cell(50, 7, "Udzielony rabat:")
-            pdf.cell(30, 7, f"-{rabat:,.2f} PLN", ln=True, align='R')
-            pdf.set_text_color(*TEXT_COLOR)
         
+    if rabat > 0:
         pdf.set_x(115)
-        pdf.set_font("Arial", 'B', 13)
-        total = (suma_rob + suma_mat) - rabat
-        pdf.cell(50, 10, "LACZNIE:")
-        pdf.cell(30, 10, f"{total:,.2f} PLN", ln=True, align='R')
-
+        pdf.set_text_color(200, 0, 0)
+        pdf.cell(50, 8, "Udzielony rabat:")
+        pdf.cell(30, 8, f"-{rabat:,.2f} PLN", ln=True, align='R')
+        pdf.set_text_color(*TEXT_COLOR)
+    
+    pdf.ln(2)
+    pdf.set_x(115)
+    pdf.set_font("Arial", 'B', 13)
+    total = (suma_rob if tryb == "robocizna" else suma_rob + suma_mat) - rabat
+    pdf.cell(50, 10, "LACZNIE:")
+    pdf.cell(30, 10, f"{total:,.2f} PLN", ln=True, align='R')
     pdf.ln(15)
     
     # --- 3. LOGISTYKA MATERIAŁOWA ---
@@ -263,30 +242,18 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     
     pdf.set_font("Arial", '', 10)
     lista_mat = dane_json.get('zbiorcza_lista_zakupow', dane_json.get('materialy_lista', []))
-    
     fill_mat = False
     for mat in lista_mat:
-        # POPRAWKA 2: Drugi klasyczny IF dla listy materiałów
-        if fill_mat:
-            pdf.set_fill_color(248, 248, 248)
-        else:
-            pdf.set_fill_color(255, 255, 255)
-        
+        if fill_mat: pdf.set_fill_color(248, 248, 248)
+        else: pdf.set_fill_color(255, 255, 255)
         nazwa_m = usun_polskie_znaki(mat.get('nazwa', ''))
-        # Obcięcie nazwy, żeby nie wjechała na ilość
         if len(nazwa_m) > 75: nazwa_m = nazwa_m[:72] + "..."
-            
         ilosc_m = usun_polskie_znaki(f"{round(mat.get('ilosc', 0), 1)} {mat.get('jed', '')}")
-        
         pdf.cell(150, 7, f"- {nazwa_m}", 0, 0, 'L', True)
         pdf.cell(40, 7, ilosc_m, 0, 1, 'R', True)
         fill_mat = not fill_mat
 
-    # --- STOPKA ---
-    pdf.set_y(-20)
-    pdf.set_font("Arial", 'I', 8)
-    pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 10, usun_polskie_znaki("Wygenerowano w systemie ProCalc - Profesjonalne Kosztorysy Budowlane"), 0, 0, 'C')
+    # STARA STOPKA ZOSTAŁA USUNIĘTA - TERAZ ROBI SIĘ SAMA AUTOMATYCZNIE PRZEZ KLASĘ
     
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
     pdf.output(temp_file.name)
