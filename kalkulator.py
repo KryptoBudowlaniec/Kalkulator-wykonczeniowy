@@ -114,32 +114,43 @@ def usun_polskie_znaki(tekst):
     return tekst
 
 def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
-    """Generuje NOWOCZESNY i KOLOROWY PDF z profesjonalnym układem."""
+    """Generuje NOWOCZESNY PDF z bezpiecznym liczeniem sum i jedną listą materiałów."""
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=20)
     
     # --- KOLORY FIRMOWE ---
     PRIMARY_COLOR = (41, 128, 185) # Elegancki niebieski
-    TEXT_COLOR = (44, 62, 80)    # Ciemnoszary (prawie czarny)
-    BG_LIGHT = (236, 240, 241)   # Bardzo jasny szary do tła sekcji
+    TEXT_COLOR = (44, 62, 80)      # Ciemnoszary (prawie czarny)
+    BG_LIGHT = (236, 240, 241)     # Jasnoszary do ramek
     
-    # --- NAGŁÓWEK Z KOLOROWYM PASKIEM ---
+    # --- AUTOMATYCZNE PRZELICZANIE (Ratunek dla starych projektów) ---
+    etapy = dane_json.get('etapy', [])
+    if etapy:
+        suma_rob = sum(e.get('koszt_robocizny', e.get('koszt_calkowity', 0)) for e in etapy)
+        suma_mat = sum(e.get('koszt_materialow', 0) for e in etapy)
+    else:
+        suma_rob = dane_json.get('suma_robocizna', dane_json.get('koszt_robocizny', 0))
+        suma_mat = dane_json.get('suma_materialy', dane_json.get('koszt_materialow', 0))
+        
+    rabat = dane_json.get('rabat_kwota', 0)
+    
+    # --- NAGŁÓWEK ---
     pdf.set_fill_color(*PRIMARY_COLOR)
-    pdf.rect(0, 0, 210, 40, 'F') # Górna belka
-    pdf.image("logo.png", x=160, y=5, w=35)
+    pdf.rect(0, 0, 210, 40, 'F')
+    pdf.image("logo.svg", x=160, y=5, w=35)
     
-    pdf.set_text_color(255, 255, 255) # Biały tekst na belce
+    pdf.set_text_color(255, 255, 255)
     pdf.set_font("Arial", 'B', 22)
     pdf.cell(0, 15, usun_polskie_znaki("OFERTA KOSZTORYSOWA"), ln=True, align='L')
     pdf.set_font("Arial", '', 10)
     data_dzis = datetime.now().strftime("%d.%m.%Y")
     pdf.cell(0, 5, f"Data wystawienia: {data_dzis}", ln=True, align='L')
     
-    pdf.ln(15) # Odstęp od belki
+    pdf.ln(15)
     pdf.set_text_color(*TEXT_COLOR)
     
-    # --- DANE PROJEKTU (W RAMCE) ---
+    # --- DANE PROJEKTU ---
     pdf.set_font("Arial", 'B', 14)
     pdf.set_draw_color(*PRIMARY_COLOR)
     pdf.set_line_width(0.5)
@@ -151,18 +162,15 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Arial", 'B', 11)
     
-    # Nagłówek tabeli
     pdf.cell(140, 10, usun_polskie_znaki(" Opis etapu / Branza"), 0, 0, 'L', True)
     pdf.cell(50, 10, usun_polskie_znaki("Wartosc "), 0, 1, 'R', True)
     
     pdf.set_text_color(*TEXT_COLOR)
     pdf.set_font("Arial", '', 10)
     
-    etapy = dane_json.get('etapy', [])
     fill = False
     if etapy:
         for i, etap in enumerate(etapy):
-            # Naprzemienne tło wierszy (Zebra)
             pdf.set_fill_color(*BG_LIGHT) if fill else pdf.set_fill_color(255, 255, 255)
             
             if tryb == "robocizna":
@@ -171,52 +179,61 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
                 kwota = f"{etap.get('koszt_calkowity', 0):,.2f} PLN"
                 
             nazwa_e = usun_polskie_znaki(f"{etap.get('nazwa_etapu')} ({etap.get('branza')})")
+            
+            # Obcięcie za długiej nazwy etapu
+            if len(nazwa_e) > 65: nazwa_e = nazwa_e[:62] + "..."
+                
             pdf.cell(140, 8, f" {nazwa_e}", 0, 0, 'L', True)
             pdf.cell(50, 8, f"{kwota} ", 0, 1, 'R', True)
             fill = not fill
+    else:
+        # Dla projektów z jednego modułu
+        if tryb == "robocizna":
+            kwota = f"{suma_rob:,.2f} PLN"
+        else:
+            kwota = f"{suma_rob + suma_mat:,.2f} PLN"
+        nazwa_e = usun_polskie_znaki(dane_json.get('branza', 'Prace wykonczeniowe'))
+        pdf.cell(140, 8, f" 1. {nazwa_e}", 0, 0, 'L')
+        pdf.cell(50, 8, f"{kwota} ", 0, 1, 'R')
+        
     pdf.ln(5)
 
-    # --- 2. PODSUMOWANIE (PODKREŚLONE) ---
+    # --- 2. PODSUMOWANIE FINANSOWE ---
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 10, usun_polskie_znaki("PODSUMOWANIE FINANSOWE"), ln=True)
     
-    rabat = dane_json.get('rabat_kwota', 0)
-    suma_rob = dane_json.get('suma_robocizna', 0)
-    suma_mat = dane_json.get('suma_materialy', 0)
-    
-    # Ramka z podsumowaniem
     pdf.set_fill_color(*BG_LIGHT)
     pdf.rect(110, pdf.get_y(), 90, 35, 'F')
     
     pdf.set_font("Arial", '', 11)
     if tryb == "robocizna":
         pdf.set_x(115)
-        pdf.cell(50, 8, "Suma robocizna:")
+        pdf.cell(50, 8, "Suma robocizny:")
         pdf.cell(30, 8, f"{suma_rob:,.2f} PLN", ln=True, align='R')
         if rabat > 0:
             pdf.set_x(115)
             pdf.set_text_color(200, 0, 0)
-            pdf.cell(50, 8, "Rabat:")
+            pdf.cell(50, 8, "Udzielony rabat:")
             pdf.cell(30, 8, f"-{rabat:,.2f} PLN", ln=True, align='R')
             pdf.set_text_color(*TEXT_COLOR)
         
         pdf.ln(2)
         pdf.set_x(115)
         pdf.set_font("Arial", 'B', 13)
-        do_zap = dane_json.get('robocizna_po_rabacie', suma_rob - rabat)
-        pdf.cell(50, 10, "DO ZAPLATY:")
+        do_zap = suma_rob - rabat
+        pdf.cell(50, 10, "LACZNIE:")
         pdf.cell(30, 10, f"{do_zap:,.2f} PLN", ln=True, align='R')
     else:
         pdf.set_x(115)
-        pdf.cell(50, 7, "Robocizna:")
+        pdf.cell(50, 7, "Suma robocizny:")
         pdf.cell(30, 7, f"{suma_rob:,.2f} PLN", ln=True, align='R')
         pdf.set_x(115)
-        pdf.cell(50, 7, "Materialy:")
+        pdf.cell(50, 7, "Szacowane materialy:")
         pdf.cell(30, 7, f"{suma_mat:,.2f} PLN", ln=True, align='R')
         if rabat > 0:
             pdf.set_x(115)
             pdf.set_text_color(200, 0, 0)
-            pdf.cell(50, 7, "Rabat:")
+            pdf.cell(50, 7, "Udzielony rabat:")
             pdf.cell(30, 7, f"-{rabat:,.2f} PLN", ln=True, align='R')
             pdf.set_text_color(*TEXT_COLOR)
         
@@ -231,7 +248,7 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     # --- 3. LOGISTYKA MATERIAŁOWA ---
     pdf.set_text_color(*PRIMARY_COLOR)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, usun_polskie_znaki("LOGISTYKA I ZAPOTRZEBOWANIE MATERIAŁOWE"), ln=True)
+    pdf.cell(0, 10, usun_polskie_znaki("LOGISTYKA I ZAPOTRZEBOWANIE MATERIALOWE"), ln=True)
     pdf.set_text_color(*TEXT_COLOR)
     pdf.set_font("Arial", 'I', 9)
     info = "Ceny materialow maja charakter szacunkowy. Ostateczny koszt zakupu zalezy od wybranych punktow sprzedazy."
@@ -240,18 +257,26 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     pdf.multi_cell(0, 5, usun_polskie_znaki(info))
     pdf.ln(5)
     
-    # Lista zakupów w dwóch kolumnach (nowoczesny układ)
+    # Jedna elegancka kolumna: nazwa po lewej, ilość po prawej
     pdf.set_font("Arial", '', 10)
-    lista_mat = dane_json.get('zbiorcza_lista_zakupow', [])
+    lista_mat = dane_json.get('zbiorcza_lista_zakupow', dane_json.get('materialy_lista', []))
     
-    col_width = 90
-    for i, mat in enumerate(lista_mat):
-        text = f"- {mat.get('nazwa')}: {round(mat.get('ilosc'),1)} {mat.get('jed')}"
-        pdf.cell(col_width, 6, usun_polskie_znaki(text))
-        if i % 2 != 0: pdf.ln(6) # Nowa linia co drugi element
+    fill_mat = False
+    for mat in lista_mat:
+        pdf.set_fill_color(248, 248, 248) if fill_mat else pdf.set_fill_color(255, 255, 255)
+        
+        nazwa_m = usun_polskie_znaki(mat.get('nazwa', ''))
+        # Obcięcie nazwy, żeby nie wjechała na ilość
+        if len(nazwa_m) > 75: nazwa_m = nazwa_m[:72] + "..."
+            
+        ilosc_m = usun_polskie_znaki(f"{round(mat.get('ilosc', 0), 1)} {mat.get('jed', '')}")
+        
+        pdf.cell(150, 7, f"- {nazwa_m}", 0, 0, 'L', True)
+        pdf.cell(40, 7, ilosc_m, 0, 1, 'R', True)
+        fill_mat = not fill_mat
 
     # --- STOPKA ---
-    pdf.set_y(-30)
+    pdf.set_y(-20)
     pdf.set_font("Arial", 'I', 8)
     pdf.set_text_color(150, 150, 150)
     pdf.cell(0, 10, usun_polskie_znaki("Wygenerowano w systemie ProCalc - Profesjonalne Kosztorysy Budowlane"), 0, 0, 'C')
