@@ -138,7 +138,7 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     # --- NAGŁÓWEK ---
     pdf.set_fill_color(*PRIMARY_COLOR)
     pdf.rect(0, 0, 210, 40, 'F')
-    pdf.image("logo.svg", x=160, y=5, w=35)
+    pdf.image("logo2.png", x=160, y=5, w=35)
     
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Arial", 'B', 22)
@@ -171,7 +171,11 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     fill = False
     if etapy:
         for i, etap in enumerate(etapy):
-            pdf.set_fill_color(*BG_LIGHT) if fill else pdf.set_fill_color(255, 255, 255)
+            # POPRAWKA: Klasyczny IF chroni przed Streamlit Magic
+            if fill:
+                pdf.set_fill_color(*BG_LIGHT)
+            else:
+                pdf.set_fill_color(255, 255, 255)
             
             if tryb == "robocizna":
                 kwota = f"{etap.get('koszt_robocizny', 0):,.2f} PLN"
@@ -257,13 +261,16 @@ def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
     pdf.multi_cell(0, 5, usun_polskie_znaki(info))
     pdf.ln(5)
     
-    # Jedna elegancka kolumna: nazwa po lewej, ilość po prawej
     pdf.set_font("Arial", '', 10)
     lista_mat = dane_json.get('zbiorcza_lista_zakupow', dane_json.get('materialy_lista', []))
     
     fill_mat = False
     for mat in lista_mat:
-        pdf.set_fill_color(248, 248, 248) if fill_mat else pdf.set_fill_color(255, 255, 255)
+        # POPRAWKA 2: Drugi klasyczny IF dla listy materiałów
+        if fill_mat:
+            pdf.set_fill_color(248, 248, 248)
+        else:
+            pdf.set_fill_color(255, 255, 255)
         
         nazwa_m = usun_polskie_znaki(mat.get('nazwa', ''))
         # Obcięcie nazwy, żeby nie wjechała na ilość
