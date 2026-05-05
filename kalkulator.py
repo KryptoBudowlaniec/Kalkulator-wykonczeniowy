@@ -669,29 +669,30 @@ if "oferta" in query_params:
             dane = projekt.get("dane_json", {})
             nazwa_klienta = projekt.get("nazwa_projektu", "Wycena Prac")
             
-            # --- LOGIKA ROZPOZNAWANIA FORMATU I KWOT ---
+# --- LOGIKA ROZPOZNAWANIA FORMATU I KWOT ---
+            ukryj_ceny = dane.get('ukryj_ceny_materialow', False)
+            rabat = dane.get('rabat_kwota', 0)
+            
             if "etapy" in dane:
-                # NOWY FORMAT (Koszykowy z obsługą rabatów)
+                # NOWY FORMAT (Koszyk)
                 etapy = dane["etapy"]
-                
-                ukryj_ceny = dane.get('ukryj_ceny_materialow', False)
-                rabat = dane.get('rabat_kwota', 0)
-                suma_rob = dane.get('suma_robocizna', sum(e.get('koszt_robocizny', 0) for e in etapy))
+                suma_rob = dane.get('suma_robocizna', sum(e.get('koszt_robocizny', e.get('koszt_calkowity', 0)) for e in etapy))
                 suma_calkowita = dane.get('koszt_calkowity_projektu', sum(e.get('koszt_calkowity', 0) for e in etapy))
-                
-                if ukryj_ceny:
-                    suma_do_pokazania = dane.get('robocizna_po_rabacie', suma_rob - rabat)
-                    opis_kwoty = "Wartość robocizny (do zapłaty):"
-                else:
-                    suma_do_pokazania = suma_calkowita - rabat
-                    opis_kwoty = "Całkowita wartość inwestycji:"
             else:
-                # STARY FORMAT (Pojedynczy etap)
+                # STARY FORMAT (Pojedynczy etap zapisany z kalkulatora)
                 etapy = [dane]
-                suma_do_pokazania = dane.get("koszt_calkowity", 0)
-                opis_kwoty = "Wartość całkowita inwestycji:"
+                suma_rob = dane.get("koszt_robocizny", dane.get("koszt_calkowity", 0))
+                suma_calkowita = dane.get("koszt_calkowity", 0)
 
-            # Formatowanie kwoty w ładny sposób (np. 15 000,00)
+            # LOGIKA: Jeśli zapisaliśmy robociznę po rabacie ALBO mamy flagę ukrycia cen
+            if 'robocizna_po_rabacie' in dane or ukryj_ceny:
+                suma_do_pokazania = dane.get('robocizna_po_rabacie', suma_rob - rabat)
+                opis_kwoty = "Wartość prac (Sama robocizna po rabacie):" if rabat > 0 else "Wartość prac (Sama robocizna):"
+            else:
+                suma_do_pokazania = suma_calkowita - rabat
+                opis_kwoty = "Całkowita wartość inwestycji:"
+
+            # Formatowanie kwoty
             kwota_wyswietlana = f"{suma_do_pokazania:,.2f}".replace(",", " ")
 
             # --- RENDEROWANIE HTML ---
