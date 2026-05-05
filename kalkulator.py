@@ -3812,7 +3812,16 @@ elif opcja_boczna == "Aplikacja Główna":
                         c1, c2 = st.columns(2)
                         szer_przed = c1.number_input("Dlugosc przedscianki (m):", min_value=0.1, value=5.0, key="przed_l_gk")
                         wys_przed = c2.number_input("Wysokosc (m):", min_value=0.1, value=2.6, key="przed_h_gk")
-                        m2_gk = szer_przed * wys_przed
+                        
+                        # --- NOWOŚĆ: ODEJMOWANIE OKIEN/DRZWI ---
+                        m2_otworow = st.number_input("Powierzchnia okien/drzwi do odjęcia [m²]:", min_value=0.0, value=0.0, step=0.1, key="przed_otwory")
+                        
+                        m2_gk_brutto = szer_przed * wys_przed
+                        m2_gk = max(0, m2_gk_brutto - m2_otworow) # Nasze Netto
+                        
+                        # Wyświetlamy dla pewności
+                        if m2_otworow > 0:
+                            st.success(f"📏 Powierzchnia robocza (netto): **{m2_gk:.2f} m²** (Brutto: {m2_gk_brutto:.2f} m²)")
                         
                         typ_konstrukcji_gk = st.selectbox("System montazu:", 
                             ["Na stelazu CD/UD (profil scienny)", "Klejenie na placki (klej gipsowy)", "Wolnostojaca (profile CW/UW)"],
@@ -3907,17 +3916,31 @@ elif opcja_boczna == "Aplikacja Główna":
                                         (szt_ua * baza_mat_gk.get(f"Profil UA{szer_profilu} (3mb)", 0))
                     elif rodzaj_gk == "Przedscianka (Wyrownanie)":
                         if "CD/UD" in typ_konstrukcji_gk:
-                            szt_cd = int((m2_gk * 3.2 / 3) + 0.99)
-                            szt_ud = int(((szer_przed + wys_przed)*2 / 3) + 0.99)
-                            szt_wieszaki = int(m2_gk * 3.5)
+                            # 1. Profile CD liczymy wg powierzchni NETTO (bez okien)
+                            # Norma KNR: ~2.0 mb profilu CD na 1 m2 ściany
+                            szt_cd = int((m2_gk * 2.0) / 3) + 1 
+                            
+                            # 2. Profil UD leci po obwodzie brutto (zabezpiecza to materiał na obróbkę ram okiennych!)
+                            szt_ud = int(((szer_przed * 2 + wys_przed * 2) / 3) + 1)
+                            
+                            # 3. Wieszaki ES wg powierzchni netto (~2.5 szt na 1 m2)
+                            szt_wieszaki = int(m2_gk * 2.5) + 1
+                            
                             koszt_profile = (szt_cd * baza_mat_gk["Profil CD60 (3mb)"]) + (szt_ud * baza_mat_gk["Profil UD27 (3mb)"])
                             koszt_wieszakow = szt_wieszaki * 1.5
+                            
                         elif "Wolnostojaca" in typ_konstrukcji_gk:
-                            szt_cw = int((szer_przed / 0.6) * (wys_przed / 3) + 1)
-                            szt_uw = int((szer_przed * 2) / 3 + 1)
+                            # Profile pionowe CW wg powierzchni NETTO
+                            szt_cw = int((m2_gk * 2.0) / 3) + 1
+                            
+                            # Profil UW (obwód brutto i nadproża)
+                            szt_uw = int(((szer_przed * 2 + wys_przed * 2) / 3) + 1)
+                            
                             koszt_profile = (szt_cw * baza_mat_gk.get(f"Profil CW{szer_profilu} (3mb)", 0)) + \
                                             (szt_uw * baza_mat_gk.get(f"Profil UW{szer_profilu} (3mb)", 0))
+                                            
                         elif "Klejenie" in typ_konstrukcji_gk:
+                            # Tu też klej policzy się z netto, więc przy oknie tarasowym nie kupisz 2 worków niepotrzebnie!
                             worki_kleju = int((m2_gk * 5 / 25) + 0.99)
                             dodatkowy_koszt_przed = worki_kleju * 38
     
@@ -6023,6 +6046,10 @@ elif opcja_boczna == "Aplikacja Główna":
             "Farba strukturalna": {
                 "Dekoral / Śnieżka (Market)": {"mat": 30.0, "rob": 80.0},
                 "Fox Dekorator (Relief z piaskiem)": {"mat": 50.0, "rob": 120.0}
+            },
+            "Montaż lameli": {
+                "Standard (Lamele na filcu/płycie)": {"mat": 15.0, "rob": 120.0},
+                "Premium (Pojedyncze lamele klejone sztuka po sztuce)": {"mat": 25.0, "rob": 180.0}
             }
         }
     
@@ -6096,9 +6123,14 @@ elif opcja_boczna == "Aplikacja Główna":
                     cena_rob_m2 = st.number_input("Stawka za wykonanie 1 m2 (zł):", min_value=50.0, value=baza_dekoracji_pro[wybrany_efekt][wybrana_marka]["rob"])
     
                     st.markdown("---")
-                    st.write("**Usługi dodatkowe**")
-                    przygotowanie = st.checkbox("Wzmocnienie ściany (siatka + klej)")
-                    zabezpieczenie = st.checkbox("Dodatkowa warstwa wosku/lakieru (strefy mokre)")
+                    st.write("**Usługi dodatkowe / Opcje**")
+                    przygotowanie = st.checkbox("Wzmocnienie ściany / Gruntowanie")
+                    
+                    # Ukrywamy woskowanie jeśli to lamele, żeby nie mylić użytkownika
+                    if wybrany_efekt != "Montaż lameli":
+                        zabezpieczenie = st.checkbox("Dodatkowa warstwa wosku/lakieru (strefy mokre)")
+                    else:
+                        zabezpieczenie = False
     
                 # --- LOGIKA OBLICZEŃ ---
                 koszt_bazowy_mat = m2_pro * cena_mat_m2
@@ -6164,6 +6196,24 @@ elif opcja_boczna == "Aplikacja Główna":
                         (f"Aktywator rdzy (spray/pędzel)", f"{round(m2_pro * 0.2, 1)} L"),
                         (f"Lakier odcinający reakcję", f"{round(m2_pro * 0.15, 1)} L")
                     ]
+                else:
+                    lista_zakupow = [
+                        (f"Farba strukturalna ({krotka_nazwa_systemu})", f"{round(m2_pro * 0.4, 1)} L"),
+                        (f"Grunt szczepny pod kolor", f"{round(m2_pro * 0.2, 1)} L")
+                    ]
+                elif wybrany_efekt == "Montaż lameli":
+                    # Zapotrzebowanie na mocny klej hybrydowy (np. Mamut 290ml)
+                    if "Pojedyncze" in wybrana_marka:
+                        kartusze = int(m2_pro / 1.5) + 1  # Więcej klejenia
+                    else:
+                        kartusze = int(m2_pro / 2.0) + 1  # Gotowe panele
+                        
+                    lista_zakupow = [
+                        (f"Mocny klej hybrydowy (np. Mamut Glue 290ml)", f"{kartusze} szt"),
+                        (f"Lamele (inwestor)", f"{round(m2_pro * 1.1, 1)} m2") # Dodajemy 10% zapasu na docięcia
+                    ]
+              
+                
                 else:
                     lista_zakupow = [
                         (f"Farba strukturalna ({krotka_nazwa_systemu})", f"{round(m2_pro * 0.4, 1)} L"),
