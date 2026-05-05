@@ -6196,11 +6196,6 @@ elif opcja_boczna == "Aplikacja Główna":
                         (f"Aktywator rdzy (spray/pędzel)", f"{round(m2_pro * 0.2, 1)} L"),
                         (f"Lakier odcinający reakcję", f"{round(m2_pro * 0.15, 1)} L")
                     ]
-                else:
-                    lista_zakupow = [
-                        (f"Farba strukturalna ({krotka_nazwa_systemu})", f"{round(m2_pro * 0.4, 1)} L"),
-                        (f"Grunt szczepny pod kolor", f"{round(m2_pro * 0.2, 1)} L")
-                    ]
                 elif wybrany_efekt == "Montaż lameli":
                     # Zapotrzebowanie na mocny klej hybrydowy (np. Mamut 290ml)
                     if "Pojedyncze" in wybrana_marka:
@@ -6212,8 +6207,6 @@ elif opcja_boczna == "Aplikacja Główna":
                         (f"Mocny klej hybrydowy (np. Mamut Glue 290ml)", f"{kartusze} szt"),
                         (f"Lamele (inwestor)", f"{round(m2_pro * 1.1, 1)} m2") # Dodajemy 10% zapasu na docięcia
                     ]
-              
-                
                 else:
                     lista_zakupow = [
                         (f"Farba strukturalna ({krotka_nazwa_systemu})", f"{round(m2_pro * 0.4, 1)} L"),
