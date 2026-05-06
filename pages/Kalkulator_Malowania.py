@@ -5,8 +5,7 @@ import streamlit as st
 # ==========================================
 st.set_page_config(
     page_title="Ile kosztuje malowanie ścian w 2026? | Kalkulator ProCalc",
-    page_description="Oblicz dokładny koszt malowania ścian w 30 sekund. Aktualne ceny robocizny i materiałów na 2026 rok.",
-    page_icon="🖌️",
+    page_icon="",
     layout="centered"
 )
 
