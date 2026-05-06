@@ -5,7 +5,6 @@ import streamlit as st
 # ==========================================
 st.set_page_config(
     page_title="Ile kosztuje remont mieszkania w 2026? Cennik i Kalkulator | ProCalc",
-    page_description="Sprawdź aktualne ceny remontów mieszkań w 2026 roku. Oblicz koszt robocizny i materiałów za m2 dla standardu ekonomicznego i premium.",
     layout="centered"
 )
 
