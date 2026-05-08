@@ -653,6 +653,22 @@ if st.session_state.get("zalogowany"):
         
         st.stop()
 
+# =======================================================
+# 🚀 UNIWERSALNY WIDOK OFERTY DLA KLIENTA (Z LINKU)
+# =======================================================
+query_params = st.query_params
+if "oferta" in query_params:
+    oferta_id = query_params["oferta"]
+    
+    try:
+        # Pobieramy dane z bazy
+        res = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
+        
+        if len(res.data) > 0:
+            projekt = res.data[0]
+            dane = projekt.get("dane_json", {})
+            nazwa_klienta = projekt.get("nazwa_projektu", "Wycena Prac")        
+
 # --- LOGIKA ROZPOZNAWANIA FORMATU I KWOT ---
             ukryj_ceny = dane.get('ukryj_ceny_materialow', False)
             rabat = dane.get('rabat_kwota', 0)
