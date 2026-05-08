@@ -684,78 +684,142 @@ if "oferta" in query_params:
             data_wystawienia = datetime.now().strftime("%d.%m.%Y")
             
             # --- BUDOWANIE ELEMENTÓW HTML (ETAPY) ---
+            # Tutaj Python "kręci" pętlę i buduje piękne karty etapów z ikonką młotka
             etapy_html = ""
             for i, etap in enumerate(etapy):
                 n_e = etap.get("nazwa_etapu", etap.get("branza", f"Etap {i+1}"))
                 k_e = etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0))
                 etapy_html += f"""
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6;">
-                    <div style="color: #4b5563;"><i class="fas fa-tools" style="color:#9ca3af; margin-right:10px;"></i> {n_e}</div>
-                    <div style="font-weight: 600;">{k_e:,.2f} zł</div>
-                </div>"""
-
-            # --- BUDOWANIE ELEMENTÓW HTML (MATERIAŁY) ---
-            materialy_html = ""
-            if lista_mat:
-                for mat in lista_mat:
-                    m_n = mat.get('nazwa', '')
-                    m_i = f"{round(mat.get('ilosc', 0), 1)} {mat.get('jed', '')}"
-                    materialy_html += f"""
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e5e7eb; font-size: 13px;">
-                        <div style="color: #6b7280;">• {m_n}</div>
-                        <div style="font-weight: 600;">{m_i}</div>
-                    </div>"""
-            else:
-                materialy_html = "<div style='color:#9ca3af;'>Brak materiałów w zestawieniu.</div>"
+                <div class="etap-card">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:42px; height:42px; border-radius:12px; background:#ecfdf5; display:flex; align-items:center; justify-content:center; color:#00B67A; font-weight:700;">
+                            <i class="fas fa-hammer"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:600; color:#111827;">{n_e}</div>
+                            <div style="font-size:13px; color:#94a3b8;">Zakres prac remontowych</div>
+                        </div>
+                    </div>
+                    <div style="font-weight:700; color:#111827; font-size:18px;">
+                        {k_e:,.2f} zł
+                    </div>
+                </div>
+                """
 
             # ==========================================
             # 🚀 RENDEROWANIE FINALNEGO HTML
             # ==========================================
-            # WAŻNE: f""" musi mieć literkę 'f' na początku!
             html_content = f"""
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            
             <style>
-                .main {{ background-color: #f0f2f5 !important; }}
+                .main {{ background-color: #f3f4f6 !important; }}
+                
                 .a4-container {{
-                    background: white; max-width: 900px; margin: 20px auto; 
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: white; max-width: 1100px; margin: 40px auto;
+                    border-radius: 24px; overflow: hidden;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.08), 0 30px 80px rgba(0,0,0,0.12);
+                    font-family: 'Inter', sans-serif;
                 }}
-                .hero {{ display: flex; background: #0f2c59; color: white; min-height: 250px; }}
-                .hero-left {{ flex: 1.2; padding: 40px; }}
-                .hero-right {{ 
-                    flex: 0.8; 
-                    background-image: url('https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1000&auto=format&fit=crop');
-                    background-size: cover; background-position: center;
+                
+                .hero {{
+                    position: relative; overflow: hidden;
+                    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+                    color: white; padding: 60px; min-height: 300px;
+                    border-bottom: 1px solid rgba(255,255,255,0.08);
                 }}
+                
+                .hero::before {{
+                    content: ""; position: absolute;
+                    width: 500px; height: 500px;
+                    background: rgba(0, 211, 149, 0.15);
+                    border-radius: 50%; filter: blur(100px);
+                    top: -150px; right: -150px;
+                }}
+                
+                .hero-content {{ position: relative; z-index: 2; }}
+                
+                .grid-layout {{ display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; }}
+                
                 .card {{
-                    background: #f9fafb; border-radius: 8px; padding: 15px; border: 1px solid #e5e7eb; margin-bottom: 10px;
+                    background: white; border-radius: 20px; padding: 22px;
+                    border: 1px solid #f1f5f9; box-shadow: 0 2px 10px rgba(15,23,42,0.04);
+                    margin-bottom: 15px; transition: all .2s ease;
                 }}
+                .card:hover {{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(15,23,42,0.08); }}
+                
+                .etap-card {{
+                    background: #ffffff; border: 1px solid #eef2f7; border-radius: 16px;
+                    padding: 16px; margin-bottom: 12px; display: flex;
+                    justify-content: space-between; align-items: center;
+                }}
+                
                 .total-bar {{
-                    background: #0f2c59; color: white; padding: 15px; border-radius: 6px;
-                    display: flex; justify-content: space-between; font-size: 20px; font-weight: bold;
+                    background: linear-gradient(135deg, #00D395, #00B67A); color: white;
+                    padding: 24px; border-radius: 18px; font-size: 24px; font-weight: 700;
+                    box-shadow: 0 10px 30px rgba(0,211,149,0.25); display: flex;
+                    justify-content: space-between; align-items: center;
+                }}
+                
+                .section-title {{
+                    color: #111827; font-size: 13px; text-transform: uppercase;
+                    letter-spacing: 1px; margin-bottom: 15px; font-weight: 700;
+                }}
+                
+                .info-box {{
+                    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;
+                    padding: 18px; margin-top: 25px; font-size: 14px;
+                }}
+                
+                .footer {{
+                    background: #f8fafc; padding: 20px; text-align: center;
+                    font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;
+                }}
+                
+                @media (max-width: 768px) {{
+                    .hero {{ padding: 30px; }}
+                    .hero h1 {{ font-size: 32px !important; }}
+                    .grid-layout {{ grid-template-columns: 1fr !important; padding: 20px; }}
+                    .total-bar {{ font-size: 18px; }}
                 }}
             </style>
 
             <div class="a4-container">
                 <div class="hero">
-                    <div class="hero-left">
-                        <div style="color: #38bdf8; font-weight: 800; font-size: 20px; margin-bottom: 15px;">PROCALC PC</div>
-                        <h1 style="font-size: 36px; margin: 0; line-height: 1.2;">OFERTA<br>KOSZTORYSOWA</h1>
-                        <p style="margin-top: 20px; color: #cbd5e1; font-size: 14px;">Data: <b>{data_wystawienia}</b></p>
+                    <div class="hero-content">
+                        <div style="display:inline-block; background: rgba(255,255,255,0.08); padding:8px 14px; border-radius:999px; font-size:13px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.08);">
+                            ProCalc Premium System
+                        </div>
+                        <h1 style="font-size:56px; line-height:1; margin:0; font-weight:800; letter-spacing:-2px;">
+                            Oferta<br>Kosztorysowa
+                        </h1>
+                        <p style="margin-top:25px; color:#cbd5e1; font-size:18px; max-width:500px; line-height:1.6;">
+                            Profesjonalna wycena prac remontowych wygenerowana automatycznie w systemie ProCalc.
+                        </p>
+                        
+                        <div style="margin-top:35px; display:flex; gap:15px; flex-wrap:wrap;">
+                            <div style="background:rgba(255,255,255,0.08); padding:14px 18px; border-radius:16px; border:1px solid rgba(255,255,255,0.08);">
+                                <div style="font-size:12px; color:#94a3b8;">Data wystawienia</div>
+                                <div style="font-weight:700;">{data_wystawienia}</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.08); padding:14px 18px; border-radius:16px; border:1px solid rgba(255,255,255,0.08);">
+                                <div style="font-size:12px; color:#94a3b8;">Projekt</div>
+                                <div style="font-weight:700;">{nazwa_klienta}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="hero-right"></div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 30px;">
+                <div class="grid-layout">
                     <div>
-                        <h3 style="color: #0f2c59; font-size: 14px; text-transform: uppercase;">Dane Inwestycji</h3>
+                        <h3 class="section-title">Dane Inwestycji</h3>
                         <div class="card">
                             <p style="margin:0; font-size: 12px; color: #6b7280;">Projekt:</p>
                             <h4 style="margin:5px 0 0 0;">{nazwa_klienta}</h4>
                         </div>
                         
-                        <h3 style="color: #0f2c59; font-size: 14px; text-transform: uppercase; margin-top: 25px;">Podsumowanie</h3>
+                        <h3 class="section-title" style="margin-top: 25px;">Podsumowanie</h3>
                         <div class="card">
                             <p style="margin:0; font-size: 11px; color: #6b7280;">SUMA ROBOCIZNY</p>
                             <h3 style="margin:5px 0 0 0; color: #111827;">{suma_rob:,.2f} zł</h3>
@@ -771,11 +835,14 @@ if "oferta" in query_params:
                     </div>
 
                     <div>
-                        <h3 style="color: #0f2c59; font-size: 14px; text-transform: uppercase;">Zestawienie prac</h3>
-                        <div style="margin-bottom: 20px;">{etapy_html}</div>
+                        <h3 class="section-title">Zestawienie prac</h3>
+                        
+                        <div style="margin-bottom: 20px;">
+                            {etapy_html}
+                        </div>
                         
                         <div class="total-bar">
-                            <span style="font-size: 14px; align-self: center;">DO ZAPŁATY:</span>
+                            <span style="font-size: 14px; align-self: center; opacity: 0.9;">DO ZAPŁATY:</span>
                             <span>{do_zaplaty:,.2f} zł</span>
                         </div>
 
@@ -789,8 +856,8 @@ if "oferta" in query_params:
                     </div>
                 </div>
                 
-                <div style="background: #f3f4f6; padding: 15px; text-align: center; font-size: 10px; color: #9ca3af;">
-                    Wygenerowano automatycznie w systemie ProCalc PC
+                <div class="footer">
+                    Wygenerowano automatycznie w systemie ProCalc Premium
                 </div>
             </div>
             """
@@ -803,6 +870,7 @@ if "oferta" in query_params:
             
     except Exception as e:
         st.error(f"Błąd krytyczny: {e}")
+        
 
 
 # =======================================================
