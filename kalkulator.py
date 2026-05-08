@@ -654,25 +654,23 @@ if st.session_state.get("zalogowany"):
         st.stop()
 
 # =======================================================
-# 🚀 UNIWERSALNY WIDOK OFERTY DLA KLIENTA (Z LINKU)
+# 🚀 NOWOCZESNA OFERTA - WIDOK DLA KLIENTA
 # =======================================================
 query_params = st.query_params
 if "oferta" in query_params:
     oferta_id = query_params["oferta"]
     
     try:
-        # Pobieramy dane z bazy
+        # 1. Pobieramy dane z Supabase
         res = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
         
         if len(res.data) > 0:
             projekt = res.data[0]
             dane = projekt.get("dane_json", {})
-            nazwa_klienta = projekt.get("nazwa_projektu", "Wycena Prac")        
-
-# --- LOGIKA ROZPOZNAWANIA FORMATU I KWOT ---
-            ukryj_ceny = dane.get('ukryj_ceny_materialow', False)
-            rabat = dane.get('rabat_kwota', 0)
+            nazwa_klienta = projekt.get("nazwa_projektu", "Wycena Prac")
             
+            # --- PRZYGOTOWANIE DANYCH FINANSOWYCH ---
+            rabat = dane.get('rabat_kwota', 0)
             if "etapy" in dane:
                 etapy = dane["etapy"]
                 suma_rob = dane.get('suma_robocizna', sum(e.get('koszt_robocizny', e.get('koszt_calkowity', 0)) for e in etapy))
@@ -685,219 +683,126 @@ if "oferta" in query_params:
             do_zaplaty = suma_rob - rabat
             data_wystawienia = datetime.now().strftime("%d.%m.%Y")
             
-            # --- GENEROWANIE LISTY ETAPÓW HTML ---
+            # --- BUDOWANIE ELEMENTÓW HTML (ETAPY) ---
             etapy_html = ""
             for i, etap in enumerate(etapy):
-                nazwa_e = etap.get("nazwa_etapu", etap.get("branza", f"Etap {i+1}"))
-                koszt_e = etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0))
+                n_e = etap.get("nazwa_etapu", etap.get("branza", f"Etap {i+1}"))
+                k_e = etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0))
                 etapy_html += f"""
-                <div class="table-row">
-                    <div class="row-left"><i class="fas fa-tools icon-grey"></i> {nazwa_e}</div>
-                    <div class="row-right">{koszt_e:,.2f} zł</div>
-                </div>
-                """
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6;">
+                    <div style="color: #4b5563;"><i class="fas fa-tools" style="color:#9ca3af; margin-right:10px;"></i> {n_e}</div>
+                    <div style="font-weight: 600;">{k_e:,.2f} zł</div>
+                </div>"""
 
-            # --- GENEROWANIE LISTY MATERIAŁÓW HTML ---
+            # --- BUDOWANIE ELEMENTÓW HTML (MATERIAŁY) ---
             materialy_html = ""
             if lista_mat:
                 for mat in lista_mat:
-                    nazwa_m = mat.get('nazwa', '')
-                    ilosc_m = f"{round(mat.get('ilosc', 0), 1)} {mat.get('jed', '')}"
+                    m_n = mat.get('nazwa', '')
+                    m_i = f"{round(mat.get('ilosc', 0), 1)} {mat.get('jed', '')}"
                     materialy_html += f"""
-                    <div class="mat-row">
-                        <div class="mat-name">• {nazwa_m}</div>
-                        <div class="mat-qty">{ilosc_m}</div>
-                    </div>
-                    """
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e5e7eb; font-size: 13px;">
+                        <div style="color: #6b7280;">• {m_n}</div>
+                        <div style="font-weight: 600;">{m_i}</div>
+                    </div>"""
             else:
-                materialy_html = "<div class='mat-row'>Brak materiałów w zestawieniu.</div>"
+                materialy_html = "<div style='color:#9ca3af;'>Brak materiałów w zestawieniu.</div>"
 
             # ==========================================
-            # 🚀 NOWOCZESNY DESIGN OFERTY (ZGODNY Z PROJEKTEM)
+            # 🚀 RENDEROWANIE FINALNEGO HTML
             # ==========================================
-            st.markdown(f"""
+            # WAŻNE: f""" musi mieć literkę 'f' na początku!
+            html_content = f"""
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-            
             <style>
-                .main {{ background-color: #f0f2f5; }}
-                
-                /* Główny kontener strony A4 */
+                .main {{ background-color: #f0f2f5 !important; }}
                 .a4-container {{
-                    background: white; max-width: 1000px; margin: 0 auto; 
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-                    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                    color: #1f2937;
+                    background: white; max-width: 900px; margin: 20px auto; 
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 }}
-                
-                /* HERO SECTION (ZDJĘCIE + GRANAT) */
-                .hero-section {{
-                    display: flex; background: #0f2c59; color: white;
-                    height: 300px; overflow: hidden;
-                }}
-                .hero-left {{
-                    flex: 1; padding: 40px; display: flex; flex-direction: column; justify-content: center;
-                }}
-                .hero-right {{
-                    flex: 1; 
-                    background-image: url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+                .hero {{ display: flex; background: #0f2c59; color: white; min-height: 250px; }}
+                .hero-left {{ flex: 1.2; padding: 40px; }}
+                .hero-right {{ 
+                    flex: 0.8; 
+                    background-image: url('https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1000&auto=format&fit=crop');
                     background-size: cover; background-position: center;
                 }}
-                .logo-text {{ font-size: 24px; font-weight: 800; color: #38bdf8; letter-spacing: 1px; margin-bottom: 20px; }}
-                .logo-text span {{ color: white; font-weight: 300; }}
-                .hero-title {{ font-size: 42px; font-weight: 800; line-height: 1.1; margin: 0 0 20px 0; }}
-                .hero-date {{ font-size: 14px; color: #cbd5e1; display: flex; align-items: center; gap: 10px; }}
-                
-                /* GŁÓWNY GRID (Dwie kolumny) */
-                .content-grid {{
-                    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 40px;
+                .card {{
+                    background: #f9fafb; border-radius: 8px; padding: 15px; border: 1px solid #e5e7eb; margin-bottom: 10px;
                 }}
-                
-                /* SEKCJE TYTUŁOWE */
-                .section-title {{
-                    font-size: 16px; font-weight: 700; color: #0f2c59; 
-                    text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+                .total-bar {{
+                    background: #0f2c59; color: white; padding: 15px; border-radius: 6px;
+                    display: flex; justify-content: space-between; font-size: 20px; font-weight: bold;
                 }}
-                
-                /* DANE INWESTYCJI */
-                .info-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }}
-                .info-box p {{ margin: 0; font-size: 12px; color: #6b7280; }}
-                .info-box h4 {{ margin: 5px 0 0 0; font-size: 16px; color: #111827; }}
-                
-                /* KARTY PODSUMOWANIA (Lewa strona) */
-                .cards-container {{ display: flex; gap: 10px; margin-bottom: 40px; }}
-                .summary-card {{
-                    flex: 1; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;
-                    background: #f9fafb; text-align: left; position: relative; overflow: hidden;
-                }}
-                .card-green {{ background: #ecfdf5; border-color: #a7f3d0; }}
-                .card-red {{ background: #fef2f2; border-color: #fecaca; }}
-                
-                .summary-card p {{ margin: 0; font-size: 11px; color: #6b7280; font-weight: 600; text-transform: uppercase; }}
-                .summary-card h3 {{ margin: 5px 0 0 0; font-size: 18px; font-weight: 800; color: #111827; }}
-                
-                .card-green h3 {{ color: #059669; }}
-                .card-red h3 {{ color: #dc2626; }}
-                
-                /* TABELA KOSZTÓW (Prawa strona) */
-                .cost-table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }}
-                .table-header {{ display: flex; justify-content: space-between; font-weight: bold; color: #0f2c59; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 10px; }}
-                .table-row {{ display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }}
-                .table-row:nth-child(even) {{ background: #f9fafb; }}
-                .icon-grey {{ color: #9ca3af; width: 20px; text-align: center; margin-right: 10px; }}
-                
-                /* GŁÓWNE PODSUMOWANIE (Prawa strona dół) */
-                .final-summary-box {{ background: #f9fafb; border-radius: 8px; padding: 20px; border: 1px solid #e5e7eb; }}
-                .final-row {{ display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; margin-bottom: 10px; }}
-                .text-red {{ color: #dc2626; }}
-                .total-bar {{ background: #0f2c59; color: white; padding: 15px 20px; border-radius: 5px; display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; margin-top: 15px; }}
-                
-                /* MATERIAŁY I UWAGI (Dół strony) */
-                .mat-row {{ display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e5e7eb; font-size: 13px; }}
-                .mat-name {{ color: #4b5563; }}
-                .mat-qty {{ font-weight: 600; }}
-                
-                .notes-box {{ background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; font-size: 13px; color: #0369a1; }}
-                .notes-box ul {{ padding-left: 20px; margin: 0; }}
-                .notes-box li {{ margin-bottom: 10px; }}
-                
-                /* STOPKA */
-                .footer {{ background: #f3f4f6; padding: 15px 40px; display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb; }}
             </style>
-            
+
             <div class="a4-container">
-                <div class="hero-section">
+                <div class="hero">
                     <div class="hero-left">
-                        <div class="logo-text">PROCALC <span>PC</span></div>
-                        <h1 class="hero-title">OFERTA<br>KOSZTORYSOWA</h1>
-                        <div class="hero-date"><i class="far fa-calendar-alt"></i> Data wystawienia: <br> <strong>{data_wystawienia}</strong></div>
+                        <div style="color: #38bdf8; font-weight: 800; font-size: 20px; margin-bottom: 15px;">PROCALC PC</div>
+                        <h1 style="font-size: 36px; margin: 0; line-height: 1.2;">OFERTA<br>KOSZTORYSOWA</h1>
+                        <p style="margin-top: 20px; color: #cbd5e1; font-size: 14px;">Data: <b>{data_wystawienia}</b></p>
                     </div>
                     <div class="hero-right"></div>
                 </div>
-                
-                <div class="content-grid">
-                    
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 30px;">
                     <div>
-                        <div class="section-title"><i class="far fa-building"></i> DANE INWESTYCJI</div>
-                        <div class="info-grid">
-                            <div class="info-box"><p>Nazwa inwestycji:</p><h4>{nazwa_klienta}</h4></div>
-                            <div class="info-box"><p>Zakres prac:</p><h4>Prace wykończeniowe</h4></div>
+                        <h3 style="color: #0f2c59; font-size: 14px; text-transform: uppercase;">Dane Inwestycji</h3>
+                        <div class="card">
+                            <p style="margin:0; font-size: 12px; color: #6b7280;">Projekt:</p>
+                            <h4 style="margin:5px 0 0 0;">{nazwa_klienta}</h4>
                         </div>
                         
-                        <div class="section-title"><i class="far fa-file-alt"></i> PODSUMOWANIE OFERTY</div>
-                        <div class="cards-container">
-                            <div class="summary-card">
-                                <p><i class="fas fa-wallet"></i> Suma robocizny:</p>
-                                <h3>{suma_rob:,.2f} PLN</h3>
-                            </div>
-                            <div class="summary-card card-red">
-                                <p><i class="fas fa-tags"></i> Rabat:</p>
-                                <h3>-{rabat:,.2f} PLN</h3>
-                            </div>
+                        <h3 style="color: #0f2c59; font-size: 14px; text-transform: uppercase; margin-top: 25px;">Podsumowanie</h3>
+                        <div class="card">
+                            <p style="margin:0; font-size: 11px; color: #6b7280;">SUMA ROBOCIZNY</p>
+                            <h3 style="margin:5px 0 0 0; color: #111827;">{suma_rob:,.2f} zł</h3>
                         </div>
-                        <div class="summary-card card-green" style="margin-bottom: 40px;">
-                            <p><i class="far fa-check-circle"></i> ŁĄCZNIE DO ZAPŁATY (Robocizna):</p>
-                            <h3 style="font-size: 24px;">{do_zaplaty:,.2f} PLN</h3>
+                        <div class="card" style="background: #fef2f2; border-color: #fecaca;">
+                            <p style="margin:0; font-size: 11px; color: #dc2626;">RABAT</p>
+                            <h3 style="margin:5px 0 0 0; color: #dc2626;">-{rabat:,.2f} zł</h3>
                         </div>
-                        
-                        <div class="section-title"><i class="fas fa-truck-loading"></i> ZAPOTRZEBOWANIE MATERIAŁOWE</div>
-                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                            {materialy_html}
+                        <div class="card" style="background: #ecfdf5; border-color: #a7f3d0;">
+                            <p style="margin:0; font-size: 11px; color: #059669;">ŁĄCZNIE DO ZAPŁATY</p>
+                            <h3 style="margin:5px 0 0 0; color: #059669; font-size: 22px;">{do_zaplaty:,.2f} zł</h3>
                         </div>
                     </div>
-                    
+
                     <div>
-                        <div class="section-title"><i class="fas fa-list-ul"></i> ZESTAWIENIE KOSZTÓW (Robocizna)</div>
+                        <h3 style="color: #0f2c59; font-size: 14px; text-transform: uppercase;">Zestawienie prac</h3>
+                        <div style="margin-bottom: 20px;">{etapy_html}</div>
                         
-                        <div class="table-header">
-                            <span>Etap / Branża</span>
-                            <span>Wartość (PLN)</span>
+                        <div class="total-bar">
+                            <span style="font-size: 14px; align-self: center;">DO ZAPŁATY:</span>
+                            <span>{do_zaplaty:,.2f} zł</span>
                         </div>
-                        <div class="cost-table">
-                            {etapy_html}
-                        </div>
-                        
-                        <div class="final-summary-box">
-                            <div class="final-row">
-                                <span>Suma robocizny:</span>
-                                <span>{suma_rob:,.2f} PLN</span>
-                            </div>
-                            <div class="final-row text-red">
-                                <span>Udzielony rabat:</span>
-                                <span>-{rabat:,.2f} PLN</span>
-                            </div>
-                            
-                            <div class="total-bar">
-                                <span>ŁĄCZNIE DO ZAPŁATY:</span>
-                                <span>{do_zaplaty:,.2f} PLN</span>
-                            </div>
-                        </div>
-                        
-                        <br>
-                        <div class="section-title"><i class="far fa-sticky-note"></i> WAŻNE INFORMACJE</div>
-                        <div class="notes-box">
-                            <ul>
-                                <li><strong>Oferta obejmuje wyłącznie koszt robocizny.</strong></li>
-                                <li>Podane ilości materiałów (jeśli występują) mają charakter orientacyjny. Należy doliczyć zapas montażowy (ok. 10%).</li>
-                                <li>Przed rozpoczęciem prac zalecamy weryfikację wymiarów na budowie.</li>
-                                <li>Wszystkie prace wykonywane są zgodnie ze sztuką budowlaną.</li>
+
+                        <div style="margin-top: 25px; padding: 15px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; font-size: 12px;">
+                            <b style="color: #0369a1;">Ważne informacje:</b>
+                            <ul style="color: #0369a1; margin: 10px 0 0 0; padding-left: 15px;">
+                                <li>Wycena obejmuje wyłącznie robociznę.</li>
+                                <li>Termin ważności oferty: 14 dni.</li>
                             </ul>
                         </div>
                     </div>
-                    
                 </div>
                 
-                <div class="footer">
-                    <div><i class="fas fa-shield-alt"></i> Wygenerowano w systemie ProCalc - Profesjonalne Kosztorysy</div>
-                    <div><i class="fas fa-globe"></i> app.procalc.pl</div>
+                <div style="background: #f3f4f6; padding: 15px; text-align: center; font-size: 10px; color: #9ca3af;">
+                    Wygenerowano automatycznie w systemie ProCalc PC
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """
             
-            st.stop() # Zatrzymujemy resztę aplikacji, żeby pokazać tylko ofertę
+            # KLUCZOWY MOMENT: Wyświetlenie HTML
+            st.markdown(html_content, unsafe_allow_html=True)
+            
+            # Zatrzymujemy renderowanie reszty strony Streamlit
+            st.stop()
             
     except Exception as e:
-        st.error(f"Nie udało się wczytać oferty: {e}")
-
+        st.error(f"Błąd krytyczny: {e}")
 
 
 # =======================================================
