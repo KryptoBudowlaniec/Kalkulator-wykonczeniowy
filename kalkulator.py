@@ -653,111 +653,226 @@ if st.session_state.get("zalogowany"):
         
         st.stop()
 
-# =======================================================
-# 🚀 UNIWERSALNY WIDOK OFERTY DLA KLIENTA
-# =======================================================
-query_params = st.query_params
-if "oferta" in query_params:
-    oferta_id = query_params["oferta"]
-    
-    try:
-        # Pobieramy dane z bazy
-        res = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
-        
-        if len(res.data) > 0:
-            projekt = res.data[0]
-            dane = projekt.get("dane_json", {})
-            nazwa_klienta = projekt.get("nazwa_projektu", "Wycena Prac")
-            
 # --- LOGIKA ROZPOZNAWANIA FORMATU I KWOT ---
             ukryj_ceny = dane.get('ukryj_ceny_materialow', False)
             rabat = dane.get('rabat_kwota', 0)
             
             if "etapy" in dane:
-                # NOWY FORMAT (Koszyk)
                 etapy = dane["etapy"]
                 suma_rob = dane.get('suma_robocizna', sum(e.get('koszt_robocizny', e.get('koszt_calkowity', 0)) for e in etapy))
-                suma_calkowita = dane.get('koszt_calkowity_projektu', sum(e.get('koszt_calkowity', 0) for e in etapy))
+                lista_mat = dane.get('zbiorcza_lista_zakupow', [])
             else:
-                # STARY FORMAT (Pojedynczy etap zapisany z kalkulatora)
                 etapy = [dane]
                 suma_rob = dane.get("koszt_robocizny", dane.get("koszt_calkowity", 0))
-                suma_calkowita = dane.get("koszt_calkowity", 0)
+                lista_mat = dane.get('materialy_lista', [])
 
-            # LOGIKA: Jeśli zapisaliśmy robociznę po rabacie ALBO mamy flagę ukrycia cen
-            if 'robocizna_po_rabacie' in dane or ukryj_ceny:
-                suma_do_pokazania = dane.get('robocizna_po_rabacie', suma_rob - rabat)
-                opis_kwoty = "Wartość prac (Sama robocizna po rabacie):" if rabat > 0 else "Wartość prac (Sama robocizna):"
-            else:
-                suma_do_pokazania = suma_calkowita - rabat
-                opis_kwoty = "Całkowita wartość inwestycji:"
-
-            # Formatowanie kwoty
-            kwota_wyswietlana = f"{suma_do_pokazania:,.2f}".replace(",", " ")
-
-            # --- RENDEROWANIE HTML ---
-            st.markdown(f"""
-            <style>
-                .main {{ background-color: #f8f9fa; }}
-                .offer-container {{
-                    background: white; padding: 40px; border-radius: 15px;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 800px; margin: auto;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                }}
-                .header {{ border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }}
-                .total-badge {{
-                    background: #1E3A8A; color: white; padding: 15px 25px;
-                    border-radius: 10px; font-size: 24px; font-weight: bold; display: inline-block;
-                }}
-                .stage-box {{
-                    border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px;
-                    margin-bottom: 15px; background: #fff;
-                }}
-                .stage-title {{ color: #111827; font-size: 18px; font-weight: bold; margin-bottom: 10px; }}
-                .tech-info {{ font-size: 14px; color: #6b7280; line-height: 1.6; }}
-                .footer-contact {{ background: #f3f4f6; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: center; }}
-            </style>
+            do_zaplaty = suma_rob - rabat
+            data_wystawienia = datetime.now().strftime("%d.%m.%Y")
             
-            <div class="offer-container">
-                <div class="header">
-                    <h1 style="margin:0; color:#111827;">OFERTA REMONTOWA</h1>
-                    <p style="color:#6b7280;">Projekt: <strong>{nazwa_klienta}</strong></p>
-                </div>
-                
-                <div style="text-align: center; margin-bottom: 40px;">
-                    <p style="margin-bottom:10px; color:#6b7280; font-weight: bold;">{opis_kwoty}</p>
-                    <div class="total-badge">{kwota_wyswietlana} zł</div>
-                </div>
-                
-                <h3 style="color:#111827; border-left: 4px solid #1E3A8A; padding-left: 15px;">Zakres prac i etapy:</h3>
-            """, unsafe_allow_html=True)
-            # Pętla generująca etapy (Działa dla 1 lub wielu etapów)
+            # --- GENEROWANIE LISTY ETAPÓW HTML ---
+            etapy_html = ""
             for i, etap in enumerate(etapy):
                 nazwa_e = etap.get("nazwa_etapu", etap.get("branza", f"Etap {i+1}"))
-                koszt_e = etap.get("koszt_calkowity", 0)
-                tech = etap.get("technologie", "Standard wykonania ProCalc")
-                detale = etap.get("detale", "")
-                
-                st.markdown(f"""
-                <div class="stage-box">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="stage-title">{i+1}. {nazwa_e}</span>
-                        <span style="font-weight:bold; color:#1E3A8A;">{koszt_e:,.2f} zł</span>
-                    </div>
-                    <div class="tech-info">
-                        <p style="margin:5px 0;"><strong>Technologia:</strong> {tech}</p>
-                        <p style="margin:5px 0;">{detale}</p>
-                    </div>
+                koszt_e = etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0))
+                etapy_html += f"""
+                <div class="table-row">
+                    <div class="row-left"><i class="fas fa-tools icon-grey"></i> {nazwa_e}</div>
+                    <div class="row-right">{koszt_e:,.2f} zł</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """
 
+            # --- GENEROWANIE LISTY MATERIAŁÓW HTML ---
+            materialy_html = ""
+            if lista_mat:
+                for mat in lista_mat:
+                    nazwa_m = mat.get('nazwa', '')
+                    ilosc_m = f"{round(mat.get('ilosc', 0), 1)} {mat.get('jed', '')}"
+                    materialy_html += f"""
+                    <div class="mat-row">
+                        <div class="mat-name">• {nazwa_m}</div>
+                        <div class="mat-qty">{ilosc_m}</div>
+                    </div>
+                    """
+            else:
+                materialy_html = "<div class='mat-row'>Brak materiałów w zestawieniu.</div>"
+
+            # ==========================================
+            # 🚀 NOWOCZESNY DESIGN OFERTY (ZGODNY Z PROJEKTEM)
+            # ==========================================
             st.markdown(f"""
-                <div class="footer-contact">
-                    <p style="margin:0; font-weight:bold;">Masz pytania do wyceny?</p>
-                    <p style="margin:5px 0;">Skontaktuj się z wykonawcą bezpośrednio.</p>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            
+            <style>
+                .main {{ background-color: #f0f2f5; }}
+                
+                /* Główny kontener strony A4 */
+                .a4-container {{
+                    background: white; max-width: 1000px; margin: 0 auto; 
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    color: #1f2937;
+                }}
+                
+                /* HERO SECTION (ZDJĘCIE + GRANAT) */
+                .hero-section {{
+                    display: flex; background: #0f2c59; color: white;
+                    height: 300px; overflow: hidden;
+                }}
+                .hero-left {{
+                    flex: 1; padding: 40px; display: flex; flex-direction: column; justify-content: center;
+                }}
+                .hero-right {{
+                    flex: 1; 
+                    background-image: url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+                    background-size: cover; background-position: center;
+                }}
+                .logo-text {{ font-size: 24px; font-weight: 800; color: #38bdf8; letter-spacing: 1px; margin-bottom: 20px; }}
+                .logo-text span {{ color: white; font-weight: 300; }}
+                .hero-title {{ font-size: 42px; font-weight: 800; line-height: 1.1; margin: 0 0 20px 0; }}
+                .hero-date {{ font-size: 14px; color: #cbd5e1; display: flex; align-items: center; gap: 10px; }}
+                
+                /* GŁÓWNY GRID (Dwie kolumny) */
+                .content-grid {{
+                    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 40px;
+                }}
+                
+                /* SEKCJE TYTUŁOWE */
+                .section-title {{
+                    font-size: 16px; font-weight: 700; color: #0f2c59; 
+                    text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+                }}
+                
+                /* DANE INWESTYCJI */
+                .info-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }}
+                .info-box p {{ margin: 0; font-size: 12px; color: #6b7280; }}
+                .info-box h4 {{ margin: 5px 0 0 0; font-size: 16px; color: #111827; }}
+                
+                /* KARTY PODSUMOWANIA (Lewa strona) */
+                .cards-container {{ display: flex; gap: 10px; margin-bottom: 40px; }}
+                .summary-card {{
+                    flex: 1; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;
+                    background: #f9fafb; text-align: left; position: relative; overflow: hidden;
+                }}
+                .card-green {{ background: #ecfdf5; border-color: #a7f3d0; }}
+                .card-red {{ background: #fef2f2; border-color: #fecaca; }}
+                
+                .summary-card p {{ margin: 0; font-size: 11px; color: #6b7280; font-weight: 600; text-transform: uppercase; }}
+                .summary-card h3 {{ margin: 5px 0 0 0; font-size: 18px; font-weight: 800; color: #111827; }}
+                
+                .card-green h3 {{ color: #059669; }}
+                .card-red h3 {{ color: #dc2626; }}
+                
+                /* TABELA KOSZTÓW (Prawa strona) */
+                .cost-table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }}
+                .table-header {{ display: flex; justify-content: space-between; font-weight: bold; color: #0f2c59; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 10px; }}
+                .table-row {{ display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }}
+                .table-row:nth-child(even) {{ background: #f9fafb; }}
+                .icon-grey {{ color: #9ca3af; width: 20px; text-align: center; margin-right: 10px; }}
+                
+                /* GŁÓWNE PODSUMOWANIE (Prawa strona dół) */
+                .final-summary-box {{ background: #f9fafb; border-radius: 8px; padding: 20px; border: 1px solid #e5e7eb; }}
+                .final-row {{ display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; margin-bottom: 10px; }}
+                .text-red {{ color: #dc2626; }}
+                .total-bar {{ background: #0f2c59; color: white; padding: 15px 20px; border-radius: 5px; display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; margin-top: 15px; }}
+                
+                /* MATERIAŁY I UWAGI (Dół strony) */
+                .mat-row {{ display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e5e7eb; font-size: 13px; }}
+                .mat-name {{ color: #4b5563; }}
+                .mat-qty {{ font-weight: 600; }}
+                
+                .notes-box {{ background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; font-size: 13px; color: #0369a1; }}
+                .notes-box ul {{ padding-left: 20px; margin: 0; }}
+                .notes-box li {{ margin-bottom: 10px; }}
+                
+                /* STOPKA */
+                .footer {{ background: #f3f4f6; padding: 15px 40px; display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb; }}
+            </style>
+            
+            <div class="a4-container">
+                <div class="hero-section">
+                    <div class="hero-left">
+                        <div class="logo-text">PROCALC <span>PC</span></div>
+                        <h1 class="hero-title">OFERTA<br>KOSZTORYSOWA</h1>
+                        <div class="hero-date"><i class="far fa-calendar-alt"></i> Data wystawienia: <br> <strong>{data_wystawienia}</strong></div>
+                    </div>
+                    <div class="hero-right"></div>
                 </div>
-                <div style="text-align:center; font-size:12px; color:#9ca3af; margin-top:20px;">
-                    Wygenerowano automatycznie przez ProCalc - System Precyzyjnych Wycen
+                
+                <div class="content-grid">
+                    
+                    <div>
+                        <div class="section-title"><i class="far fa-building"></i> DANE INWESTYCJI</div>
+                        <div class="info-grid">
+                            <div class="info-box"><p>Nazwa inwestycji:</p><h4>{nazwa_klienta}</h4></div>
+                            <div class="info-box"><p>Zakres prac:</p><h4>Prace wykończeniowe</h4></div>
+                        </div>
+                        
+                        <div class="section-title"><i class="far fa-file-alt"></i> PODSUMOWANIE OFERTY</div>
+                        <div class="cards-container">
+                            <div class="summary-card">
+                                <p><i class="fas fa-wallet"></i> Suma robocizny:</p>
+                                <h3>{suma_rob:,.2f} PLN</h3>
+                            </div>
+                            <div class="summary-card card-red">
+                                <p><i class="fas fa-tags"></i> Rabat:</p>
+                                <h3>-{rabat:,.2f} PLN</h3>
+                            </div>
+                        </div>
+                        <div class="summary-card card-green" style="margin-bottom: 40px;">
+                            <p><i class="far fa-check-circle"></i> ŁĄCZNIE DO ZAPŁATY (Robocizna):</p>
+                            <h3 style="font-size: 24px;">{do_zaplaty:,.2f} PLN</h3>
+                        </div>
+                        
+                        <div class="section-title"><i class="fas fa-truck-loading"></i> ZAPOTRZEBOWANIE MATERIAŁOWE</div>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            {materialy_html}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="section-title"><i class="fas fa-list-ul"></i> ZESTAWIENIE KOSZTÓW (Robocizna)</div>
+                        
+                        <div class="table-header">
+                            <span>Etap / Branża</span>
+                            <span>Wartość (PLN)</span>
+                        </div>
+                        <div class="cost-table">
+                            {etapy_html}
+                        </div>
+                        
+                        <div class="final-summary-box">
+                            <div class="final-row">
+                                <span>Suma robocizny:</span>
+                                <span>{suma_rob:,.2f} PLN</span>
+                            </div>
+                            <div class="final-row text-red">
+                                <span>Udzielony rabat:</span>
+                                <span>-{rabat:,.2f} PLN</span>
+                            </div>
+                            
+                            <div class="total-bar">
+                                <span>ŁĄCZNIE DO ZAPŁATY:</span>
+                                <span>{do_zaplaty:,.2f} PLN</span>
+                            </div>
+                        </div>
+                        
+                        <br>
+                        <div class="section-title"><i class="far fa-sticky-note"></i> WAŻNE INFORMACJE</div>
+                        <div class="notes-box">
+                            <ul>
+                                <li><strong>Oferta obejmuje wyłącznie koszt robocizny.</strong></li>
+                                <li>Podane ilości materiałów (jeśli występują) mają charakter orientacyjny. Należy doliczyć zapas montażowy (ok. 10%).</li>
+                                <li>Przed rozpoczęciem prac zalecamy weryfikację wymiarów na budowie.</li>
+                                <li>Wszystkie prace wykonywane są zgodnie ze sztuką budowlaną.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <div class="footer">
+                    <div><i class="fas fa-shield-alt"></i> Wygenerowano w systemie ProCalc - Profesjonalne Kosztorysy</div>
+                    <div><i class="fas fa-globe"></i> app.procalc.pl</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
