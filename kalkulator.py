@@ -684,183 +684,182 @@ if "oferta" in query_params:
             data_wystawienia = datetime.now().strftime("%d.%m.%Y")
             
             # --- BUDOWANIE ELEMENTÓW HTML (ETAPY) ---
-            # Tutaj Python "kręci" pętlę i buduje piękne karty etapów z ikonką młotka
             etapy_html = ""
             for i, etap in enumerate(etapy):
                 n_e = etap.get("nazwa_etapu", etap.get("branza", f"Etap {i+1}"))
                 k_e = etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0))
                 etapy_html += f"""
-                <div class="etap-card">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:42px; height:42px; border-radius:12px; background:#ecfdf5; display:flex; align-items:center; justify-content:center; color:#00B67A; font-weight:700;">
-                            <i class="fas fa-hammer"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight:600; color:#111827;">{n_e}</div>
-                            <div style="font-size:13px; color:#94a3b8;">Zakres prac remontowych</div>
-                        </div>
-                    </div>
-                    <div style="font-weight:700; color:#111827; font-size:18px;">
-                        {k_e:,.2f} zł
-                    </div>
-                </div>
-                """
+<div class="etap-card">
+    <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:42px; height:42px; border-radius:12px; background:#ecfdf5; display:flex; align-items:center; justify-content:center; color:#00B67A; font-weight:700;">
+            <i class="fas fa-hammer"></i>
+        </div>
+        <div>
+            <div style="font-weight:600; color:#111827;">{n_e}</div>
+            <div style="font-size:13px; color:#94a3b8;">Zakres prac remontowych</div>
+        </div>
+    </div>
+    <div style="font-weight:700; color:#111827; font-size:18px;">
+        {k_e:,.2f} zł
+    </div>
+</div>
+"""
 
             # ==========================================
             # 🚀 RENDEROWANIE FINALNEGO HTML
             # ==========================================
             html_content = f"""
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.main {{ background-color: #f3f4f6 !important; }}
+
+.a4-container {{
+    background: white; max-width: 1100px; margin: 40px auto;
+    border-radius: 24px; overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08), 0 30px 80px rgba(0,0,0,0.12);
+    font-family: 'Inter', sans-serif;
+}}
+
+.hero {{
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+    color: white; padding: 60px; min-height: 300px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}}
+
+.hero::before {{
+    content: ""; position: absolute;
+    width: 500px; height: 500px;
+    background: rgba(0, 211, 149, 0.15);
+    border-radius: 50%; filter: blur(100px);
+    top: -150px; right: -150px;
+}}
+
+.hero-content {{ position: relative; z-index: 2; }}
+
+.grid-layout {{ display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; }}
+
+.card {{
+    background: white; border-radius: 20px; padding: 22px;
+    border: 1px solid #f1f5f9; box-shadow: 0 2px 10px rgba(15,23,42,0.04);
+    margin-bottom: 15px; transition: all .2s ease;
+}}
+.card:hover {{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(15,23,42,0.08); }}
+
+.etap-card {{
+    background: #ffffff; border: 1px solid #eef2f7; border-radius: 16px;
+    padding: 16px; margin-bottom: 12px; display: flex;
+    justify-content: space-between; align-items: center;
+}}
+
+.total-bar {{
+    background: linear-gradient(135deg, #00D395, #00B67A); color: white;
+    padding: 24px; border-radius: 18px; font-size: 24px; font-weight: 700;
+    box-shadow: 0 10px 30px rgba(0,211,149,0.25); display: flex;
+    justify-content: space-between; align-items: center;
+}}
+
+.section-title {{
+    color: #111827; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 15px; font-weight: 700;
+}}
+
+.info-box {{
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;
+    padding: 18px; margin-top: 25px; font-size: 14px;
+}}
+
+.footer {{
+    background: #f8fafc; padding: 20px; text-align: center;
+    font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;
+}}
+
+@media (max-width: 768px) {{
+    .hero {{ padding: 30px; }}
+    .hero h1 {{ font-size: 32px !important; }}
+    .grid-layout {{ grid-template-columns: 1fr !important; padding: 20px; }}
+    .total-bar {{ font-size: 18px; }}
+}}
+</style>
+
+<div class="a4-container">
+    <div class="hero">
+        <div class="hero-content">
+            <div style="display:inline-block; background: rgba(255,255,255,0.08); padding:8px 14px; border-radius:999px; font-size:13px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.08);">
+                ProCalc Premium System
+            </div>
+            <h1 style="font-size:56px; line-height:1; margin:0; font-weight:800; letter-spacing:-2px;">
+                Oferta<br>Kosztorysowa
+            </h1>
+            <p style="margin-top:25px; color:#cbd5e1; font-size:18px; max-width:500px; line-height:1.6;">
+                Profesjonalna wycena prac remontowych wygenerowana automatycznie w systemie ProCalc.
+            </p>
             
-            <style>
-                .main {{ background-color: #f3f4f6 !important; }}
-                
-                .a4-container {{
-                    background: white; max-width: 1100px; margin: 40px auto;
-                    border-radius: 24px; overflow: hidden;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.08), 0 30px 80px rgba(0,0,0,0.12);
-                    font-family: 'Inter', sans-serif;
-                }}
-                
-                .hero {{
-                    position: relative; overflow: hidden;
-                    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-                    color: white; padding: 60px; min-height: 300px;
-                    border-bottom: 1px solid rgba(255,255,255,0.08);
-                }}
-                
-                .hero::before {{
-                    content: ""; position: absolute;
-                    width: 500px; height: 500px;
-                    background: rgba(0, 211, 149, 0.15);
-                    border-radius: 50%; filter: blur(100px);
-                    top: -150px; right: -150px;
-                }}
-                
-                .hero-content {{ position: relative; z-index: 2; }}
-                
-                .grid-layout {{ display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; }}
-                
-                .card {{
-                    background: white; border-radius: 20px; padding: 22px;
-                    border: 1px solid #f1f5f9; box-shadow: 0 2px 10px rgba(15,23,42,0.04);
-                    margin-bottom: 15px; transition: all .2s ease;
-                }}
-                .card:hover {{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(15,23,42,0.08); }}
-                
-                .etap-card {{
-                    background: #ffffff; border: 1px solid #eef2f7; border-radius: 16px;
-                    padding: 16px; margin-bottom: 12px; display: flex;
-                    justify-content: space-between; align-items: center;
-                }}
-                
-                .total-bar {{
-                    background: linear-gradient(135deg, #00D395, #00B67A); color: white;
-                    padding: 24px; border-radius: 18px; font-size: 24px; font-weight: 700;
-                    box-shadow: 0 10px 30px rgba(0,211,149,0.25); display: flex;
-                    justify-content: space-between; align-items: center;
-                }}
-                
-                .section-title {{
-                    color: #111827; font-size: 13px; text-transform: uppercase;
-                    letter-spacing: 1px; margin-bottom: 15px; font-weight: 700;
-                }}
-                
-                .info-box {{
-                    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;
-                    padding: 18px; margin-top: 25px; font-size: 14px;
-                }}
-                
-                .footer {{
-                    background: #f8fafc; padding: 20px; text-align: center;
-                    font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;
-                }}
-                
-                @media (max-width: 768px) {{
-                    .hero {{ padding: 30px; }}
-                    .hero h1 {{ font-size: 32px !important; }}
-                    .grid-layout {{ grid-template-columns: 1fr !important; padding: 20px; }}
-                    .total-bar {{ font-size: 18px; }}
-                }}
-            </style>
-
-            <div class="a4-container">
-                <div class="hero">
-                    <div class="hero-content">
-                        <div style="display:inline-block; background: rgba(255,255,255,0.08); padding:8px 14px; border-radius:999px; font-size:13px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.08);">
-                            ProCalc Premium System
-                        </div>
-                        <h1 style="font-size:56px; line-height:1; margin:0; font-weight:800; letter-spacing:-2px;">
-                            Oferta<br>Kosztorysowa
-                        </h1>
-                        <p style="margin-top:25px; color:#cbd5e1; font-size:18px; max-width:500px; line-height:1.6;">
-                            Profesjonalna wycena prac remontowych wygenerowana automatycznie w systemie ProCalc.
-                        </p>
-                        
-                        <div style="margin-top:35px; display:flex; gap:15px; flex-wrap:wrap;">
-                            <div style="background:rgba(255,255,255,0.08); padding:14px 18px; border-radius:16px; border:1px solid rgba(255,255,255,0.08);">
-                                <div style="font-size:12px; color:#94a3b8;">Data wystawienia</div>
-                                <div style="font-weight:700;">{data_wystawienia}</div>
-                            </div>
-                            <div style="background:rgba(255,255,255,0.08); padding:14px 18px; border-radius:16px; border:1px solid rgba(255,255,255,0.08);">
-                                <div style="font-size:12px; color:#94a3b8;">Projekt</div>
-                                <div style="font-weight:700;">{nazwa_klienta}</div>
-                            </div>
-                        </div>
-                    </div>
+            <div style="margin-top:35px; display:flex; gap:15px; flex-wrap:wrap;">
+                <div style="background:rgba(255,255,255,0.08); padding:14px 18px; border-radius:16px; border:1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size:12px; color:#94a3b8;">Data wystawienia</div>
+                    <div style="font-weight:700;">{data_wystawienia}</div>
                 </div>
-
-                <div class="grid-layout">
-                    <div>
-                        <h3 class="section-title">Dane Inwestycji</h3>
-                        <div class="card">
-                            <p style="margin:0; font-size: 12px; color: #6b7280;">Projekt:</p>
-                            <h4 style="margin:5px 0 0 0;">{nazwa_klienta}</h4>
-                        </div>
-                        
-                        <h3 class="section-title" style="margin-top: 25px;">Podsumowanie</h3>
-                        <div class="card">
-                            <p style="margin:0; font-size: 11px; color: #6b7280;">SUMA ROBOCIZNY</p>
-                            <h3 style="margin:5px 0 0 0; color: #111827;">{suma_rob:,.2f} zł</h3>
-                        </div>
-                        <div class="card" style="background: #fef2f2; border-color: #fecaca;">
-                            <p style="margin:0; font-size: 11px; color: #dc2626;">RABAT</p>
-                            <h3 style="margin:5px 0 0 0; color: #dc2626;">-{rabat:,.2f} zł</h3>
-                        </div>
-                        <div class="card" style="background: #ecfdf5; border-color: #a7f3d0;">
-                            <p style="margin:0; font-size: 11px; color: #059669;">ŁĄCZNIE DO ZAPŁATY</p>
-                            <h3 style="margin:5px 0 0 0; color: #059669; font-size: 22px;">{do_zaplaty:,.2f} zł</h3>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="section-title">Zestawienie prac</h3>
-                        
-                        <div style="margin-bottom: 20px;">
-                            {etapy_html}
-                        </div>
-                        
-                        <div class="total-bar">
-                            <span style="font-size: 14px; align-self: center; opacity: 0.9;">DO ZAPŁATY:</span>
-                            <span>{do_zaplaty:,.2f} zł</span>
-                        </div>
-
-                        <div style="margin-top: 25px; padding: 15px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; font-size: 12px;">
-                            <b style="color: #0369a1;">Ważne informacje:</b>
-                            <ul style="color: #0369a1; margin: 10px 0 0 0; padding-left: 15px;">
-                                <li>Wycena obejmuje wyłącznie robociznę.</li>
-                                <li>Termin ważności oferty: 14 dni.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="footer">
-                    Wygenerowano automatycznie w systemie ProCalc Premium
+                <div style="background:rgba(255,255,255,0.08); padding:14px 18px; border-radius:16px; border:1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size:12px; color:#94a3b8;">Projekt</div>
+                    <div style="font-weight:700;">{nazwa_klienta}</div>
                 </div>
             </div>
-            """
+        </div>
+    </div>
+
+    <div class="grid-layout">
+        <div>
+            <h3 class="section-title">Dane Inwestycji</h3>
+            <div class="card">
+                <p style="margin:0; font-size: 12px; color: #6b7280;">Projekt:</p>
+                <h4 style="margin:5px 0 0 0;">{nazwa_klienta}</h4>
+            </div>
+            
+            <h3 class="section-title" style="margin-top: 25px;">Podsumowanie</h3>
+            <div class="card">
+                <p style="margin:0; font-size: 11px; color: #6b7280;">SUMA ROBOCIZNY</p>
+                <h3 style="margin:5px 0 0 0; color: #111827;">{suma_rob:,.2f} zł</h3>
+            </div>
+            <div class="card" style="background: #fef2f2; border-color: #fecaca;">
+                <p style="margin:0; font-size: 11px; color: #dc2626;">RABAT</p>
+                <h3 style="margin:5px 0 0 0; color: #dc2626;">-{rabat:,.2f} zł</h3>
+            </div>
+            <div class="card" style="background: #ecfdf5; border-color: #a7f3d0;">
+                <p style="margin:0; font-size: 11px; color: #059669;">ŁĄCZNIE DO ZAPŁATY</p>
+                <h3 style="margin:5px 0 0 0; color: #059669; font-size: 22px;">{do_zaplaty:,.2f} zł</h3>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="section-title">Zestawienie prac</h3>
+            
+            <div style="margin-bottom: 20px;">
+                {etapy_html}
+            </div>
+            
+            <div class="total-bar">
+                <span style="font-size: 14px; align-self: center; opacity: 0.9;">DO ZAPŁATY:</span>
+                <span>{do_zaplaty:,.2f} zł</span>
+            </div>
+
+            <div style="margin-top: 25px; padding: 15px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; font-size: 12px;">
+                <b style="color: #0369a1;">Ważne informacje:</b>
+                <ul style="color: #0369a1; margin: 10px 0 0 0; padding-left: 15px;">
+                    <li>Wycena obejmuje wyłącznie robociznę.</li>
+                    <li>Termin ważności oferty: 14 dni.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Wygenerowano automatycznie w systemie ProCalc Premium
+    </div>
+</div>
+"""
             
             # KLUCZOWY MOMENT: Wyświetlenie HTML
             st.markdown(html_content, unsafe_allow_html=True)
