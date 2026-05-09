@@ -102,15 +102,7 @@ def sprawdz_dostep_pro():
         
     return False
 
-dane = {
-    "nazwa_klienta": nazwa_projektu,
-    "etapy": etapy,
-    "suma_rob": suma_rob,
-    "rabat": rabat,
-    "do_zaplaty": do_zaplaty
-}
 
-pdf_path = generuj_pdf("koszyk", dane)
 # ==========================================
 # --- LOGIKA WYŚWIETLANIA PODSTRON ---
 params = st.query_params
@@ -2561,6 +2553,10 @@ elif opcja_boczna == "Aplikacja Główna":
                     "szt_akryl": szt_akryl,
                     "mb_sztukaterii": mb_sztukaterii,
                     "pro_user": st.session_state.get('pakiet') == "PRO",
+                    "nazwa_projektu": nazwa_projektu,
+                    "total_pro": total_pro,
+                    "k_rob_total": k_rob_total,
+                    "k_mat_sredni": k_mat_sredni,
                 }
                 
                 c_btn1, c_btn2 = st.columns(2)
