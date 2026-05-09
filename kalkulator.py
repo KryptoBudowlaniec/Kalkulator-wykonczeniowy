@@ -102,15 +102,15 @@ def sprawdz_dostep_pro():
         
     return False
 
-from pdf_generator import generuj_premium_pdf
+dane = {
+    "nazwa_klienta": nazwa_projektu,
+    "etapy": etapy,
+    "suma_rob": suma_rob,
+    "rabat": rabat,
+    "do_zaplaty": do_zaplaty
+}
 
-pdf_path = generuj_premium_pdf(
-    nazwa_klienta=nazwa_projektu,
-    etapy=etapy,
-    suma_rob=suma_rob,
-    rabat=rabat,
-    do_zaplaty=do_zaplaty
-)
+pdf_path = generuj_pdf("koszyk", dane)
 # ==========================================
 # --- LOGIKA WYŚWIETLANIA PODSTRON ---
 params = st.query_params
@@ -2572,7 +2572,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     
                 with c_btn2:
                     try:
-                        pdf_path = generuj_premium_pdf_malowanie(dane_pdf)
+                        pdf_path = generuj_pdf("malowanie", dane_pdf)
 
                         with open(pdf_path, "rb") as f:
                             pdf_bytes = f.read()
