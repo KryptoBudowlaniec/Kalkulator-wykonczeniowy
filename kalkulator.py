@@ -55,6 +55,7 @@ import string
 from datetime import datetime
 import streamlit.components.v1 as components
 
+
     
 # 1. KONFIGURACJA GŁÓWNA (SEO i Favicon)
 st.set_page_config(
@@ -101,163 +102,15 @@ def sprawdz_dostep_pro():
         
     return False
 
-from fpdf import FPDF
-import tempfile
+from pdf_generator import generuj_premium_pdf
 
-def usun_polskie_znaki(tekst):
-    """Szybki filtr chroniący FPDF przed błędem kodowania polskich znaków"""
-    if not isinstance(tekst, str): return str(tekst)
-    znaki = {'ą':'a', 'ć':'c', 'ę':'e', 'ł':'l', 'ń':'n', 'ó':'o', 'ś':'s', 'ź':'z', 'ż':'z',
-             'Ą':'A', 'Ć':'C', 'Ę':'E', 'Ł':'L', 'Ń':'N', 'Ó':'O', 'Ś':'S', 'Ź':'Z', 'Ż':'Z'}
-    for pl, lat in znaki.items():
-        tekst = tekst.replace(pl, lat)
-    return tekst
-
-# --- KLASA DLA AUTOMATYCZNEJ STOPKI ---
-class ProCalcPDF(FPDF):
-    def footer(self):
-        # Przejdź na 1.5 cm od dołu strony
-        self.set_y(-15)
-        # Ustaw czcionkę
-        self.set_font("Arial", 'I', 8)
-        self.set_text_color(150, 150, 150)
-        # Numeracja stron + Twój napis
-        tekst_stopki = f"Wygenerowano w systemie ProCalc - Profesjonalne Kosztorysy Budowlane | Strona {self.page_no()}"
-        self.cell(0, 10, usun_polskie_znaki(tekst_stopki), 0, 0, 'C')
-
-def wygeneruj_pdf_oferte(nazwa_projektu, dane_json, tryb="robocizna"):
-    """Generuje profesjonalny PDF z automatyczną stopką na każdej stronie."""
-    # ZMIANA: Używamy naszej nowej klasy zamiast zwykłego FPDF()
-    pdf = ProCalcPDF() 
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=20)
-    
-    # --- KOLORY FIRMOWE ---
-    PRIMARY_COLOR = (41, 128, 185) # Elegancki niebieski
-    TEXT_COLOR = (44, 62, 80)      # Ciemnoszary
-    BG_LIGHT = (236, 240, 241)     # Jasnoszary do ramek
-    
-    # --- AUTOMATYCZNE PRZELICZANIE ---
-    etapy = dane_json.get('etapy', [])
-    if etapy:
-        suma_rob = sum(e.get('koszt_robocizny', e.get('koszt_calkowity', 0)) for e in etapy)
-        suma_mat = sum(e.get('koszt_materialow', 0) for e in etapy)
-    else:
-        suma_rob = dane_json.get('suma_robocizna', dane_json.get('koszt_robocizny', 0))
-        suma_mat = dane_json.get('suma_materialy', dane_json.get('koszt_materialow', 0))
-        
-    rabat = dane_json.get('rabat_kwota', 0)
-    
-    # --- NAGŁÓWEK ---
-    pdf.set_fill_color(*PRIMARY_COLOR)
-    pdf.rect(0, 0, 210, 40, 'F')
-    pdf.image("logo.png", x=160, y=5, w=35)
-    
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_font("Arial", 'B', 22)
-    pdf.cell(0, 15, usun_polskie_znaki("OFERTA KOSZTORYSOWA"), ln=True, align='L')
-    pdf.set_font("Arial", '', 10)
-    data_dzis = datetime.now().strftime("%d.%m.%Y")
-    pdf.cell(0, 5, f"Data wystawienia: {data_dzis}", ln=True, align='L')
-    
-    pdf.ln(15)
-    pdf.set_text_color(*TEXT_COLOR)
-    
-    # --- DANE PROJEKTU ---
-    pdf.set_font("Arial", 'B', 14)
-    pdf.set_draw_color(*PRIMARY_COLOR)
-    pdf.set_line_width(0.5)
-    pdf.cell(0, 10, f"Inwestycja: {usun_polskie_znaki(nazwa_projektu)}", border='B', ln=True)
-    pdf.ln(5)
-
-    # --- 1. ZAKRES PRAC ---
-    pdf.set_fill_color(*PRIMARY_COLOR)
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_font("Arial", 'B', 11)
-    pdf.cell(140, 10, usun_polskie_znaki(" Opis etapu / Branza"), 0, 0, 'L', True)
-    pdf.cell(50, 10, usun_polskie_znaki("Wartosc "), 0, 1, 'R', True)
-    
-    pdf.set_text_color(*TEXT_COLOR)
-    pdf.set_font("Arial", '', 10)
-    
-    fill = False
-    if etapy:
-        for i, etap in enumerate(etapy):
-            if fill: pdf.set_fill_color(*BG_LIGHT)
-            else: pdf.set_fill_color(255, 255, 255)
-            
-            kwota = f"{etap.get('koszt_robocizny' if tryb == 'robocizna' else 'koszt_calkowity', 0):,.2f} PLN"
-            nazwa_e = usun_polskie_znaki(f"{etap.get('nazwa_etapu')} ({etap.get('branza')})")
-            if len(nazwa_e) > 65: nazwa_e = nazwa_e[:62] + "..."
-                
-            pdf.cell(140, 8, f" {nazwa_e}", 0, 0, 'L', True)
-            pdf.cell(50, 8, f"{kwota} ", 0, 1, 'R', True)
-            fill = not fill
-    pdf.ln(5)
-
-    # --- 2. PODSUMOWANIE FINANSOWE ---
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, usun_polskie_znaki("PODSUMOWANIE FINANSOWE"), ln=True)
-    pdf.set_fill_color(*BG_LIGHT)
-    pdf.rect(110, pdf.get_y(), 90, 35, 'F')
-    
-    pdf.set_font("Arial", '', 11)
-    pdf.set_x(115)
-    if tryb == "robocizna":
-        pdf.cell(50, 8, "Suma robocizny:")
-        pdf.cell(30, 8, f"{suma_rob:,.2f} PLN", ln=True, align='R')
-    else:
-        pdf.cell(50, 7, "Suma robocizny:")
-        pdf.cell(30, 7, f"{suma_rob:,.2f} PLN", ln=True, align='R')
-        pdf.set_x(115)
-        pdf.cell(50, 7, "Szacowane materialy:")
-        pdf.cell(30, 7, f"{suma_mat:,.2f} PLN", ln=True, align='R')
-        
-    if rabat > 0:
-        pdf.set_x(115)
-        pdf.set_text_color(200, 0, 0)
-        pdf.cell(50, 8, "Udzielony rabat:")
-        pdf.cell(30, 8, f"-{rabat:,.2f} PLN", ln=True, align='R')
-        pdf.set_text_color(*TEXT_COLOR)
-    
-    pdf.ln(2)
-    pdf.set_x(115)
-    pdf.set_font("Arial", 'B', 13)
-    total = (suma_rob if tryb == "robocizna" else suma_rob + suma_mat) - rabat
-    pdf.cell(50, 10, "LACZNIE:")
-    pdf.cell(30, 10, f"{total:,.2f} PLN", ln=True, align='R')
-    pdf.ln(15)
-    
-    # --- 3. LOGISTYKA MATERIAŁOWA ---
-    pdf.set_text_color(*PRIMARY_COLOR)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, usun_polskie_znaki("LOGISTYKA I ZAPOTRZEBOWANIE MATERIALOWE"), ln=True)
-    pdf.set_text_color(*TEXT_COLOR)
-    pdf.set_font("Arial", 'I', 9)
-    info = "Ceny materialow maja charakter szacunkowy. Ostateczny koszt zakupu zalezy od wybranych punktow sprzedazy."
-    if tryb == "robocizna":
-        info = "UWAGA: Powyzsza oferta obejmuje WYŁACZNIE koszt robocizny. Materialy inwestor zapewnia we wlasnym zakresie."
-    pdf.multi_cell(0, 5, usun_polskie_znaki(info))
-    pdf.ln(5)
-    
-    pdf.set_font("Arial", '', 10)
-    lista_mat = dane_json.get('zbiorcza_lista_zakupow', dane_json.get('materialy_lista', []))
-    fill_mat = False
-    for mat in lista_mat:
-        if fill_mat: pdf.set_fill_color(248, 248, 248)
-        else: pdf.set_fill_color(255, 255, 255)
-        nazwa_m = usun_polskie_znaki(mat.get('nazwa', ''))
-        if len(nazwa_m) > 75: nazwa_m = nazwa_m[:72] + "..."
-        ilosc_m = usun_polskie_znaki(f"{round(mat.get('ilosc', 0), 1)} {mat.get('jed', '')}")
-        pdf.cell(150, 7, f"- {nazwa_m}", 0, 0, 'L', True)
-        pdf.cell(40, 7, ilosc_m, 0, 1, 'R', True)
-        fill_mat = not fill_mat
-
-    # STARA STOPKA ZOSTAŁA USUNIĘTA - TERAZ ROBI SIĘ SAMA AUTOMATYCZNIE PRZEZ KLASĘ
-    
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-    pdf.output(temp_file.name)
-    return temp_file.name
+pdf_path = generuj_premium_pdf(
+    nazwa_klienta=nazwa_projektu,
+    etapy=etapy,
+    suma_rob=suma_rob,
+    rabat=rabat,
+    do_zaplaty=do_zaplaty
+)
 # ==========================================
 # --- LOGIKA WYŚWIETLANIA PODSTRON ---
 params = st.query_params
@@ -2593,9 +2446,9 @@ elif opcja_boczna == "Aplikacja Główna":
                 jest_edycja = st.session_state.get('tryb_edycji', False)
                 
                 if jest_edycja:
-                    st.subheader("✏️ Edytujesz zapisany kosztorys")
+                    st.subheader("Edytujesz zapisany kosztorys")
                 else:
-                    st.subheader("💾 Opcje zapisu kosztorysu")
+                    st.subheader("Opcje zapisu kosztorysu")
 
                 # 2. PANEL ZAPISU (Tylko dla zalogowanych)
                 if st.session_state.get('zalogowany'):
@@ -2631,19 +2484,19 @@ elif opcja_boczna == "Aplikacja Główna":
 
                     # --- PRZYCISK A: DODAJ DO KOSZYKA ---
                     with col_save1:
-                        if st.button("🛒 Dodaj do wspólnego koszyka", use_container_width=True):
+                        if st.button("Dodaj do wspólnego koszyka", use_container_width=True):
                             if nazwa_projektu.strip() == "":
                                 st.error("Wpisz nazwę etapu!")
                             else:
                                 st.session_state.koszyk_projektow.append(dane_json)
-                                st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                                st.success(f"Etap '{nazwa_projektu}' dodany do koszyka!")
                                 import time
                                 time.sleep(1) # Sekunda na zobaczenie balonów
                                 st.rerun()
 
                     # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
                     with col_save2:
-                        label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                        label_przycisku = "Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
                         if st.button(label_przycisku, type="primary", use_container_width=True):
                             if nazwa_projektu.strip() == "":
                                 st.error("Wpisz nazwę projektu!")
@@ -2661,7 +2514,7 @@ elif opcja_boczna == "Aplikacja Główna":
                                             "nazwa_projektu": nazwa_projektu,
                                             "dane_json": dane_do_bazy
                                         }).eq("id", projekt_id).execute()
-                                        st.success(f"✅ Zmiany zapisane!")
+                                        st.success(f"Zmiany zapisane!")
                                         st.session_state['tryb_edycji'] = False
                                         st.session_state['id_edytowanego_projektu'] = None
                                     else:
@@ -2671,14 +2524,14 @@ elif opcja_boczna == "Aplikacja Główna":
                                             "branza": "Malowanie", # Traktujemy to jako główny temat
                                             "dane_json": dane_do_bazy
                                         }).execute()
-                                        st.success(f"✅ Projekt zapisany jako nowy!")
+                                        st.success(f"Projekt zapisany jako nowy!")
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Błąd komunikacji z bazą: {e}")
 
                     # --- PRZYCISK ANULOWANIA EDYCJI ---
                     if jest_edycja:
-                        if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", use_container_width=True):
+                        if st.button("Anuluj edycję (Zapisz jako nowy)", use_container_width=True):
                             st.session_state['tryb_edycji'] = False
                             st.session_state['id_edytowanego_projektu'] = None
                             st.rerun()
@@ -2688,6 +2541,27 @@ elif opcja_boczna == "Aplikacja Główna":
                 st.markdown("---")
                 
                 st.subheader("Zarządzanie Projektem")
+
+                dane_pdf = {
+                    "nazwa_projektu": nazwa_projektu,
+                    "firma_nazwa": st.session_state.get('firma_nazwa', 'PROCALC'),
+                    "firma_adres": st.session_state.get('firma_adres', ''),
+                    "firma_nip": st.session_state.get('firma_nip', ''),
+                    "firma_kontakt": st.session_state.get('firma_kontakt', ''),
+                
+                    "m_uzytkowy": m_uzytkowy,
+                    "total_pro": total_pro,
+                    "k_rob_total": k_rob_total,
+                    "k_mat_sredni": k_mat_sredni,
+                
+                    "l_biala": l_biala,
+                    "l_kolor": l_kolor,
+                    "l_grunt": l_grunt,
+                    "szt_tasma": szt_tasma,
+                    "szt_akryl": szt_akryl,
+                    "mb_sztukaterii": mb_sztukaterii,
+                    "pro_user": st.session_state.get('pakiet') == "PRO",
+                }
                 
                 c_btn1, c_btn2 = st.columns(2)
     
@@ -2695,144 +2569,21 @@ elif opcja_boczna == "Aplikacja Główna":
                     if st.button("Wyczyść projekt PRO", use_container_width=True):
                         st.session_state.pokoje_pro = []
                         st.rerun()
-    
+                    
                 with c_btn2:
                     try:
-                        from fpdf import FPDF
-                        import os
-                        from datetime import datetime
-    
-                        # --- 1. PRZENIESIONA FUNKCJA (Musi być na samej górze!) ---
-                        def czysc_tekst(tekst):
-                            if not tekst: return ""
-                            pl_znaki = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z','Ą':'A','Ć':'C','Ę':'E','Ł':'L','Ń':'N','Ó':'O','Ś':'S','Ź':'Z','Ż':'Z'}
-                            for pl, ang in pl_znaki.items(): tekst = tekst.replace(pl, ang)
-                            return tekst.encode('latin-1', 'replace').decode('latin-1')
-    
-                        # 2. Inicjalizacja PDF
-                        pdf = FPDF()
-                        pdf.add_page()
-    
-                        # 3. KONFIGURACJA CZCIONKI INTER
-                        font_path = "Inter-Regular.ttf"
-                        if os.path.exists(font_path):
-                            pdf.add_font("Inter", "", font_path)
-                            pdf.set_font("Inter", size=12)
-                            font_exists = True
-                        else:
-                            pdf.set_font("Arial", size=12)
-                            font_exists = False
-    
-                        # =======================================================
-                        # --- SPERSONALIZOWANY NAGŁÓWEK ---
-                        # =======================================================
-                        
-                        # LOGO (po lewej)
-                        logo_path = st.session_state.get('firma_logo')
-                        if logo_path and os.path.exists(logo_path):
-                            pdf.image(logo_path, x=10, y=8, w=35)
-                        elif os.path.exists("logo.png"): # Backup dla domyślnego logo
-                            pdf.image("logo.png", x=10, y=8, w=35)
-                        
-                        # DANE FIRMY (po prawej)
-                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                        
-                        f_nazwa = czysc_tekst(st.session_state.get('firma_nazwa', 'PROCALC'))
-                        f_adres = czysc_tekst(st.session_state.get('firma_adres', ''))
-                        f_nip = czysc_tekst(st.session_state.get('firma_nip', ''))
-                        f_kontakt = czysc_tekst(st.session_state.get('firma_kontakt', ''))
-                        
-                        pdf.set_xy(110, 8) 
-                        tekst_firmy = f"{f_nazwa}\n"
-                        if f_adres: tekst_firmy += f"{f_adres}\n"
-                        if f_nip: tekst_firmy += f"NIP: {f_nip}\n"
-                        if f_kontakt: tekst_firmy += f"{f_kontakt}"
-                        
-                        pdf.multi_cell(90, 5, tekst_firmy, align='R')
-    
-                        # TYTUŁ RAPORTU (na środku, niżej)
-                        pdf.set_y(35)
-                        pdf.set_font("Inter" if font_exists else "Arial", size=16)
-                        pdf.cell(0, 15, "RAPORT KOSZTORYSOWY: MALOWANIE", ln=True, align='C')
-    
-                        # --- LINIA SEPARATORA ---
-                        pdf.set_draw_color(0, 0, 0)
-                        pdf.line(10, 50, 200, 50) 
-                        pdf.ln(5)
-                        # =======================================================
-    
-                        # --- DANE PROJEKTU ---
-                        pdf.set_y(55)
-                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                        data_str = datetime.now().strftime("%d.%m.%Y %H:%M")
-                        pdf.cell(0, 8, f"Data: {data_str} | Metraz: {m_uzytkowy} m2", ln=True)
-                        pdf.ln(5)
-    
-                        # --- SEKCJA 1: FINANSE (Tabela) ---
-                        pdf.set_fill_color(230, 230, 230)
-                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
-                        pdf.cell(0, 10, " 1. PODSUMOWANIE KOSZTOW", ln=True, fill=True)
-                        
-                        pdf.set_font("Inter" if font_exists else "Arial", size=11)
-                        pdf.cell(95, 10, " Twoja Robocizna:", 1)
-                        pdf.cell(95, 10, f" {round(k_rob_total)} PLN", 1, ln=True)
-                        
-                        pdf.cell(95, 10, " Szacowane Materialy:", 1)
-                        pdf.cell(95, 10, f" {round(k_mat_sredni)} PLN", 1, ln=True)
-                        
-                        pdf.set_font("Inter" if font_exists else "Arial", size=13)
-                        pdf.cell(95, 12, " SUMA CALKOWITA:", 1)
-                        pdf.cell(95, 12, f" {round(total_pro)} PLN", 1, ln=True)
-                        pdf.ln(10)
-    
-                        # --- SEKCJA 2: LISTA ZAKUPOWA ---
-                        pdf.set_font("Inter" if font_exists else "Arial", size=12)
-                        pdf.cell(0, 10, " 2. SZCZEGOLOWA LISTA ZAKUPOW", ln=True, fill=True)
-                        pdf.set_font("Inter" if font_exists else "Arial", size=10)
-                        pdf.ln(2)
-    
-                        lista_pdf = {
-                            "Farba Biala (Sufity)": f"{round(l_biala, 1)}L ({f_biala})",
-                            "Farba Kolor (Sciany)": f"{round(l_kolor, 1)}L ({f_kolor})",
-                            "Grunt gleboko penetrujacy": f"{round(l_grunt, 1)}L ({f_grunt})",
-                            "Tasma malarska": f"{round(szt_tasma + 0.5)} szt. ({f_tasma})",
-                            "Akryl szpachlowy": f"{round(szt_akryl + 0.5)} szt."
-                        }
-                        
-                        if mb_sztukaterii > 0:
-                            lista_pdf["Klej do listew"] = f"Bostik Mamut ({int(mb_sztukaterii/8 + 1)} szt.)"
-    
-                        # (Tu już nie ma definicji czysc_tekst, bo przenieśliśmy ją na samą górę)
-                        for produkt, opis in lista_pdf.items():
-                            pdf.cell(0, 8, f"- {czysc_tekst(produkt)}: {czysc_tekst(opis)}", ln=True)
-    
-                        # ==========================================
-                        # 🛡️ AKTYWACJA TARCZY OCHRONNEJ
-                        dodaj_tarcze_ochronna(pdf, font_exists)
-                        # ==========================================
-    
-                        # --- STOPKA ---
-                        pdf.set_y(-25)
-                        pdf.set_font("Inter" if font_exists else "Arial", size=8)
-                        pdf.set_text_color(100, 100, 100)
-                        pdf.cell(0, 10, "Wygenerowano w systemie ProCalc (procalc.pl).", 0, 0, 'C')
-    
-                        pdf_output = pdf.output(dest="S")
-                        
-                        if isinstance(pdf_output, str):
-                            safe_bytes = pdf_output.encode('latin-1', 'replace')
-                        else:
-                            safe_bytes = bytes(pdf_output)
-                        
+                        pdf_bytes = generuj_pdf_malowanie(dane_pdf)
+                
                         st.download_button(
-                            label="Pobierz Raport PDF",
-                            data=safe_bytes,
+                            label="📄 Pobierz Raport PDF",
+                            data=pdf_bytes,
                             file_name=f"Kosztorys_Malowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
                             mime="application/pdf",
                             use_container_width=True
                         )
+    
                     except Exception as e:
-                        st.error(f"Błąd PDF: {e}")
+                        st.error(f"Błąd PDF: {e}")    
     
     
     
