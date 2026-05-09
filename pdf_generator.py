@@ -3,9 +3,18 @@ from datetime import datetime
 import tempfile
 
 
-def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
+def generuj_premium_pdf_malowanie(dane):
 
     data_wystawienia = datetime.now().strftime("%d.%m.%Y")
+
+    nazwa_klienta = dane.get("nazwa_projektu", "Projekt Malowania")
+    do_zaplaty = dane.get("total_pro", 0)
+
+    # 🔥 tworzymy "etapy" z Twojego malowania
+    etapy = [{
+        "nazwa_etapu": "Malowanie - Kompleksowy Kosztorys",
+        "koszt_robocizny": dane.get("k_rob_total", 0)
+    }]
 
     etapy_html = ""
 
@@ -20,13 +29,13 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
             <div class="left">
 
                 <div class="icon">
-                    🔨
+                    🎨
                 </div>
 
                 <div>
                     <div class="title">{nazwa}</div>
                     <div class="subtitle">
-                        Zakres prac remontowych
+                        Malowanie + materiały + robocizna
                     </div>
                 </div>
 
@@ -40,15 +49,11 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
         """
 
     html = f"""
-
     <html>
-
     <head>
-
     <meta charset="utf-8">
 
     <style>
-
     body {{
         font-family: Arial;
         background: #edf2f7;
@@ -56,44 +61,21 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
     }}
 
     .container {{
-
         background: white;
-
         border-radius: 30px;
-
         overflow: hidden;
-
-        box-shadow:
-            0 20px 60px rgba(0,0,0,0.1);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
     }}
 
     .hero {{
-
-        background:
-            linear-gradient(
-                135deg,
-                #111827,
-                #1f2937
-            );
-
+        background: linear-gradient(135deg, #111827, #1f2937);
         padding: 70px;
-
         color: white;
-    }}
-
-    .logo {{
-        width: 180px;
-        margin-bottom: 30px;
     }}
 
     h1 {{
         font-size: 58px;
         margin: 0;
-    }}
-
-    .hero p {{
-        color: #cbd5e1;
-        font-size: 18px;
     }}
 
     .content {{
@@ -108,36 +90,19 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
     }}
 
     .card {{
-
         border: 1px solid #e2e8f0;
-
         border-radius: 20px;
-
         padding: 25px;
-
         margin-bottom: 20px;
     }}
 
-    .big-price {{
-        font-size: 38px;
-        font-weight: bold;
-        color: #00B67A;
-    }}
-
     .etap-card {{
-
         border: 1px solid #e2e8f0;
-
         border-radius: 20px;
-
         padding: 20px;
-
         margin-bottom: 15px;
-
         display: flex;
-
         justify-content: space-between;
-
         align-items: center;
     }}
 
@@ -148,20 +113,13 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
     }}
 
     .icon {{
-
         width: 50px;
         height: 50px;
-
         background: #ecfdf5;
-
         border-radius: 15px;
-
         display: flex;
-
         justify-content: center;
-
         align-items: center;
-
         font-size: 22px;
     }}
 
@@ -181,20 +139,10 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
     }}
 
     .total-box {{
-
-        background:
-            linear-gradient(
-                135deg,
-                #00D395,
-                #00B67A
-            );
-
+        background: linear-gradient(135deg, #00D395, #00B67A);
         color: white;
-
         padding: 35px;
-
         border-radius: 25px;
-
         margin-top: 30px;
     }}
 
@@ -202,7 +150,6 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
         font-size: 44px;
         font-weight: bold;
     }}
-
     </style>
 
     </head>
@@ -213,16 +160,13 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
 
         <div class="hero">
 
-            <img src="logo.png" class="logo">
-
             <h1>
-            Oferta<br>
-            Kosztorysowa
+            Kosztorys<br>
+            Malowania
             </h1>
 
             <p>
-            Profesjonalna wycena wygenerowana
-            w systemie ProCalc Premium
+            ProCalc Premium System
             </p>
 
         </div>
@@ -234,34 +178,21 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
             </div>
 
             <div class="card">
-
-                <h2>
-                {nazwa_klienta}
-                </h2>
-
-                <p>
-                Data wystawienia:
-                {data_wystawienia}
-                </p>
-
+                <h2>{nazwa_klienta}</h2>
+                <p>Data: {data_wystawienia}</p>
             </div>
 
             <div class="section-title">
-            Zakres prac
+            Podsumowanie
             </div>
 
             {etapy_html}
 
             <div class="total-box">
-
-                <div>
-                Łączna kwota
-                </div>
-
+                <div>Łączna kwota</div>
                 <div class="total-price">
                 {do_zaplaty:,.2f} zł
                 </div>
-
             </div>
 
         </div>
@@ -269,18 +200,11 @@ def generuj_premium_pdf(nazwa_klienta, etapy, suma_rob, rabat, do_zaplaty):
     </div>
 
     </body>
-
     </html>
     """
 
-    temp_file = tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=".pdf"
-    )
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
 
-    HTML(
-        string=html,
-        base_url="."
-    ).write_pdf(temp_file.name)
+    HTML(string=html, base_url=".").write_pdf(temp_file.name)
 
     return temp_file.name
