@@ -656,6 +656,7 @@ if st.session_state.get("zalogowany"):
 # =======================================================
 # 🚀 PROCALC PREMIUM OFFER VIEW
 # =======================================================
+
 query_params = st.query_params
 
 if "oferta" in query_params:
@@ -677,6 +678,7 @@ if "oferta" in query_params:
             rabat = dane.get('rabat_kwota', 0)
 
             if "etapy" in dane:
+
                 etapy = dane["etapy"]
 
                 suma_rob = dane.get(
@@ -762,7 +764,7 @@ Zakres prac remontowych
 
 /* GLOBAL */
 
-html, body, [class*="css"]  {{
+html, body, [class*="css"] {{
     font-family: 'Inter', sans-serif;
 }}
 
@@ -776,7 +778,7 @@ html, body, [class*="css"]  {{
     max-width: 1300px;
 }}
 
-/* CONTAINER */
+/* MAIN CONTAINER */
 
 .a4-container {{
 
@@ -838,6 +840,22 @@ html, body, [class*="css"]  {{
     position: relative;
     z-index: 2;
 }}
+
+/* LOGO */
+
+.logo-box {{
+
+    margin-bottom: 30px;
+}}
+
+.logo-box img {{
+
+    height: 42px;
+
+    width: auto;
+}}
+
+/* BADGE */
 
 .badge {{
 
@@ -924,7 +942,9 @@ html, body, [class*="css"]  {{
 }}
 
 .hero-value {{
+
     font-weight: 700;
+
     font-size: 15px;
 }}
 
@@ -941,7 +961,7 @@ html, body, [class*="css"]  {{
     padding: 40px;
 }}
 
-/* SECTION */
+/* TITLES */
 
 .section-title {{
 
@@ -958,7 +978,7 @@ html, body, [class*="css"]  {{
     font-weight: 700;
 }}
 
-/* CARD */
+/* CARDS */
 
 .card {{
 
@@ -1039,7 +1059,7 @@ html, body, [class*="css"]  {{
     color: #dc2626;
 }}
 
-/* ETAP */
+/* ETAPY */
 
 .etap-card {{
 
@@ -1125,7 +1145,7 @@ html, body, [class*="css"]  {{
     color: #111827;
 }}
 
-/* TOTAL */
+/* TOTAL BAR */
 
 .total-bar {{
 
@@ -1254,6 +1274,10 @@ html, body, [class*="css"]  {{
 <div class="hero">
 
 <div class="hero-content">
+
+<div class="logo-box">
+<img src="logo.svg">
+</div>
 
 <div class="badge">
 PROCALC PREMIUM SYSTEM
