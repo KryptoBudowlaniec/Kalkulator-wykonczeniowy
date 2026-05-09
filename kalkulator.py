@@ -2572,7 +2572,10 @@ elif opcja_boczna == "Aplikacja Główna":
                     
                 with c_btn2:
                     try:
-                        pdf_bytes = generuj_pdf_malowanie(dane_pdf)
+                        pdf_path = generuj_premium_pdf_malowanie(dane_pdf)
+
+                        with open(pdf_path, "rb") as f:
+                            pdf_bytes = f.read()
                 
                         st.download_button(
                             label="📄 Pobierz Raport PDF",
