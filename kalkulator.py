@@ -54,7 +54,6 @@ import random
 import string
 from datetime import datetime
 import streamlit.components.v1 as components
-from weasyprint import HTML
 from pdf_generator import generuj_pdf
 
 def _nazwa_pliku_pdf(nazwa):
