@@ -4345,31 +4345,32 @@ elif opcja_boczna == "Aplikacja Główna":
                                 st.session_state['tryb_edycji'] = False
                                 st.session_state['id_edytowanego_projektu'] = None
                                 st.rerun()
-                    else:
-                        st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
-                    
-                        st.markdown("---")
-                        st.subheader("Generator PDF")
+                        else:
+                            st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
+                        
+                            st.markdown("---")
+                            st.subheader("Generator PDF")
     
-                        dane_pdf = _dane_pdf_z_etapu(
-                            dane_json,
-                            tytul="Kosztorys suchej zabudowy",
-                            parametry=[
-                                {"nazwa": "Powierzchnia zabudowy", "wartosc": f"{round(m2_gk, 1)} m²"},
-                                {"nazwa": "Rodzaj konstrukcji", "wartosc": rodzaj_gk},
-                                {"nazwa": "Płytowanie", "wartosc": plytowanie},
-                                {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_gk} zł/m²"},
-                                {"nazwa": "Izolacja", "wartosc": "TAK" if izolacja_gk else "NIE"},
-                                {"nazwa": "Zbrojenie łączeń", "wartosc": typ_tasmy},
-                            ],
-                        )
+                            dane_pdf = _dane_pdf_z_etapu(
+                                dane_json,
+                                tytul="Kosztorys suchej zabudowy",
+                                parametry=[
+                                    {"nazwa": "Powierzchnia zabudowy", "wartosc": f"{round(m2_gk, 1)} m²"},
+                                    {"nazwa": "Rodzaj konstrukcji", "wartosc": rodzaj_gk},
+                                    {"nazwa": "Płytowanie", "wartosc": plytowanie},
+                                    {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_gk} zł/m²"},
+                                    {"nazwa": "Izolacja", "wartosc": "TAK" if izolacja_gk else "NIE"},
+                                    {"nazwa": "Zbrojenie łączeń", "wartosc": typ_tasmy},
+                                ],
+                            )
     
-                        _przycisk_pdf(
-                            "sucha_zabudowa",
-                            dane_pdf,
-                            "Kosztorys_GK",
-                            "pdf_gk"
-                        )
+                            _przycisk_pdf(
+                                "sucha_zabudowa",
+                                dane_pdf,
+                                "Kosztorys_GK",
+                                "pdf_gk"
+                            )
+
                 
     elif branza == "Elektryka":
         st.header("Instalacja Elektryczna")
@@ -4604,10 +4605,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.session_state['tryb_edycji'] = False
                     st.session_state['id_edytowanego_projektu'] = None
                     st.rerun()
-        else:
-            st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
 
-                
             st.markdown("---")
             st.subheader("Generator PDF")
 
@@ -4629,6 +4627,9 @@ elif opcja_boczna == "Aplikacja Główna":
                 "Kosztorys_Elektryka",
                 "pdf_elektryka"
             )
+        else:
+            st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
+
 
     elif branza == "Łazienka":
         # --- 1. BAZY MATERIAŁOWE (ŁAZIENKA) ---
@@ -5065,36 +5066,35 @@ elif opcja_boczna == "Aplikacja Główna":
                         st.session_state['tryb_edycji'] = False
                         st.session_state['id_edytowanego_projektu'] = None
                         st.rerun()
+
+                st.markdown("---")
+                st.subheader("Generator PDF")
+    
+                dane_pdf = _dane_pdf_z_etapu(
+                    dane_json,
+                    tytul="Kosztorys remontu łazienki",
+                    parametry=[
+                        {"nazwa": "Powierzchnia podłogi", "wartosc": f"{round(m2_podlogi, 1)} m²"},
+                        {"nazwa": "Powierzchnia ścian", "wartosc": f"{round(m2_scian_total, 1)} m²"},
+                        {"nazwa": "Wysokość pomieszczenia", "wartosc": f"{wysokosc} m"},
+                        {"nazwa": "Format płytek", "wartosc": format_plytki},
+                        {"nazwa": "Hydroizolacja", "wartosc": typ_hydro},
+                        {"nazwa": "Stan pomieszczenia", "wartosc": stan_pomieszczenia},
+                        {"nazwa": "Rodzaj fugi", "wartosc": rodzaj_fugi},
+                        {"nazwa": "Stawka za cięcie 45°", "wartosc": f"{stawka_mb_45} zł/mb"},
+                        {"nazwa": "Stawka zabudowy WC", "wartosc": f"{stawka_wc} zł/szt."},
+                    ],
+                )
+    
+                _przycisk_pdf(
+                    "lazienka",
+                    dane_pdf,
+                    "Kosztorys_Lazienka",
+                    "pdf_lazienka"
+                )
             else:
                 st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                       
-
-                    
-            st.markdown("---")
-            st.subheader("Generator PDF")
-
-            dane_pdf = _dane_pdf_z_etapu(
-                dane_json,
-                tytul="Kosztorys remontu łazienki",
-                parametry=[
-                    {"nazwa": "Powierzchnia podłogi", "wartosc": f"{round(m2_podlogi, 1)} m²"},
-                    {"nazwa": "Powierzchnia ścian", "wartosc": f"{round(m2_scian_total, 1)} m²"},
-                    {"nazwa": "Wysokość pomieszczenia", "wartosc": f"{wysokosc} m"},
-                    {"nazwa": "Format płytek", "wartosc": format_plytki},
-                    {"nazwa": "Hydroizolacja", "wartosc": typ_hydro},
-                    {"nazwa": "Stan pomieszczenia", "wartosc": stan_pomieszczenia},
-                    {"nazwa": "Rodzaj fugi", "wartosc": rodzaj_fugi},
-                    {"nazwa": "Stawka za cięcie 45°", "wartosc": f"{stawka_mb_45} zł/mb"},
-                    {"nazwa": "Stawka zabudowy WC", "wartosc": f"{stawka_wc} zł/szt."},
-                ],
-            )
-
-            _przycisk_pdf(
-                "lazienka",
-                dane_pdf,
-                "Kosztorys_Lazienka",
-                "pdf_lazienka"
-            )
                    
     # --- SEKCJA: DRZWI ---
     elif branza == "Drzwi":
