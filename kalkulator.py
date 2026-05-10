@@ -54,6 +54,7 @@ import random
 import string
 from datetime import datetime
 import streamlit.components.v1 as components
+from pdf_generator import generuj_pdf
 
 
     
