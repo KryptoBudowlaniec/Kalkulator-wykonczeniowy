@@ -1652,26 +1652,59 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             # Tłumaczymy wybór na parametr dla naszej funkcji
             tryb_wybrany = "robocizna" if "Tylko robocizna" in opcja_oferty else "pelny"
             
-            if st.button("🚀 Wygeneruj plik PDF", type="primary", use_container_width=True):
-                with st.spinner("Przygotowuję profesjonalny dokument..."):
-                    try:
-                        # Przekazujemy wybrany tryb do funkcji!
-                        sciezka_pdf = wygeneruj_pdf_oferte(aktyw.get('nazwa_projektu', 'Projekt'), dane_proj, tryb=tryb_wybrany)
-                        nazwa_pliku = usun_polskie_znaki(f"Oferta_{aktyw.get('nazwa_projektu', 'projekt').replace(' ', '_')}.pdf")
-                        
-                        with open(sciezka_pdf, "rb") as file:
-                            st.download_button(
-                                label="⬇️ POBIERZ OFERTĘ (PDF)",
-                                data=file,
-                                file_name=nazwa_pliku,
-                                mime="application/pdf",
-                                type="primary",
-                                use_container_width=True
-                            )
-                        st.success("✅ PDF gotowy! Dokument uwzględnia wybraną formę wyceny.")
-                        
-                    except Exception as e:
-                        st.error(f"Błąd generatora PDF: {e}")
+            # Przygotowanie danych do wspólnego generatora PDF
+            if "etapy" in dane_proj:
+                kwota_robocizny = dane_proj.get(
+                    "robocizna_po_rabacie",
+                    dane_proj.get("suma_robocizna", 0)
+                )
+
+                kwota_materialow = 0 if tryb_wybrany == "robocizna" else dane_proj.get("suma_materialy", 0)
+                kwota_koncowa = kwota_robocizny if tryb_wybrany == "robocizna" else dane_proj.get("koszt_calkowity_projektu", kwota_robocizny + kwota_materialow)
+
+                materialy_pdf = dane_proj.get("zbiorcza_lista_zakupow", [])
+                etapy_pdf = dane_proj.get("etapy", [])
+
+            else:
+                kwota_robocizny = dane_proj.get("koszt_robocizny", dane_proj.get("koszt_calkowity", 0))
+                kwota_materialow = 0 if tryb_wybrany == "robocizna" else dane_proj.get("koszt_materialow", 0)
+                kwota_koncowa = kwota_robocizny if tryb_wybrany == "robocizna" else dane_proj.get("koszt_calkowity", kwota_robocizny + kwota_materialow)
+
+                materialy_pdf = dane_proj.get("materialy_lista", [])
+                etapy_pdf = [dane_proj]
+
+            dane_pdf_oferta = {
+                **_dane_firmy_pdf(),
+                "branza": aktyw.get("branza", "Kosztorys"),
+                "tytul": "Oferta kosztorysowa",
+                "nazwa_projektu": aktyw.get("nazwa_projektu", "Projekt"),
+                "koszt_robocizny": kwota_robocizny,
+                "koszt_materialow": kwota_materialow,
+                "kwota_koncowa": kwota_koncowa,
+                "materialy": materialy_pdf,
+                "etapy": etapy_pdf,
+                "parametry": [
+                    {"nazwa": "Tryb oferty", "wartosc": "Tylko robocizna" if tryb_wybrany == "robocizna" else "Robocizna + materiały"},
+                    {"nazwa": "Rabat", "wartosc": f"{dane_proj.get('rabat_kwota', 0):,.2f} zł".replace(",", " ")},
+                    {"nazwa": "Liczba etapów", "wartosc": len(etapy_pdf)},
+                ],
+                "uwagi": [
+                    "Oferta została wygenerowana na podstawie zapisanego kosztorysu.",
+                    "Materiały mogą być pokazane jako lista zakupów bez cen, zależnie od wybranego trybu oferty.",
+                ],
+                "klauzule": [
+                    "Oferta ważna 14 dni.",
+                    "Końcowy koszt może ulec zmianie po zmianie zakresu prac.",
+                ],
+            }
+
+            _przycisk_pdf(
+                "oferta",
+                dane_pdf_oferta,
+                "Oferta",
+                f"oferta_{aktyw.get('id')}"
+            )
+
             
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("✖️ Zamknij podgląd PDF", key="close_pdf", use_container_width=True):
