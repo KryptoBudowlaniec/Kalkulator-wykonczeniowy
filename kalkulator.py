@@ -4348,7 +4348,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     else:
                         st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                     
-                     st.markdown("---")
+                    st.markdown("---")
                     st.subheader("Generator PDF")
 
                     dane_pdf = _dane_pdf_z_etapu(
@@ -4629,10 +4629,6 @@ elif opcja_boczna == "Aplikacja Główna":
                 "Kosztorys_Elektryka",
                 "pdf_elektryka"
             )
-
-                )
-        except Exception as e:
-            st.error(f"Problem z generowaniem PDF: {e}")
 
     elif branza == "Łazienka":
         # --- 1. BAZY MATERIAŁOWE (ŁAZIENKA) ---
@@ -5374,10 +5370,6 @@ elif opcja_boczna == "Aplikacja Główna":
                 "Kosztorys_Drzwi",
                 "pdf_drzwi"
             )
-
-                    
-            except Exception as e:
-                st.error(f"Błąd podczas generowania PDF: {e}")
     
     
     elif branza == "Tapetowanie":
