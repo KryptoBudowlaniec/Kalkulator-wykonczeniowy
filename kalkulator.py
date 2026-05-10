@@ -2623,9 +2623,6 @@ elif opcja_boczna == "Aplikacja Główna":
                         "Kosztorys_Malowanie",
                         "pdf_malowanie"
                     )
-
-        except Exception as e:
-        st.error(f"Błąd PDF: {e}")
     
     
     
@@ -3046,9 +3043,6 @@ elif opcja_boczna == "Aplikacja Główna":
                             "pdf_szpachlowanie"
                         )
 
-
-    except Exception as e:
-        st.error(f"Błąd PDF: {e}")
     
     # --- SEKCJA: PODŁOGI ---
     elif branza == "Podłogi":
@@ -3470,9 +3464,6 @@ elif opcja_boczna == "Aplikacja Główna":
                     "pdf_podlogi"
                 )
 
-                        
-                except Exception as e:
-                    st.error(f"Błąd PDF: {e}")
                           
     # --- SEKCJA: TYNKOWANIE ---
     elif branza == "Tynkowanie":
@@ -3841,10 +3832,6 @@ elif opcja_boczna == "Aplikacja Główna":
                     "Kosztorys_Tynki",
                     "pdf_tynkowanie"
                 )
-
-
-                except Exception as e:
-                    st.error(f"Problem z generatorem PDF: {e}")
                     
     # --- SEKCJA: SUCHA ZABUDOWA ---
     elif branza == "Sucha Zabudowa":
@@ -4383,9 +4370,6 @@ elif opcja_boczna == "Aplikacja Główna":
                         "Kosztorys_GK",
                         "pdf_gk"
                     )
-
-                    except Exception as e:
-                        st.error(f"Problem z PDF: {e}")
                 
     elif branza == "Elektryka":
         st.header("Instalacja Elektryczna")
@@ -5115,9 +5099,6 @@ elif opcja_boczna == "Aplikacja Główna":
                 "Kosztorys_Lazienka",
                 "pdf_lazienka"
             )
-
-                except Exception as e:
-                    st.error(f"Błąd PDF: {e}")
                    
     # --- SEKCJA: DRZWI ---
     elif branza == "Drzwi":
@@ -5698,9 +5679,6 @@ elif opcja_boczna == "Aplikacja Główna":
                 "Kosztorys_Tapetowanie",
                 "pdf_tapetowanie"
             )
-
-                except Exception as e:
-                    st.error(f"Błąd PDF: {e}")
         
     # --- SEKCJA: EFEKTY DEKORACYJNE ---
     elif branza == "Efekty Dekoracyjne":
@@ -6052,9 +6030,6 @@ elif opcja_boczna == "Aplikacja Główna":
                     "Kosztorys_Dekoracje",
                     "pdf_dekoracje"
                 )
-
-            except Exception as e:
-                st.error(f"Błąd podczas generowania PDF: {e}")
     
                                 
     elif branza == "🛒 Koszyk":
@@ -6922,10 +6897,6 @@ elif opcja_boczna == "Aplikacja Główna":
                         "Kosztorys_Inwestor",
                         "pdf_panel_inwestora"
                     )
-
-    
-                        except Exception as e:
-                            st.error(f"Błąd PDF: {e}")
                         
     # ==========================================
     # MODUŁ: HARMONOGRAM (GANTT LIVE)
