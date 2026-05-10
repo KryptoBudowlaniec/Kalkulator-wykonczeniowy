@@ -121,7 +121,7 @@ def generuj_pdf(typ_pdf, dane):
 <meta charset="utf-8">
 <style>
 @page {{
-    size: A4 landscape;
+    size: A4 portrait;
     margin: 0;
 }}
 
@@ -137,19 +137,19 @@ body {{
 }}
 
 .page {{
-    width: 297mm;
-    height: 210mm;
+    width: 210mm;
+    height: 297mm;
     background: white;
     page-break-after: always;
     position: relative;
     overflow: hidden;
 }}
 
-.grid {{
-    display: grid;
-    grid-template-columns: 51% 49%;
-    height: calc(100% - 12mm);
-}}
+.grid {
+    display: block;
+    min-height: calc(297mm - 12mm);
+}
+
 
 .left {{
     border-right: 1px solid #d8e0ea;
