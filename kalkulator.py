@@ -569,6 +569,8 @@ if "oferta" in query_params:
     import base64
     import mimetypes
     import html as html_lib
+    import textwrap
+
 
     def _safe_html(value):
         return html_lib.escape(str(value if value is not None else ""))
@@ -701,7 +703,7 @@ if "oferta" in query_params:
 
         status_badge = "Zaakceptowana" if status == "Zaakceptowana" else "Oczekuje na decyzję"
 
-        html_content = f"""
+        html_content = textwrap.dedent(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -1172,7 +1174,7 @@ if "oferta" in query_params:
     </footer>
 
 </div>
-"""
+""")
 
         st.markdown(html_content, unsafe_allow_html=True)
 
