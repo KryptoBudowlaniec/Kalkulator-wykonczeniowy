@@ -1176,7 +1176,7 @@ if "oferta" in query_params:
 </div>
 """)
 
-        st.markdown(html_content, unsafe_allow_html=True)
+        components.html(html_content, height=1800, scrolling=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
