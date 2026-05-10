@@ -434,7 +434,7 @@ body {{
         <div class="left">
             <div class="hero">
                 {"<img class='logo' src='" + logo + "'>" if logo else ""}
-                <h1>Oferta<br>Kosztorysowa</h1>
+                <h1>NOWA<br>OFERTA PDF</h1>
                 <div class="hero-date">
                     Data wystawienia:<br>
                     <b>{data_wyst.strftime("%d.%m.%Y")}</b>
