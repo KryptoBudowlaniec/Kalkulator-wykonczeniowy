@@ -4348,28 +4348,28 @@ elif opcja_boczna == "Aplikacja Główna":
                     else:
                         st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                     
-                    st.markdown("---")
-                    st.subheader("Generator PDF")
-
-                    dane_pdf = _dane_pdf_z_etapu(
-                        dane_json,
-                        tytul="Kosztorys suchej zabudowy",
-                        parametry=[
-                            {"nazwa": "Powierzchnia zabudowy", "wartosc": f"{round(m2_gk, 1)} m²"},
-                            {"nazwa": "Rodzaj konstrukcji", "wartosc": rodzaj_gk},
-                            {"nazwa": "Płytowanie", "wartosc": plytowanie},
-                            {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_gk} zł/m²"},
-                            {"nazwa": "Izolacja", "wartosc": "TAK" if izolacja_gk else "NIE"},
-                            {"nazwa": "Zbrojenie łączeń", "wartosc": typ_tasmy},
-                        ],
-                    )
-
-                    _przycisk_pdf(
-                        "sucha_zabudowa",
-                        dane_pdf,
-                        "Kosztorys_GK",
-                        "pdf_gk"
-                    )
+                        st.markdown("---")
+                        st.subheader("Generator PDF")
+    
+                        dane_pdf = _dane_pdf_z_etapu(
+                            dane_json,
+                            tytul="Kosztorys suchej zabudowy",
+                            parametry=[
+                                {"nazwa": "Powierzchnia zabudowy", "wartosc": f"{round(m2_gk, 1)} m²"},
+                                {"nazwa": "Rodzaj konstrukcji", "wartosc": rodzaj_gk},
+                                {"nazwa": "Płytowanie", "wartosc": plytowanie},
+                                {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_gk} zł/m²"},
+                                {"nazwa": "Izolacja", "wartosc": "TAK" if izolacja_gk else "NIE"},
+                                {"nazwa": "Zbrojenie łączeń", "wartosc": typ_tasmy},
+                            ],
+                        )
+    
+                        _przycisk_pdf(
+                            "sucha_zabudowa",
+                            dane_pdf,
+                            "Kosztorys_GK",
+                            "pdf_gk"
+                        )
                 
     elif branza == "Elektryka":
         st.header("Instalacja Elektryczna")
