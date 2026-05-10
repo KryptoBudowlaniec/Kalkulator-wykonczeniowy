@@ -56,6 +56,66 @@ from datetime import datetime
 import streamlit.components.v1 as components
 from pdf_generator import generuj_pdf
 
+def _nazwa_pliku_pdf(nazwa):
+    mapa = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
+    tekst = str(nazwa or "Kosztorys").translate(mapa)
+    tekst = "".join(c if c.isalnum() else "_" for c in tekst)
+    return tekst.strip("_") or "Kosztorys"
+
+
+def _dane_firmy_pdf():
+    return {
+        "firma_nazwa": st.session_state.get("firma_nazwa", "PROCALC"),
+        "firma_adres": st.session_state.get("firma_adres", ""),
+        "firma_nip": st.session_state.get("firma_nip", ""),
+        "firma_kontakt": st.session_state.get("firma_kontakt", ""),
+    }
+
+
+def _dane_pdf_z_etapu(dane_json, tytul=None, parametry=None):
+    dane_pdf = dict(dane_json or {})
+    dane_pdf.update(_dane_firmy_pdf())
+
+    nazwa = dane_pdf.get("nazwa_etapu") or dane_pdf.get("nazwa_projektu") or "Kosztorys"
+    branza_pdf = dane_pdf.get("branza", "Kosztorys")
+
+    dane_pdf["nazwa_projektu"] = nazwa
+    dane_pdf["tytul"] = tytul or f"Kosztorys - {branza_pdf}"
+
+    if "kwota_koncowa" not in dane_pdf:
+        dane_pdf["kwota_koncowa"] = dane_pdf.get("koszt_calkowity", 0)
+
+    if "materialy" not in dane_pdf:
+        dane_pdf["materialy"] = dane_pdf.get("materialy_lista", [])
+
+    if parametry:
+        dane_pdf["parametry"] = parametry
+
+    return dane_pdf
+
+
+def _przycisk_pdf(typ_pdf, dane_pdf, prefix_pliku, key):
+    sesja_key = f"pdf_bytes_{key}"
+
+    if st.button("📄 Wygeneruj PDF", key=f"gen_{key}", use_container_width=True, type="primary"):
+        try:
+            pdf_path = generuj_pdf(typ_pdf, dane_pdf)
+            with open(pdf_path, "rb") as f:
+                st.session_state[sesja_key] = f.read()
+            st.success("✅ PDF gotowy. Możesz pobrać plik.")
+        except Exception as e:
+            st.error(f"Błąd PDF: {e}")
+
+    if sesja_key in st.session_state:
+        nazwa = _nazwa_pliku_pdf(dane_pdf.get("nazwa_projektu", prefix_pliku))
+        st.download_button(
+            label="⬇️ Pobierz PDF",
+            data=st.session_state[sesja_key],
+            file_name=f"{prefix_pliku}_{nazwa}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            key=f"download_{key}",
+            use_container_width=True,
+        )
 
     
 # 1. KONFIGURACJA GŁÓWNA (SEO i Favicon)
@@ -2532,59 +2592,40 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                 
                 st.markdown("---")
-                
-                st.subheader("Zarządzanie Projektem")
+                st.subheader("Zarządzanie projektem")
 
-                dane_pdf = {
-                    "nazwa_projektu": nazwa_projektu,
-                    "firma_nazwa": st.session_state.get('firma_nazwa', 'PROCALC'),
-                    "firma_adres": st.session_state.get('firma_adres', ''),
-                    "firma_nip": st.session_state.get('firma_nip', ''),
-                    "firma_kontakt": st.session_state.get('firma_kontakt', ''),
-                
-                    "m_uzytkowy": m_uzytkowy,
-                    "total_pro": total_pro,
-                    "k_rob_total": k_rob_total,
-                    "k_mat_sredni": k_mat_sredni,
-                
-                    "l_biala": l_biala,
-                    "l_kolor": l_kolor,
-                    "l_grunt": l_grunt,
-                    "szt_tasma": szt_tasma,
-                    "szt_akryl": szt_akryl,
-                    "mb_sztukaterii": mb_sztukaterii,
-                    "pro_user": st.session_state.get('pakiet') == "PRO",
-                    "nazwa_projektu": nazwa_projektu,
-                    "total_pro": total_pro,
-                    "k_rob_total": k_rob_total,
-                    "k_mat_sredni": k_mat_sredni,
-                }
-                
                 c_btn1, c_btn2 = st.columns(2)
-    
+
                 with c_btn1:
                     if st.button("Wyczyść projekt PRO", use_container_width=True):
                         st.session_state.pokoje_pro = []
                         st.rerun()
-                    
-                with c_btn2:
-                    try:
-                        pdf_path = generuj_pdf("malowanie", dane_pdf)
 
-                        with open(pdf_path, "rb") as f:
-                            pdf_bytes = f.read()
-                
-                        st.download_button(
-                            label="📄 Pobierz Raport PDF",
-                            data=pdf_bytes,
-                            file_name=f"Kosztorys_Malowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-    
-                    except Exception as e:
-                        st.error(f"Błąd PDF: {e}")    
-    
+                with c_btn2:
+                    dane_pdf = _dane_pdf_z_etapu(
+                        dane_json,
+                        tytul="Kosztorys prac malarskich",
+                        parametry=[
+                            {"nazwa": "Metraż użytkowy", "wartosc": f"{m_uzytkowy} m²"},
+                            {"nazwa": "Powierzchnia malowania", "wartosc": f"{round(m2_razem, 1)} m²"},
+                            {"nazwa": "Stan lokalu", "wartosc": stan_f},
+                            {"nazwa": "Farba do sufitów", "wartosc": f_biala},
+                            {"nazwa": "Farba ścienna", "wartosc": f_kolor},
+                            {"nazwa": "Grunt", "wartosc": f_grunt},
+                            {"nazwa": "Taśma", "wartosc": f_tasma},
+                            {"nazwa": "Sztukateria", "wartosc": f"{mb_sztukaterii} mb"},
+                        ],
+                    )
+
+                    _przycisk_pdf(
+                        "malowanie",
+                        dane_pdf,
+                        "Kosztorys_Malowanie",
+                        "pdf_malowanie"
+                    )
+
+        except Exception as e:
+        st.error(f"Błąd PDF: {e}")
     
     
     
@@ -2974,86 +3015,37 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.markdown("---")
                         
 
-    dane_pdf = {
-    "branza": "Szpachlowanie",
+                    st.markdown("---")
+                    st.subheader("Zarządzanie projektem")
 
-    "nazwa_projektu": "Szpachlowanie",
+                    c_btn1, c_btn2 = st.columns(2)
 
-    "firma_nazwa": st.session_state.get('firma_nazwa', 'PROCALC'),
-    "firma_adres": st.session_state.get('firma_adres', ''),
-    "firma_nip": st.session_state.get('firma_nip', ''),
-    "firma_kontakt": st.session_state.get('firma_kontakt', ''),
+                    with c_btn1:
+                        if st.button("Wyczyść projekt", key="btn_clear_szpachlowanie", use_container_width=True):
+                            st.session_state.pokoje_szp = []
+                            st.rerun()
 
-    "powierzchnia": round(m2_total, 1),
+                    with c_btn2:
+                        dane_pdf = _dane_pdf_z_etapu(
+                            dane_json,
+                            tytul="Kosztorys prac szpachlarskich",
+                            parametry=[
+                                {"nazwa": "Powierzchnia", "wartosc": f"{round(m2_total, 1)} m²"},
+                                {"nazwa": "Liczba warstw", "wartosc": l_warstw},
+                                {"nazwa": "Podłoże", "wartosc": "Płyty GK" if czy_gk else "Tynki / Beton"},
+                                {"nazwa": "Flizelina", "wartosc": "TAK" if uzyj_flizeliny else "NIE"},
+                                {"nazwa": "Gładź", "wartosc": wybrana_g},
+                                {"nazwa": "Grunt", "wartosc": wybrany_grunt},
+                            ],
+                        )
 
-    "koszt_robocizny": robocizna,
-    "koszt_materialow": koszt_m,
-    "kwota_koncowa": koszt_m + robocizna,
+                        _przycisk_pdf(
+                            "szpachlowanie",
+                            dane_pdf,
+                            "Kosztorys_Szpachlowanie",
+                            "pdf_szpachlowanie"
+                        )
 
-    "liczba_warstw": l_warstw,
-
-    "podloze": "Płyty GK" if czy_gk else "Tynki / Beton",
-
-    "flizelina": "TAK" if uzyj_flizeliny else "NIE",
-
-    "materialy": [
-
-        {
-            "nazwa": f"Gładź: {wybrana_g}",
-            "ilosc": f"{szt_gladzi} szt."
-        },
-
-        {
-            "nazwa": f"Grunt: {wybrany_grunt}",
-            "ilosc": f"{szt_gruntu} szt."
-        },
-
-        {
-            "nazwa": "Krążki ścierne P180/220",
-            "ilosc": f"{szt_krazkow} szt."
-        }
-
-    ],
-
-    "uwagi": [
-        "Końcowe zużycie materiałów może się różnić.",
-        "Przed realizacją zalecana wizja lokalna."
-    ],
-
-    "harmonogram": [
-        "30% zaliczki na materiały",
-        "40% po wykonaniu 80% prac",
-        "30% po zakończeniu"
-    ],
-
-    "klauzule": [
-        "Oferta ważna 14 dni.",
-        "Kolory i struktury ustalane z inwestorem.",
-        "Wycena ma charakter orientacyjny."
-    ]
-}
-
-c_btn1, c_btn2 = st.columns(2)
-
-with c_btn1:
-    if st.button("Wyczyść projekt", use_container_width=True):
-        st.session_state.pokoje_szp = []
-        st.rerun()
-
-with c_btn2:
-    try:
-        pdf_path = generuj_pdf("szpachlowanie", dane_pdf)
-
-        with open(pdf_path, "rb") as f:
-            pdf_bytes = f.read()
-
-        st.download_button(
-            label="📄 Pobierz Raport PDF",
-            data=pdf_bytes,
-            file_name=f"Kosztorys_Szpachlowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
 
     except Exception as e:
         st.error(f"Błąd PDF: {e}")
@@ -3456,21 +3448,28 @@ with c_btn2:
                             st.rerun()
                 else:
                     st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
-                
-                # ==========================================
-                # --- GENERATOR PDF (POSADZKI) ---
-                # ==========================================
-                # Przesunięte w lewo, niezależne od tego, czy ktoś jest zalogowany
-                
-                        
-                        st.download_button(
-                            label="KLIKNIJ TUTAJ, ABY ZAPISAĆ PLIK PDF",
-                            data=pdf_bytes,
-                            file_name=f"Kosztorys_Podlogi_{datetime.now().strftime('%Y%m%d')}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                        st.success("✅ Plik PDF został wygenerowany! Kliknij powyższy przycisk, aby go pobrać.")
+                st.markdown("---")
+                st.subheader("Generator PDF")
+
+                dane_pdf = _dane_pdf_z_etapu(
+                    dane_json,
+                    tytul="Kosztorys prac podłogowych",
+                    parametry=[
+                        {"nazwa": "Powierzchnia", "wartosc": f"{round(m2_p, 1)} m²"},
+                        {"nazwa": "System montażu", "wartosc": system_montazu},
+                        {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_podl} zł/m²"},
+                        {"nazwa": "Zrywanie / kucie", "wartosc": "TAK" if dem_parkiet or dem_plytki else "NIE"},
+                        {"nazwa": "Wylewka", "wartosc": "TAK" if wylewka else "NIE"},
+                    ],
+                )
+
+                _przycisk_pdf(
+                    "podlogi",
+                    dane_pdf,
+                    "Kosztorys_Podlogi",
+                    "pdf_podlogi"
+                )
+
                         
                 except Exception as e:
                     st.error(f"Błąd PDF: {e}")
@@ -3820,22 +3819,29 @@ with c_btn2:
                 else:
                     st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
     
-# --- GENERATOR PDF (TYNKOWANIE) ---
-                # Przesunięte w lewo - teraz jest dostępne dla każdego (zalogowanego i nie)
                 st.markdown("---")
-                st.subheader("📄 Eksport do pliku")
-                
-               
-                        # Generowanie bajtów i przycisk pobierania try:
-                        
-                        st.download_button(
-                            label="📥 KLIKNIJ TUTAJ, ABY ZAPISAĆ PLIK",
-                            data=pdf_output,
-                            file_name=f"Kosztorys_Tynki_{datetime.now().strftime('%Y%m%d')}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                        st.success("✅ Plik PDF został wygenerowany! Kliknij powyższy przycisk, aby go pobrać.")
+                st.subheader("Generator PDF")
+
+                dane_pdf = _dane_pdf_z_etapu(
+                    dane_json,
+                    tytul="Kosztorys prac tynkarskich",
+                    parametry=[
+                        {"nazwa": "Powierzchnia robocza", "wartosc": f"{round(m2_rob_pro, 1)} m²"},
+                        {"nazwa": "Metraż podłogi", "wartosc": f"{round(m2_podl_pro, 1)} m²"},
+                        {"nazwa": "System tynku", "wartosc": wybrany_tynk},
+                        {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_rob_t} zł/m²"},
+                        {"nazwa": "Marża O&P", "wartosc": mnoznik_op},
+                        {"nazwa": "Utrudnienia", "wartosc": mnoznik_utrudnien},
+                    ],
+                )
+
+                _przycisk_pdf(
+                    "tynkowanie",
+                    dane_pdf,
+                    "Kosztorys_Tynki",
+                    "pdf_tynkowanie"
+                )
+
 
                 except Exception as e:
                     st.error(f"Problem z generatorem PDF: {e}")
@@ -4355,27 +4361,34 @@ with c_btn2:
                     else:
                         st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                     
-                   # --- GENERATOR PDF (SYSTEMY G-K) ---
+                     st.markdown("---")
+                    st.subheader("Generator PDF")
 
-    
-                                # --- BEZPIECZNE POBIERANIE ---
-                                pdf_bytes = pdf.output(dest="S")
-                                safe_bytes = pdf_bytes.encode('latin-1', 'replace') if isinstance(pdf_bytes, str) else bytes(pdf_bytes)
-                                
-                                st.download_button(
-                                    label="Pobierz Raport PDF",
-                                    data=safe_bytes,
-                                    file_name=f"Kosztorys_GK_{datetime.now().strftime('%Y%m%d')}.pdf",
-                                    mime="application/pdf",
-                                    use_container_width=True
-                                )
-                            else:
-                                st.warning("Dodaj metraż zabudowy, aby wygenerować ofertę PDF.")
+                    dane_pdf = _dane_pdf_z_etapu(
+                        dane_json,
+                        tytul="Kosztorys suchej zabudowy",
+                        parametry=[
+                            {"nazwa": "Powierzchnia zabudowy", "wartosc": f"{round(m2_gk, 1)} m²"},
+                            {"nazwa": "Rodzaj konstrukcji", "wartosc": rodzaj_gk},
+                            {"nazwa": "Płytowanie", "wartosc": plytowanie},
+                            {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_gk} zł/m²"},
+                            {"nazwa": "Izolacja", "wartosc": "TAK" if izolacja_gk else "NIE"},
+                            {"nazwa": "Zbrojenie łączeń", "wartosc": typ_tasmy},
+                        ],
+                    )
+
+                    _przycisk_pdf(
+                        "sucha_zabudowa",
+                        dane_pdf,
+                        "Kosztorys_GK",
+                        "pdf_gk"
+                    )
+
                     except Exception as e:
                         st.error(f"Problem z PDF: {e}")
                 
     elif branza == "Elektryka":
-        st.header("⚡ Instalacja Elektryczna")
+        st.header("Instalacja Elektryczna")
         
         col_e1, col_e2 = st.columns([1, 1.2])
 
@@ -4611,12 +4624,28 @@ with c_btn2:
             st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
 
                 
-                st.download_button(
-                    label="📥 Pobierz Raport PDF",
-                    data=pdf_bytes,
-                    file_name=f"Kosztorys_Elektryka_{datetime.now().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
+            st.markdown("---")
+            st.subheader("Generator PDF")
+
+            dane_pdf = _dane_pdf_z_etapu(
+                dane_json,
+                tytul="Kosztorys prac elektrycznych",
+                parametry=[
+                    {"nazwa": "Metraż mieszkania", "wartosc": f"{round(m2_mieszkania, 1)} m²"},
+                    {"nazwa": "Liczba punktów", "wartosc": f"{n_wszystkich_punktow} szt."},
+                    {"nazwa": "Typ ścian", "wartosc": typ_scian},
+                    {"nazwa": "Standard osprzętu", "wartosc": wybrany_standard},
+                    {"nazwa": "Stawka za punkt", "wartosc": f"{stawka_punkt} zł"},
+                ],
+            )
+
+            _przycisk_pdf(
+                "elektryka",
+                dane_pdf,
+                "Kosztorys_Elektryka",
+                "pdf_elektryka"
+            )
+
                 )
         except Exception as e:
             st.error(f"Problem z generowaniem PDF: {e}")
@@ -5061,13 +5090,32 @@ with c_btn2:
                       
 
                     
-                    st.download_button(
-                        label="Pobierz Kosztorys PDF",
-                        data=safe_bytes,
-                        file_name=f"Kosztorys_Lazienka_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
+            st.markdown("---")
+            st.subheader("Generator PDF")
+
+            dane_pdf = _dane_pdf_z_etapu(
+                dane_json,
+                tytul="Kosztorys remontu łazienki",
+                parametry=[
+                    {"nazwa": "Powierzchnia podłogi", "wartosc": f"{round(m2_podlogi, 1)} m²"},
+                    {"nazwa": "Powierzchnia ścian", "wartosc": f"{round(m2_scian_total, 1)} m²"},
+                    {"nazwa": "Wysokość pomieszczenia", "wartosc": f"{wysokosc} m"},
+                    {"nazwa": "Format płytek", "wartosc": format_plytki},
+                    {"nazwa": "Hydroizolacja", "wartosc": typ_hydro},
+                    {"nazwa": "Stan pomieszczenia", "wartosc": stan_pomieszczenia},
+                    {"nazwa": "Rodzaj fugi", "wartosc": rodzaj_fugi},
+                    {"nazwa": "Stawka za cięcie 45°", "wartosc": f"{stawka_mb_45} zł/mb"},
+                    {"nazwa": "Stawka zabudowy WC", "wartosc": f"{stawka_wc} zł/szt."},
+                ],
+            )
+
+            _przycisk_pdf(
+                "lazienka",
+                dane_pdf,
+                "Kosztorys_Lazienka",
+                "pdf_lazienka"
+            )
+
                 except Exception as e:
                     st.error(f"Błąd PDF: {e}")
                    
@@ -5323,20 +5371,29 @@ with c_btn2:
     
 
                     
-                    # Zapisujemy do sesji! 
-                    st.session_state['pdf_drzwi_gotowy'] = safe_bytes
-                    
-                # --- WYSWIETLANIE PRZYCISKU POBIERANIA ---
-                # Ten kod wywoła się tylko, jeśli PDF został już wygenerowany w pamięci
-                if 'pdf_drzwi_gotowy' in st.session_state:
-                    st.success("✅ Kosztorys wygenerowany pomyślnie!")
-                    st.download_button(
-                        label="Pobierz Kosztorys PDF",
-                        data=st.session_state['pdf_drzwi_gotowy'],
-                        file_name=f"Kosztorys_Drzwi_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
+            st.markdown("---")
+            st.subheader("Generator PDF")
+
+            dane_pdf = _dane_pdf_z_etapu(
+                dane_json,
+                tytul="Kosztorys montażu drzwi",
+                parametry=[
+                    {"nazwa": "Liczba drzwi", "wartosc": f"{szt_drzwi} kpl."},
+                    {"nazwa": "Model drzwi", "wartosc": wybrany_model},
+                    {"nazwa": "Szerokość muru", "wartosc": szerokosc_muru},
+                    {"nazwa": "Stawka montażu", "wartosc": f"{stawka_montazu} zł/kpl."},
+                    {"nazwa": "Podcięcie wentylacyjne", "wartosc": "TAK" if podciecie else "NIE"},
+                    {"nazwa": "Demontaż starych drzwi", "wartosc": "TAK" if demontaz else "NIE"},
+                ],
+            )
+
+            _przycisk_pdf(
+                "drzwi",
+                dane_pdf,
+                "Kosztorys_Drzwi",
+                "pdf_drzwi"
+            )
+
                     
             except Exception as e:
                 st.error(f"Błąd podczas generowania PDF: {e}")
@@ -5614,17 +5671,34 @@ with c_btn2:
             else:
                 st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
     
-            # --- GENERATOR PDF (TAPETOWANIE) ---
             st.markdown("---")
+            st.subheader("Generator PDF")
 
-                    
-                    st.download_button(
-                        label="Pobierz Kosztorys PDF",
-                        data=safe_bytes,
-                        file_name=f"Kosztorys_Tapetowanie_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
+            dane_pdf = _dane_pdf_z_etapu(
+                dane_json,
+                tytul="Kosztorys tapetowania",
+                parametry=[
+                    {"nazwa": "Powierzchnia ścian", "wartosc": f"{round(m2_scian, 1)} m²"},
+                    {"nazwa": "Obwód ścian", "wartosc": f"{round(obwod, 1)} m"},
+                    {"nazwa": "Wysokość pomieszczenia", "wartosc": f"{wysokosc} m"},
+                    {"nazwa": "Rodzaj tapety", "wartosc": rodzaj_tapety},
+                    {"nazwa": "Klej", "wartosc": wybrany_klej},
+                    {"nazwa": "Potrzebne rolki", "wartosc": f"{potrzebne_rolki} szt."},
+                    {"nazwa": "Liczba pasów", "wartosc": f"{liczba_pasow} szt."},
+                    {"nazwa": "Pasy z rolki", "wartosc": pasy_z_rolki},
+                    {"nazwa": "Raport wzoru", "wartosc": f"{raport} cm"},
+                    {"nazwa": "Zrywanie starej tapety", "wartosc": "TAK" if zrywanie_starej else "NIE"},
+                    {"nazwa": "Gruntowanie", "wartosc": "TAK" if gruntowanie else "NIE"},
+                ],
+            )
+
+            _przycisk_pdf(
+                "tapetowanie",
+                dane_pdf,
+                "Kosztorys_Tapetowanie",
+                "pdf_tapetowanie"
+            )
+
                 except Exception as e:
                     st.error(f"Błąd PDF: {e}")
         
@@ -5955,13 +6029,30 @@ with c_btn2:
     
 
                     
-                    st.download_button(
-                        label="Pobierz Kosztorys PDF",
-                        data=safe_bytes,
-                        file_name=f"Kosztorys_Dekoracje_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
+                st.markdown("---")
+                st.subheader("Generator PDF")
+
+                dane_pdf = _dane_pdf_z_etapu(
+                    dane_json,
+                    tytul="Kosztorys efektów dekoracyjnych",
+                    parametry=[
+                        {"nazwa": "Powierzchnia", "wartosc": f"{round(m2_pro, 1)} m²"},
+                        {"nazwa": "Efekt dekoracyjny", "wartosc": wybrany_efekt},
+                        {"nazwa": "System / producent", "wartosc": krotka_nazwa_systemu},
+                        {"nazwa": "Koszt materiału za m²", "wartosc": f"{cena_mat_m2} zł"},
+                        {"nazwa": "Stawka robocizny za m²", "wartosc": f"{cena_rob_m2} zł"},
+                        {"nazwa": "Przygotowanie podłoża", "wartosc": "TAK" if przygotowanie else "NIE"},
+                        {"nazwa": "Zabezpieczenie lakier/wosk", "wartosc": "TAK" if zabezpieczenie else "NIE"},
+                    ],
+                )
+
+                _przycisk_pdf(
+                    "efekty_dekoracyjne",
+                    dane_pdf,
+                    "Kosztorys_Dekoracje",
+                    "pdf_dekoracje"
+                )
+
             except Exception as e:
                 st.error(f"Błąd podczas generowania PDF: {e}")
     
@@ -6745,52 +6836,93 @@ with c_btn2:
     
                 zakupy = {k: v for k, v in zakupy.items() if len(v) > 0}
                 
-               # ==============================================================
+                # ==============================================================
                 # 💾 GENERATOR PDF I ZAPIS W CHMURZE (PANEL INWESTORA)
                 # ==============================================================
                 st.markdown("---")
-                st.subheader("💾 Zapisz Projekt i Pobierz PDF")
-                
-                # Tworzymy dwie kolumny (Zapisz po lewej, PDF po prawej)
+                st.subheader("Zapisz projekt i pobierz PDF")
+
+                # Zamieniamy listę zakupów z kategorii na format PDF
+                lista_zakupow_pdf = []
+                for kategoria, pozycje in zakupy.items():
+                    for pozycja in pozycje:
+                        lista_zakupow_pdf.append({
+                            "nazwa": f"{kategoria}: {pozycja}",
+                            "ilosc": "",
+                            "jed": ""
+                        })
+
+                dane_pdf_inwestor = {
+                    **_dane_firmy_pdf(),
+                    "branza": "Panel Inwestora",
+                    "tytul": "Analiza inwestycji i kosztorys materiałowy",
+                    "nazwa_projektu": nazwa_inwestycji,
+                    "koszt_calkowity": round(calkowity_koszt_projektu, 2),
+                    "koszt_robocizny": round(bazowy_remont_szacunek, 2),
+                    "koszt_materialow": round(wyposazenie_total, 2),
+                    "kwota_koncowa": round(calkowity_koszt_projektu, 2),
+                    "materialy": lista_zakupow_pdf,
+                    "parametry": [
+                        {"nazwa": "Metraż lokalu", "wartosc": f"{round(m2_total, 1)} m²"},
+                        {"nazwa": "Cena zakupu", "wartosc": f"{round(cena_zakupu):,} zł".replace(",", " ")},
+                        {"nazwa": "Cena sprzedaży", "wartosc": f"{round(cena_sprzedazy):,} zł".replace(",", " ")},
+                        {"nazwa": "Stan lokalu", "wartosc": stan_lokalu},
+                        {"nazwa": "Standard wykończenia", "wartosc": standard},
+                        {"nazwa": "Koszty transakcyjne", "wartosc": f"{round(koszt_transakcyjny):,} zł".replace(",", " ")},
+                        {"nazwa": "Koszty utrzymania", "wartosc": f"{round(koszty_utrzymania_total):,} zł".replace(",", " ")},
+                        {"nazwa": "Wyposażenie / materiały", "wartosc": f"{round(wyposazenie_total):,} zł".replace(",", " ")},
+                        {"nazwa": "Przewidywany zysk", "wartosc": f"{round(zysk_brutto):,} zł".replace(",", " ")},
+                        {"nazwa": "ROI", "wartosc": f"{round(roi, 1)} %"},
+                    ],
+                    "uwagi": [
+                        "Analiza ma charakter szacunkowy.",
+                        "Końcowe koszty mogą się różnić po wizji lokalnej i ofertach wykonawców.",
+                    ],
+                    "klauzule": [
+                        "Raport wygenerowany automatycznie w systemie ProCalc.",
+                        "Wycena nie stanowi projektu budowlanego ani operatu rzeczoznawcy.",
+                    ],
+                }
+
                 col_save, col_pdf = st.columns(2)
-                
-                # --- KOLUMNA 1: ZAPIS DO CHMURY ---
+
                 with col_save:
                     if st.button("Zapisz w Chmurze ProCalc", use_container_width=True, type="primary"):
                         u_id = st.session_state.get("user_id")
-                        # Zabezpieczenia, by nie wysłać pustych danych do bazy
+
                         if not u_id:
-                            st.error("❌ Błąd krytyczny: Zgubiłeś sesję! Zaloguj się ponownie.")
+                            st.error("Błąd krytyczny: Zgubiłeś sesję! Zaloguj się ponownie.")
                         elif 'nazwa_inwestycji' not in locals() or not nazwa_inwestycji:
-                            st.warning("⚠️ Podaj nazwę inwestycji (na samej górze panelu), aby zapisać projekt.")
+                            st.warning("Podaj nazwę inwestycji na samej górze panelu, aby zapisać projekt.")
                         else:
                             try:
                                 dane_do_zapisu = {
                                     "suma_calkowita": round(calkowity_koszt_projektu),
                                     "zysk_brutto": round(zysk_brutto),
                                     "roi_procent": round(roi, 1),
-                                    "lista_zakupow": zakupy 
+                                    "lista_zakupow": zakupy
                                 }
+
                                 supabase.table("projekty").insert({
-                                    "user_id": u_id, 
+                                    "user_id": u_id,
                                     "nazwa_projektu": nazwa_inwestycji,
-                                    "branza": "Kompleksowy Flip", 
+                                    "branza": "Kompleksowy Flip",
                                     "dane_json": dane_do_zapisu
                                 }).execute()
-                                st.success("✅ Projekt został bezpiecznie zapisany w chmurze!")
-                            except Exception as e:
-                                st.error(f"❌ Błąd zapisu: {e}")
-    
-                # --- KOLUMNA 2: GENERATOR PDF ---
 
-                                
-                            st.download_button(
-                                label="📥 Pobierz Kosztorys PDF", 
-                                data=pdf_bytes, 
-                                file_name=nazwa_pliku, 
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
+                                st.success("Projekt został bezpiecznie zapisany w chmurze!")
+
+                            except Exception as e:
+                                st.error(f"Błąd zapisu: {e}")
+
+                with col_pdf:
+                    _przycisk_pdf(
+                        "panel_inwestora",
+                        dane_pdf_inwestor,
+                        "Kosztorys_Inwestor",
+                        "pdf_panel_inwestora"
+                    )
+
     
                         except Exception as e:
                             st.error(f"Błąd PDF: {e}")
