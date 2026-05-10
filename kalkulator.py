@@ -560,806 +560,647 @@ if st.session_state.get("zalogowany"):
         st.stop()
 
 # =======================================================
-# 🚀 PROCALC PREMIUM OFFER VIEW
+# 🚀 PROCALC PREMIUM OFFER VIEW - LINK DLA KLIENTA
 # =======================================================
 
 query_params = st.query_params
 
 if "oferta" in query_params:
+    import base64
+    import mimetypes
+    import html as html_lib
+
+    def _safe_html(value):
+        return html_lib.escape(str(value if value is not None else ""))
+
+    def _money_html(value):
+        try:
+            return f"{float(value):,.2f} PLN".replace(",", " ")
+        except Exception:
+            return "0,00 PLN"
+
+    def _asset_data_uri(file_name):
+        try:
+            if not os.path.exists(file_name):
+                return ""
+            mime = mimetypes.guess_type(file_name)[0] or "image/png"
+            with open(file_name, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode("utf-8")
+            return f"data:{mime};base64,{encoded}"
+        except Exception:
+            return ""
+
+    def _zbierz_materialy(dane):
+        materialy = []
+
+        if dane.get("zbiorcza_lista_zakupow"):
+            materialy = dane.get("zbiorcza_lista_zakupow", [])
+        elif dane.get("materialy_lista"):
+            materialy = dane.get("materialy_lista", [])
+        elif dane.get("etapy"):
+            for etap in dane.get("etapy", []):
+                for mat in etap.get("materialy_lista", []):
+                    materialy.append(mat)
+
+        return materialy
 
     oferta_id = query_params["oferta"]
 
     try:
-
         res = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
 
-        if len(res.data) > 0:
+        if not res.data:
+            st.error("Nie znaleziono oferty.")
+            st.stop()
 
-            projekt = res.data[0]
+        projekt = res.data[0]
+        dane = projekt.get("dane_json", {}) or {}
 
-            dane = projekt.get("dane_json", {})
+        nazwa_klienta = projekt.get("nazwa_projektu", "Wycena prac")
+        status = projekt.get("status", "Oczekująca")
 
-            nazwa_klienta = projekt.get("nazwa_projektu", "Wycena Prac")
+        rabat = float(dane.get("rabat_kwota", 0) or 0)
 
-            rabat = dane.get('rabat_kwota', 0)
+        if "etapy" in dane:
+            etapy = dane.get("etapy", [])
 
-            if "etapy" in dane:
-
-                etapy = dane["etapy"]
-
-                suma_rob = dane.get(
-                    'suma_robocizna',
+            suma_rob = float(
+                dane.get(
+                    "suma_robocizna",
                     sum(
-                        e.get('koszt_robocizny', e.get('koszt_calkowity', 0))
+                        float(e.get("koszt_robocizny", e.get("koszt_calkowity", 0)) or 0)
                         for e in etapy
                     )
-                )
+                ) or 0
+            )
 
-            else:
+            suma_mat = float(
+                dane.get(
+                    "suma_materialy",
+                    sum(float(e.get("koszt_materialow", 0) or 0) for e in etapy)
+                ) or 0
+            )
+        else:
+            etapy = [dane]
+            suma_rob = float(dane.get("koszt_robocizny", dane.get("koszt_calkowity", 0)) or 0)
+            suma_mat = float(dane.get("koszt_materialow", 0) or 0)
 
-                etapy = [dane]
-
-                suma_rob = dane.get(
-                    "koszt_robocizny",
-                    dane.get("koszt_calkowity", 0)
-                )
-
+        do_zaplaty = float(dane.get("robocizna_po_rabacie", suma_rob - rabat) or 0)
+        if do_zaplaty <= 0:
             do_zaplaty = suma_rob - rabat
 
-            data_wystawienia = datetime.now().strftime("%d.%m.%Y")
+        materialy = _zbierz_materialy(dane)
 
-            # ===================================================
-            # ETAPY HTML
-            # ===================================================
+        logo_uri = _asset_data_uri("logo2.png")
+        hero_uri = _asset_data_uri("hero_remont.png")
+        qr_uri = _asset_data_uri("QR.png") or _asset_data_uri("qr.png")
 
-            etapy_html = ""
+        data_wystawienia = datetime.now().strftime("%d.%m.%Y")
 
-            for i, etap in enumerate(etapy):
+        etapy_html = ""
+        for i, etap in enumerate(etapy):
+            nazwa_etapu = etap.get("nazwa_etapu", etap.get("branza", f"Etap {i + 1}"))
+            branza_etapu = etap.get("branza", "Zakres prac")
+            koszt_etapu = etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0))
 
-                n_e = etap.get(
-                    "nazwa_etapu",
-                    etap.get("branza", f"Etap {i+1}")
-                )
+            etapy_html += f"""
+            <tr>
+                <td>
+                    <div class="stage-name">{_safe_html(nazwa_etapu)}</div>
+                    <div class="stage-sub">{_safe_html(branza_etapu)}</div>
+                </td>
+                <td>{_money_html(koszt_etapu)}</td>
+            </tr>
+            """
 
-                k_e = etap.get(
-                    "koszt_robocizny",
-                    etap.get("koszt_calkowity", 0)
-                )
+        materialy_html = ""
+        if materialy:
+            for mat in materialy:
+                if isinstance(mat, dict):
+                    nazwa_mat = mat.get("nazwa", "")
+                    ilosc = mat.get("ilosc", "")
+                    jed = mat.get("jed", "")
+                    wartosc = f"{ilosc} {jed}".strip()
+                else:
+                    nazwa_mat = str(mat)
+                    wartosc = ""
 
-                etapy_html += f"""
-<div class="etap-card">
+                materialy_html += f"""
+                <div class="material-row">
+                    <span>{_safe_html(nazwa_mat)}</span>
+                    <strong>{_safe_html(wartosc)}</strong>
+                </div>
+                """
+        else:
+            materialy_html = """
+            <div class="material-row">
+                <span>Materiały</span>
+                <strong>Do ustalenia</strong>
+            </div>
+            """
 
-<div class="etap-left">
+        status_badge = "Zaakceptowana" if status == "Zaakceptowana" else "Oczekuje na decyzję"
 
-<div class="icon-box">
-<i class="fas fa-hammer"></i>
-</div>
-
-<div>
-
-<div class="etap-title">
-{n_e}
-</div>
-
-<div class="etap-subtitle">
-Zakres prac remontowych
-</div>
-
-</div>
-
-</div>
-
-<div class="etap-price">
-{k_e:,.2f} zł
-</div>
-
-</div>
-"""
-
-            # ===================================================
-            # FINAL HTML
-            # ===================================================
-
-            html_content = f"""
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+        html_content = f"""
 <style>
-
-/* GLOBAL */
-
-html, body, [class*="css"] {{
-    font-family: 'Inter', sans-serif;
-}}
-
-.main {{
-    background: #edf2f7 !important;
-}}
-
-.block-container {{
-    padding-top: 1rem !important;
-    padding-bottom: 2rem !important;
-    max-width: 1300px;
-}}
-
-/* MAIN CONTAINER */
-
-.a4-container {{
-
-    background: #ffffff;
-
-    border-radius: 32px;
-
-    overflow: hidden;
-
-    box-shadow:
-        0 20px 50px rgba(15,23,42,0.08),
-        0 40px 120px rgba(15,23,42,0.12);
-
-    margin-top: 20px;
-    margin-bottom: 40px;
-}}
-
-/* HERO */
-
-.hero {{
-
-    position: relative;
-
-    overflow: hidden;
-
-    padding: 70px 60px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #111827 0%,
-            #1f2937 100%
-        );
-
-    color: white;
-}}
-
-.hero::before {{
-
-    content: "";
-
-    position: absolute;
-
-    width: 600px;
-    height: 600px;
-
-    background:
-        rgba(0, 211, 149, 0.12);
-
-    border-radius: 999px;
-
-    filter: blur(120px);
-
-    top: -250px;
-    right: -250px;
-}}
-
-.hero-content {{
-    position: relative;
-    z-index: 2;
-}}
-
-/* LOGO */
-
-.logo-box {{
-
-    margin-bottom: 30px;
-}}
-
-.logo-box img {{
-
-    height: 42px;
-
-    width: auto;
-}}
-
-/* BADGE */
-
-.badge {{
-
-    display: inline-block;
-
-    padding: 10px 18px;
-
-    border-radius: 999px;
-
-    background:
-        rgba(255,255,255,0.08);
-
-    border:
-        1px solid rgba(255,255,255,0.08);
-
-    font-size: 13px;
-
-    margin-bottom: 30px;
-
-    backdrop-filter: blur(10px);
-}}
-
-.hero h1 {{
-
-    font-size: 64px;
-
-    line-height: 0.95;
-
-    margin: 0;
-
-    font-weight: 800;
-
-    letter-spacing: -3px;
-}}
-
-.hero p {{
-
-    margin-top: 28px;
-
-    font-size: 18px;
-
-    line-height: 1.7;
-
-    color: #cbd5e1;
-
-    max-width: 600px;
-}}
-
-.hero-stats {{
-
-    margin-top: 40px;
-
-    display: flex;
-
-    gap: 16px;
-
-    flex-wrap: wrap;
-}}
-
-.hero-box {{
-
-    background:
-        rgba(255,255,255,0.08);
-
-    border:
-        1px solid rgba(255,255,255,0.08);
-
-    border-radius: 18px;
-
-    padding: 16px 20px;
-
-    min-width: 180px;
-
-    backdrop-filter: blur(10px);
-}}
-
-.hero-label {{
-
-    font-size: 12px;
-
-    color: #94a3b8;
-
-    margin-bottom: 6px;
-}}
-
-.hero-value {{
-
-    font-weight: 700;
-
-    font-size: 15px;
-}}
-
-/* GRID */
-
-.grid-layout {{
-
-    display: grid;
-
-    grid-template-columns: 420px 1fr;
-
-    gap: 35px;
-
-    padding: 40px;
-}}
-
-/* TITLES */
-
-.section-title {{
-
-    font-size: 13px;
-
-    text-transform: uppercase;
-
-    letter-spacing: 1px;
-
-    color: #64748b;
-
-    margin-bottom: 16px;
-
-    font-weight: 700;
-}}
-
-/* CARDS */
-
-.card {{
-
-    background: #ffffff;
-
-    border:
-        1px solid #eef2f7;
-
-    border-radius: 24px;
-
-    padding: 24px;
-
-    margin-bottom: 18px;
-
-    box-shadow:
-        0 4px 12px rgba(15,23,42,0.03);
-
-    transition: all .2s ease;
-}}
-
-.card:hover {{
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 12px 30px rgba(15,23,42,0.08);
-}}
-
-/* FINANCE */
-
-.finance-label {{
-
-    font-size: 11px;
-
-    color: #94a3b8;
-
-    margin-bottom: 8px;
-
-    letter-spacing: 1px;
-}}
-
-.finance-value {{
-
-    font-size: 32px;
-
-    font-weight: 800;
-
-    color: #111827;
-}}
-
-.finance-green {{
-
-    background: #ecfdf5 !important;
-
-    border-color: #a7f3d0 !important;
-}}
-
-.finance-green .finance-label {{
-    color: #059669;
-}}
-
-.finance-green .finance-value {{
-    color: #059669;
-}}
-
-.finance-red {{
-
-    background: #fef2f2 !important;
-
-    border-color: #fecaca !important;
-}}
-
-.finance-red .finance-label {{
-    color: #dc2626;
-}}
-
-.finance-red .finance-value {{
-    color: #dc2626;
-}}
-
-/* ETAPY */
-
-.etap-card {{
-
-    background: white;
-
-    border:
-        1px solid #eef2f7;
-
-    border-radius: 22px;
-
-    padding: 18px;
-
-    margin-bottom: 14px;
-
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    transition: all .2s ease;
-}}
-
-.etap-card:hover {{
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 12px 30px rgba(15,23,42,0.06);
-}}
-
-.etap-left {{
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 14px;
-}}
-
-.icon-box {{
-
-    width: 52px;
-    height: 52px;
-
-    border-radius: 16px;
-
-    background: #ecfdf5;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    color: #00B67A;
-
-    font-size: 18px;
-}}
-
-.etap-title {{
-
-    font-weight: 700;
-
-    color: #111827;
-
-    margin-bottom: 4px;
-}}
-
-.etap-subtitle {{
-
-    font-size: 13px;
-
-    color: #94a3b8;
-}}
-
-.etap-price {{
-
-    font-size: 22px;
-
-    font-weight: 800;
-
-    color: #111827;
-}}
-
-/* TOTAL BAR */
-
-.total-bar {{
-
-    margin-top: 24px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #00D395,
-            #00B67A
-        );
-
-    color: white;
-
-    padding: 28px;
-
-    border-radius: 24px;
-
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    box-shadow:
-        0 20px 40px rgba(0,211,149,0.22);
-}}
-
-.total-label {{
-
-    font-size: 14px;
-
-    opacity: 0.9;
-
-    letter-spacing: 1px;
-}}
-
-.total-price {{
-
-    font-size: 34px;
-
-    font-weight: 800;
-}}
-
-/* INFO */
-
-.info-box {{
-
-    margin-top: 24px;
-
-    background: #f8fafc;
-
-    border:
-        1px solid #e2e8f0;
-
-    border-radius: 20px;
-
-    padding: 22px;
-
-    font-size: 14px;
-
-    line-height: 1.7;
-}}
-
-.info-box b {{
-    color: #0f172a;
-}}
-
-/* FOOTER */
-
-.footer {{
-
-    background: #f8fafc;
-
-    border-top:
-        1px solid #e2e8f0;
-
-    padding: 24px;
-
-    text-align: center;
-
-    color: #94a3b8;
-
-    font-size: 12px;
-}}
-
-/* MOBILE */
-
-@media (max-width: 900px) {{
-
-    .hero {{
-        padding: 40px 28px;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    html, body, [class*="css"] {{
+        font-family: 'Inter', sans-serif !important;
+        background: #eef2f6 !important;
     }}
 
-    .hero h1 {{
-        font-size: 42px;
+    .block-container {{
+        max-width: 1180px !important;
+        padding-top: 24px !important;
+        padding-bottom: 40px !important;
     }}
 
-    .grid-layout {{
+    .premium-offer {{
+        background: #ffffff;
+        border: 1px solid #dfe7f0;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 24px 70px rgba(8, 40, 73, 0.12);
+    }}
+
+    .offer-hero {{
+        min-height: 360px;
+        background:
+            linear-gradient(90deg, rgba(4, 32, 62, .96), rgba(4, 32, 62, .70), rgba(4, 32, 62, .20)),
+            url('{hero_uri}');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 46px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }}
+
+    .offer-logo {{
+        max-width: 210px;
+        height: auto;
+    }}
+
+    .offer-hero h1 {{
+        font-size: 56px;
+        line-height: 1.02;
+        margin: 34px 0 0;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }}
+
+    .hero-meta {{
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-top: 32px;
+    }}
+
+    .hero-pill {{
+        border: 1px solid rgba(255,255,255,.18);
+        background: rgba(255,255,255,.10);
+        border-radius: 12px;
+        padding: 13px 16px;
+        min-width: 170px;
+        backdrop-filter: blur(10px);
+    }}
+
+    .hero-pill span {{
+        display: block;
+        color: #c7d4e4;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }}
+
+    .hero-pill strong {{
+        display: block;
+        color: white;
+        font-size: 15px;
+    }}
+
+    .offer-body {{
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 34px;
+        padding: 34px;
+    }}
+
+    .section-title {{
+        color: #003b78;
+        font-size: 16px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin: 0 0 18px;
+    }}
+
+    .info-grid {{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 30px;
+    }}
+
+    .info-box {{
+        border-bottom: 1px solid #e4ebf3;
+        padding-bottom: 14px;
+    }}
+
+    .info-box span {{
+        display: block;
+        color: #68788c;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }}
+
+    .info-box strong {{
+        display: block;
+        color: #09274a;
+        font-size: 17px;
+    }}
+
+    .summary-cards {{
+        display: grid;
         grid-template-columns: 1fr;
-        padding: 22px;
+        gap: 12px;
+        margin-bottom: 30px;
+    }}
+
+    .summary-card {{
+        border: 1px solid #dfe7f0;
+        border-radius: 12px;
+        padding: 18px;
+        background: #f8fafc;
+    }}
+
+    .summary-card span {{
+        display: block;
+        font-size: 13px;
+        color: #607287;
+        margin-bottom: 6px;
+    }}
+
+    .summary-card strong {{
+        font-size: 22px;
+        color: #09274a;
+    }}
+
+    .summary-card.red {{
+        background: #fff7f7;
+    }}
+
+    .summary-card.red strong {{
+        color: #d71920;
+    }}
+
+    .summary-card.green {{
+        background: #f1fbf6;
+    }}
+
+    .summary-card.green strong {{
+        color: #009a5b;
+    }}
+
+    .stages-table {{
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid #e2e9f2;
+    }}
+
+    .stages-table th {{
+        background: #f1f4f8;
+        color: #003b78;
+        text-align: left;
+        padding: 15px;
+        font-size: 13px;
+    }}
+
+    .stages-table th:last-child,
+    .stages-table td:last-child {{
+        text-align: right;
+    }}
+
+    .stages-table td {{
+        padding: 15px;
+        border-top: 1px solid #edf2f7;
+        vertical-align: middle;
+        color: #09274a;
+    }}
+
+    .stages-table tr:nth-child(even) td {{
+        background: #fafbfc;
+    }}
+
+    .stage-name {{
+        font-weight: 700;
+        font-size: 14px;
+    }}
+
+    .stage-sub {{
+        color: #6b7b8f;
+        font-size: 12px;
+        margin-top: 4px;
     }}
 
     .total-bar {{
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
+        margin-top: 20px;
+        background: #003b78;
+        color: white;
+        border-radius: 12px;
+        padding: 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }}
 
-    .total-price {{
+    .total-bar span {{
+        font-weight: 800;
+        text-transform: uppercase;
+    }}
+
+    .total-bar strong {{
         font-size: 28px;
     }}
 
-    .etap-card {{
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 18px;
+    .materials-section {{
+        padding: 0 34px 34px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 34px;
     }}
 
-}}
+    .material-box,
+    .terms-box {{
+        border: 1px solid #e2e9f2;
+        border-radius: 14px;
+        background: #ffffff;
+        overflow: hidden;
+    }}
 
+    .material-head {{
+        background: #f1f4f8;
+        color: #003b78;
+        font-weight: 800;
+        padding: 14px 18px;
+    }}
+
+    .material-row {{
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 13px 18px;
+        border-top: 1px solid #edf2f7;
+        color: #09274a;
+        font-size: 14px;
+    }}
+
+    .material-row strong {{
+        white-space: nowrap;
+    }}
+
+    .terms-content {{
+        padding: 18px;
+        color: #09274a;
+        line-height: 1.7;
+        font-size: 14px;
+    }}
+
+    .terms-content p {{
+        margin: 0 0 12px;
+    }}
+
+    .offer-footer {{
+        background: #082849;
+        color: white;
+        padding: 26px 34px;
+        display: grid;
+        grid-template-columns: 220px 1fr 90px 170px;
+        align-items: center;
+        gap: 24px;
+    }}
+
+    .offer-footer img.logo-footer {{
+        max-width: 180px;
+    }}
+
+    .offer-footer img.qr {{
+        width: 82px;
+        height: 82px;
+        background: white;
+        padding: 5px;
+        border-radius: 8px;
+    }}
+
+    .accept-box {{
+        margin-top: 22px;
+        border: 1px solid #dbe5ef;
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 18px;
+    }}
+
+    .status-badge {{
+        display: inline-block;
+        background: #ecfdf5;
+        color: #007a4a;
+        border: 1px solid #b7efd1;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 13px;
+        margin-bottom: 12px;
+    }}
+
+    @media (max-width: 900px) {{
+        .offer-hero {{
+            min-height: 300px;
+            padding: 28px;
+        }}
+
+        .offer-hero h1 {{
+            font-size: 38px;
+        }}
+
+        .offer-body,
+        .materials-section {{
+            grid-template-columns: 1fr;
+            padding: 24px;
+        }}
+
+        .offer-footer {{
+            grid-template-columns: 1fr;
+            text-align: center;
+        }}
+
+        .offer-footer img.logo-footer,
+        .offer-footer img.qr {{
+            margin: 0 auto;
+        }}
+
+        .total-bar {{
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 8px;
+        }}
+    }}
 </style>
 
-<div class="a4-container">
+<div class="premium-offer">
 
-<div class="hero">
+    <section class="offer-hero">
+        <div>
+            {"<img class='offer-logo' src='" + logo_uri + "'>" if logo_uri else "<strong>PROCALC</strong>"}
+            <h1>Oferta<br>Kosztorysowa</h1>
+        </div>
 
-<div class="hero-content">
+        <div class="hero-meta">
+            <div class="hero-pill">
+                <span>Data wystawienia</span>
+                <strong>{data_wystawienia}</strong>
+            </div>
+            <div class="hero-pill">
+                <span>Projekt</span>
+                <strong>{_safe_html(nazwa_klienta)}</strong>
+            </div>
+            <div class="hero-pill">
+                <span>Status</span>
+                <strong>{_safe_html(status_badge)}</strong>
+            </div>
+        </div>
+    </section>
 
-<div class="logo-box">
-<img src="logo.svg">
-</div>
+    <section class="offer-body">
+        <div>
+            <h2 class="section-title">Dane inwestycji</h2>
 
-<div class="badge">
-PROCALC PREMIUM SYSTEM
-</div>
+            <div class="info-grid">
+                <div class="info-box">
+                    <span>Nazwa inwestycji</span>
+                    <strong>{_safe_html(nazwa_klienta)}</strong>
+                </div>
+                <div class="info-box">
+                    <span>Zakres prac</span>
+                    <strong>{_safe_html(projekt.get("branza", "Kosztorys"))}</strong>
+                </div>
+                <div class="info-box">
+                    <span>Oferta ważna</span>
+                    <strong>14 dni</strong>
+                </div>
+                <div class="info-box">
+                    <span>Forma rozliczenia</span>
+                    <strong>Robocizna / etapy</strong>
+                </div>
+            </div>
 
-<h1>
-Oferta<br>
-Kosztorysowa
-</h1>
+            <h2 class="section-title">Podsumowanie oferty</h2>
 
-<p>
-Profesjonalna wycena prac remontowych
-wygenerowana automatycznie w systemie ProCalc.
-</p>
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <span>Suma robocizny</span>
+                    <strong>{_money_html(suma_rob)}</strong>
+                </div>
+                <div class="summary-card red">
+                    <span>Udzielony rabat</span>
+                    <strong>-{_money_html(rabat)}</strong>
+                </div>
+                <div class="summary-card green">
+                    <span>Łącznie do zapłaty</span>
+                    <strong>{_money_html(do_zaplaty)}</strong>
+                </div>
+            </div>
 
-<div class="hero-stats">
+            <div class="accept-box">
+                <div class="status-badge">{_safe_html(status_badge)}</div>
+                <p style="margin:0;color:#42566f;font-size:14px;">
+                    Po akceptacji wykonawca otrzyma informację, że oferta została zatwierdzona.
+                </p>
+            </div>
+        </div>
 
-<div class="hero-box">
-<div class="hero-label">
-Data wystawienia
-</div>
-<div class="hero-value">
-{data_wystawienia}
-</div>
-</div>
+        <div>
+            <h2 class="section-title">Zestawienie kosztów</h2>
 
-<div class="hero-box">
-<div class="hero-label">
-Projekt
-</div>
-<div class="hero-value">
-{nazwa_klienta}
-</div>
-</div>
+            <table class="stages-table">
+                <thead>
+                    <tr>
+                        <th>Etap / Branża</th>
+                        <th>Wartość</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {etapy_html}
+                </tbody>
+            </table>
 
-</div>
+            <div class="total-bar">
+                <span>Łącznie do zapłaty</span>
+                <strong>{_money_html(do_zaplaty)}</strong>
+            </div>
+        </div>
+    </section>
 
-</div>
+    <section class="materials-section">
+        <div class="material-box">
+            <div class="material-head">Logistyka i zapotrzebowanie materiałowe</div>
+            {materialy_html}
+        </div>
 
-</div>
+        <div class="terms-box">
+            <div class="material-head">Notatki i warunki współpracy</div>
+            <div class="terms-content">
+                <p>Oferta obejmuje zakres prac wskazany w zestawieniu kosztów.</p>
+                <p>Podane ilości materiałów mają charakter orientacyjny i mogą się różnić po weryfikacji na budowie.</p>
+                <p>Zalecamy zakup materiałów z 5-10% zapasem.</p>
+                <p>Płatność: zaliczka 30%, pozostała część po zakończeniu lub według ustalonego harmonogramu.</p>
+                <p>Końcowy koszt może ulec zmianie w przypadku zmiany zakresu prac przez inwestora.</p>
+            </div>
+        </div>
+    </section>
 
-<div class="grid-layout">
-
-<!-- LEFT -->
-
-<div>
-
-<div class="section-title">
-Dane inwestycji
-</div>
-
-<div class="card">
-
-<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">
-Projekt
-</div>
-
-<div style="font-size:24px; font-weight:700; color:#111827;">
-{nazwa_klienta}
-</div>
-
-</div>
-
-<div class="section-title" style="margin-top:30px;">
-Podsumowanie finansowe
-</div>
-
-<div class="card">
-
-<div class="finance-label">
-SUMA ROBOCIZNY
-</div>
-
-<div class="finance-value">
-{suma_rob:,.2f} zł
-</div>
-
-</div>
-
-<div class="card finance-red">
-
-<div class="finance-label">
-RABAT
-</div>
-
-<div class="finance-value">
--{rabat:,.2f} zł
-</div>
-
-</div>
-
-<div class="card finance-green">
-
-<div class="finance-label">
-DO ZAPŁATY
-</div>
-
-<div class="finance-value">
-{do_zaplaty:,.2f} zł
-</div>
-
-</div>
-
-</div>
-
-<!-- RIGHT -->
-
-<div>
-
-<div class="section-title">
-Zakres prac
-</div>
-
-{etapy_html}
-
-<div class="total-bar">
-
-<div>
-
-<div class="total-label">
-ŁĄCZNA KWOTA
-</div>
-
-<div class="total-price">
-{do_zaplaty:,.2f} zł
-</div>
-
-</div>
-
-<div style="
-font-size:14px;
-opacity:0.9;
-text-align:right;
-">
-Profesjonalna oferta<br>
-wygenerowana w ProCalc
-</div>
-
-</div>
-
-<div class="info-box">
-
-<b>Warunki współpracy:</b>
-
-<ul style="margin-top:12px; padding-left:18px; color:#475569;">
-
-<li>Oferta ważna przez 14 dni</li>
-
-<li>Wycena obejmuje wyłącznie robociznę</li>
-
-<li>Możliwość etapowania płatności</li>
-
-<li>Materiały rozliczane osobno</li>
-
-</ul>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="footer">
-Wygenerowano automatycznie w systemie ProCalc Premium
-</div>
+    <footer class="offer-footer">
+        {"<img class='logo-footer' src='" + logo_uri + "'>" if logo_uri else "<strong>PROCALC</strong>"}
+        <div>
+            <strong>Masz pytania? Skontaktuj się z nami.</strong><br>
+            kontakt@procalc.pl &nbsp;&nbsp; | &nbsp;&nbsp; procalc.pl
+        </div>
+        {"<img class='qr' src='" + qr_uri + "'>" if qr_uri else ""}
+        <div>Zeskanuj kod QR<br>i zobacz kalkulator online</div>
+    </footer>
 
 </div>
 """
 
-            st.markdown(html_content, unsafe_allow_html=True)
+        st.markdown(html_content, unsafe_allow_html=True)
 
-            st.stop()
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        if status != "Zaakceptowana":
+            col_a, col_b, col_c = st.columns([1, 2, 1])
+            with col_b:
+                if st.button("✅ Akceptuję ofertę", type="primary", use_container_width=True):
+                    try:
+                        supabase.table("kosztorysy").update({
+                            "status": "Zaakceptowana"
+                        }).eq("id", oferta_id).execute()
+
+                        st.success("Dziękujemy. Oferta została zaakceptowana.")
+                        time.sleep(1)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Nie udało się zaakceptować oferty: {e}")
+        else:
+            st.success("Oferta została zaakceptowana.")
+
+        st.stop()
 
     except Exception as e:
-
         st.error(f"Błąd krytyczny: {e}")
+        st.stop()
+
         
 
 
