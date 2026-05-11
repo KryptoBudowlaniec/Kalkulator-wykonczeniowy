@@ -1295,7 +1295,8 @@ if nawigacja == "Kalkulatory":
     # Wyświetlamy pillsy tylko w sekcji kalkulatorów
     wybor_kalkulatora = st.pills(
         "Wybierz branżę:", 
-        ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa", "Elektryka", "Łazienka", "Podłogi", "Drzwi", "Efekty Dekoracyjne", "Tapetowanie", "🛒 Koszyk"],
+        ["Malowanie", "Szpachlowanie", "Tynkowanie", "Sucha Zabudowa","Poddasze", "Elektryka", "Łazienka", "Podłogi", "Drzwi", "Efekty Dekoracyjne", "Tapetowanie"
+, "🛒 Koszyk"],
         selection_mode="single",
         default=domyslna_branza,  # <--- TUTAJ UŻYWAMY ZMIENNEJ PRZEKIEROWANIA
         key="sub_nav"
@@ -1385,7 +1386,7 @@ if st.session_state.zalogowany:
             opcja_boczna == "Aplikacja Główna" and
             branza not in ["Start", "Logowanie", "Panel Inwestora", "Harmonogram", "Kontakt", "Kalkulatory"]):
             
-            with st.expander("⚙️ USTAWIENIA ZAAWANSOWANE (PRO)", expanded=False):
+            with st.expander("USTAWIENIA ZAAWANSOWANE (PRO)", expanded=False):
                 st.write("Dostosuj narzuty dla tego kosztorysu:")
                 
                 # --- TWOJA LOGIKA O&P ---
@@ -1427,11 +1428,11 @@ if st.session_state.zalogowany:
 # ==========================================
 
 if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
-    st.header("👤 Mój Profil i Dane Firmy")
+    st.header("Mój Profil i Dane Firmy")
     
     if st.session_state.get("pakiet") == "PRO":
         # --- CZĘŚĆ 1: DANE FIRMY (ROZWIJANE) ---
-        with st.expander("⚙️ Ustawienia firmy i logo do PDF", expanded=False):
+        with st.expander("Ustawienia firmy i logo do PDF", expanded=False):
             st.write("Uzupełnij dane, które będą automatycznie widoczne na nagłówkach Twoich kosztorysów PDF.")
             
             col_dane, col_logo_pdf = st.columns(2)
@@ -1451,7 +1452,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 st.number_input("Twoja domyślna stawka za roboczogodzinę (PLN/h)", value=60)
 
             st.markdown("---")
-            if st.button("💾 Zapisz ustawienia profilu i PDF", type="primary", use_container_width=True):
+            if st.button("Zapisz ustawienia profilu i PDF", type="primary", use_container_width=True):
                 st.session_state.firma_nazwa = firma_nazwa
                 st.session_state.firma_adres = firma_adres
                 st.session_state.firma_nip = firma_nip
@@ -1475,16 +1476,16 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
     # --- CZĘŚĆ 2: TWOJE ZAPISANE PROJEKTY (LISTA) ---
     # ==========================================
     st.markdown("---")
-    st.header("🗄️ Zarządzanie Kosztorysami")
+    st.header("Zarządzanie Kosztorysami")
 
     # --- 🚀 PANEL PDF ---
     if 'aktywny_projekt_do_pdf' in st.session_state:
         aktyw = st.session_state['aktywny_projekt_do_pdf']
         dane_proj = aktyw.get('dane_json', {})
         
-        st.info("👇 Wybierz opcje oferty i wygeneruj plik.")
+        st.info(" Wybierz opcje oferty i wygeneruj plik.")
         with st.container(border=True):
-            st.subheader(f"📄 Oferta: {aktyw.get('nazwa_projektu')}")
+            st.subheader(f"Oferta: {aktyw.get('nazwa_projektu')}")
             
             # --- NOWOŚĆ: WYBÓR TRYBU OFERTY ---
             opcja_oferty = st.radio(
@@ -1554,7 +1555,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 del st.session_state['aktywny_projekt_do_pdf']
                 st.rerun()
 
-   # --- PĘTLA Z LISTĄ PROJEKTÓW ---
+   # --- TABELA Z LISTĄ PROJEKTÓW ---
     try:
         odpowiedz = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).order("created_at", desc=True).execute()
         projekty = odpowiedz.data
@@ -1562,74 +1563,92 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         if not projekty:
             st.info("Nie masz jeszcze żadnych zapisanych projektów.")
         else:
+            st.markdown("### Twoje zapisane kosztorysy")
+
+            host_url = "https://app.procalc.pl"
+
+            def policz_kwote_robocizny(projekt):
+                dane = projekt.get("dane_json", {}) or {}
+                branza = projekt.get("branza", "")
+
+                if branza == "Kosztorys Wieloetapowy":
+                    return float(
+                        dane.get(
+                            "robocizna_po_rabacie",
+                            dane.get("suma_robocizna", dane.get("koszt_calkowity_projektu", 0))
+                        ) or 0
+                    )
+
+                if "etapy" in dane:
+                    return float(
+                        sum(
+                            float(e.get("koszt_robocizny", e.get("koszt_calkowity", 0)) or 0)
+                            for e in dane.get("etapy", [])
+                        )
+                    )
+
+                return float(dane.get("koszt_robocizny", dane.get("koszt_calkowity", 0)) or 0)
+
+            # Nagłówek tabeli
+            h1, h2, h3, h4, h5, h6 = st.columns([2.5, 1.2, 1.1, 1.2, 2.5, 0.8])
+            h1.markdown("**Nazwa projektu**")
+            h2.markdown("**Kwota**")
+            h3.markdown("**Status**")
+            h4.markdown("**PDF**")
+            h5.markdown("**Link dla klienta**")
+            h6.markdown("**Usuń**")
+
+            st.markdown("---")
+
             for p in projekty:
-                data_utworzenia = str(p.get('created_at'))[:10]
-                nazwa = p.get('nazwa_projektu', 'Brak nazwy')
-                branza_projektu = p.get('branza', 'Nieznana')
-                dane = p.get('dane_json', {}) 
-                
-                # Zmienione: Pobieramy kwotę robocizny po rabacie, żebyś widział realny zysk
-                if branza_projektu == "Kosztorys Wieloetapowy":
-                    koszt_surowy = float(dane.get('robocizna_po_rabacie', dane.get('koszt_calkowity_projektu', 0)))
-                else:
-                    koszt_surowy = float(dane.get('koszt_calkowity', 0))
-                    
-                koszt_format = f"{koszt_surowy:,.2f}".replace(",", " ")
-                
-                with st.expander(f"{data_utworzenia} | {nazwa} | {koszt_format} zł (Robocizna)"):
-                    
-                    # 1. STATUS I LINK DLA KLIENTA
-                    status = p.get('status', 'Oczekująca')
+                projekt_id = p.get("id")
+                data_utworzenia = str(p.get("created_at", ""))[:10]
+                nazwa = p.get("nazwa_projektu", "Brak nazwy")
+                branza_projektu = p.get("branza", "Nieznana")
+                status = p.get("status", "Oczekująca")
+                kwota = policz_kwote_robocizny(p)
+                kwota_format = f"{kwota:,.2f} zł".replace(",", " ")
+                link_do_oferty = f"{host_url}/?oferta={projekt_id}"
+
+                col_nazwa, col_kwota, col_status, col_pdf, col_link, col_usun = st.columns([2.5, 1.2, 1.1, 1.2, 2.5, 0.8])
+
+                with col_nazwa:
+                    st.markdown(f"**{nazwa}**")
+                    st.caption(f"{data_utworzenia} | {branza_projektu}")
+
+                with col_kwota:
+                    st.markdown(f"**{kwota_format}**")
+                    st.caption("Robocizna")
+
+                with col_status:
                     if status == "Zaakceptowana":
-                        st.success(f"**Status:** ✅ {status} - Klient potwierdził realizację!")
+                        st.success("Zaakceptowana")
                     else:
-                        st.info(f"**Status:** ⏳ {status} - Czeka na decyzję klienta.")
-                        
-                    host_url = "https://app.procalc.pl" # Pamiętaj, żeby to był adres, pod którym działa aplikacja Streamlit
-                    link_do_oferty = f"{host_url}/?oferta={p.get('id')}"
-                    st.markdown("**🔗 Wyślij klientowi interaktywny link do akceptacji:**")
-                    st.code(link_do_oferty, language="http")
-                    st.markdown("---")
-                    
-                    # 2. SZCZEGÓŁY
-                    if branza_projektu == "Kosztorys Wieloetapowy":
-                        st.info("Projekt wieloetapowy z ukrytymi cenami materiałów.")
-                        if "zbiorcza_lista_zakupow" in dane:
-                            with st.expander("ZBIORCZA LISTA ZAKUPÓW (Logistyka)", expanded=False):
-                                for mat in dane["zbiorcza_lista_zakupow"]:
-                                    st.write(f"- {mat['nazwa']}: **{round(mat['ilosc'], 1)} {mat['jed']}**")
-                        with st.expander("Podgląd etapów projektu", expanded=False):
-                            for e in dane.get("etapy", []):
-                                st.write(f"🔸 **{e.get('nazwa_etapu', 'Etap')}** ({e.get('branza', '')})")
-                    else:
-                        st.write(f"**Moduł kalkulatora:** {branza_projektu}")
-                    
-                    st.markdown("<br>", unsafe_allow_html=True)
+                        st.info("Oczekująca")
 
-                    # 3. PRZYCISKI AKCJI
-                    btn_col1, btn_col2, btn_col3 = st.columns(3)
-                    
-                    with btn_col1:
-                        # Przycisk edycji ukrywamy dla wieloetapowych (na ten moment)
-                        if branza_projektu != "Kosztorys Wieloetapowy":
-                            if st.button("Edytuj", key=f"edit_{p.get('id')}", use_container_width=True):
-                                # ... tu zostaje Twój kod z przypisywaniem zmiennych do edycji ...
-                                st.info("Edycja pojedynczych modułów (wkrótce)")
-                        else:
-                            st.write("") 
+                with col_pdf:
+                    if st.button("PDF", key=f"pdf_{projekt_id}", use_container_width=True):
+                        st.session_state["aktywny_projekt_do_pdf"] = p
+                        st.rerun()
 
-                    with btn_col2:
-                        if st.button("Generuj PDF", key=f"pdf_{p.get('id')}", use_container_width=True):
-                            st.session_state['aktywny_projekt_do_pdf'] = p
-                            st.rerun()
+                with col_link:
+                    st.text_input(
+                        "Link dla klienta",
+                        value=link_do_oferty,
+                        key=f"link_{projekt_id}",
+                        label_visibility="collapsed"
+                    )
 
-                    with btn_col3:
-                        if st.button("Usuń", key=f"del_{p.get('id')}", type="secondary", use_container_width=True):
-                            supabase.table("kosztorysy").delete().eq("id", p.get("id")).execute()
-                            st.rerun()
+                with col_usun:
+                    if st.button("Usuń", key=f"del_{projekt_id}", type="secondary", use_container_width=True):
+                        supabase.table("kosztorysy").delete().eq("id", projekt_id).execute()
+                        st.rerun()
+
+                st.markdown("---")
 
     except Exception as e:
         st.error(f"Błąd komunikacji z bazą danych: {e}")
+
                 
 
 # ==========================================
@@ -1661,15 +1680,15 @@ elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
                         data_str = str(user_res.user.created_at)[:10] 
                         data_zalozenia = datetime.strptime(data_str, "%Y-%m-%d").date()
                         waznosc = data_zalozenia + timedelta(days=7)
-                        st.info(f"🎁 Aktywna wersja próbna.\n\nTwój darmowy okres testowy wygasa: **{waznosc.strftime('%d.%m.%Y')}**")
+                        st.info(f"Aktywna wersja próbna.\n\nTwój darmowy okres testowy wygasa: **{waznosc.strftime('%d.%m.%Y')}**")
             except Exception as e:
                 st.write("Konto aktywne.")
         else:
-            st.warning("🔒 Brak aktywnej subskrypcji. Aktywuj kod, aby odzyskać pełny dostęp do kalkulatorów.")
+            st.warning("Brak aktywnej subskrypcji. Aktywuj kod, aby odzyskać pełny dostęp do kalkulatorów.")
             
         st.markdown("<br>", unsafe_allow_html=True)
-        st.button("💳 Zarządzaj kartą płatniczą (Stripe)")
-        st.button("📄 Pobierz ostatnie faktury")
+        st.button("Zarządzaj kartą płatniczą (Stripe)")
+        st.button("Pobierz ostatnie faktury")
         
     with col_sub2:
         st.markdown("""
@@ -1686,7 +1705,7 @@ elif st.session_state.zalogowany and opcja_boczna == "Moja Subskrypcja":
         """, unsafe_allow_html=True)
 
 elif st.session_state.zalogowany and opcja_boczna == "Bezpieczeństwo":
-    st.header("Bezpieczeństwo i Logowanie 🔒")
+    st.header("Bezpieczeństwo i Logowanie")
     
     st.subheader("Zmiana hasła")
     st.write("Zalecamy używanie silnego hasła składającego się z minimum 8 znaków.")
@@ -1711,7 +1730,7 @@ elif st.session_state.zalogowany and opcja_boczna == "Bezpieczeństwo":
         st.button("Trwale usuń moje konto", type="secondary")
 
 elif st.session_state.zalogowany and opcja_boczna == "Język i Region":
-    st.header("Ustawienia Regionalne 🌍")
+    st.header("Ustawienia Regionalne")
     st.selectbox("Wybierz język interfejsu", ["Polski", "English"])
     st.selectbox("Domyślna waluta systemu", ["PLN", "EUR", "USD", "GBP"])
     if st.button("Zapisz ustawienia regionalne"):
@@ -1919,41 +1938,350 @@ elif opcja_boczna == "Aplikacja Główna":
             
         st.markdown("<br><br>", unsafe_allow_html=True)
             
-# ==========================================
-        # NOWY ROADMAP (Z TWOJEGO PDF PRO)
         # ==========================================
-        st.markdown("---")
-        st.header("🚀 Kierunek Rozwoju ProCalc")
-        st.markdown("_Inspirujemy się najlepszymi systemami SaaS na świecie, aby dostarczyć polskim wykonawcom narzędzie najwyższej klasy._")
-        
-        col_roadmap1, col_roadmap2 = st.columns(2)
-        
-        with col_roadmap1:
-            st.markdown("### 🛠️ W TRAKCIE (Priorytety)")
-            
-            with st.expander("📦 Inteligentny System Koszyka", expanded=True):
-                st.write("""
-                **Multi-Wycena:** Możliwość łączenia wielu branż (malowanie, panele, łazienka) w jeden zbiorczy projekt z ujednoliconą listą zakupową.
-                """)
-                st.progress(85) # Wizualny pasek postępu
+        # ROADMAP PREMIUM SAAS
+        # ==========================================
+        import textwrap
 
-            with st.expander("⚙️ Centralny System Stawek", expanded=True):
-                st.write("""
-                **Globalny Cennik:** Jeden panel do zarządzania stawkami roboczogodziny i marżami, który automatycznie aktualizuje wszystkie 9 kalkulatorów.
-                """)
-                st.progress(40)
+        st.markdown(textwrap.dedent("""
+        <style>
+            .roadmap-wrap {
+                margin-top: 56px;
+                padding: 34px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background: #ffffff;
+            }
 
-        with col_roadmap2:
-            st.markdown("### 📅 NADCHODZĄCE (Q3 / Q4)")
-            
-            st.info("📈 **CRM i Zarządzanie Sprzedażą**\n\nŚledzenie statusu ofert (Wysłane/Zaakceptowane) oraz system powiadomień o otwarciu linku przez klienta.")
-            
-            st.success("📸 **Dokumentacja i Prawo**\n\nGaleria zdjęć z budowy przypisana do projektu oraz automatyczny generator Umów o Dzieło i Protokołów Odbioru.")
-            
-            st.warning("💰 **Dashboard Finansowy**\n\nPanel szefa pokazujący rentowność firmy, zysk netto z projektów oraz integracja z płatnościami Stripe/Przelewy24.")
+            .roadmap-top {
+                display: flex;
+                justify-content: space-between;
+                gap: 24px;
+                align-items: flex-start;
+                margin-bottom: 28px;
+            }
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.caption("Naszym celem jest skrócenie czasu Twojej pracy biurowej o 80% przy jednoczesnym wzroście profesjonalizmu Twoich ofert.")
+            .roadmap-eyebrow {
+                color: #00A876;
+                font-size: 12px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: .08em;
+                margin-bottom: 8px;
+            }
+
+            .roadmap-title {
+                color: #0E172B;
+                font-size: 30px;
+                line-height: 1.15;
+                font-weight: 800;
+                margin: 0;
+            }
+
+            .roadmap-sub {
+                color: #64748b;
+                font-size: 15px;
+                line-height: 1.6;
+                max-width: 640px;
+                margin-top: 12px;
+            }
+
+            .roadmap-status {
+                min-width: 220px;
+                border: 1px solid #dbe4ef;
+                border-radius: 8px;
+                padding: 16px;
+                background: #f8fafc;
+            }
+
+            .roadmap-status span {
+                display: block;
+                color: #64748b;
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+
+            .roadmap-status strong {
+                display: block;
+                color: #0E172B;
+                font-size: 22px;
+                font-weight: 800;
+            }
+
+            .roadmap-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 16px;
+            }
+
+            .roadmap-col {
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #ffffff;
+            }
+
+            .roadmap-col-head {
+                padding: 16px 18px;
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .roadmap-col-head span {
+                display: inline-block;
+                font-size: 11px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: .08em;
+                color: #00A876;
+                margin-bottom: 5px;
+            }
+
+            .roadmap-col-head h3 {
+                margin: 0;
+                color: #0E172B;
+                font-size: 17px;
+                font-weight: 800;
+            }
+
+            .roadmap-item {
+                padding: 17px 18px;
+                border-bottom: 1px solid #eef2f7;
+            }
+
+            .roadmap-item:last-child {
+                border-bottom: 0;
+            }
+
+            .roadmap-item-top {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+
+            .roadmap-item-title {
+                color: #0E172B;
+                font-size: 15px;
+                font-weight: 800;
+            }
+
+            .roadmap-pill {
+                white-space: nowrap;
+                border-radius: 999px;
+                padding: 5px 9px;
+                font-size: 11px;
+                font-weight: 800;
+                border: 1px solid #dbe4ef;
+                color: #475569;
+                background: #ffffff;
+            }
+
+            .roadmap-pill.done {
+                color: #007a4a;
+                background: #ecfdf5;
+                border-color: #bbf7d0;
+            }
+
+            .roadmap-pill.active {
+                color: #005b96;
+                background: #eff6ff;
+                border-color: #bfdbfe;
+            }
+
+            .roadmap-pill.next {
+                color: #7c2d12;
+                background: #fff7ed;
+                border-color: #fed7aa;
+            }
+
+            .roadmap-desc {
+                color: #64748b;
+                font-size: 13px;
+                line-height: 1.55;
+                margin: 0 0 12px;
+            }
+
+            .roadmap-progress {
+                width: 100%;
+                height: 7px;
+                border-radius: 999px;
+                background: #e2e8f0;
+                overflow: hidden;
+            }
+
+            .roadmap-progress div {
+                height: 100%;
+                background: #00A876;
+                border-radius: 999px;
+            }
+
+            .roadmap-footer {
+                margin-top: 18px;
+                padding: 16px 18px;
+                border: 1px solid #dbe4ef;
+                border-radius: 8px;
+                background: #f8fafc;
+                color: #475569;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            @media (max-width: 900px) {
+                .roadmap-wrap {
+                    padding: 22px;
+                }
+
+                .roadmap-top {
+                    flex-direction: column;
+                }
+
+                .roadmap-status {
+                    width: 100%;
+                }
+
+                .roadmap-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .roadmap-title {
+                    font-size: 24px;
+                }
+            }
+        </style>
+
+        <section class="roadmap-wrap">
+            <div class="roadmap-top">
+                <div>
+                    <div class="roadmap-eyebrow">Roadmapa produktu</div>
+                    <h2 class="roadmap-title">Kierunek rozwoju ProCalc</h2>
+                    <div class="roadmap-sub">
+                        Budujemy system operacyjny dla ekip wykończeniowych: od szybkiej wyceny, przez kosztorys PDF i link dla klienta,
+                        aż po zarządzanie sprzedażą, realizacją i rentownością prac.
+                    </div>
+                </div>
+
+                <div class="roadmap-status">
+                    <span>Cel produktu</span>
+                    <strong>-80% pracy biurowej</strong>
+                    <span style="margin-top:8px;">Mniej liczenia, więcej kontroli nad ofertą i marżą.</span>
+                </div>
+            </div>
+
+            <div class="roadmap-grid">
+
+                <div class="roadmap-col">
+                    <div class="roadmap-col-head">
+                        <span>Delivered</span>
+                        <h3>Już wdrożone</h3>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">Koszyk wieloetapowy</div>
+                            <div class="roadmap-pill done">Gotowe</div>
+                        </div>
+                        <p class="roadmap-desc">Łączenie wielu branż w jeden kosztorys z automatyczną listą zakupów.</p>
+                        <div class="roadmap-progress"><div style="width:100%;"></div></div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">Premium PDF</div>
+                            <div class="roadmap-pill done">Gotowe</div>
+                        </div>
+                        <p class="roadmap-desc">Nowy wygląd ofert z logo, hero, tabelą kosztów, materiałami i warunkami współpracy.</p>
+                        <div class="roadmap-progress"><div style="width:100%;"></div></div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">Link oferty dla klienta</div>
+                            <div class="roadmap-pill done">Gotowe</div>
+                        </div>
+                        <p class="roadmap-desc">Interaktywny widok kosztorysu online z możliwością akceptacji oferty.</p>
+                        <div class="roadmap-progress"><div style="width:100%;"></div></div>
+                    </div>
+                </div>
+
+                <div class="roadmap-col">
+                    <div class="roadmap-col-head">
+                        <span>In progress</span>
+                        <h3>W trakcie</h3>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">Centralny system stawek</div>
+                            <div class="roadmap-pill active">60%</div>
+                        </div>
+                        <p class="roadmap-desc">Globalny cennik robocizny, narzutów, utrudnień i marż automatycznie stosowany w kalkulatorach.</p>
+                        <div class="roadmap-progress"><div style="width:60%;"></div></div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">Moduł poddasza</div>
+                            <div class="roadmap-pill active">75%</div>
+                        </div>
+                        <p class="roadmap-desc">Geometria skosów, izolacja, okna dachowe, obróbki, profile, wieszaki i kompletna lista materiałów.</p>
+                        <div class="roadmap-progress"><div style="width:75%;"></div></div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">Profil wykonawcy</div>
+                            <div class="roadmap-pill active">45%</div>
+                        </div>
+                        <p class="roadmap-desc">Dane firmy, logo, kontakt i preferencje PDF zapisane jako domyślne ustawienia konta.</p>
+                        <div class="roadmap-progress"><div style="width:45%;"></div></div>
+                    </div>
+                </div>
+
+                <div class="roadmap-col">
+                    <div class="roadmap-col-head">
+                        <span>Next</span>
+                        <h3>Następne kroki</h3>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">CRM ofert</div>
+                            <div class="roadmap-pill next">Q3</div>
+                        </div>
+                        <p class="roadmap-desc">Statusy: robocza, wysłana, otwarta, zaakceptowana, odrzucona. Historia kontaktu z klientem.</p>
+                        <div class="roadmap-progress"><div style="width:20%;"></div></div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">Dokumentacja budowy</div>
+                            <div class="roadmap-pill next">Q3/Q4</div>
+                        </div>
+                        <p class="roadmap-desc">Zdjęcia, notatki, protokoły odbioru i automatyczne załączniki do projektu.</p>
+                        <div class="roadmap-progress"><div style="width:10%;"></div></div>
+                    </div>
+
+                    <div class="roadmap-item">
+                        <div class="roadmap-item-top">
+                            <div class="roadmap-item-title">Dashboard finansowy</div>
+                            <div class="roadmap-pill next">Q4</div>
+                        </div>
+                        <p class="roadmap-desc">Rentowność projektów, zysk netto, materiały, robocizna, rabaty i pipeline sprzedaży.</p>
+                        <div class="roadmap-progress"><div style="width:8%;"></div></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="roadmap-footer">
+                ProCalc rozwijamy jako praktyczne narzędzie pracy, nie katalog funkcji. Priorytet mają te moduły,
+                które skracają czas przygotowania oferty, zmniejszają ryzyko pomyłek i pomagają wykonawcy wyglądać profesjonalnie przed klientem.
+            </div>
+        </section>
+        """), unsafe_allow_html=True)
+
     
     
     # ==========================================
@@ -4224,28 +4552,388 @@ elif opcja_boczna == "Aplikacja Główna":
                         else:
                             st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
                         
-                            st.markdown("---")
-                            st.subheader("Generator PDF")
-    
-                            dane_pdf = _dane_pdf_z_etapu(
-                                dane_json,
-                                tytul="Kosztorys suchej zabudowy",
-                                parametry=[
-                                    {"nazwa": "Powierzchnia zabudowy", "wartosc": f"{round(m2_gk, 1)} m²"},
-                                    {"nazwa": "Rodzaj konstrukcji", "wartosc": rodzaj_gk},
-                                    {"nazwa": "Płytowanie", "wartosc": plytowanie},
-                                    {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_gk} zł/m²"},
-                                    {"nazwa": "Izolacja", "wartosc": "TAK" if izolacja_gk else "NIE"},
-                                    {"nazwa": "Zbrojenie łączeń", "wartosc": typ_tasmy},
-                                ],
-                            )
-    
-                            _przycisk_pdf(
-                                "sucha_zabudowa",
-                                dane_pdf,
-                                "Kosztorys_GK",
-                                "pdf_gk"
-                            )
+                        st.markdown("---")
+                        st.subheader("Generator PDF")
+
+                        dane_pdf = _dane_pdf_z_etapu(
+                            dane_json,
+                            tytul="Kosztorys suchej zabudowy",
+                            parametry=[
+                                {"nazwa": "Powierzchnia zabudowy", "wartosc": f"{round(m2_gk, 1)} m²"},
+                                {"nazwa": "Rodzaj konstrukcji", "wartosc": rodzaj_gk},
+                                {"nazwa": "Płytowanie", "wartosc": plytowanie},
+                                {"nazwa": "Stawka robocizny", "wartosc": f"{stawka_gk} zł/m²"},
+                                {"nazwa": "Izolacja", "wartosc": "TAK" if izolacja_gk else "NIE"},
+                                {"nazwa": "Zbrojenie łączeń", "wartosc": typ_tasmy},
+                            ],
+                        )
+
+                        _przycisk_pdf(
+                            "sucha_zabudowa",
+                            dane_pdf,
+                            "Kosztorys_GK",
+                            "pdf_gk"
+                        )
+        # --- SEKCJA: PODDASZE ---
+    elif branza == "Poddasze":
+        st.header("Kalkulator Zabudowy Poddasza")
+
+        baza_poddasze = {
+            "Płyta GK 12.5mm zwykła": 35.0,
+            "Płyta GKBI zielona 12.5mm": 48.0,
+            "Profil CD60 (3mb)": 16.0,
+            "Profil UD27 (3mb)": 11.0,
+            "Wieszak grzybkowy": 1.80,
+            "Wieszak obrotowy + drut": 3.20,
+            "Łącznik wzdłużny CD": 1.20,
+            "Wkręty TN25/TN35 komplet": 65.0,
+            "Kołki montażowe komplet": 35.0,
+            "Folia paroizolacyjna m2": 3.50,
+            "Taśma akustyczna rolka 30m": 25.0,
+            "Taśma Tuff-Tape 30m": 150.0,
+            "Taśma flizelinowa 25m": 20.0,
+            "Piana PUR otwartokomórkowa 20cm m2": 95.0,
+            "Wełna mineralna 15cm m2": 32.0,
+            "Wełna mineralna 20cm m2": 42.0,
+            "Wełna mineralna 25cm m2": 54.0,
+            "Wełna skalna 15cm m2": 42.0,
+            "Wełna skalna 20cm m2": 56.0,
+            "Wełna skalna 25cm m2": 70.0,
+        }
+
+        baza_masy_poddasze = {
+            "Knauf Uniflott 25kg": 140.0,
+            "Rigips Vario 25kg": 145.0,
+            "Dolina Nidy Start 20kg": 60.0,
+            "Franspol GS-6 20kg": 96.0,
+        }
+
+        tab_pod_fast, tab_pod_pro = st.tabs(["Szybka Wycena", "Kosztorys PRO"])
+
+        with tab_pod_fast:
+            st.subheader("Szybki szacunek zabudowy poddasza")
+
+            m2_fast = st.number_input("Przybliżona powierzchnia skosów i sufitu (m²):", min_value=1.0, value=80.0, key="pod_fast_m2")
+            standard_fast = st.radio("Standard wykonania:", ["Standard", "Premium"], horizontal=True, key="pod_fast_std")
+
+            stawka_fast = 135 if standard_fast == "Standard" else 170
+            material_fast = 115 if standard_fast == "Standard" else 155
+
+            rob_fast = m2_fast * stawka_fast
+            mat_fast = m2_fast * material_fast
+
+            c1, c2 = st.columns(2)
+            c1.metric("Szacowana robocizna", f"{round(rob_fast)} PLN")
+            c2.metric("Szacowane materiały", f"{round(mat_fast)} PLN")
+
+            st.success(f"### Szacowany koszt całkowity: **{round(rob_fast + mat_fast)} PLN**")
+            st.info("Dokładne wyliczenie kąta skosu, izolacji, profili, wieszaków, okien dachowych i PDF znajdziesz w Kosztorysie PRO.")
+
+        with tab_pod_pro:
+            if not st.session_state.zalogowany or st.session_state.pakiet != "PRO":
+                st.error("🔒 Dostęp zablokowany")
+                st.warning("Zaawansowany kalkulator poddasza dostępny jest dla użytkowników PRO.")
+
+                _, col_k, _ = st.columns([1, 2, 1])
+                with col_k:
+                    if st.button("Odblokuj dostęp PRO", use_container_width=True, key="btn_odblokuj_poddasze"):
+                        st.session_state.przekierowanie = True
+                        st.rerun()
+            else:
+                col_p1, col_p2 = st.columns([1, 1.2])
+
+                with col_p1:
+                    st.subheader("Geometria poddasza")
+
+                    dl_poddasza = st.number_input("Długość poddasza (m):", min_value=0.1, value=10.0, step=0.1, key="pod_dl")
+                    szer_poddasza = st.number_input("Szerokość poddasza po podłodze (m):", min_value=0.1, value=8.0, step=0.1, key="pod_szer")
+                    wys_max = st.number_input("Wysokość maksymalna / do kalenicy (m):", min_value=0.1, value=3.8, step=0.1, key="pod_wys_max")
+                    wys_kolankowa = st.number_input("Wysokość ścianki kolankowej (m):", min_value=0.0, value=1.0, step=0.1, key="pod_wys_kol")
+                    szer_sufitu_plaskiego = st.number_input("Szerokość sufitu płaskiego u góry (m, wpisz 0 jeśli brak):", min_value=0.0, value=1.5, step=0.1, key="pod_sufit_plaski")
+
+                    st.markdown("---")
+                    st.subheader("Okna dachowe i wykusze")
+
+                    liczba_okien = st.number_input("Liczba okien dachowych / wyłazów:", min_value=0, value=2, step=1, key="pod_okna")
+                    szer_okna = st.number_input("Średnia szerokość okna (m):", min_value=0.0, value=0.78, step=0.01, key="pod_okno_szer")
+                    wys_okna = st.number_input("Średnia wysokość okna (m):", min_value=0.0, value=1.18, step=0.01, key="pod_okno_wys")
+                    glebokosc_obrobki = st.number_input("Średnia głębokość obróbki okna (m):", min_value=0.0, value=0.30, step=0.05, key="pod_obrobka_gleb")
+
+                    dodatkowe_wykusze_m2 = st.number_input("Dodatkowe wykusze / nieregularne skosy do doliczenia (m²):", min_value=0.0, value=0.0, step=0.5, key="pod_wykusze")
+                    utrudnienie_proc = st.slider("Dopłata za nieregularny dach / dużo docinek (%)", min_value=0, max_value=50, value=10, step=5, key="pod_utrudnienia")
+
+                    st.markdown("---")
+                    st.subheader("System zabudowy")
+
+                    typ_plyty = st.selectbox("Rodzaj płyt GK:", ["Płyta GK 12.5mm zwykła", "Płyta GKBI zielona 12.5mm"], key="pod_plyta")
+                    plytowanie_pod = st.radio("Płytowanie:", ["1x GK", "2x GK"], horizontal=True, key="pod_plytowanie")
+
+                    konstrukcja_skosy = st.selectbox(
+                        "Konstrukcja skosów:",
+                        ["Wszędzie wieszaki grzybkowe", "Mieszane: skosy grzybkowe, sufit płaski obrotowy + drut"],
+                        key="pod_konstrukcja"
+                    )
+
+                    izolacja_typ = st.selectbox(
+                        "Izolacja termiczna:",
+                        [
+                            "Piana PUR otwartokomórkowa 20cm",
+                            "Wełna mineralna 15cm",
+                            "Wełna mineralna 20cm",
+                            "Wełna mineralna 25cm",
+                            "Wełna skalna 15cm",
+                            "Wełna skalna 20cm",
+                            "Wełna skalna 25cm",
+                        ],
+                        key="pod_izolacja"
+                    )
+
+                    folia_paro = st.checkbox("Folia paroizolacyjna z zapasem 15%", value=True, key="pod_folia")
+                    tasma_akustyczna = st.checkbox("Taśma akustyczna pod profile obwodowe", value=True, key="pod_tasma_akust")
+
+                    typ_tasmy = st.radio(
+                        "Zbrojenie łączeń:",
+                        ["Tuff-Tape wszędzie", "Tuff-Tape tylko narożniki, reszta flizelina"],
+                        key="pod_tasmy"
+                    )
+
+                    masa_spoinowa = st.selectbox("Masa do łączeń:", list(baza_masy_poddasze.keys()), key="pod_masa")
+
+                    stawka_poddasze = st.number_input(
+                        "Stawka robocizny za m² zabudowy (zł):",
+                        min_value=1,
+                        max_value=400,
+                        value=150,
+                        key="pod_stawka",
+                        help="Dla poddaszy zwykle 130-220 zł/m² zależnie od skomplikowania, izolacji, okien i jakości łączeń."
+                    )
+
+                # --- GEOMETRIA ---
+                polowa_sufitu = szer_sufitu_plaskiego / 2
+                poziomy_odcinek_skosu = max(0.01, (szer_poddasza / 2) - polowa_sufitu)
+                wysokosc_skosu = max(0.01, wys_max - wys_kolankowa)
+
+                dlugosc_skosu = math.sqrt(poziomy_odcinek_skosu ** 2 + wysokosc_skosu ** 2)
+                kat_skosu = math.degrees(math.atan(wysokosc_skosu / poziomy_odcinek_skosu))
+
+                m2_skosy_brutto = 2 * dl_poddasza * dlugosc_skosu
+                m2_sufit_plaski = dl_poddasza * szer_sufitu_plaskiego if szer_sufitu_plaskiego > 0 else 0
+
+                m2_okien = liczba_okien * szer_okna * wys_okna
+                m2_obrobek_okien = liczba_okien * ((2 * szer_okna + 2 * wys_okna) * glebokosc_obrobki)
+
+                m2_zabudowy_netto = max(0, m2_skosy_brutto + m2_sufit_plaski + dodatkowe_wykusze_m2 - m2_okien)
+                m2_zabudowy_liczone = m2_zabudowy_netto + m2_obrobek_okien
+
+                mnoznik_plyt = 2 if plytowanie_pod == "2x GK" else 1
+                nad = 1.12
+
+                # --- MATERIAŁY ---
+                szt_plyt = math.ceil((m2_zabudowy_liczone * mnoznik_plyt * nad) / 3.12)
+
+                mb_cd = (m2_zabudowy_liczone * 2.4) if plytowanie_pod == "1x GK" else (m2_zabudowy_liczone * 2.8)
+                szt_cd = math.ceil((mb_cd * 1.10) / 3)
+
+                obwod_poddasza = (dl_poddasza + szer_poddasza) * 2
+                szt_ud = math.ceil((obwod_poddasza * 1.10) / 3)
+
+                szt_wieszaki_skos = math.ceil(m2_skosy_brutto / 0.65)
+                szt_wieszaki_sufit = math.ceil(m2_sufit_plaski / 0.75) if m2_sufit_plaski > 0 else 0
+
+                if "Mieszane" in konstrukcja_skosy:
+                    nazwa_wieszak_skos = "Wieszak grzybkowy"
+                    nazwa_wieszak_sufit = "Wieszak obrotowy + drut"
+                    koszt_wieszakow = (szt_wieszaki_skos * baza_poddasze["Wieszak grzybkowy"]) + (szt_wieszaki_sufit * baza_poddasze["Wieszak obrotowy + drut"])
+                else:
+                    nazwa_wieszak_skos = "Wieszak grzybkowy"
+                    nazwa_wieszak_sufit = "Wieszak grzybkowy"
+                    koszt_wieszakow = (szt_wieszaki_skos + szt_wieszaki_sufit) * baza_poddasze["Wieszak grzybkowy"]
+
+                szt_lacznikow = math.ceil(szt_cd * 0.45)
+
+                m2_izolacji = (m2_skosy_brutto + dodatkowe_wykusze_m2) * 1.08
+                koszt_izolacji = m2_izolacji * baza_poddasze[izolacja_typ]
+
+                m2_folii = m2_zabudowy_liczone * 1.15 if folia_paro else 0
+                koszt_folii = m2_folii * baza_poddasze["Folia paroizolacyjna m2"]
+
+                rolki_tasmy_akust = math.ceil(obwod_poddasza / 30) if tasma_akustyczna else 0
+                koszt_tasmy_akust = rolki_tasmy_akust * baza_poddasze["Taśma akustyczna rolka 30m"]
+
+                if "wszędzie" in typ_tasmy.lower():
+                    mb_tuff = m2_zabudowy_liczone * mnoznik_plyt * 1.45
+                    mb_fliz = 0
+                else:
+                    mb_tuff = m2_zabudowy_liczone * mnoznik_plyt * 0.45
+                    mb_fliz = m2_zabudowy_liczone * mnoznik_plyt * 1.05
+
+                rolki_tuff = math.ceil(mb_tuff / 30) if mb_tuff > 0 else 0
+                rolki_fliz = math.ceil(mb_fliz / 25) if mb_fliz > 0 else 0
+
+                worki_masy = math.ceil((m2_zabudowy_liczone * mnoznik_plyt * 0.55) / 25)
+
+                koszt_plyt = szt_plyt * baza_poddasze[typ_plyty]
+                koszt_profili = (szt_cd * baza_poddasze["Profil CD60 (3mb)"]) + (szt_ud * baza_poddasze["Profil UD27 (3mb)"])
+                koszt_lacznikow = szt_lacznikow * baza_poddasze["Łącznik wzdłużny CD"]
+                koszt_tasm = (rolki_tuff * baza_poddasze["Taśma Tuff-Tape 30m"]) + (rolki_fliz * baza_poddasze["Taśma flizelinowa 25m"])
+                koszt_masy = worki_masy * baza_masy_poddasze[masa_spoinowa]
+                koszt_wkretow = math.ceil((m2_zabudowy_liczone * mnoznik_plyt * 22) / 1000) * baza_poddasze["Wkręty TN25/TN35 komplet"]
+                koszt_kolkow = baza_poddasze["Kołki montażowe komplet"]
+
+                total_material = (
+                    koszt_plyt + koszt_profili + koszt_wieszakow + koszt_lacznikow +
+                    koszt_izolacji + koszt_folii + koszt_tasmy_akust + koszt_tasm +
+                    koszt_masy + koszt_wkretow + koszt_kolkow
+                )
+
+                robocizna_baza = m2_zabudowy_liczone * stawka_poddasze
+                robocizna_okna = liczba_okien * 220
+                robocizna_utrudnienia = robocizna_baza * (utrudnienie_proc / 100)
+
+                robocizna = robocizna_baza + robocizna_okna + robocizna_utrudnienia
+
+                mnoznik_op = st.session_state.get("globalny_mnoznik_op", 1.0)
+                mnoznik_utrudnien = st.session_state.get("globalny_mnoznik", 1.0)
+
+                robocizna = robocizna * mnoznik_op * mnoznik_utrudnien
+                total_material = total_material * mnoznik_op
+
+                suma_poddasze = robocizna + total_material
+
+                lista_zakupow_etapu = [
+                    {"nazwa": typ_plyty, "ilosc": szt_plyt, "jed": "szt."},
+                    {"nazwa": "Profil CD60 (3mb)", "ilosc": szt_cd, "jed": "szt."},
+                    {"nazwa": "Profil UD27 (3mb)", "ilosc": szt_ud, "jed": "szt."},
+                    {"nazwa": nazwa_wieszak_skos, "ilosc": szt_wieszaki_skos, "jed": "szt."},
+                    {"nazwa": nazwa_wieszak_sufit, "ilosc": szt_wieszaki_sufit, "jed": "szt."},
+                    {"nazwa": "Łączniki CD", "ilosc": szt_lacznikow, "jed": "szt."},
+                    {"nazwa": izolacja_typ, "ilosc": round(m2_izolacji, 1), "jed": "m²"},
+                    {"nazwa": f"Masa spoinowa {masa_spoinowa}", "ilosc": worki_masy, "jed": "worki"},
+                    {"nazwa": "Taśma Tuff-Tape (30m)", "ilosc": rolki_tuff, "jed": "rolki"},
+                    {"nazwa": "Taśma flizelinowa (25m)", "ilosc": rolki_fliz, "jed": "rolki"},
+                    {"nazwa": "Wkręty TN25/TN35", "ilosc": math.ceil((m2_zabudowy_liczone * mnoznik_plyt * 22) / 1000), "jed": "op."},
+                    {"nazwa": "Kołki montażowe", "ilosc": 1, "jed": "kpl"},
+                ]
+
+                if m2_folii > 0:
+                    lista_zakupow_etapu.append({"nazwa": "Folia paroizolacyjna", "ilosc": round(m2_folii, 1), "jed": "m²"})
+
+                if rolki_tasmy_akust > 0:
+                    lista_zakupow_etapu.append({"nazwa": "Taśma akustyczna pod profile", "ilosc": rolki_tasmy_akust, "jed": "rolki"})
+
+                with col_p2:
+                    st.subheader("Wyniki i geometria")
+
+                    st.metric("Kąt nachylenia skosu", f"{round(kat_skosu, 1)}°")
+                    st.caption(f"Długość jednego skosu po połaci: {round(dlugosc_skosu, 2)} m")
+
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Skosy brutto", f"{round(m2_skosy_brutto, 1)} m²")
+                    c2.metric("Sufit płaski", f"{round(m2_sufit_plaski, 1)} m²")
+                    c3.metric("Obróbki okien", f"{round(m2_obrobek_okien, 1)} m²")
+
+                    st.success(f"### RAZEM: **{round(suma_poddasze)} PLN**")
+
+                    c4, c5 = st.columns(2)
+                    c4.metric("Robocizna", f"{round(robocizna)} PLN")
+                    c5.metric("Materiały", f"{round(total_material)} PLN")
+
+                    st.markdown("---")
+                    st.subheader("Lista zakupów")
+                    for mat in lista_zakupow_etapu:
+                        if mat["ilosc"] and mat["ilosc"] > 0:
+                            st.write(f"• **{mat['nazwa']}:** {mat['ilosc']} {mat['jed']}")
+
+                st.markdown("---")
+                st.subheader("Opcje zapisu kosztorysu")
+
+                if st.session_state.get("zalogowany"):
+                    nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Poddasze Kowalscy):", key="nazwa_proj_poddasze_input")
+
+                    dane_json = {
+                        "branza": "Poddasze",
+                        "nazwa_etapu": nazwa_projektu,
+                        "powierzchnia_scian": round(m2_zabudowy_liczone, 1),
+                        "marza_op": mnoznik_op,
+                        "mnoznik_utrudnien": mnoznik_utrudnien,
+                        "koszt_calkowity": round(suma_poddasze, 2),
+                        "koszt_robocizny": round(robocizna, 2),
+                        "koszt_materialow": round(total_material, 2),
+                        "technologie": f"Poddasze | kąt {round(kat_skosu, 1)}° | {izolacja_typ}",
+                        "materialy_lista": lista_zakupow_etapu,
+                        "detale": f"Skosy: {round(m2_skosy_brutto, 1)} m² | Sufit płaski: {round(m2_sufit_plaski, 1)} m² | Okna: {liczba_okien} szt.",
+                        "kat_skosu": round(kat_skosu, 1),
+                        "m2_zabudowy": round(m2_zabudowy_liczone, 1),
+                        "liczba_okien": int(liczba_okien),
+                        "izolacja": izolacja_typ,
+                        "plytowanie": plytowanie_pod,
+                    }
+
+                    col_save1, col_save2 = st.columns(2)
+
+                    with col_save1:
+                        if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_pod_koszyk", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę etapu!")
+                            else:
+                                st.session_state.koszyk_projektow.append(dane_json)
+                                st.success(f"Etap '{nazwa_projektu}' dodany do koszyka!")
+                                time.sleep(1)
+                                st.rerun()
+
+                    with col_save2:
+                        if st.button("💾 Zapisz jako osobny projekt", key="btn_pod_chmura", type="primary", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę projektu!")
+                            else:
+                                try:
+                                    dane_do_bazy = {
+                                        "koszt_calkowity_projektu": round(suma_poddasze, 2),
+                                        "etapy": [dane_json]
+                                    }
+
+                                    supabase.table("kosztorysy").insert({
+                                        "uzytkownik_id": st.session_state.user_id,
+                                        "nazwa_projektu": nazwa_projektu,
+                                        "branza": "Poddasze",
+                                        "dane_json": dane_do_bazy
+                                    }).execute()
+
+                                    st.success("Projekt zapisany jako nowy!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Błąd komunikacji z bazą: {e}")
+
+                    st.markdown("---")
+                    st.subheader("Generator PDF")
+
+                    dane_pdf = _dane_pdf_z_etapu(
+                        dane_json,
+                        tytul="Kosztorys zabudowy poddasza",
+                        parametry=[
+                            {"nazwa": "Długość poddasza", "wartosc": f"{dl_poddasza} m"},
+                            {"nazwa": "Szerokość poddasza", "wartosc": f"{szer_poddasza} m"},
+                            {"nazwa": "Wysokość maksymalna", "wartosc": f"{wys_max} m"},
+                            {"nazwa": "Ścianka kolankowa", "wartosc": f"{wys_kolankowa} m"},
+                            {"nazwa": "Szerokość sufitu płaskiego", "wartosc": f"{szer_sufitu_plaskiego} m"},
+                            {"nazwa": "Kąt skosu", "wartosc": f"{round(kat_skosu, 1)}°"},
+                            {"nazwa": "Powierzchnia zabudowy", "wartosc": f"{round(m2_zabudowy_liczone, 1)} m²"},
+                            {"nazwa": "Izolacja", "wartosc": izolacja_typ},
+                            {"nazwa": "Płytowanie", "wartosc": plytowanie_pod},
+                            {"nazwa": "Zbrojenie", "wartosc": typ_tasmy},
+                            {"nazwa": "Okna dachowe", "wartosc": f"{liczba_okien} szt."},
+                        ],
+                    )
+
+                    _przycisk_pdf(
+                        "poddasze",
+                        dane_pdf,
+                        "Kosztorys_Poddasze",
+                        "pdf_poddasze"
+                    )
+
+                else:
+                    st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
 
                 
     elif branza == "Elektryka":
