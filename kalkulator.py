@@ -1943,8 +1943,9 @@ elif opcja_boczna == "Aplikacja Główna":
         # ==========================================
         import textwrap
 
-        st.markdown(textwrap.dedent("""
+        roadmap_html = textwrap.dedent("""
         <style>
+
             .roadmap-wrap {
                 margin-top: 56px;
                 padding: 34px;
@@ -2280,7 +2281,10 @@ elif opcja_boczna == "Aplikacja Główna":
                 które skracają czas przygotowania oferty, zmniejszają ryzyko pomyłek i pomagają wykonawcy wyglądać profesjonalnie przed klientem.
             </div>
         </section>
-        """), unsafe_allow_html=True)
+        """)
+
+        components.html(roadmap_html, height=1250, scrolling=False)
+
 
     
     
