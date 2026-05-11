@@ -1914,7 +1914,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                                         st.error(f"Błąd wysyłania kontrpropozycji: {e}")
 
 
-                
+    except Exception as e:
+        st.error(f"Błąd komunikacji z bazą danych: {e}")                
 
 # ==========================================
 # (TUTAJ POWINIEN BYĆ TWÓJ KOD OD np. elif opcja_boczna == "Moja Subskrypcja":)
