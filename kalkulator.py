@@ -4596,13 +4596,13 @@ elif opcja_boczna == "Aplikacja Główna":
             "Taśma akustyczna rolka 30m": 25.0,
             "Taśma Tuff-Tape 30m": 150.0,
             "Taśma flizelinowa 25m": 20.0,
-            "Piana PUR otwartokomórkowa 20cm m2": 95.0,
-            "Wełna mineralna 15cm m2": 32.0,
-            "Wełna mineralna 20cm m2": 42.0,
-            "Wełna mineralna 25cm m2": 54.0,
-            "Wełna skalna 15cm m2": 42.0,
-            "Wełna skalna 20cm m2": 56.0,
-            "Wełna skalna 25cm m2": 70.0,
+            "Piana PUR otwartokomórkowa 20cm": 95.0,
+            "Wełna mineralna 15cm": 32.0,
+            "Wełna mineralna 20cm": 42.0,
+            "Wełna mineralna 25cm": 54.0,
+            "Wełna skalna 15cm": 42.0,
+            "Wełna skalna 20cm": 56.0,
+            "Wełna skalna 25cm": 70.0,
         }
 
         baza_masy_poddasze = {
@@ -4756,7 +4756,17 @@ elif opcja_boczna == "Aplikacja Główna":
                 szt_lacznikow = math.ceil(szt_cd * 0.45)
 
                 m2_izolacji = (m2_skosy_brutto + dodatkowe_wykusze_m2) * 1.08
-                koszt_izolacji = m2_izolacji * baza_poddasze[izolacja_typ]
+                ceny_izolacji = {
+                    "Piana PUR otwartokomórkowa 20cm": 95.0,
+                    "Wełna mineralna 15cm": 32.0,
+                    "Wełna mineralna 20cm": 42.0,
+                    "Wełna mineralna 25cm": 54.0,
+                    "Wełna skalna 15cm": 42.0,
+                    "Wełna skalna 20cm": 56.0,
+                    "Wełna skalna 25cm": 70.0,
+                }
+                
+                koszt_izolacji = m2_izolacji * ceny_izolacji[izolacja_typ]
 
                 m2_folii = m2_zabudowy_liczone * 1.15 if folia_paro else 0
                 koszt_folii = m2_folii * baza_poddasze["Folia paroizolacyjna m2"]
