@@ -1202,6 +1202,67 @@ if "oferta" in query_params:
         st.markdown("---")
         st.subheader("Decyzja klienta")
 
+        propozycja_wykonawcy = projekt.get("propozycja_wykonawcy")
+        propozycja_klienta = projekt.get("propozycja_klienta")
+
+        if status == "Negocjacja" and propozycja_wykonawcy:
+            st.info(
+                f"Wykonawca zaproponował nową cenę: **{float(propozycja_wykonawcy):,.2f} zł**".replace(",", " ")
+            )
+
+            col_k1, col_k2 = st.columns(2)
+
+            with col_k1:
+                if st.button("Akceptuję nową cenę", type="primary", use_container_width=True):
+                    try:
+                        historia = projekt.get("historia_negocjacji") or []
+                        historia.append({
+                            "typ": "akceptacja_kontrpropozycji_wykonawcy",
+                            "kwota": float(propozycja_wykonawcy),
+                            "data": datetime.now().isoformat()
+                        })
+
+                        supabase.table("kosztorysy").update({
+                            "status": "Zaakceptowano",
+                            "kwota_aktualna": float(propozycja_wykonawcy),
+                            "propozycja_wykonawcy": None,
+                            "propozycja_klienta": None,
+                            "zaakceptowano_data": datetime.now().isoformat(),
+                            "historia_negocjacji": historia
+                        }).eq("id", oferta_id).execute()
+
+                        st.success("Nowa cena została zaakceptowana.")
+                        time.sleep(1)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Nie udało się zaakceptować nowej ceny: {e}")
+
+            with col_k2:
+                if st.button("Odrzucam nową cenę", use_container_width=True):
+                    try:
+                        historia = projekt.get("historia_negocjacji") or []
+                        historia.append({
+                            "typ": "odrzucenie_kontrpropozycji_wykonawcy",
+                            "kwota": float(propozycja_wykonawcy),
+                            "data": datetime.now().isoformat()
+                        })
+
+                        supabase.table("kosztorysy").update({
+                            "status": "Odrzucono",
+                            "propozycja_wykonawcy": None,
+                            "propozycja_klienta": None,
+                            "historia_negocjacji": historia
+                        }).eq("id", oferta_id).execute()
+
+                        st.warning("Oferta została odrzucona.")
+                        time.sleep(1)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Nie udało się odrzucić propozycji: {e}")
+
+            st.stop()
+
+
         if status in ["Zaakceptowano", "Podpisano", "Zaliczka opłacona"]:
             st.success(f"Oferta ma status: {status}")
 
