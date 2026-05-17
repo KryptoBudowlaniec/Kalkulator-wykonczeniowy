@@ -63,6 +63,33 @@ def _stage_rows(etapy):
         """
     return rows
 
+def _extra_work_rows(prace):
+    if not prace:
+        return ""
+
+    rows = ""
+    for praca in prace:
+        nazwa = praca.get("nazwa", "Praca dodatkowa")
+        opis = praca.get("opis", "")
+        rob = float(praca.get("robocizna", 0) or 0)
+        mat = float(praca.get("materialy", 0) or 0)
+        suma = rob + mat
+
+        rows += f"""
+        <tr>
+            <td>
+                {_safe(nazwa)}
+                <span>{_safe(opis)}</span>
+            </td>
+            <td>{_money(suma)}</td>
+        </tr>
+        """
+    return rows
+
+def _paragraphs(items, fallback):
+    source = items if items else fallback
+    return "".join(f"<p>{_safe(item)}</p>" for item in source if str(item).strip())
+
 
 def _param_rows(parametry):
     if not parametry:
@@ -105,6 +132,10 @@ def generuj_pdf(typ_pdf, dane):
         or dane.get("zbiorcza_lista_zakupow")
         or []
     )
+    prace_dodatkowe = dane.get("prace_dodatkowe", []) or []
+    klauzule = dane.get("klauzule", []) or []
+    uwagi = dane.get("uwagi", []) or []
+
 
     suma_rob = dane.get("koszt_robocizny", dane.get("suma_robocizna", 0))
     suma_mat = dane.get("koszt_materialow", dane.get("suma_materialy", 0))
@@ -519,6 +550,7 @@ body {{
                 </thead>
                 <tbody>
                     {_stage_rows(etapy)}
+                    {_extra_work_rows(prace_dodatkowe)}
                 </tbody>
             </table>
 
@@ -565,11 +597,17 @@ body {{
         <div>
             <h2 class="section-title">Notatki i uwagi</h2>
             <div class="note-box">
-                <p>Podane ilości materiałów mają charakter orientacyjny i mogą się różnić po weryfikacji na budowie.</p>
-                <p>Zalecamy zakup materiałów z 5-10% zapasem.</p>
-                <p>Przed rozpoczęciem prac zalecamy weryfikację wszystkich wymiarów na miejscu.</p>
-                <p>Prace wykonywane są zgodnie ze sztuką budowlaną oraz obowiązującymi normami.</p>
+                {_paragraphs(
+                    uwagi + klauzule,
+                    [
+                        "Podane ilości materiałów mają charakter orientacyjny i mogą się różnić po weryfikacji na budowie.",
+                        "Zalecamy zakup materiałów z 5-10% zapasem.",
+                        "Przed rozpoczęciem prac zalecamy weryfikację wszystkich wymiarów na miejscu.",
+                        "Prace wykonywane są zgodnie ze sztuką budowlaną oraz obowiązującymi normami."
+                    ]
+                )}
             </div>
+
 
             <div class="terms">
                 <h2 class="section-title">Warunki współpracy</h2>
