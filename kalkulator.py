@@ -2436,7 +2436,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
         st.stop()
 
-        elif widok_sidebar == "Koszty":
+    elif widok_sidebar == "Koszty":
         st.header("Koszty")
         st.caption("Rejestr kosztów firmy i projektów: paliwo, narzędzia, podwykonawcy, dojazdy i zakupy.")
 
@@ -2597,7 +2597,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             st.error(f"Błąd wczytywania kosztów: {e}")
 
         st.stop()
-        elif widok_sidebar == "Statystyki":
+    elif widok_sidebar == "Statystyki":
         st.header("Statystyki")
         st.caption("Skuteczność ofert, wartość projektów, podpisy, zaliczki i koszty firmy.")
 
