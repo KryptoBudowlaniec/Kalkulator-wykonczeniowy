@@ -120,6 +120,44 @@ def _przycisk_pdf(typ_pdf, dane_pdf, prefix_pliku, key):
             key=f"download_{key}",
             use_container_width=True,
         )
+def wybierz_klienta_do_projektu(key_prefix="projekt"):
+    if not st.session_state.get("zalogowany"):
+        return {}
+
+    try:
+        odp = supabase.table("klienci").select("*").eq("user_id", st.session_state.user_id).order("created_at", desc=True).execute()
+        klienci = odp.data or []
+    except Exception:
+        klienci = []
+
+    if not klienci:
+        st.info("Nie masz jeszcze klientów w CRM. Możesz zapisać projekt bez przypisanego klienta.")
+        return {}
+
+    opcje = ["Bez przypisanego klienta"] + [
+        f"{k.get('nazwa', 'Klient')} | {k.get('miasto', '')} | {k.get('telefon', '')}"
+        for k in klienci
+    ]
+
+    wybor = st.selectbox(
+        "Przypisz klienta do projektu:",
+        opcje,
+        key=f"{key_prefix}_wybor_klienta"
+    )
+
+    if wybor == "Bez przypisanego klienta":
+        return {}
+
+    index = opcje.index(wybor) - 1
+    klient = klienci[index]
+
+    return {
+        "klient_id": klient.get("id"),
+        "klient_nazwa": klient.get("nazwa"),
+        "klient_telefon": klient.get("telefon"),
+        "klient_email": klient.get("email"),
+        "klient_miasto": klient.get("miasto"),
+    }
 
     
 # 1. KONFIGURACJA GŁÓWNA (SEO i Favicon)
@@ -623,6 +661,10 @@ if "oferta" in query_params:
         dane = projekt.get("dane_json", {}) or {}
 
         nazwa_klienta = projekt.get("nazwa_projektu", "Wycena prac")
+        klient_nazwa = projekt.get("klient_nazwa", "")
+        klient_miasto = projekt.get("klient_miasto", "")
+        klient_telefon = projekt.get("klient_telefon", "")
+        klient_email = projekt.get("klient_email", "")
         status = projekt.get("status", "Wysłano")
 
         if status in ["Wysłano", "Oczekująca"]:
@@ -1122,6 +1164,15 @@ if "oferta" in query_params:
                     <span>Zakres prac</span>
                     <strong>{_safe_html(projekt.get("branza", "Kosztorys"))}</strong>
                 </div>
+                <div class="info-box">
+                    <span>Klient</span>
+                    <strong>{_safe_html(klient_nazwa or "Nie przypisano")}</strong>
+                </div>
+                <div class="info-box">
+                    <span>Lokalizacja</span>
+                    <strong>{_safe_html(klient_miasto or "Do ustalenia")}</strong>
+                </div>
+
                 <div class="info-box">
                     <span>Oferta ważna</span>
                     <strong>14 dni</strong>
@@ -2254,7 +2305,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         st.caption("Oferty zaakceptowane przez klienta, które czekają na podpis elektroniczny.")
 
         try:
-            odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).in_("status", ["Zaakceptowano", "Podpisano"]).order("created_at", desc=True).execute()
+            odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).in_("status", ["Zaakceptowano", "Podpisano", "Zaliczka opłacona"])
+            .order("created_at", desc=True).execute()
             oferty_podpisy = odp.data or []
 
             if not oferty_podpisy:
@@ -2263,12 +2315,14 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
             host_url = "https://app.procalc.pl"
 
-            h1, h2, h3, h4, h5 = st.columns([2.2, 1.2, 1.2, 1.4, 2.2])
+            h1, h2, h3, h4, h5, h6 = st.columns([2.0, 1.1, 1.1, 1.2, 1.8, 1.3])
+
             h1.markdown("**Projekt**")
             h2.markdown("**Kwota**")
             h3.markdown("**Status**")
             h4.markdown("**Data akceptacji**")
             h5.markdown("**Link dla klienta**")
+            h6.markdown("**Zaliczka**")
 
             st.markdown("---")
 
@@ -2290,7 +2344,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
                 link_do_oferty = f"{host_url}/?oferta={projekt_id}"
 
-                c1, c2, c3, c4, c5 = st.columns([2.2, 1.2, 1.2, 1.4, 2.2])
+                c1, c2, c3, c4, c5, c6 = st.columns([2.0, 1.1, 1.1, 1.2, 1.8, 1.3])
+
 
                 with c1:
                     st.markdown(f"**{nazwa}**")
@@ -2300,7 +2355,9 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     st.markdown(f"**{float(kwota):,.2f} zł**".replace(",", " "))
 
                 with c3:
-                    if status == "Podpisano":
+                    if status == "Zaliczka opłacona":
+                        st.success("Zaliczka")
+                    elif status == "Podpisano":
                         st.success("Podpisano")
                     else:
                         st.warning("Do podpisu")
@@ -2315,6 +2372,55 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         key=f"podpis_link_{projekt_id}",
                         label_visibility="collapsed"
                     )
+                with c6:
+                    if status == "Zaliczka opłacona":
+                        st.success("Opłacona")
+                        if p.get("zaliczka_kwota"):
+                            st.caption(f"{float(p.get('zaliczka_kwota')):,.2f} zł".replace(",", " "))
+                    elif status == "Podpisano":
+                        with st.popover("Oznacz", use_container_width=True):
+                            domyslna_zaliczka = float(kwota) * 0.30 if kwota else 0.0
+                
+                            zaliczka_kwota = st.number_input(
+                                "Kwota zaliczki",
+                                min_value=0.0,
+                                value=float(round(domyslna_zaliczka, 2)),
+                                step=100.0,
+                                key=f"zaliczka_kwota_{projekt_id}"
+                            )
+                
+                            zaliczka_metoda = st.selectbox(
+                                "Metoda płatności",
+                                ["Gotówka", "Przelew", "BLIK", "Karta", "Inne"],
+                                key=f"zaliczka_metoda_{projekt_id}"
+                            )
+                
+                            if st.button("Potwierdź wpłatę", key=f"zaliczka_ok_{projekt_id}", type="primary", use_container_width=True):
+                                try:
+                                    historia = p.get("historia_negocjacji") or []
+                                    historia.append({
+                                        "typ": "zaliczka_oplacona",
+                                        "kwota": float(zaliczka_kwota),
+                                        "metoda": zaliczka_metoda,
+                                        "data": datetime.now().isoformat()
+                                    })
+                
+                                    supabase.table("kosztorysy").update({
+                                        "status": "Zaliczka opłacona",
+                                        "zaliczka_kwota": float(zaliczka_kwota),
+                                        "zaliczka_metoda": zaliczka_metoda,
+                                        "zaliczka_data": datetime.now().isoformat(),
+                                        "historia_negocjacji": historia
+                                    }).eq("id", projekt_id).execute()
+                
+                                    st.success("Zaliczka oznaczona jako opłacona.")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Błąd zapisu zaliczki: {e}")
+                    else:
+                        st.caption("Po podpisie")
+    
 
                 st.markdown("---")
 
@@ -2497,13 +2603,14 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 return float(dane.get("koszt_robocizny", dane.get("koszt_calkowity", 0)) or 0)
 
             # Nagłówek tabeli
-            h1, h2, h3, h4, h5, h6 = st.columns([2.5, 1.2, 1.1, 1.2, 2.5, 0.8])
-            h1.markdown("**Nazwa projektu**")
-            h2.markdown("**Kwota**")
-            h3.markdown("**Status**")
-            h4.markdown("**PDF**")
-            h5.markdown("**Link dla klienta**")
-            h6.markdown("**Usuń**")
+            h1, h2, h3, h4, h5, h6, h7 = st.columns([2.2, 1.5, 1.1, 1.0, 1.0, 2.2, 0.7])
+            h1.markdown("**Projekt**")
+            h2.markdown("**Klient**")
+            h3.markdown("**Kwota**")
+            h4.markdown("**Status**")
+            h5.markdown("**PDF**")
+            h6.markdown("**Link**")
+            h7.markdown("**Usuń**")
 
             st.markdown("---")
 
@@ -2517,11 +2624,22 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 kwota_format = f"{kwota:,.2f} zł".replace(",", " ")
                 link_do_oferty = f"{host_url}/?oferta={projekt_id}"
 
-                col_nazwa, col_kwota, col_status, col_pdf, col_link, col_usun = st.columns([2.5, 1.2, 1.1, 1.2, 2.5, 0.8])
+                col_nazwa, col_klient, col_kwota, col_status, col_pdf, col_link, col_usun = st.columns([2.2, 1.5, 1.1, 1.0, 1.0, 2.2, 0.7])
+
 
                 with col_nazwa:
                     st.markdown(f"**{nazwa}**")
                     st.caption(f"{data_utworzenia} | {branza_projektu}")
+                with col_klient:
+                    klient_nazwa = p.get("klient_nazwa") or "Brak klienta"
+                    st.markdown(f"**{klient_nazwa}**")
+                
+                    klient_miasto = p.get("klient_miasto")
+                    klient_telefon = p.get("klient_telefon")
+                
+                    opis_klienta = " | ".join([x for x in [klient_miasto, klient_telefon] if x])
+                    if opis_klienta:
+                        st.caption(opis_klienta)
 
                 with col_kwota:
                     st.markdown(f"**{kwota_format}**")
@@ -7710,7 +7828,8 @@ elif opcja_boczna == "Aplikacja Główna":
                 # ==========================================
                 if sprawdz_dostep_pro():
                     nazwa_glownego_projektu = st.text_input("Nazwa GŁÓWNA dla klienta (np. Remont Domu Kowalskich):", key="nazwa_koszyk_input")
-                    
+                    dane_klienta = wybierz_klienta_do_projektu("koszyk")
+
                     if st.button("ZAPISZ CAŁY KOSZTORYS DO CHMURY", type="primary", use_container_width=True):
                         
                         if not nazwa_glownego_projektu.strip():
@@ -7729,12 +7848,17 @@ elif opcja_boczna == "Aplikacja Główna":
                             }
                             
                             try:
-                                supabase.table("kosztorysy").insert({
+                                rekord_kosztorysu = {
                                     "uzytkownik_id": st.session_state.user_id,
                                     "nazwa_projektu": nazwa_glownego_projektu,
                                     "branza": "Kosztorys Wieloetapowy",
-                                    "dane_json": dane_do_bazy # Tutaj ląduje nasz słownik
-                                }).execute()
+                                    "dane_json": dane_do_bazy,
+                                }
+                                
+                                rekord_kosztorysu.update(dane_klienta)
+                                
+                                supabase.table("kosztorysy").insert(rekord_kosztorysu).execute()
+
                                 
                                 st.success("✅ Projekt pomyślnie zapisany!")
                                 st.session_state.koszyk_projektow = []
