@@ -2944,7 +2944,104 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             )
             # Tłumaczymy wybór na parametr dla naszej funkcji
             tryb_wybrany = "robocizna" if "Tylko robocizna" in opcja_oferty else "pelny"
-            
+                st.markdown("---")
+                st.subheader("Klauzule i zabezpieczenia oferty")
+    
+                try:
+                    odp_szablony = (
+                        supabase.table("szablony")
+                        .select("*")
+                        .eq("user_id", st.session_state.user_id)
+                        .in_("typ", ["Warunki współpracy", "Wyłączenia z wyceny", "Harmonogram płatności"])
+                        .order("created_at", desc=True)
+                        .execute()
+                    )
+                    szablony_pdf = odp_szablony.data or []
+                except Exception:
+                    szablony_pdf = []
+    
+                opcje_szablonow = ["Standardowe klauzule ProCalc"] + [
+                    f"{s.get('nazwa', 'Szablon')} | {s.get('typ', '')}" for s in szablony_pdf
+                ]
+    
+                wybrany_szablon_pdf = st.selectbox(
+                    "Wybierz szablon warunków / klauzul:",
+                    opcje_szablonow,
+                    key=f"szablon_pdf_{aktyw.get('id')}"
+                )
+    
+                if wybrany_szablon_pdf == "Standardowe klauzule ProCalc":
+                    klauzule_pdf = [
+                        "Oferta ważna 14 dni od daty wystawienia.",
+                        "Wycena obejmuje wyłącznie zakres prac wskazany w kosztorysie.",
+                        "Prace ukryte, naprawy podłoża oraz nieujawnione wady budynku rozliczane są osobno.",
+                        "Zmiana zakresu prac lub materiałów po akceptacji oferty może wpłynąć na końcową cenę.",
+                        "Podane ilości materiałów mają charakter orientacyjny i mogą wymagać korekty po wizji lokalnej.",
+                        "Materiały zakupione przez inwestora powinny być dostępne przed rozpoczęciem danego etapu prac.",
+                    ]
+                else:
+                    idx = opcje_szablonow.index(wybrany_szablon_pdf) - 1
+                    tresc = szablony_pdf[idx].get("tresc", "")
+                    klauzule_pdf = [linia.strip() for linia in tresc.splitlines() if linia.strip()]
+    
+                dodatkowe_uwagi_pdf = st.text_area(
+                    "Dodatkowe uwagi do oferty:",
+                    placeholder="Np. Termin realizacji do ustalenia po wpłacie zaliczki. Zakres nie obejmuje utylizacji gruzu.",
+                    key=f"uwagi_pdf_{aktyw.get('id')}"
+                )
+    
+                st.markdown("---")
+                st.subheader("Prace dodatkowe ręcznie dodane do oferty")
+    
+                if "prace_dodatkowe_pdf" not in st.session_state:
+                    st.session_state.prace_dodatkowe_pdf = {}
+    
+                aktyw_id = str(aktyw.get("id"))
+                if aktyw_id not in st.session_state.prace_dodatkowe_pdf:
+                    st.session_state.prace_dodatkowe_pdf[aktyw_id] = []
+    
+                with st.expander("Dodaj pracę dodatkową", expanded=False):
+                    cpd1, cpd2, cpd3 = st.columns([2, 1, 1])
+                    nazwa_pracy_dod = cpd1.text_input("Nazwa pracy", key=f"dod_nazwa_{aktyw_id}")
+                    rob_pracy_dod = cpd2.number_input("Robocizna (PLN)", min_value=0.0, value=0.0, step=50.0, key=f"dod_rob_{aktyw_id}")
+                    mat_pracy_dod = cpd3.number_input("Materiały (PLN)", min_value=0.0, value=0.0, step=50.0, key=f"dod_mat_{aktyw_id}")
+    
+                    opis_pracy_dod = st.text_area(
+                        "Opis / uwagi do pracy dodatkowej",
+                        key=f"dod_opis_{aktyw_id}",
+                        placeholder="Np. Zakres dodany ręcznie, niewynikający z kalkulatora."
+                    )
+    
+                    if st.button("Dodaj pracę dodatkową do oferty", key=f"dod_btn_{aktyw_id}", use_container_width=True):
+                        if not nazwa_pracy_dod.strip():
+                            st.error("Podaj nazwę pracy dodatkowej.")
+                        elif rob_pracy_dod <= 0 and mat_pracy_dod <= 0:
+                            st.error("Podaj kwotę robocizny lub materiałów.")
+                        else:
+                            st.session_state.prace_dodatkowe_pdf[aktyw_id].append({
+                                "nazwa": nazwa_pracy_dod,
+                                "opis": opis_pracy_dod,
+                                "robocizna": float(rob_pracy_dod),
+                                "materialy": float(mat_pracy_dod),
+                            })
+                            st.success("Praca dodatkowa dodana.")
+                            st.rerun()
+
+            prace_dodatkowe_pdf = st.session_state.prace_dodatkowe_pdf.get(aktyw_id, [])
+
+            if prace_dodatkowe_pdf:
+                st.write("**Dodane prace dodatkowe:**")
+                for i, praca in enumerate(prace_dodatkowe_pdf):
+                    cpd_a, cpd_b = st.columns([4, 1])
+                    with cpd_a:
+                        st.write(
+                            f"- **{praca.get('nazwa')}** | robocizna: {praca.get('robocizna', 0):,.2f} zł | materiały: {praca.get('materialy', 0):,.2f} zł".replace(",", " ")
+                        )
+                    with cpd_b:
+                        if st.button("Usuń", key=f"usun_dod_{aktyw_id}_{i}", use_container_width=True):
+                            st.session_state.prace_dodatkowe_pdf[aktyw_id].pop(i)
+                            st.rerun()
+
             # Przygotowanie danych do wspólnego generatora PDF
             if "etapy" in dane_proj:
                 kwota_robocizny = dane_proj.get(
@@ -2965,6 +3062,17 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
                 materialy_pdf = dane_proj.get("materialy_lista", [])
                 etapy_pdf = [dane_proj]
+            suma_rob_dodatkowe = sum(float(p.get("robocizna", 0) or 0) for p in prace_dodatkowe_pdf)
+            suma_mat_dodatkowe = sum(float(p.get("materialy", 0) or 0) for p in prace_dodatkowe_pdf)
+
+            kwota_robocizny = float(kwota_robocizny or 0) + suma_rob_dodatkowe
+
+            if tryb_wybrany == "pelny":
+                kwota_materialow = float(kwota_materialow or 0) + suma_mat_dodatkowe
+            else:
+                kwota_materialow = 0
+
+            kwota_koncowa = kwota_robocizny + kwota_materialow
 
             dane_pdf_oferta = {
                 **_dane_firmy_pdf(),
@@ -2980,20 +3088,17 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 "kwota_koncowa": kwota_koncowa,
                 "materialy": materialy_pdf,
                 "etapy": etapy_pdf,
+                "prace_dodatkowe": prace_dodatkowe_pdf,
+                "klauzule": klauzule_pdf,
+                "uwagi": [dodatkowe_uwagi_pdf] if dodatkowe_uwagi_pdf.strip() else [],
                 "parametry": [
                     {"nazwa": "Tryb oferty", "wartosc": "Tylko robocizna" if tryb_wybrany == "robocizna" else "Robocizna + materiały"},
                     {"nazwa": "Rabat", "wartosc": f"{dane_proj.get('rabat_kwota', 0):,.2f} zł".replace(",", " ")},
                     {"nazwa": "Liczba etapów", "wartosc": len(etapy_pdf)},
-                ],
-                "uwagi": [
-                    "Oferta została wygenerowana na podstawie zapisanego kosztorysu.",
-                    "Materiały mogą być pokazane jako lista zakupów bez cen, zależnie od wybranego trybu oferty.",
-                ],
-                "klauzule": [
-                    "Oferta ważna 14 dni.",
-                    "Końcowy koszt może ulec zmianie po zmianie zakresu prac.",
+                    {"nazwa": "Prace dodatkowe", "wartosc": len(prace_dodatkowe_pdf)},
                 ],
             }
+
 
             _przycisk_pdf(
                 "oferta",
