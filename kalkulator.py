@@ -2305,8 +2305,15 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         st.caption("Oferty zaakceptowane przez klienta, które czekają na podpis elektroniczny.")
 
         try:
-            odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).in_("status", ["Zaakceptowano", "Podpisano", "Zaliczka opłacona"])
-            .order("created_at", desc=True).execute()
+            odp = (
+                supabase.table("kosztorysy")
+                .select("*")
+                .eq("uzytkownik_id", st.session_state.user_id)
+                .in_("status", ["Zaakceptowano", "Podpisano", "Zaliczka opłacona"])
+                .order("created_at", desc=True)
+                .execute()
+            )
+
             oferty_podpisy = odp.data or []
 
             if not oferty_podpisy:
@@ -2429,6 +2436,112 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
         st.stop()
 
+    elif widok_sidebar == "Wiadomości":
+        st.header("Wiadomości")
+        st.caption("Najważniejsze zdarzenia: negocjacje, akceptacje, podpisy, zaliczki i odrzucenia.")
+
+        try:
+            odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).order("created_at", desc=True).execute()
+            projekty_msg = odp.data or []
+
+            wazne_typy = {
+                "propozycja_klienta": "Klient zaproponował cenę",
+                "propozycja_wykonawcy": "Wysłano kontrpropozycję",
+                "akceptacja_klienta": "Klient zaakceptował ofertę",
+                "akceptacja_kontrpropozycji_wykonawcy": "Klient zaakceptował nową cenę",
+                "akceptacja_propozycji_klienta": "Zaakceptowano propozycję klienta",
+                "odrzucenie_klienta": "Klient odrzucił ofertę",
+                "odrzucenie_propozycji": "Odrzucono propozycję",
+                "odrzucenie_propozycji_klienta": "Odrzucono propozycję klienta",
+                "odrzucenie_kontrpropozycji_wykonawcy": "Klient odrzucił kontrpropozycję",
+                "podpis_klienta": "Klient podpisał ofertę",
+                "zaliczka_oplacona": "Zaliczka została opłacona",
+            }
+
+            wydarzenia = []
+
+            for p in projekty_msg:
+                nazwa = p.get("nazwa_projektu", "Projekt")
+                historia = p.get("historia_negocjacji") or []
+
+                for h in historia:
+                    typ = h.get("typ")
+
+                    if typ not in wazne_typy:
+                        continue
+
+                    kwota = h.get("kwota")
+                    komentarz = h.get("komentarz", "")
+                    imie = h.get("imie_nazwisko", "")
+                    metoda = h.get("metoda", "")
+
+                    opis_parts = []
+
+                    if kwota:
+                        opis_parts.append(f"Kwota: {float(kwota):,.2f} zł".replace(",", " "))
+
+                    if metoda:
+                        opis_parts.append(f"Metoda płatności: {metoda}")
+
+                    if imie:
+                        opis_parts.append(f"Podpisujący: {imie}")
+
+                    if komentarz:
+                        opis_parts.append(komentarz)
+
+                    opis = " | ".join(opis_parts) if opis_parts else "Zdarzenie w ofercie."
+
+                    if "odrzuc" in typ:
+                        kolor = "error"
+                    elif "akcept" in typ or "podpis" in typ or "zaliczka" in typ:
+                        kolor = "success"
+                    elif "propozycja" in typ:
+                        kolor = "warning"
+                    else:
+                        kolor = "info"
+
+                    wydarzenia.append({
+                        "typ": wazne_typy[typ],
+                        "projekt": nazwa,
+                        "data": h.get("data", p.get("created_at")),
+                        "opis": opis,
+                        "kolor": kolor
+                    })
+
+            wydarzenia = sorted(
+                wydarzenia,
+                key=lambda x: str(x.get("data", "")),
+                reverse=True
+            )
+
+            if not wydarzenia:
+                st.info("Brak ważnych wiadomości. Pojawią się tutaj negocjacje, podpisy, akceptacje i zaliczki.")
+                st.stop()
+
+            for w in wydarzenia[:50]:
+                with st.container(border=True):
+                    c1, c2 = st.columns([3, 1])
+
+                    with c1:
+                        if w["kolor"] == "success":
+                            st.success(f"**{w['typ']}**")
+                        elif w["kolor"] == "error":
+                            st.error(f"**{w['typ']}**")
+                        elif w["kolor"] == "warning":
+                            st.warning(f"**{w['typ']}**")
+                        else:
+                            st.info(f"**{w['typ']}**")
+
+                        st.markdown(f"**Projekt:** {w['projekt']}")
+                        st.write(w["opis"])
+
+                    with c2:
+                        st.caption(str(w.get("data", ""))[:19].replace("T", " "))
+
+        except Exception as e:
+            st.error(f"Błąd wczytywania wiadomości: {e}")
+
+        st.stop()
 
 
     elif widok_sidebar == "Pliki":
