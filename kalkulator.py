@@ -2597,6 +2597,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             st.error(f"Błąd wczytywania kosztów: {e}")
 
         st.stop()
+        
     elif widok_sidebar == "Statystyki":
         st.header("Statystyki")
         st.caption("Skuteczność ofert, wartość projektów, podpisy, zaliczki i koszty firmy.")
