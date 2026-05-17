@@ -719,8 +719,19 @@ if "oferta" in query_params:
                 <strong>Do ustalenia</strong>
             </div>
             """
+        
+        status_badge_map = {
+            "Wysłano": "Wysłano",
+            "Otworzono": "Otworzono",
+            "Negocjacja": "W negocjacji",
+            "Zaakceptowano": "Zaakceptowano",
+            "Podpisano": "Podpisano",
+            "Zaliczka opłacona": "Zaliczka opłacona",
+            "Odrzucono": "Odrzucono",
+        }
+        
+        status_badge = status_badge_map.get(status, "Oczekuje na decyzję")
 
-        status_badge = "Zaakceptowana" if status == "Zaakceptowana" else "Oczekuje na decyzję"
 
         html_content = textwrap.dedent(f"""
 <style>
@@ -1422,16 +1433,20 @@ with col_logo:
 
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
-    
+
+    if "pending_main_nav" in st.session_state:
+        st.session_state["main_nav"] = st.session_state.pop("pending_main_nav")
 
     nawigacja = st.pills(
-        "", 
+        "",
         ["Start", "Kalkulatory", "Panel Inwestora", "Harmonogram", "Kontakt", "Logowanie"],
         selection_mode="single",
-        default="Start", 
+        default="Start",
         key="main_nav"
     )
+
     st.markdown('</div>', unsafe_allow_html=True)
+
 # --- LOGIKA NAWIGACJI ---
 if st.session_state.przekierowanie:
     branza = "Logowanie"
@@ -1449,7 +1464,8 @@ if nawigacja == "Kalkulatory":
         domyslna_branza = "Malowanie"
         st.session_state['przelacz_na_malowanie'] = False # Wyłączamy flagę po użyciu
     # -----------------------------------------
-
+    if "pending_sub_nav" in st.session_state:
+        st.session_state["sub_nav"] = st.session_state.pop("pending_sub_nav")
     # Wyświetlamy pillsy tylko w sekcji kalkulatorów
     wybor_kalkulatora = st.pills(
         "Wybierz branżę:", 
@@ -1682,13 +1698,13 @@ if st.session_state.zalogowany:
         def przejdz_sidebar(nazwa, main_nav=None, sub_nav=None, panel="Aplikacja Główna"):
             st.session_state.sidebar_active = nazwa
             st.session_state.globalny_sidebar = panel
-
+        
             if main_nav:
-                st.session_state.main_nav = main_nav
-
+                st.session_state["pending_main_nav"] = main_nav
+        
             if sub_nav:
-                st.session_state.sub_nav = sub_nav
-
+                st.session_state["pending_sub_nav"] = sub_nav
+        
             st.rerun()
 
         def nav_item(nazwa, ikona, key, main_nav=None, sub_nav=None, panel="Aplikacja Główna", badge=None):
@@ -1818,7 +1834,354 @@ if st.session_state.zalogowany:
 # ==========================================
 
 if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
-    st.header("Mój Profil i Dane Firmy")
+    widok_sidebar = st.session_state.get("sidebar_active", "Projekty")
+
+    if widok_sidebar == "Projekty":
+        st.header("Projekty i kosztorysy")
+
+    elif widok_sidebar == "Klienci":
+        st.header("Klienci")
+        st.caption("Mini CRM: kontakty, statusy ofert i notatki do inwestycji.")
+
+        with st.expander("Dodaj klienta", expanded=False):
+            with st.form("form_dodaj_klienta"):
+                c1, c2 = st.columns(2)
+                nazwa_klienta = c1.text_input("Imię / nazwa klienta")
+                telefon = c2.text_input("Telefon")
+                email = c1.text_input("E-mail")
+                miasto = c2.text_input("Miasto / lokalizacja")
+                zrodlo = c1.selectbox("Źródło kontaktu", ["Polecenie", "OLX", "Facebook", "Strona www", "Telefon", "Inne"])
+                status_klienta = c2.selectbox("Status", ["Nowy", "Wycena wysłana", "Negocjacja", "Wygrany", "Przegrany"])
+                notatki = st.text_area("Notatki")
+
+                if st.form_submit_button("Zapisz klienta", type="primary", use_container_width=True):
+                    if not nazwa_klienta.strip():
+                        st.error("Podaj nazwę klienta.")
+                    else:
+                        try:
+                            supabase.table("klienci").insert({
+                                "user_id": st.session_state.user_id,
+                                "nazwa": nazwa_klienta,
+                                "telefon": telefon,
+                                "email": email,
+                                "miasto": miasto,
+                                "zrodlo": zrodlo,
+                                "status": status_klienta,
+                                "notatki": notatki
+                            }).execute()
+                            st.success("Klient zapisany.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd zapisu klienta: {e}")
+
+        try:
+            odp = supabase.table("klienci").select("*").eq("user_id", st.session_state.user_id).order("created_at", desc=True).execute()
+            klienci = odp.data
+
+            if not klienci:
+                st.info("Nie masz jeszcze zapisanych klientów.")
+            else:
+                h1, h2, h3, h4, h5 = st.columns([2, 1.2, 1.4, 1.2, 0.7])
+                h1.markdown("**Klient**")
+                h2.markdown("**Miasto**")
+                h3.markdown("**Kontakt**")
+                h4.markdown("**Status**")
+                h5.markdown("**Usuń**")
+                st.markdown("---")
+
+                for k in klienci:
+                    c1, c2, c3, c4, c5 = st.columns([2, 1.2, 1.4, 1.2, 0.7])
+
+                    with c1:
+                        st.markdown(f"**{k.get('nazwa', '')}**")
+                        st.caption(k.get("zrodlo", ""))
+
+                    with c2:
+                        st.write(k.get("miasto", ""))
+
+                    with c3:
+                        st.write(k.get("telefon", ""))
+                        st.caption(k.get("email", ""))
+
+                    with c4:
+                        status = k.get("status", "Nowy")
+                        if status == "Wygrany":
+                            st.success(status)
+                        elif status in ["Negocjacja", "Wycena wysłana"]:
+                            st.info(status)
+                        elif status == "Przegrany":
+                            st.error(status)
+                        else:
+                            st.warning(status)
+
+                    with c5:
+                        if st.button("Usuń", key=f"del_klient_{k.get('id')}", use_container_width=True):
+                            supabase.table("klienci").delete().eq("id", k.get("id")).execute()
+                            st.rerun()
+
+                    if k.get("notatki"):
+                        st.caption(f"Notatki: {k.get('notatki')}")
+                    st.markdown("---")
+
+        except Exception as e:
+            st.error(f"Błąd wczytywania klientów: {e}")
+
+        st.stop()
+
+
+    elif widok_sidebar == "Szablony":
+        st.header("Szablony")
+        st.caption("Gotowe treści do ofert, PDF-ów, wiadomości i warunków współpracy.")
+
+        with st.expander("Dodaj szablon", expanded=False):
+            with st.form("form_dodaj_szablon"):
+                nazwa_szablonu = st.text_input("Nazwa szablonu")
+                typ_szablonu = st.selectbox(
+                    "Typ szablonu",
+                    ["Warunki współpracy", "Wiadomość do klienta", "Zakres prac", "Wyłączenia z wyceny", "Harmonogram płatności"]
+                )
+                tresc_szablonu = st.text_area("Treść", height=180)
+
+                if st.form_submit_button("Zapisz szablon", type="primary", use_container_width=True):
+                    if not nazwa_szablonu.strip() or not tresc_szablonu.strip():
+                        st.error("Podaj nazwę i treść szablonu.")
+                    else:
+                        try:
+                            supabase.table("szablony").insert({
+                                "user_id": st.session_state.user_id,
+                                "nazwa": nazwa_szablonu,
+                                "typ": typ_szablonu,
+                                "tresc": tresc_szablonu
+                            }).execute()
+                            st.success("Szablon zapisany.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd zapisu szablonu: {e}")
+
+        try:
+            odp = supabase.table("szablony").select("*").eq("user_id", st.session_state.user_id).order("created_at", desc=True).execute()
+            szablony = odp.data
+
+            if not szablony:
+                st.info("Nie masz jeszcze zapisanych szablonów.")
+            else:
+                for s in szablony:
+                    with st.container(border=True):
+                        c1, c2, c3 = st.columns([2, 1.4, 0.7])
+
+                        with c1:
+                            st.markdown(f"**{s.get('nazwa', '')}**")
+                            st.caption(s.get("typ", ""))
+
+                        with c2:
+                            st.text_area(
+                                "Treść",
+                                value=s.get("tresc", ""),
+                                height=110,
+                                key=f"szablon_tresc_{s.get('id')}",
+                                label_visibility="collapsed"
+                            )
+
+                        with c3:
+                            if st.button("Usuń", key=f"del_szablon_{s.get('id')}", use_container_width=True):
+                                supabase.table("szablony").delete().eq("id", s.get("id")).execute()
+                                st.rerun()
+
+        except Exception as e:
+            st.error(f"Błąd wczytywania szablonów: {e}")
+
+        st.stop()
+
+
+    elif widok_sidebar == "Negocjacje":
+    st.header("Negocjacje ofert")
+    st.caption("Oferty, w których klient zaproponował inną cenę albo czeka na Twoją kontrpropozycję.")
+
+    try:
+        odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).eq("status", "Negocjacja").order("created_at", desc=True).execute()
+        negocjacje = odp.data
+
+        if not negocjacje:
+            st.info("Nie masz aktualnie żadnych aktywnych negocjacji.")
+            st.stop()
+
+        host_url = "https://app.procalc.pl"
+
+        h1, h2, h3, h4, h5 = st.columns([2.2, 1.2, 1.2, 1.2, 2.4])
+        h1.markdown("**Projekt**")
+        h2.markdown("**Aktualna cena**")
+        h3.markdown("**Propozycja klienta**")
+        h4.markdown("**Twoja cena**")
+        h5.markdown("**Akcje**")
+
+        st.markdown("---")
+
+        for p in negocjacje:
+            projekt_id = p.get("id")
+            nazwa = p.get("nazwa_projektu", "Bez nazwy")
+            dane = p.get("dane_json", {}) or {}
+
+            propozycja_klienta = p.get("propozycja_klienta")
+            propozycja_wykonawcy = p.get("propozycja_wykonawcy")
+            historia = p.get("historia_negocjacji") or []
+
+            kwota_bazowa = (
+                p.get("kwota_aktualna")
+                or dane.get("robocizna_po_rabacie")
+                or dane.get("suma_robocizna")
+                or dane.get("koszt_calkowity_projektu")
+                or dane.get("koszt_calkowity")
+                or 0
+            )
+
+            link_do_oferty = f"{host_url}/?oferta={projekt_id}"
+
+            c1, c2, c3, c4, c5 = st.columns([2.2, 1.2, 1.2, 1.2, 2.4])
+
+            with c1:
+                st.markdown(f"**{nazwa}**")
+                st.caption(str(p.get("created_at", ""))[:10])
+
+            with c2:
+                st.markdown(f"**{float(kwota_bazowa):,.2f} zł**".replace(",", " "))
+
+            with c3:
+                if propozycja_klienta:
+                    st.warning(f"{float(propozycja_klienta):,.2f} zł".replace(",", " "))
+                else:
+                    st.caption("Brak")
+
+            with c4:
+                if propozycja_wykonawcy:
+                    st.info(f"{float(propozycja_wykonawcy):,.2f} zł".replace(",", " "))
+                else:
+                    st.caption("Brak")
+
+            with c5:
+                a1, a2 = st.columns(2)
+
+                with a1:
+                    if st.button("Akceptuj", key=f"neg_accept_{projekt_id}", type="primary", use_container_width=True):
+                        if propozycja_klienta:
+                            try:
+                                nowa_historia = historia + [{
+                                    "typ": "akceptacja_propozycji_klienta",
+                                    "kwota": float(propozycja_klienta),
+                                    "data": datetime.now().isoformat()
+                                }]
+
+                                supabase.table("kosztorysy").update({
+                                    "kwota_aktualna": float(propozycja_klienta),
+                                    "propozycja_klienta": None,
+                                    "propozycja_wykonawcy": None,
+                                    "status": "Otworzono",
+                                    "historia_negocjacji": nowa_historia
+                                }).eq("id", projekt_id).execute()
+
+                                st.success("Propozycja zaakceptowana. Klient może zaakceptować ofertę po nowej cenie.")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Błąd: {e}")
+                        else:
+                            st.error("Brak propozycji klienta do zaakceptowania.")
+
+                with a2:
+                    if st.button("Odrzuć", key=f"neg_reject_{projekt_id}", use_container_width=True):
+                        try:
+                            nowa_historia = historia + [{
+                                "typ": "odrzucenie_propozycji",
+                                "kwota": float(propozycja_klienta) if propozycja_klienta else None,
+                                "data": datetime.now().isoformat()
+                            }]
+
+                            supabase.table("kosztorysy").update({
+                                "propozycja_klienta": None,
+                                "propozycja_wykonawcy": None,
+                                "status": "Otworzono",
+                                "historia_negocjacji": nowa_historia
+                            }).eq("id", projekt_id).execute()
+
+                            st.info("Propozycja odrzucona.")
+                            time.sleep(1)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd: {e}")
+
+                with st.popover("Kontrpropozycja", use_container_width=True):
+                    kontr_kwota = st.number_input(
+                        "Twoja nowa cena",
+                        min_value=0.0,
+                        value=float(kwota_bazowa),
+                        step=100.0,
+                        key=f"neg_kontr_{projekt_id}"
+                    )
+
+                    komentarz = st.text_area(
+                        "Komentarz",
+                        placeholder="Np. Mogę zejść do tej ceny przy zaliczce 30%.",
+                        key=f"neg_komentarz_{projekt_id}"
+                    )
+
+                    if st.button("Wyślij kontrpropozycję", key=f"neg_send_{projekt_id}", use_container_width=True):
+                        try:
+                            nowa_historia = historia + [{
+                                "typ": "propozycja_wykonawcy",
+                                "kwota": float(kontr_kwota),
+                                "komentarz": komentarz,
+                                "data": datetime.now().isoformat()
+                            }]
+
+                            supabase.table("kosztorysy").update({
+                                "kwota_aktualna": float(kontr_kwota),
+                                "propozycja_wykonawcy": float(kontr_kwota),
+                                "propozycja_klienta": None,
+                                "status": "Negocjacja",
+                                "historia_negocjacji": nowa_historia
+                            }).eq("id", projekt_id).execute()
+
+                            st.success("Kontrpropozycja wysłana.")
+                            time.sleep(1)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd: {e}")
+
+                st.text_input(
+                    "Link klienta",
+                    value=link_do_oferty,
+                    key=f"neg_link_{projekt_id}",
+                    label_visibility="collapsed"
+                )
+
+            st.markdown("---")
+
+    except Exception as e:
+        st.error(f"Błąd wczytywania negocjacji: {e}")
+
+    st.stop()
+
+
+    elif widok_sidebar == "Podpisy":
+        st.header("Podpisy")
+        st.info("Tutaj pojawią się zaakceptowane oferty oczekujące na podpis elektroniczny klienta.")
+        st.stop()
+
+    elif widok_sidebar == "Wiadomości":
+        st.header("Wiadomości")
+        st.info("Tutaj pojawią się powiadomienia: otwarcie oferty, propozycja ceny, akceptacja i płatność zaliczki.")
+        st.stop()
+
+    elif widok_sidebar == "Pliki":
+        st.header("Pliki")
+        st.info("Tutaj będą wygenerowane PDF-y, załączniki, zdjęcia z realizacji i dokumenty projektów.")
+        st.stop()
+
+    elif widok_sidebar == "Ustawienia":
+        st.header("Ustawienia konta i firmy")
+
+    else:
+        st.header("Projekty i kosztorysy")
+
     
     if st.session_state.get("pakiet") == "PRO":
         # --- CZĘŚĆ 1: DANE FIRMY (ROZWIJANE) ---
