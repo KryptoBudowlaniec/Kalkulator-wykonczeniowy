@@ -1527,58 +1527,290 @@ opcja_boczna = "Aplikacja Główna" # Domyślnie nic nie zasłania
 
 if st.session_state.zalogowany:
     with st.sidebar:
-        st.title("Panel Konta")
-        st.markdown(f"Konto: **{st.session_state.user_email}**")
-        
-        # To menu nadpisuje ekran główny TYLKO gdy chcesz wejść w profil
-        opcja_boczna = st.radio(
-            "Zarządzaj kontem:",
-            ["Aplikacja Główna", "Mój Profil", "Moja Subskrypcja", "Bezpieczeństwo", "Język i Region"],
-            key="globalny_sidebar"
-        )
+        st.markdown("""
+        <style>
+            section[data-testid="stSidebar"] {
+                background: #ffffff;
+                border-right: 1px solid #e5eaf0;
+            }
+
+            section[data-testid="stSidebar"] > div {
+                padding-top: 18px;
+            }
+
+            .side-brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 4px 4px 18px 4px;
+                border-bottom: 1px solid #eef2f7;
+                margin-bottom: 18px;
+            }
+
+            .side-logo-mark {
+                width: 34px;
+                height: 34px;
+                border-radius: 8px;
+                background: #00C985;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 900;
+                font-size: 16px;
+            }
+
+            .side-brand-name {
+                font-size: 22px;
+                font-weight: 900;
+                color: #111827;
+                letter-spacing: -0.02em;
+            }
+
+            .side-section {
+                font-size: 11px;
+                color: #8a97a8;
+                text-transform: uppercase;
+                font-weight: 800;
+                letter-spacing: .06em;
+                margin: 18px 0 8px 4px;
+            }
+
+            .side-active {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                background: #e9f8f1;
+                color: #00A876;
+                font-size: 14px;
+                font-weight: 700;
+                margin-bottom: 4px;
+            }
+
+            .side-active-left {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .side-badge {
+                background: #c7f4df;
+                color: #00845d;
+                font-size: 11px;
+                font-weight: 800;
+                border-radius: 999px;
+                padding: 2px 7px;
+            }
+
+            section[data-testid="stSidebar"] div.stButton > button {
+                background: transparent !important;
+                color: #46566a !important;
+                border: 0 !important;
+                box-shadow: none !important;
+                justify-content: flex-start !important;
+                text-align: left !important;
+                height: 42px !important;
+                min-height: 42px !important;
+                border-radius: 8px !important;
+                padding: 0 12px !important;
+                font-weight: 600 !important;
+            }
+
+            section[data-testid="stSidebar"] div.stButton > button:hover {
+                background: #f4f7fa !important;
+                color: #0E172B !important;
+            }
+
+            .side-plan {
+                margin-top: 28px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px;
+                background: #ffffff;
+            }
+
+            .side-plan-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }
+
+            .side-plan-title {
+                color: #0E172B;
+                font-weight: 900;
+                font-size: 14px;
+            }
+
+            .side-plan-title span {
+                color: #00A876;
+            }
+
+            .side-plan p {
+                margin: 0;
+                color: #66758a;
+                font-size: 12px;
+                line-height: 1.55;
+            }
+
+            .side-account {
+                margin-top: 14px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                background: #f8fafc;
+                color: #536275;
+                font-size: 12px;
+                line-height: 1.5;
+                border: 1px solid #edf2f7;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="side-brand">
+            <div class="side-logo-mark">P</div>
+            <div class="side-brand-name">PROCALC</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if "sidebar_active" not in st.session_state:
+            st.session_state.sidebar_active = "Dashboard"
+
+        def przejdz_sidebar(nazwa, main_nav=None, sub_nav=None, panel="Aplikacja Główna"):
+            st.session_state.sidebar_active = nazwa
+            st.session_state.globalny_sidebar = panel
+
+            if main_nav:
+                st.session_state.main_nav = main_nav
+
+            if sub_nav:
+                st.session_state.sub_nav = sub_nav
+
+            st.rerun()
+
+        def nav_item(nazwa, ikona, key, main_nav=None, sub_nav=None, panel="Aplikacja Główna", badge=None):
+            active = st.session_state.get("sidebar_active") == nazwa
+
+            if active:
+                badge_html = f'<span class="side-badge">{badge}</span>' if badge else ""
+                st.markdown(f"""
+                <div class="side-active">
+                    <div class="side-active-left">
+                        <span>{ikona}</span>
+                        <span>{nazwa}</span>
+                    </div>
+                    {badge_html}
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                label = f"{ikona}  {nazwa}"
+                if badge:
+                    label = f"{label}   {badge}"
+
+                if st.button(label, key=key, use_container_width=True):
+                    przejdz_sidebar(nazwa, main_nav=main_nav, sub_nav=sub_nav, panel=panel)
+
+        st.markdown('<div class="side-section">Panel główny</div>', unsafe_allow_html=True)
+
+        nav_item("Dashboard", "⌂", "side_dashboard", main_nav="Start")
+        nav_item("Projekty", "▣", "side_projekty", panel="Mój Profil")
+        nav_item("Kalkulatory", "▤", "side_kalkulatory", main_nav="Kalkulatory", sub_nav="Malowanie")
+        nav_item("Klienci", "◌", "side_klienci", panel="Mój Profil")
+        nav_item("Kalendarz", "□", "side_kalendarz", main_nav="Harmonogram")
+        nav_item("Zamówienia", "▱", "side_zamowienia", main_nav="Panel Inwestora")
+        nav_item("Hurtownie", "▥", "side_hurtownie", main_nav="Panel Inwestora")
+        nav_item("Szablony", "▧", "side_szablony", panel="Mój Profil")
+        nav_item("Koszty", "◫", "side_koszty", main_nav="Panel Inwestora")
+        nav_item("Statystyki", "▥", "side_statystyki", main_nav="Panel Inwestora")
+
+        st.markdown('<div class="side-section">Narzędzia</div>', unsafe_allow_html=True)
+
+        nav_item("Negocjacje", "◇", "side_negocjacje", panel="Mój Profil")
+        nav_item("Podpisy", "✎", "side_podpisy", panel="Mój Profil")
+        nav_item("Wiadomości", "◉", "side_wiadomosci", panel="Mój Profil", badge="5")
+        nav_item("Pliki", "▧", "side_pliki", panel="Mój Profil")
+
+        st.markdown('<div class="side-section">Ustawienia</div>', unsafe_allow_html=True)
+
+        nav_item("Ustawienia", "⚙", "side_ustawienia", panel="Mój Profil")
+        nav_item("Pomoc", "?", "side_pomoc", main_nav="Kontakt")
+
+        st.markdown(f"""
+        <div class="side-account">
+            Konto:<br>
+            <strong>{st.session_state.get("user_email", "")}</strong>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.session_state.get("pakiet") == "PRO":
+            st.markdown("""
+            <div class="side-plan">
+                <div class="side-plan-top">
+                    <div class="side-plan-title">PROCALC <span>PRO</span></div>
+                    <div style="color:#00A876;font-weight:900;">♕</div>
+                </div>
+                <p>Masz aktywny plan Pro</p>
+                <p>Pełny dostęp do zapisu, PDF, koszyka i linków ofert.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class="side-plan">
+                <div class="side-plan-top">
+                    <div class="side-plan-title">PROCALC <span>FREE</span></div>
+                    <div style="color:#64748b;font-weight:900;">○</div>
+                </div>
+                <p>Aktywuj PRO, aby zapisywać projekty i generować oferty PDF.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
         st.markdown("---")
-        
-        # --- ZADANIE 2: USTAWIENIA PRO SCHOWANE POD EXPANDEREM ---
-        # Pokazujemy to TYLKO jeśli: użytkownik ma pakiet PRO, nie ukrył kalkulatorów i wybrał kalkulator
-        if (st.session_state.get('pakiet') == "PRO" and 
-            opcja_boczna == "Aplikacja Główna" and
+
+        # --- USTAWIENIA ZAAWANSOWANE PRO ---
+        if (st.session_state.get('pakiet') == "PRO" and
+            st.session_state.get("globalny_sidebar", "Aplikacja Główna") == "Aplikacja Główna" and
             branza not in ["Start", "Logowanie", "Panel Inwestora", "Harmonogram", "Kontakt", "Kalkulatory"]):
-            
-            with st.expander("USTAWIENIA ZAAWANSOWANE (PRO)", expanded=False):
+
+            with st.expander("Ustawienia zaawansowane PRO", expanded=False):
                 st.write("Dostosuj narzuty dla tego kosztorysu:")
-                
-                # --- TWOJA LOGIKA O&P ---
+
                 marza_op_procent = st.slider("Ukryta marża O&P (%)", min_value=0, max_value=50, value=0, step=5, key="op_slider_pro")
                 st.session_state.globalny_mnoznik_op = 1.0 + (marza_op_procent / 100.0)
-                
+
                 st.markdown("**Utrudnienia (Robocizna)**")
-                # --- TWOJE CHECKBOXY Z UTRUDNIENIAMI ---
                 u_winda = st.checkbox("Brak windy / Wysokie piętro (+10%)", key="u_winda")
                 u_meble = st.checkbox("Mieszkanie umeblowane (+15%)", key="u_meble")
                 u_krzywizny = st.checkbox("Bardzo krzywe ściany (+20%)", key="u_krzywizny")
                 u_dojazdy = st.checkbox("Trudny dojazd (+5%)", key="u_dojazdy")
-                
+
                 mnoznik_utrudnien = 1.0
                 if u_winda: mnoznik_utrudnien += 0.10
                 if u_meble: mnoznik_utrudnien += 0.15
                 if u_krzywizny: mnoznik_utrudnien += 0.20
                 if u_dojazdy: mnoznik_utrudnien += 0.05
-                
+
                 st.session_state.globalny_mnoznik = mnoznik_utrudnien
-                
+
                 if marza_op_procent > 0 or mnoznik_utrudnien > 1.0:
                     st.success("Aktywne mnożniki wpływają na ostateczną cenę w kalkulatorze.")
-            st.markdown("---")
-        
-        if st.button("🚪 Wyloguj się", key="btn_wyloguj_global"):
+
+        if st.button("Wyloguj się", key="btn_wyloguj_global", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.session_state.zalogowany = False
             st.session_state.pakiet = "Podstawowy"
-            if supabase: 
-                try: supabase.auth.sign_out()
-                except: pass
+            if supabase:
+                try:
+                    supabase.auth.sign_out()
+                except:
+                    pass
             st.rerun()
+
+    opcja_boczna = st.session_state.get("globalny_sidebar", "Aplikacja Główna")
+
 
 
 # ==========================================
