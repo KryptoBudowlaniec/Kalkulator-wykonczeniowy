@@ -2249,79 +2249,79 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         st.stop()
 
 
-        elif widok_sidebar == "Podpisy":
-            st.header("Podpisy")
-            st.caption("Oferty zaakceptowane przez klienta, które czekają na podpis elektroniczny.")
-    
-            try:
-                odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).in_("status", ["Zaakceptowano", "Podpisano"]).order("created_at", desc=True).execute()
-                oferty_podpisy = odp.data or []
-    
-                if not oferty_podpisy:
-                    st.info("Nie masz jeszcze ofert oczekujących na podpis.")
-                    st.stop()
-    
-                host_url = "https://app.procalc.pl"
-    
-                h1, h2, h3, h4, h5 = st.columns([2.2, 1.2, 1.2, 1.4, 2.2])
-                h1.markdown("**Projekt**")
-                h2.markdown("**Kwota**")
-                h3.markdown("**Status**")
-                h4.markdown("**Data akceptacji**")
-                h5.markdown("**Link dla klienta**")
-    
-                st.markdown("---")
-    
-                for p in oferty_podpisy:
-                    projekt_id = p.get("id")
-                    dane = p.get("dane_json", {}) or {}
-                    nazwa = p.get("nazwa_projektu", "Bez nazwy")
-                    status = p.get("status", "Zaakceptowano")
-                    data_akceptacji = str(p.get("zaakceptowano_data", ""))[:10]
-    
-                    kwota = (
-                        p.get("kwota_aktualna")
-                        or dane.get("robocizna_po_rabacie")
-                        or dane.get("suma_robocizna")
-                        or dane.get("koszt_calkowity_projektu")
-                        or dane.get("koszt_calkowity")
-                        or 0
+    elif widok_sidebar == "Podpisy":
+        st.header("Podpisy")
+        st.caption("Oferty zaakceptowane przez klienta, które czekają na podpis elektroniczny.")
+
+        try:
+            odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).in_("status", ["Zaakceptowano", "Podpisano"]).order("created_at", desc=True).execute()
+            oferty_podpisy = odp.data or []
+
+            if not oferty_podpisy:
+                st.info("Nie masz jeszcze ofert oczekujących na podpis.")
+                st.stop()
+
+            host_url = "https://app.procalc.pl"
+
+            h1, h2, h3, h4, h5 = st.columns([2.2, 1.2, 1.2, 1.4, 2.2])
+            h1.markdown("**Projekt**")
+            h2.markdown("**Kwota**")
+            h3.markdown("**Status**")
+            h4.markdown("**Data akceptacji**")
+            h5.markdown("**Link dla klienta**")
+
+            st.markdown("---")
+
+            for p in oferty_podpisy:
+                projekt_id = p.get("id")
+                dane = p.get("dane_json", {}) or {}
+                nazwa = p.get("nazwa_projektu", "Bez nazwy")
+                status = p.get("status", "Zaakceptowano")
+                data_akceptacji = str(p.get("zaakceptowano_data", ""))[:10]
+
+                kwota = (
+                    p.get("kwota_aktualna")
+                    or dane.get("robocizna_po_rabacie")
+                    or dane.get("suma_robocizna")
+                    or dane.get("koszt_calkowity_projektu")
+                    or dane.get("koszt_calkowity")
+                    or 0
+                )
+
+                link_do_oferty = f"{host_url}/?oferta={projekt_id}"
+
+                c1, c2, c3, c4, c5 = st.columns([2.2, 1.2, 1.2, 1.4, 2.2])
+
+                with c1:
+                    st.markdown(f"**{nazwa}**")
+                    st.caption(str(p.get("created_at", ""))[:10])
+
+                with c2:
+                    st.markdown(f"**{float(kwota):,.2f} zł**".replace(",", " "))
+
+                with c3:
+                    if status == "Podpisano":
+                        st.success("Podpisano")
+                    else:
+                        st.warning("Do podpisu")
+
+                with c4:
+                    st.write(data_akceptacji if data_akceptacji else "Brak")
+
+                with c5:
+                    st.text_input(
+                        "Link dla klienta",
+                        value=link_do_oferty,
+                        key=f"podpis_link_{projekt_id}",
+                        label_visibility="collapsed"
                     )
-    
-                    link_do_oferty = f"{host_url}/?oferta={projekt_id}"
-    
-                    c1, c2, c3, c4, c5 = st.columns([2.2, 1.2, 1.2, 1.4, 2.2])
-    
-                    with c1:
-                        st.markdown(f"**{nazwa}**")
-                        st.caption(str(p.get("created_at", ""))[:10])
-    
-                    with c2:
-                        st.markdown(f"**{float(kwota):,.2f} zł**".replace(",", " "))
-    
-                    with c3:
-                        if status == "Podpisano":
-                            st.success("Podpisano")
-                        else:
-                            st.warning("Do podpisu")
-    
-                    with c4:
-                        st.write(data_akceptacji if data_akceptacji else "Brak")
-    
-                    with c5:
-                        st.text_input(
-                            "Link dla klienta",
-                            value=link_do_oferty,
-                            key=f"podpis_link_{projekt_id}",
-                            label_visibility="collapsed"
-                        )
-    
-                    st.markdown("---")
-    
-            except Exception as e:
-                st.error(f"Błąd wczytywania podpisów: {e}")
-    
-            st.stop()
+
+                st.markdown("---")
+
+        except Exception as e:
+            st.error(f"Błąd wczytywania podpisów: {e}")
+
+        st.stop()
 
 
 
