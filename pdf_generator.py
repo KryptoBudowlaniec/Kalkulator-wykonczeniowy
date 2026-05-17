@@ -86,6 +86,10 @@ def generuj_pdf(typ_pdf, dane):
 
     nazwa = dane.get("nazwa_projektu", "Kosztorys")
     tytul = dane.get("tytul", "Oferta kosztorysowa")
+    klient_nazwa = dane.get("klient_nazwa", "")
+    klient_miasto = dane.get("klient_miasto", "")
+    klient_telefon = dane.get("klient_telefon", "")
+    klient_email = dane.get("klient_email", "")
 
     etapy = dane.get("etapy")
     if not etapy:
@@ -471,6 +475,14 @@ body {{
                     <div class="info-pair">
                         <span>Zakres prac:</span>
                         <b>{_safe(dane.get("branza", typ_pdf))}</b>
+                    </div>
+                    <div class="info-pair">
+                        <span>Klient:</span>
+                        <b>{_safe(klient_nazwa or "Nie przypisano")}</b>
+                    </div>
+                    <div class="info-pair">
+                        <span>Lokalizacja:</span>
+                        <b>{_safe(klient_miasto or "Do ustalenia")}</b>
                     </div>
                     {_param_rows(dane.get("parametry", [])[:4])}
                 </div>
