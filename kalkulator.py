@@ -55,6 +55,10 @@ import string
 from datetime import datetime
 import streamlit.components.v1 as components
 from pdf_generator import generuj_pdf
+from streamlit_drawable_canvas import st_canvas
+import base64
+from io import BytesIO
+
 
 def _nazwa_pliku_pdf(nazwa):
     mapa = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
@@ -1277,171 +1281,85 @@ if "oferta" in query_params:
         if status == "Podpisano":
             st.success("Oferta została podpisana elektronicznie.")
 
+            if projekt.get("podpis_imie_nazwisko"):
+                st.info(f"Podpisujący: {projekt.get('podpis_imie_nazwisko')}")
+
         elif status == "Zaakceptowano":
             st.success("Oferta została zaakceptowana. Do zakończenia potrzebny jest podpis klienta.")
 
             st.markdown("### Podpis elektroniczny klienta")
-            st.info("Podpisz palcem lub myszką w polu poniżej, a następnie zatwierdź podpis.")
+            st.info("Podpisz palcem na telefonie albo myszką na komputerze.")
 
             podpis_imie = st.text_input(
-                "Imię i nazwisko osoby akceptującej ofertę",
+                "Imię i nazwisko osoby podpisującej",
                 key=f"podpis_imie_{oferta_id}"
             )
 
-            signature_html = f"""
-            <style>
-                .sig-box {{
-                    border: 1px solid #dbe5ef;
-                    border-radius: 12px;
-                    background: #ffffff;
-                    padding: 14px;
-                    margin-bottom: 12px;
-                }}
-                #signature-pad {{
-                    width: 100%;
-                    height: 220px;
-                    border: 1px dashed #9aa8b8;
-                    border-radius: 10px;
-                    background: #f8fafc;
-                    touch-action: none;
-                }}
-                .sig-actions {{
-                    display: flex;
-                    gap: 10px;
-                    margin-top: 10px;
-                }}
-                .sig-actions button {{
-                    border: 1px solid #dbe5ef;
-                    background: #ffffff;
-                    border-radius: 8px;
-                    padding: 10px 14px;
-                    cursor: pointer;
-                    font-weight: 700;
-                }}
-                .sig-actions button.primary {{
-                    background: #00A876;
-                    color: #ffffff;
-                    border-color: #00A876;
-                }}
-            </style>
-
-            <div class="sig-box">
-                <canvas id="signature-pad"></canvas>
-                <div class="sig-actions">
-                    <button onclick="clearSignature()">Wyczyść</button>
-                    <button class="primary" onclick="saveSignature()">Zapisz podpis</button>
-                </div>
-                <p id="sig-status" style="font-family:Arial;font-size:13px;color:#64748b;"></p>
-            </div>
-
-            <script>
-                const canvas = document.getElementById("signature-pad");
-                const ctx = canvas.getContext("2d");
-                let drawing = false;
-
-                function resizeCanvas() {{
-                    const rect = canvas.getBoundingClientRect();
-                    const ratio = window.devicePixelRatio || 1;
-                    canvas.width = rect.width * ratio;
-                    canvas.height = rect.height * ratio;
-                    ctx.scale(ratio, ratio);
-                    ctx.lineWidth = 2.5;
-                    ctx.lineCap = "round";
-                    ctx.strokeStyle = "#0E172B";
-                }}
-
-                resizeCanvas();
-                window.addEventListener("resize", resizeCanvas);
-
-                function pos(e) {{
-                    const rect = canvas.getBoundingClientRect();
-                    const touch = e.touches ? e.touches[0] : e;
-                    return {{
-                        x: touch.clientX - rect.left,
-                        y: touch.clientY - rect.top
-                    }};
-                }}
-
-                function start(e) {{
-                    drawing = true;
-                    const p = pos(e);
-                    ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    e.preventDefault();
-                }}
-
-                function move(e) {{
-                    if (!drawing) return;
-                    const p = pos(e);
-                    ctx.lineTo(p.x, p.y);
-                    ctx.stroke();
-                    e.preventDefault();
-                }}
-
-                function end(e) {{
-                    drawing = false;
-                    e.preventDefault();
-                }}
-
-                canvas.addEventListener("mousedown", start);
-                canvas.addEventListener("mousemove", move);
-                canvas.addEventListener("mouseup", end);
-                canvas.addEventListener("mouseleave", end);
-
-                canvas.addEventListener("touchstart", start);
-                canvas.addEventListener("touchmove", move);
-                canvas.addEventListener("touchend", end);
-
-                function clearSignature() {{
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    document.getElementById("sig-status").innerText = "Podpis wyczyszczony.";
-                    window.parent.postMessage({{type: "PROCALC_SIGNATURE", signature: ""}}, "*");
-                }}
-
-                function saveSignature() {{
-                    const dataUrl = canvas.toDataURL("image/png");
-                    document.getElementById("sig-status").innerText = "Podpis zapisany. Teraz kliknij przycisk zatwierdzenia pod formularzem.";
-                    window.parent.postMessage({{type: "PROCALC_SIGNATURE", signature: dataUrl}}, "*");
-                }}
-            </script>
-            """
-
-            components.html(signature_html, height=340, scrolling=False)
-
-            podpis_base64 = st.text_area(
-                "Dane podpisu",
-                key=f"podpis_base64_{oferta_id}",
-                label_visibility="collapsed",
-                height=1
+            canvas_result = st_canvas(
+                fill_color="rgba(255, 255, 255, 0)",
+                stroke_width=3,
+                stroke_color="#0E172B",
+                background_color="#F8FAFC",
+                height=220,
+                drawing_mode="freedraw",
+                key=f"canvas_podpis_{oferta_id}",
             )
 
-            st.warning("Jeśli pole podpisu nie zapisze się automatycznie, podpis palcem dołożymy przez wariant techniczny z osobnym komponentem. Na tym etapie testujemy widok podpisu.")
+            zgoda_podpis = st.checkbox(
+                "Potwierdzam akceptację zakresu prac, ceny oraz warunków współpracy.",
+                key=f"zgoda_podpis_{oferta_id}"
+            )
 
             if st.button("Zatwierdź podpis i zakończ akceptację", type="primary", use_container_width=True):
                 if not podpis_imie.strip():
                     st.error("Podaj imię i nazwisko osoby podpisującej.")
+                elif not zgoda_podpis:
+                    st.error("Zaznacz potwierdzenie akceptacji warunków.")
+                elif canvas_result.image_data is None:
+                    st.error("Złóż podpis w polu powyżej.")
                 else:
                     try:
-                        historia = projekt.get("historia_negocjacji") or []
-                        historia.append({
-                            "typ": "podpis_klienta",
-                            "imie_nazwisko": podpis_imie,
-                            "data": datetime.now().isoformat()
-                        })
+                        img = canvas_result.image_data
 
-                        supabase.table("kosztorysy").update({
-                            "status": "Podpisano",
-                            "podpis_imie_nazwisko": podpis_imie,
-                            "podpis_klienta": podpis_base64,
-                            "podpis_data": datetime.now().isoformat(),
-                            "historia_negocjacji": historia
-                        }).eq("id", oferta_id).execute()
+                        # Sprawdzamy, czy podpis nie jest pusty.
+                        has_signature = (img[:, :, :3] < 245).any()
 
-                        st.success("Oferta została podpisana.")
-                        time.sleep(1)
-                        st.rerun()
+                        if not has_signature:
+                            st.error("Podpis wygląda na pusty. Złóż podpis w polu powyżej.")
+                        else:
+                            from PIL import Image
+
+                            podpis_img = Image.fromarray(img.astype("uint8"), "RGBA")
+                            bufor = BytesIO()
+                            podpis_img.save(bufor, format="PNG")
+                            podpis_base64 = base64.b64encode(bufor.getvalue()).decode("utf-8")
+                            podpis_data_uri = f"data:image/png;base64,{podpis_base64}"
+
+                            historia = projekt.get("historia_negocjacji") or []
+                            historia.append({
+                                "typ": "podpis_klienta",
+                                "imie_nazwisko": podpis_imie,
+                                "data": datetime.now().isoformat()
+                            })
+
+                            supabase.table("kosztorysy").update({
+                                "status": "Podpisano",
+                                "podpis_imie_nazwisko": podpis_imie,
+                                "podpis_klienta": podpis_data_uri,
+                                "podpis_data": datetime.now().isoformat(),
+                                "historia_negocjacji": historia
+                            }).eq("id", oferta_id).execute()
+
+                            st.success("Oferta została podpisana elektronicznie.")
+                            time.sleep(1)
+                            st.rerun()
+
                     except Exception as e:
                         st.error(f"Nie udało się zapisać podpisu: {e}")
+
+        elif status == "Zaliczka opłacona":
+            st.success("Oferta podpisana, zaliczka opłacona.")
+
 
         elif status == "Zaliczka opłacona":
             st.success("Oferta podpisana, zaliczka opłacona.")
