@@ -2436,6 +2436,329 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
         st.stop()
 
+        elif widok_sidebar == "Koszty":
+        st.header("Koszty")
+        st.caption("Rejestr kosztów firmy i projektów: paliwo, narzędzia, podwykonawcy, dojazdy i zakupy.")
+
+        kategorie_kosztow = [
+            "Paliwo / dojazd",
+            "Parking / opłaty",
+            "Narzędzia",
+            "Materiały dodatkowe",
+            "Podwykonawca",
+            "Utylizacja gruzu",
+            "Wynajem sprzętu",
+            "Zakwaterowanie",
+            "Jedzenie / delegacja",
+            "Inne",
+        ]
+
+        try:
+            odp_proj = (
+                supabase.table("kosztorysy")
+                .select("id,nazwa_projektu")
+                .eq("uzytkownik_id", st.session_state.user_id)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            projekty_do_kosztow = odp_proj.data or []
+        except Exception:
+            projekty_do_kosztow = []
+
+        with st.expander("Dodaj koszt", expanded=False):
+            with st.form("form_dodaj_koszt"):
+                c1, c2, c3 = st.columns(3)
+
+                data_kosztu = c1.date_input("Data kosztu")
+                kategoria = c2.selectbox("Kategoria", kategorie_kosztow)
+                status_kosztu = c3.selectbox("Status", ["Opłacony", "Planowany", "Do rozliczenia"])
+
+                opcje_projektow = ["Bez projektu"] + [
+                    f"{p.get('nazwa_projektu', 'Projekt')} | {p.get('id')}"
+                    for p in projekty_do_kosztow
+                ]
+
+                wybor_projektu = st.selectbox("Przypisz do projektu", opcje_projektow)
+
+                opis = st.text_input("Opis kosztu", placeholder="Np. paliwo na dojazd, wynajem żyrafy, dodatkowy grunt")
+                kwota = st.number_input("Kwota brutto (PLN)", min_value=0.0, value=0.0, step=10.0)
+
+                if st.form_submit_button("Zapisz koszt", type="primary", use_container_width=True):
+                    if kwota <= 0:
+                        st.error("Podaj kwotę większą niż 0.")
+                    else:
+                        kosztorys_id = None
+                        if wybor_projektu != "Bez projektu":
+                            kosztorys_id = wybor_projektu.split("|")[-1].strip()
+
+                        try:
+                            supabase.table("koszty").insert({
+                                "user_id": st.session_state.user_id,
+                                "kosztorys_id": kosztorys_id,
+                                "data_kosztu": str(data_kosztu),
+                                "kategoria": kategoria,
+                                "opis": opis,
+                                "kwota": float(kwota),
+                                "status": status_kosztu
+                            }).execute()
+
+                            st.success("Koszt zapisany.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd zapisu kosztu: {e}")
+
+        try:
+            odp = (
+                supabase.table("koszty")
+                .select("*")
+                .eq("user_id", st.session_state.user_id)
+                .order("data_kosztu", desc=True)
+                .execute()
+            )
+            koszty = odp.data or []
+
+            if not koszty:
+                st.info("Nie masz jeszcze zapisanych kosztów.")
+                st.stop()
+
+            suma_wszystkie = sum(float(k.get("kwota", 0) or 0) for k in koszty)
+            suma_oplacone = sum(float(k.get("kwota", 0) or 0) for k in koszty if k.get("status") == "Opłacony")
+            suma_planowane = sum(float(k.get("kwota", 0) or 0) for k in koszty if k.get("status") == "Planowany")
+            suma_do_rozliczenia = sum(float(k.get("kwota", 0) or 0) for k in koszty if k.get("status") == "Do rozliczenia")
+
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Koszty razem", f"{suma_wszystkie:,.2f} zł".replace(",", " "))
+            m2.metric("Opłacone", f"{suma_oplacone:,.2f} zł".replace(",", " "))
+            m3.metric("Planowane", f"{suma_planowane:,.2f} zł".replace(",", " "))
+            m4.metric("Do rozliczenia", f"{suma_do_rozliczenia:,.2f} zł".replace(",", " "))
+
+            st.markdown("---")
+
+            st.subheader("Koszty według kategorii")
+
+            suma_kategorii = {}
+            for k in koszty:
+                kat = k.get("kategoria", "Inne")
+                suma_kategorii[kat] = suma_kategorii.get(kat, 0) + float(k.get("kwota", 0) or 0)
+
+            if suma_kategorii:
+                cols = st.columns(3)
+                for i, (kat, suma) in enumerate(sorted(suma_kategorii.items(), key=lambda x: x[1], reverse=True)):
+                    with cols[i % 3]:
+                        st.metric(kat, f"{suma:,.2f} zł".replace(",", " "))
+
+            st.markdown("---")
+            st.subheader("Lista kosztów")
+
+            h1, h2, h3, h4, h5, h6 = st.columns([1.0, 1.5, 2.2, 1.2, 1.1, 0.7])
+            h1.markdown("**Data**")
+            h2.markdown("**Kategoria**")
+            h3.markdown("**Opis**")
+            h4.markdown("**Kwota**")
+            h5.markdown("**Status**")
+            h6.markdown("**Usuń**")
+
+            st.markdown("---")
+
+            for k in koszty:
+                c1, c2, c3, c4, c5, c6 = st.columns([1.0, 1.5, 2.2, 1.2, 1.1, 0.7])
+
+                with c1:
+                    st.write(str(k.get("data_kosztu", ""))[:10])
+
+                with c2:
+                    st.write(k.get("kategoria", ""))
+
+                with c3:
+                    st.write(k.get("opis", ""))
+                    if k.get("kosztorys_id"):
+                        st.caption(f"Projekt: {k.get('kosztorys_id')}")
+
+                with c4:
+                    st.markdown(f"**{float(k.get('kwota', 0) or 0):,.2f} zł**".replace(",", " "))
+
+                with c5:
+                    status = k.get("status", "Opłacony")
+                    if status == "Opłacony":
+                        st.success(status)
+                    elif status == "Planowany":
+                        st.info(status)
+                    else:
+                        st.warning(status)
+
+                with c6:
+                    if st.button("Usuń", key=f"del_koszt_{k.get('id')}", use_container_width=True):
+                        supabase.table("koszty").delete().eq("id", k.get("id")).execute()
+                        st.rerun()
+
+                st.markdown("---")
+
+        except Exception as e:
+            st.error(f"Błąd wczytywania kosztów: {e}")
+
+        st.stop()
+        elif widok_sidebar == "Statystyki":
+        st.header("Statystyki")
+        st.caption("Skuteczność ofert, wartość projektów, podpisy, zaliczki i koszty firmy.")
+
+        def _kwota_projektu(p):
+            dane = p.get("dane_json", {}) or {}
+            return float(
+                p.get("kwota_aktualna")
+                or dane.get("robocizna_po_rabacie")
+                or dane.get("suma_robocizna")
+                or dane.get("koszt_calkowity_projektu")
+                or dane.get("koszt_calkowity")
+                or 0
+            )
+
+        try:
+            odp = (
+                supabase.table("kosztorysy")
+                .select("*")
+                .eq("uzytkownik_id", st.session_state.user_id)
+                .execute()
+            )
+            projekty_stat = odp.data or []
+
+            odp_koszty = (
+                supabase.table("koszty")
+                .select("*")
+                .eq("user_id", st.session_state.user_id)
+                .execute()
+            )
+            koszty_stat = odp_koszty.data or []
+
+            wszystkie = len(projekty_stat)
+            wyslano = len([p for p in projekty_stat if p.get("status") in ["Wysłano", "Oczekująca"]])
+            otworzono = len([p for p in projekty_stat if p.get("status") == "Otworzono"])
+            negocjacje = len([p for p in projekty_stat if p.get("status") == "Negocjacja"])
+            zaakceptowane = len([p for p in projekty_stat if p.get("status") == "Zaakceptowano"])
+            podpisane = len([p for p in projekty_stat if p.get("status") == "Podpisano"])
+            zaliczki = len([p for p in projekty_stat if p.get("status") == "Zaliczka opłacona"])
+            odrzucone = len([p for p in projekty_stat if p.get("status") == "Odrzucono"])
+
+            aktywne_wygrane = [
+                p for p in projekty_stat
+                if p.get("status") in ["Zaakceptowano", "Podpisano", "Zaliczka opłacona"]
+            ]
+
+            wartosc_wszystkich = sum(_kwota_projektu(p) for p in projekty_stat)
+            wartosc_wygranych = sum(_kwota_projektu(p) for p in aktywne_wygrane)
+            wartosc_podpisanych = sum(_kwota_projektu(p) for p in projekty_stat if p.get("status") in ["Podpisano", "Zaliczka opłacona"])
+            wartosc_zaliczek = sum(float(p.get("zaliczka_kwota", 0) or 0) for p in projekty_stat)
+
+            suma_kosztow = sum(float(k.get("kwota", 0) or 0) for k in koszty_stat)
+            suma_kosztow_oplacone = sum(float(k.get("kwota", 0) or 0) for k in koszty_stat if k.get("status") == "Opłacony")
+
+            skutecznosc = (len(aktywne_wygrane) / wszystkie * 100) if wszystkie else 0
+            podpisy_rate = (podpisane + zaliczki) / len(aktywne_wygrane) * 100 if aktywne_wygrane else 0
+            zaliczki_rate = (zaliczki / (podpisane + zaliczki) * 100) if (podpisane + zaliczki) else 0
+
+            st.subheader("Pipeline ofert")
+
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Wszystkie oferty", wszystkie)
+            c2.metric("W negocjacji", negocjacje)
+            c3.metric("Wygrane", len(aktywne_wygrane))
+            c4.metric("Odrzucone", odrzucone)
+
+            c5, c6, c7, c8 = st.columns(4)
+            c5.metric("Wysłane", wyslano)
+            c6.metric("Otworzone", otworzono)
+            c7.metric("Podpisane", podpisane + zaliczki)
+            c8.metric("Zaliczki", zaliczki)
+
+            st.markdown("---")
+            st.subheader("Finanse")
+
+            f1, f2, f3, f4 = st.columns(4)
+            f1.metric("Wartość ofert", f"{wartosc_wszystkich:,.2f} zł".replace(",", " "))
+            f2.metric("Wartość wygranych", f"{wartosc_wygranych:,.2f} zł".replace(",", " "))
+            f3.metric("Podpisane umowy", f"{wartosc_podpisanych:,.2f} zł".replace(",", " "))
+            f4.metric("Zaliczki opłacone", f"{wartosc_zaliczek:,.2f} zł".replace(",", " "))
+
+            f5, f6, f7, f8 = st.columns(4)
+            f5.metric("Koszty razem", f"{suma_kosztow:,.2f} zł".replace(",", " "))
+            f6.metric("Koszty opłacone", f"{suma_kosztow_oplacone:,.2f} zł".replace(",", " "))
+            f7.metric("Wynik po kosztach", f"{(wartosc_wygranych - suma_kosztow):,.2f} zł".replace(",", " "))
+            f8.metric("Średnia oferta", f"{(wartosc_wszystkich / wszystkie if wszystkie else 0):,.2f} zł".replace(",", " "))
+
+            st.markdown("---")
+            st.subheader("Skuteczność")
+
+            s1, s2, s3 = st.columns(3)
+            s1.metric("Konwersja ofert", f"{round(skutecznosc, 1)}%")
+            s2.metric("Podpisy / wygrane", f"{round(podpisy_rate, 1)}%")
+            s3.metric("Zaliczki / podpisane", f"{round(zaliczki_rate, 1)}%")
+
+            st.progress(min(skutecznosc / 100, 1.0), text="Konwersja ofert")
+            st.progress(min(podpisy_rate / 100, 1.0), text="Podpisy po akceptacji")
+            st.progress(min(zaliczki_rate / 100, 1.0), text="Zaliczki po podpisie")
+
+            st.markdown("---")
+            st.subheader("Statusy ofert")
+
+            statusy = {
+                "Wysłano": wyslano,
+                "Otworzono": otworzono,
+                "Negocjacja": negocjacje,
+                "Zaakceptowano": zaakceptowane,
+                "Podpisano": podpisane,
+                "Zaliczka opłacona": zaliczki,
+                "Odrzucono": odrzucone,
+            }
+
+            cols = st.columns(4)
+            for i, (status, liczba) in enumerate(statusy.items()):
+                with cols[i % 4]:
+                    st.metric(status, liczba)
+
+            st.markdown("---")
+            st.subheader("Największe oferty")
+
+            top_oferty = sorted(projekty_stat, key=lambda p: _kwota_projektu(p), reverse=True)[:5]
+
+            if not top_oferty:
+                st.info("Brak ofert do analizy.")
+            else:
+                h1, h2, h3, h4 = st.columns([2.4, 1.2, 1.2, 1.2])
+                h1.markdown("**Projekt**")
+                h2.markdown("**Kwota**")
+                h3.markdown("**Status**")
+                h4.markdown("**Data**")
+
+                st.markdown("---")
+
+                for p in top_oferty:
+                    c1, c2, c3, c4 = st.columns([2.4, 1.2, 1.2, 1.2])
+                    c1.markdown(f"**{p.get('nazwa_projektu', 'Projekt')}**")
+                    c2.markdown(f"{_kwota_projektu(p):,.2f} zł".replace(",", " "))
+                    c3.write(p.get("status", "Wysłano"))
+                    c4.caption(str(p.get("created_at", ""))[:10])
+
+            st.markdown("---")
+            st.subheader("Koszty według kategorii")
+
+            suma_kategorii = {}
+            for k in koszty_stat:
+                kat = k.get("kategoria", "Inne")
+                suma_kategorii[kat] = suma_kategorii.get(kat, 0) + float(k.get("kwota", 0) or 0)
+
+            if not suma_kategorii:
+                st.info("Brak kosztów do analizy.")
+            else:
+                cols_k = st.columns(3)
+                for i, (kat, suma) in enumerate(sorted(suma_kategorii.items(), key=lambda x: x[1], reverse=True)):
+                    with cols_k[i % 3]:
+                        st.metric(kat, f"{suma:,.2f} zł".replace(",", " "))
+
+        except Exception as e:
+            st.error(f"Błąd wczytywania statystyk: {e}")
+
+        st.stop()
+
+
     elif widok_sidebar == "Wiadomości":
         st.header("Wiadomości")
         st.caption("Najważniejsze zdarzenia: negocjacje, akceptacje, podpisy, zaliczki i odrzucenia.")
@@ -2648,6 +2971,10 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 "branza": aktyw.get("branza", "Kosztorys"),
                 "tytul": "Oferta kosztorysowa",
                 "nazwa_projektu": aktyw.get("nazwa_projektu", "Projekt"),
+                "klient_nazwa": aktyw.get("klient_nazwa", ""),
+                "klient_miasto": aktyw.get("klient_miasto", ""),
+                "klient_telefon": aktyw.get("klient_telefon", ""),
+                "klient_email": aktyw.get("klient_email", ""),
                 "koszt_robocizny": kwota_robocizny,
                 "koszt_materialow": kwota_materialow,
                 "kwota_koncowa": kwota_koncowa,
