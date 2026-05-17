@@ -2161,104 +2161,80 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         st.stop()
 
 
-    elif widok_sidebar == "Podpisy":
-        st.header("Podpisy")
-        st.info("Tutaj pojawią się zaakceptowane oferty oczekujące na podpis elektroniczny klienta.")
-        st.stop()
-
-        elif widok_sidebar == "Wiadomości":
-        st.header("Wiadomości")
-        st.caption("Powiadomienia z ofert: otwarcia, negocjacje, akceptacje i odrzucenia.")
-
-        try:
-            odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).order("created_at", desc=True).execute()
-            projekty_msg = odp.data or []
-
-            wydarzenia = []
-
-            for p in projekty_msg:
-                nazwa = p.get("nazwa_projektu", "Projekt")
-                status = p.get("status", "Wysłano")
-
-                if p.get("otworzono_data"):
-                    wydarzenia.append({
-                        "typ": "Otworzono ofertę",
-                        "projekt": nazwa,
-                        "data": p.get("otworzono_data"),
-                        "opis": "Klient otworzył link z ofertą.",
-                        "kolor": "info"
-                    })
-
-                if p.get("zaakceptowano_data"):
-                    wydarzenia.append({
-                        "typ": "Oferta zaakceptowana",
-                        "projekt": nazwa,
-                        "data": p.get("zaakceptowano_data"),
-                        "opis": "Klient zaakceptował ofertę.",
-                        "kolor": "success"
-                    })
-
-                if p.get("odrzucono_data"):
-                    wydarzenia.append({
-                        "typ": "Oferta odrzucona",
-                        "projekt": nazwa,
-                        "data": p.get("odrzucono_data"),
-                        "opis": "Klient odrzucił ofertę.",
-                        "kolor": "error"
-                    })
-
-                historia = p.get("historia_negocjacji") or []
-                for h in historia:
-                    typ = h.get("typ", "Zdarzenie")
-                    kwota = h.get("kwota")
-                    komentarz = h.get("komentarz", "")
-
-                    opis = komentarz or "Zdarzenie negocjacyjne."
-                    if kwota:
-                        opis = f"Kwota: {float(kwota):,.2f} zł. {opis}".replace(",", " ")
-
-                    wydarzenia.append({
-                        "typ": typ.replace("_", " ").capitalize(),
-                        "projekt": nazwa,
-                        "data": h.get("data", p.get("created_at")),
-                        "opis": opis,
-                        "kolor": "warning" if "propozycja" in typ else "info"
-                    })
-
-            wydarzenia = sorted(
-                wydarzenia,
-                key=lambda x: str(x.get("data", "")),
-                reverse=True
-            )
-
-            if not wydarzenia:
-                st.info("Brak powiadomień. Gdy klient otworzy ofertę, zaproponuje cenę lub zaakceptuje kosztorys, zobaczysz to tutaj.")
-                st.stop()
-
-            for w in wydarzenia[:50]:
-                with st.container(border=True):
-                    c1, c2 = st.columns([3, 1])
-
+        elif widok_sidebar == "Podpisy":
+            st.header("Podpisy")
+            st.caption("Oferty zaakceptowane przez klienta, które czekają na podpis elektroniczny.")
+    
+            try:
+                odp = supabase.table("kosztorysy").select("*").eq("uzytkownik_id", st.session_state.user_id).in_("status", ["Zaakceptowano", "Podpisano"]).order("created_at", desc=True).execute()
+                oferty_podpisy = odp.data or []
+    
+                if not oferty_podpisy:
+                    st.info("Nie masz jeszcze ofert oczekujących na podpis.")
+                    st.stop()
+    
+                host_url = "https://app.procalc.pl"
+    
+                h1, h2, h3, h4, h5 = st.columns([2.2, 1.2, 1.2, 1.4, 2.2])
+                h1.markdown("**Projekt**")
+                h2.markdown("**Kwota**")
+                h3.markdown("**Status**")
+                h4.markdown("**Data akceptacji**")
+                h5.markdown("**Link dla klienta**")
+    
+                st.markdown("---")
+    
+                for p in oferty_podpisy:
+                    projekt_id = p.get("id")
+                    dane = p.get("dane_json", {}) or {}
+                    nazwa = p.get("nazwa_projektu", "Bez nazwy")
+                    status = p.get("status", "Zaakceptowano")
+                    data_akceptacji = str(p.get("zaakceptowano_data", ""))[:10]
+    
+                    kwota = (
+                        p.get("kwota_aktualna")
+                        or dane.get("robocizna_po_rabacie")
+                        or dane.get("suma_robocizna")
+                        or dane.get("koszt_calkowity_projektu")
+                        or dane.get("koszt_calkowity")
+                        or 0
+                    )
+    
+                    link_do_oferty = f"{host_url}/?oferta={projekt_id}"
+    
+                    c1, c2, c3, c4, c5 = st.columns([2.2, 1.2, 1.2, 1.4, 2.2])
+    
                     with c1:
-                        if w["kolor"] == "success":
-                            st.success(f"**{w['typ']}**")
-                        elif w["kolor"] == "error":
-                            st.error(f"**{w['typ']}**")
-                        elif w["kolor"] == "warning":
-                            st.warning(f"**{w['typ']}**")
-                        else:
-                            st.info(f"**{w['typ']}**")
-
-                        st.markdown(f"**Projekt:** {w['projekt']}")
-                        st.write(w["opis"])
-
+                        st.markdown(f"**{nazwa}**")
+                        st.caption(str(p.get("created_at", ""))[:10])
+    
                     with c2:
-                        st.caption(str(w.get("data", ""))[:19].replace("T", " "))
+                        st.markdown(f"**{float(kwota):,.2f} zł**".replace(",", " "))
+    
+                    with c3:
+                        if status == "Podpisano":
+                            st.success("Podpisano")
+                        else:
+                            st.warning("Do podpisu")
+    
+                    with c4:
+                        st.write(data_akceptacji if data_akceptacji else "Brak")
+    
+                    with c5:
+                        st.text_input(
+                            "Link dla klienta",
+                            value=link_do_oferty,
+                            key=f"podpis_link_{projekt_id}",
+                            label_visibility="collapsed"
+                        )
+    
+                    st.markdown("---")
+    
+            except Exception as e:
+                st.error(f"Błąd wczytywania podpisów: {e}")
+    
+            st.stop()
 
-        except Exception as e:
-            st.error(f"Błąd wczytywania wiadomości: {e}")
-
-        st.stop()
 
 
     elif widok_sidebar == "Pliki":
