@@ -704,7 +704,11 @@ if "oferta" in query_params:
             suma_rob = float(dane.get("koszt_robocizny", dane.get("koszt_calkowity", 0)) or 0)
             suma_mat = float(dane.get("koszt_materialow", 0) or 0)
 
-        do_zaplaty = float(dane.get("robocizna_po_rabacie", suma_rob - rabat) or 0)
+        prace_dodatkowe = dane.get("prace_dodatkowe", []) or []
+        suma_rob_dodatkowe = sum(_to_float(p.get("robocizna", 0)) for p in prace_dodatkowe)
+        
+        suma_rob = suma_rob + suma_rob_dodatkowe
+
         if do_zaplaty <= 0:
             do_zaplaty = suma_rob - rabat
         kwota_aktualna = projekt.get("kwota_aktualna")
@@ -2996,10 +3000,11 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
             if "prace_dodatkowe_pdf" not in st.session_state:
                 st.session_state.prace_dodatkowe_pdf = {}
-
+            
             aktyw_id = str(aktyw.get("id"))
             if aktyw_id not in st.session_state.prace_dodatkowe_pdf:
-                st.session_state.prace_dodatkowe_pdf[aktyw_id] = []
+                st.session_state.prace_dodatkowe_pdf[aktyw_id] = dane_proj.get("prace_dodatkowe", []) or []
+
 
             with st.expander("Dodaj pracę dodatkową", expanded=False):
                 cpd1, cpd2, cpd3 = st.columns([2, 1, 1])
@@ -3025,8 +3030,15 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                             "robocizna": float(rob_pracy_dod),
                             "materialy": float(mat_pracy_dod),
                         })
-                        st.success("Praca dodatkowa dodana.")
+                        
+                        _zapisz_prace_dodatkowe_do_bazy(
+                            aktyw,
+                            st.session_state.prace_dodatkowe_pdf[aktyw_id]
+                        )
+                        
+                        st.success("Praca dodatkowa dodana i zapisana do projektu.")
                         st.rerun()
+
 
             prace_dodatkowe_pdf = st.session_state.prace_dodatkowe_pdf.get(aktyw_id, [])
     
@@ -3041,39 +3053,65 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     with cpd_b:
                         if st.button("Usuń", key=f"usun_dod_{aktyw_id}_{i}", use_container_width=True):
                             st.session_state.prace_dodatkowe_pdf[aktyw_id].pop(i)
+
+                            _zapisz_prace_dodatkowe_do_bazy(
+                                aktyw,
+                                st.session_state.prace_dodatkowe_pdf[aktyw_id]
+                            )
+                            
                             st.rerun()
-    
+
             # Przygotowanie danych do wspólnego generatora PDF
+            prace_dodatkowe_pdf = st.session_state.prace_dodatkowe_pdf.get(aktyw_id, dane_proj.get("prace_dodatkowe", []) or [])
+            
             if "etapy" in dane_proj:
-                kwota_robocizny = dane_proj.get(
-                    "robocizna_po_rabacie",
-                    dane_proj.get("suma_robocizna", 0)
+                etapy_pdf = dane_proj.get("etapy", []) or []
+            
+                kwota_robocizny = _to_float(
+                    dane_proj.get(
+                        "robocizna_po_rabacie",
+                        dane_proj.get("suma_robocizna", 0)
+                    )
                 )
-    
-                kwota_materialow = 0 if tryb_wybrany == "robocizna" else dane_proj.get("suma_materialy", 0)
-                kwota_koncowa = kwota_robocizny if tryb_wybrany == "robocizna" else dane_proj.get("koszt_calkowity_projektu", kwota_robocizny + kwota_materialow)
-    
-                materialy_pdf = dane_proj.get("zbiorcza_lista_zakupow", [])
-                etapy_pdf = dane_proj.get("etapy", [])
-    
+            
+                if kwota_robocizny <= 0:
+                    kwota_robocizny = sum(
+                        _to_float(e.get("koszt_robocizny", e.get("koszt_calkowity", 0)))
+                        for e in etapy_pdf
+                    )
+            
+                kwota_materialow = 0 if tryb_wybrany == "robocizna" else _to_float(dane_proj.get("suma_materialy", 0))
+            
+                if kwota_materialow <= 0 and tryb_wybrany == "pelny":
+                    kwota_materialow = sum(
+                        _to_float(e.get("koszt_materialow", 0))
+                        for e in etapy_pdf
+                    )
+            
+                materialy_pdf = dane_proj.get("zbiorcza_lista_zakupow", []) or []
+            
             else:
-                kwota_robocizny = dane_proj.get("koszt_robocizny", dane_proj.get("koszt_calkowity", 0))
-                kwota_materialow = 0 if tryb_wybrany == "robocizna" else dane_proj.get("koszt_materialow", 0)
-                kwota_koncowa = kwota_robocizny if tryb_wybrany == "robocizna" else dane_proj.get("koszt_calkowity", kwota_robocizny + kwota_materialow)
-    
-                materialy_pdf = dane_proj.get("materialy_lista", [])
                 etapy_pdf = [dane_proj]
-            suma_rob_dodatkowe = sum(float(p.get("robocizna", 0) or 0) for p in prace_dodatkowe_pdf)
-            suma_mat_dodatkowe = sum(float(p.get("materialy", 0) or 0) for p in prace_dodatkowe_pdf)
-    
-            kwota_robocizny = float(kwota_robocizny or 0) + suma_rob_dodatkowe
-    
+            
+                kwota_robocizny = _to_float(
+                    dane_proj.get("koszt_robocizny", dane_proj.get("koszt_calkowity", 0))
+                )
+            
+                kwota_materialow = 0 if tryb_wybrany == "robocizna" else _to_float(dane_proj.get("koszt_materialow", 0))
+                materialy_pdf = dane_proj.get("materialy_lista", []) or []
+            
+            suma_rob_dodatkowe = sum(_to_float(p.get("robocizna", 0)) for p in prace_dodatkowe_pdf)
+            suma_mat_dodatkowe = sum(_to_float(p.get("materialy", 0)) for p in prace_dodatkowe_pdf)
+            
+            kwota_robocizny = _to_float(kwota_robocizny) + suma_rob_dodatkowe
+            
             if tryb_wybrany == "pelny":
-                kwota_materialow = float(kwota_materialow or 0) + suma_mat_dodatkowe
+                kwota_materialow = _to_float(kwota_materialow) + suma_mat_dodatkowe
             else:
                 kwota_materialow = 0
-    
+            
             kwota_koncowa = kwota_robocizny + kwota_materialow
+
     
             dane_pdf_oferta = {
                 **_dane_firmy_pdf(),
@@ -3107,6 +3145,25 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 "Oferta",
                 f"oferta_{aktyw.get('id')}"
             )
+            def _to_float(value, default=0.0):
+                try:
+                    if value is None:
+                        return default
+                    return float(value)
+                except Exception:
+                    return default
+            
+            
+            def _zapisz_prace_dodatkowe_do_bazy(aktywny, prace_dodatkowe):
+                dane_bazy = dict(aktywny.get("dane_json", {}) or {})
+                dane_bazy["prace_dodatkowe"] = prace_dodatkowe
+            
+                supabase.table("kosztorysy").update({
+                    "dane_json": dane_bazy
+                }).eq("id", aktywny.get("id")).execute()
+            
+                st.session_state["aktywny_projekt_do_pdf"]["dane_json"] = dane_bazy
+
 
         
         st.markdown("<br>", unsafe_allow_html=True)
