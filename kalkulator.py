@@ -639,6 +639,186 @@ if st.session_state.get("zalogowany"):
 # =======================================================
 
 query_params = st.query_params
+# =======================================================
+# LINK DLA HURTOWNI - WYCENA MATERIAŁÓW
+# =======================================================
+
+if "hurtownia" in query_params:
+    token_hurtowni = query_params["hurtownia"]
+
+    try:
+        odp = (
+            supabase.table("zapytania_hurtownie")
+            .select("*")
+            .eq("token", token_hurtowni)
+            .execute()
+        )
+
+        if not odp.data:
+            st.error("Nie znaleziono zapytania lub link jest nieaktywny.")
+            st.stop()
+
+        zapytanie = odp.data[0]
+        materialy = zapytanie.get("materialy", []) or []
+        nazwa_projektu = zapytanie.get("nazwa_projektu", "Zapytanie materiałowe")
+        status = zapytanie.get("status", "Wysłano")
+
+        st.set_page_config(page_title="Wycena materiałów | ProCalc", layout="wide")
+
+        st.markdown("""
+        <style>
+            .hurtownia-hero {
+                background: linear-gradient(135deg, #082849, #003b78);
+                color: white;
+                padding: 34px;
+                border-radius: 18px;
+                margin-bottom: 24px;
+            }
+            .hurtownia-hero h1 {
+                margin: 0;
+                font-size: 34px;
+                font-weight: 800;
+            }
+            .hurtownia-hero p {
+                margin-top: 10px;
+                color: #d8e4f2;
+                font-size: 16px;
+            }
+            .hurtownia-box {
+                border: 1px solid #e2e8f0;
+                border-radius: 14px;
+                padding: 18px;
+                background: #ffffff;
+                margin-bottom: 14px;
+            }
+            .hurtownia-muted {
+                color: #64748b;
+                font-size: 13px;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="hurtownia-hero">
+            <h1>Zapytanie materiałowe</h1>
+            <p>Projekt: <strong>{nazwa_projektu}</strong></p>
+            <p>Uzupełnij ceny materiałów, zaproponuj zamienniki lub wpisz łączną kwotę oferty.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if status == "Wycena otrzymana":
+            st.success("Wycena została już wysłana. Dziękujemy.")
+            st.stop()
+
+        if not materialy:
+            st.warning("To zapytanie nie zawiera listy materiałów.")
+            st.stop()
+
+        st.subheader("Lista materiałów do wyceny")
+
+        odpowiedzi_materialow = []
+
+        for i, mat in enumerate(materialy):
+            nazwa_mat = mat.get("nazwa", "Materiał") if isinstance(mat, dict) else str(mat)
+            ilosc_mat = mat.get("ilosc", "") if isinstance(mat, dict) else ""
+            jed_mat = mat.get("jed", "") if isinstance(mat, dict) else ""
+
+            with st.container(border=True):
+                st.markdown(f"**{i + 1}. {nazwa_mat}**")
+                st.caption(f"Ilość: {ilosc_mat} {jed_mat}")
+
+                c1, c2, c3 = st.columns([1, 1, 2])
+
+                cena_netto = c1.number_input(
+                    "Cena netto",
+                    min_value=0.0,
+                    value=0.0,
+                    step=1.0,
+                    key=f"h_cena_netto_{i}"
+                )
+
+                cena_brutto = c2.number_input(
+                    "Cena brutto",
+                    min_value=0.0,
+                    value=0.0,
+                    step=1.0,
+                    key=f"h_cena_brutto_{i}"
+                )
+
+                zamiennik = c3.text_input(
+                    "Zamiennik / uwagi do pozycji",
+                    key=f"h_zamiennik_{i}",
+                    placeholder="Np. produkt alternatywny, dostępność, marka"
+                )
+
+                odpowiedzi_materialow.append({
+                    "nazwa": nazwa_mat,
+                    "ilosc": ilosc_mat,
+                    "jed": jed_mat,
+                    "cena_netto": cena_netto,
+                    "cena_brutto": cena_brutto,
+                    "zamiennik": zamiennik,
+                })
+
+        st.markdown("---")
+        st.subheader("Podsumowanie oferty hurtowni")
+
+        c_sum1, c_sum2, c_sum3 = st.columns(3)
+
+        kwota_netto = c_sum1.number_input(
+            "Łączna kwota netto",
+            min_value=0.0,
+            value=sum(float(x.get("cena_netto", 0) or 0) for x in odpowiedzi_materialow),
+            step=10.0,
+            key="hurt_kwota_netto"
+        )
+
+        kwota_brutto = c_sum2.number_input(
+            "Łączna kwota brutto",
+            min_value=0.0,
+            value=sum(float(x.get("cena_brutto", 0) or 0) for x in odpowiedzi_materialow),
+            step=10.0,
+            key="hurt_kwota_brutto"
+        )
+
+        termin_realizacji = c_sum3.text_input(
+            "Termin realizacji",
+            placeholder="Np. dostępne od ręki / 3 dni / dostawa piątek",
+            key="hurt_termin"
+        )
+
+        komentarz_hurtowni = st.text_area(
+            "Komentarz hurtowni",
+            placeholder="Np. transport gratis od 2000 zł, możliwość negocjacji przy większym zamówieniu.",
+            key="hurt_komentarz"
+        )
+
+        if st.button("Wyślij wycenę do wykonawcy", type="primary", use_container_width=True):
+            try:
+                supabase.table("zapytania_hurtownie").update({
+                    "status": "Wycena otrzymana",
+                    "odpowiedz": {
+                        "pozycje": odpowiedzi_materialow
+                    },
+                    "kwota_netto": float(kwota_netto),
+                    "kwota_brutto": float(kwota_brutto),
+                    "termin_realizacji": termin_realizacji,
+                    "komentarz_hurtowni": komentarz_hurtowni,
+                    "odpowiedz_data": datetime.now().isoformat()
+                }).eq("token", token_hurtowni).execute()
+
+                st.success("Dziękujemy. Wycena została wysłana do wykonawcy.")
+                time.sleep(1)
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Nie udało się wysłać wyceny: {e}")
+
+        st.stop()
+
+    except Exception as e:
+        st.error(f"Błąd linku hurtowni: {e}")
+        st.stop()
 
 if "oferta" in query_params:
     import base64
@@ -2874,6 +3054,401 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
         except Exception as e:
             st.error(f"Błąd wczytywania zamówień: {e}")
+
+        st.stop()
+
+    elif widok_sidebar == "Hurtownie":
+        st.header("Hurtownie")
+        st.caption("Baza dostawców, zapytania materiałowe i odpowiedzi cenowe.")
+
+        import secrets
+
+        # =========================
+        # 1. DODAWANIE HURTOWNI
+        # =========================
+        with st.expander("Dodaj hurtownię", expanded=False):
+            with st.form("form_dodaj_hurtownie"):
+                c1, c2 = st.columns(2)
+
+                nazwa_h = c1.text_input("Nazwa hurtowni")
+                miasto_h = c2.text_input("Miasto")
+
+                c3, c4 = st.columns(2)
+                telefon_h = c3.text_input("Telefon")
+                email_h = c4.text_input("E-mail")
+
+                c5, c6 = st.columns(2)
+                opiekun_h = c5.text_input("Opiekun handlowy")
+                kategorie_h = c6.text_input("Kategorie", placeholder="Np. G-K, farby, chemia, płytki")
+
+                rabat_info_h = st.text_input("Rabat / warunki", placeholder="Np. -12% na Rigips, transport od 1500 zł")
+                notatki_h = st.text_area("Notatki", placeholder="Np. szybko odpisuje, dobre ceny na chemię budowlaną")
+
+                if st.form_submit_button("Zapisz hurtownię", type="primary", use_container_width=True):
+                    if not nazwa_h.strip():
+                        st.error("Podaj nazwę hurtowni.")
+                    else:
+                        try:
+                            supabase.table("hurtownie").insert({
+                                "user_id": st.session_state.user_id,
+                                "nazwa": nazwa_h,
+                                "miasto": miasto_h,
+                                "telefon": telefon_h,
+                                "email": email_h,
+                                "opiekun": opiekun_h,
+                                "kategorie": kategorie_h,
+                                "rabat_info": rabat_info_h,
+                                "notatki": notatki_h,
+                            }).execute()
+
+                            st.success("Hurtownia zapisana.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd zapisu hurtowni: {e}")
+
+        # =========================
+        # 2. POBIERANIE DANYCH
+        # =========================
+        try:
+            odp_h = (
+                supabase.table("hurtownie")
+                .select("*")
+                .eq("user_id", st.session_state.user_id)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            hurtownie = odp_h.data or []
+        except Exception as e:
+            st.error(f"Błąd wczytywania hurtowni: {e}")
+            hurtownie = []
+
+        try:
+            odp_proj = (
+                supabase.table("kosztorysy")
+                .select("id,nazwa_projektu,dane_json")
+                .eq("uzytkownik_id", st.session_state.user_id)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            projekty_h = odp_proj.data or []
+        except Exception:
+            projekty_h = []
+
+        # =========================
+        # 3. GENEROWANIE ZAPYTANIA
+        # =========================
+        st.markdown("---")
+        st.subheader("Wyślij zapytanie materiałowe")
+
+        if not hurtownie:
+            st.info("Dodaj najpierw hurtownię, aby wygenerować link z zapytaniem.")
+        elif not projekty_h:
+            st.info("Brak projektów z listą materiałów.")
+        else:
+            opcje_hurtowni = {
+                f"{h.get('nazwa', 'Hurtownia')} | {h.get('miasto', '')}": h
+                for h in hurtownie
+            }
+
+            opcje_projektow_h = {
+                f"{p.get('nazwa_projektu', 'Projekt')}": p
+                for p in projekty_h
+            }
+
+            c1, c2 = st.columns(2)
+
+            wybor_hurtowni = c1.selectbox(
+                "Wybierz hurtownię:",
+                list(opcje_hurtowni.keys()),
+                key="zap_hurtownia"
+            )
+
+            wybor_projektu_h = c2.selectbox(
+                "Wybierz projekt:",
+                list(opcje_projektow_h.keys()),
+                key="zap_projekt_hurtownia"
+            )
+
+            hurtownia_wybrana = opcje_hurtowni.get(wybor_hurtowni)
+            projekt_wybrany = opcje_projektow_h.get(wybor_projektu_h)
+
+            dane_proj_h = projekt_wybrany.get("dane_json", {}) if projekt_wybrany else {}
+            materialy_h = []
+
+            if dane_proj_h.get("zbiorcza_lista_zakupow"):
+                materialy_h = dane_proj_h.get("zbiorcza_lista_zakupow", [])
+            elif dane_proj_h.get("materialy_lista"):
+                materialy_h = dane_proj_h.get("materialy_lista", [])
+            elif dane_proj_h.get("etapy"):
+                for etap in dane_proj_h.get("etapy", []):
+                    for mat in etap.get("materialy_lista", []):
+                        materialy_h.append(mat)
+
+            if not materialy_h:
+                st.warning("Wybrany projekt nie ma zapisanej listy materiałów.")
+            else:
+                st.write(f"Pozycji materiałowych do wysłania: **{len(materialy_h)}**")
+
+                with st.expander("Podgląd materiałów", expanded=False):
+                    for mat in materialy_h:
+                        if isinstance(mat, dict):
+                            st.write(f"- **{mat.get('nazwa', '')}**: {mat.get('ilosc', '')} {mat.get('jed', '')}")
+                        else:
+                            st.write(f"- {mat}")
+
+                if st.button("Utwórz link dla hurtowni", type="primary", use_container_width=True):
+                    try:
+                        token = secrets.token_urlsafe(24)
+
+                        supabase.table("zapytania_hurtownie").insert({
+                            "user_id": st.session_state.user_id,
+                            "hurtownia_id": hurtownia_wybrana.get("id"),
+                            "kosztorys_id": str(projekt_wybrany.get("id")),
+                            "token": token,
+                            "nazwa_projektu": projekt_wybrany.get("nazwa_projektu", "Projekt"),
+                            "materialy": materialy_h,
+                            "status": "Wysłano",
+                        }).execute()
+
+                        st.session_state["ostatni_link_hurtowni"] = f"https://app.procalc.pl/?hurtownia={token}"
+                        st.success("Link dla hurtowni został utworzony.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Błąd tworzenia zapytania: {e}")
+
+            if "ostatni_link_hurtowni" in st.session_state:
+                st.markdown("**Link do wysłania hurtowni:**")
+                st.text_input(
+                    "Link",
+                    value=st.session_state["ostatni_link_hurtowni"],
+                    label_visibility="collapsed"
+                )
+
+        # =========================
+        # 4. LISTA ZAPYTAŃ
+        # =========================
+        st.markdown("---")
+
+        st.subheader("Porównanie ofert dla projektu")
+
+            try:
+                odp_porownanie = (
+                    supabase.table("zapytania_hurtownie")
+                    .select("*")
+                    .eq("user_id", st.session_state.user_id)
+                    .in_("status", ["Wycena otrzymana", "Zamówione"])
+                    .order("created_at", desc=True)
+                    .execute()
+                )
+                zapytania_porownanie = odp_porownanie.data or []
+            except Exception:
+                zapytania_porownanie = []
+            
+            if not zapytania_porownanie:
+                st.info("Brak otrzymanych wycen do porównania.")
+            else:
+                projekty_porownanie = {}
+
+                for z in zapytania_porownanie:
+                    kosztorys_id = str(z.get("kosztorys_id") or "brak_id")
+                    nazwa_proj = z.get("nazwa_projektu", "Projekt")
+                
+                    if kosztorys_id not in projekty_porownanie:
+                        projekty_porownanie[kosztorys_id] = {
+                            "label": nazwa_proj,
+                            "oferty": []
+                        }
+                
+                    projekty_porownanie[kosztorys_id]["oferty"].append(z)
+                
+                opcje_porownania = {
+                    f"{v['label']} | ID: {k}": k
+                    for k, v in projekty_porownanie.items()
+                }
+                
+                wybor_proj_porownanie = st.selectbox(
+                    "Wybierz projekt do porównania ofert:",
+                    list(opcje_porownania.keys()),
+                    key="porownanie_hurtownie_projekt"
+                )
+                
+                wybrany_kosztorys_id = opcje_porownania.get(wybor_proj_porownanie)
+                oferty_proj = projekty_porownanie.get(wybrany_kosztorys_id, {}).get("oferty", [])
+
+            
+                if len(oferty_proj) < 2:
+                    st.warning("Do pełnego porównania potrzebujesz co najmniej dwóch wycen dla tego projektu.")
+                else:
+                    najtansza_brutto = min(
+                        [_to_float(o.get("kwota_brutto", 0)) for o in oferty_proj if _to_float(o.get("kwota_brutto", 0)) > 0],
+                        default=0
+                    )
+            
+                    najtansza_netto = min(
+                        [_to_float(o.get("kwota_netto", 0)) for o in oferty_proj if _to_float(o.get("kwota_netto", 0)) > 0],
+                        default=0
+                    )
+            
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("Liczba ofert", len(oferty_proj))
+                    m2.metric("Najniżej netto", f"{najtansza_netto:,.2f} zł".replace(",", " "))
+                    m3.metric("Najniżej brutto", f"{najtansza_brutto:,.2f} zł".replace(",", " "))
+            
+                st.markdown("---")
+            
+                h1, h2, h3, h4, h5, h6 = st.columns([2.0, 1.2, 1.2, 1.2, 1.6, 1.2])
+                h1.markdown("**Oferta**")
+                h2.markdown("**Netto**")
+                h3.markdown("**Brutto**")
+                h4.markdown("**Różnica**")
+                h5.markdown("**Termin**")
+                h6.markdown("**Akcja**")
+            
+                st.markdown("---")
+            
+                for oferta in oferty_proj:
+                    oferta_id = oferta.get("id")
+                    kw_netto = _to_float(oferta.get("kwota_netto", 0))
+                    kw_brutto = _to_float(oferta.get("kwota_brutto", 0))
+                    roznica = kw_brutto - najtansza_brutto if najtansza_brutto else 0
+                    status_oferty = oferta.get("status", "")
+            
+                    c1, c2, c3, c4, c5, c6 = st.columns([2.0, 1.2, 1.2, 1.2, 1.6, 1.2])
+            
+                    with c1:
+                        st.markdown(f"**{oferta.get('nazwa_projektu', 'Projekt')}**")
+                        st.caption(str(oferta.get("created_at", ""))[:10])
+                        if status_oferty == "Zamówione":
+                            st.success("Wybrana / zamówiona")
+            
+                    with c2:
+                        st.write(f"{kw_netto:,.2f} zł".replace(",", " "))
+            
+                    with c3:
+                        st.write(f"{kw_brutto:,.2f} zł".replace(",", " "))
+            
+                    with c4:
+                        if roznica <= 0:
+                            st.success("Najtaniej")
+                        else:
+                            st.warning(f"+{roznica:,.2f} zł".replace(",", " "))
+            
+                    with c5:
+                        st.write(oferta.get("termin_realizacji") or "-")
+            
+                    with c6:
+                        if status_oferty == "Zamówione":
+                            st.success("Zamówione")
+                        else:
+                            if st.button("Wybierz", key=f"wybierz_hurt_{oferta_id}", type="primary", use_container_width=True):
+                                try:
+                                    supabase.table("zapytania_hurtownie").update({
+                                        "status": "Zamówione"
+                                    }).eq("id", oferta_id).execute()
+            
+                                    st.success("Oferta oznaczona jako zamówiona.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Błąd zmiany statusu: {e}")
+            
+                    with st.expander(f"Szczegóły oferty {str(oferta_id)[:8]}", expanded=False):
+                        st.write(f"**Komentarz hurtowni:** {oferta.get('komentarz_hurtowni') or '-'}")
+            
+                        odpowiedz = oferta.get("odpowiedz", {}) or {}
+                        pozycje = odpowiedz.get("pozycje", [])
+            
+                        if pozycje:
+                            for poz in pozycje:
+                                st.write(
+                                    f"- **{poz.get('nazwa', '')}** | netto: {poz.get('cena_netto', 0)} zł | brutto: {poz.get('cena_brutto', 0)} zł | zamiennik: {poz.get('zamiennik', '')}"
+                                )
+            
+                    st.markdown("---")
+
+        
+        st.subheader("Zapytania i odpowiedzi hurtowni")
+
+        try:
+            odp_zap = (
+                supabase.table("zapytania_hurtownie")
+                .select("*")
+                .eq("user_id", st.session_state.user_id)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            zapytania = odp_zap.data or []
+
+            if not zapytania:
+                st.info("Nie masz jeszcze wysłanych zapytań do hurtowni.")
+            else:
+                h1, h2, h3, h4, h5, h6 = st.columns([2.0, 1.2, 1.2, 1.2, 2.0, 0.7])
+                h1.markdown("**Projekt**")
+                h2.markdown("**Status**")
+                h3.markdown("**Netto**")
+                h4.markdown("**Brutto**")
+                h5.markdown("**Link**")
+                h6.markdown("**Usuń**")
+
+                st.markdown("---")
+
+                host_url = "https://app.procalc.pl"
+
+                for z in zapytania:
+                    zap_id = z.get("id")
+                    link_h = f"{host_url}/?hurtownia={z.get('token')}"
+
+                    c1, c2, c3, c4, c5, c6 = st.columns([2.0, 1.2, 1.2, 1.2, 2.0, 0.7])
+
+                    with c1:
+                        st.markdown(f"**{z.get('nazwa_projektu', 'Projekt')}**")
+                        st.caption(str(z.get("created_at", ""))[:10])
+
+                    with c2:
+                        status = z.get("status", "Wysłano")
+                        if status == "Wycena otrzymana":
+                            st.success(status)
+                        else:
+                            st.info(status)
+
+                    with c3:
+                        kw_netto = z.get("kwota_netto")
+                        st.write(f"{float(kw_netto):,.2f} zł".replace(",", " ") if kw_netto else "-")
+
+                    with c4:
+                        kw_brutto = z.get("kwota_brutto")
+                        st.write(f"{float(kw_brutto):,.2f} zł".replace(",", " ") if kw_brutto else "-")
+
+                    with c5:
+                        st.text_input(
+                            "Link",
+                            value=link_h,
+                            key=f"link_hurt_{zap_id}",
+                            label_visibility="collapsed"
+                        )
+
+                    with c6:
+                        if st.button("Usuń", key=f"del_zap_h_{zap_id}", use_container_width=True):
+                            supabase.table("zapytania_hurtownie").delete().eq("id", zap_id).execute()
+                            st.rerun()
+
+                    if z.get("status") == "Wycena otrzymana":
+                        with st.expander(f"Szczegóły odpowiedzi: {z.get('nazwa_projektu', 'Projekt')}", expanded=False):
+                            st.write(f"**Termin realizacji:** {z.get('termin_realizacji') or '-'}")
+                            st.write(f"**Komentarz hurtowni:** {z.get('komentarz_hurtowni') or '-'}")
+
+                            odpowiedz = z.get("odpowiedz", {}) or {}
+                            pozycje = odpowiedz.get("pozycje", [])
+
+                            if pozycje:
+                                for poz in pozycje:
+                                    st.write(
+                                        f"- **{poz.get('nazwa', '')}** | netto: {poz.get('cena_netto', 0)} zł | brutto: {poz.get('cena_brutto', 0)} zł | zamiennik: {poz.get('zamiennik', '')}"
+                                    )
+
+                    st.markdown("---")
+
+        except Exception as e:
+            st.error(f"Błąd wczytywania zapytań: {e}")
 
         st.stop()
 
