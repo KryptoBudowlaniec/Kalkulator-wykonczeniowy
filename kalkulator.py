@@ -2758,16 +2758,36 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                                 st.rerun()
                         except Exception as e:
                             st.error(f"Błąd importu materiałów: {e}")
+                            
+        st.markdown("---")
+        st.subheader("Lista zamówień")
+        
+        opcje_filtra_zam = {"Wszystkie projekty": None}
+        
+        for p in projekty_do_zamowien:
+            opcje_filtra_zam[f"{p.get('nazwa_projektu', 'Projekt')}"] = str(p.get("id"))
+        
+        wybrany_filtr_zam = st.selectbox(
+            "Pokaż zamówienia dla projektu:",
+            list(opcje_filtra_zam.keys()),
+            key="filtr_zamowien_projekt"
+        )
+        
+        filtr_kosztorys_id = opcje_filtra_zam.get(wybrany_filtr_zam)
 
         try:
-            odp = (
+            query_zam = (
                 supabase.table("zamowienia")
                 .select("*")
                 .eq("user_id", st.session_state.user_id)
-                .order("created_at", desc=True)
-                .execute()
             )
+
+            if filtr_kosztorys_id:
+                query_zam = query_zam.eq("kosztorys_id", filtr_kosztorys_id)
+
+            odp = query_zam.order("created_at", desc=True).execute()
             zamowienia = odp.data or []
+
 
             if not zamowienia:
                 st.info("Nie masz jeszcze żadnych zamówień.")
