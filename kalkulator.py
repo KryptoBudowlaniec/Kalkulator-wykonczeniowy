@@ -2706,15 +2706,21 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             if not projekty_do_zamowien:
                 st.info("Brak projektów z materiałami.")
             else:
+                opcje_importu = {
+                    f"{p.get('nazwa_projektu', 'Projekt')}": p
+                    for p in projekty_do_zamowien
+                }
+                
                 wybor_import = st.selectbox(
                     "Wybierz projekt:",
-                    [f"{p.get('nazwa_projektu', 'Projekt')} | {p.get('id')}" for p in projekty_do_zamowien],
+                    list(opcje_importu.keys()),
                     key="import_zamowien_projekt"
                 )
-
-                projekt_id_import = wybor_import.split("|")[-1].strip()
-                projekt_import = next((p for p in projekty_do_zamowien if str(p.get("id")) == projekt_id_import), None)
+                
+                projekt_import = opcje_importu.get(wybor_import)
+                projekt_id_import = projekt_import.get("id") if projekt_import else None
                 dane_import = projekt_import.get("dane_json", {}) if projekt_import else {}
+
 
                 materialy_import = []
 
@@ -2738,7 +2744,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                             for mat in materialy_import:
                                 rekordy.append({
                                     "user_id": st.session_state.user_id,
-                                    "kosztorys_id": projekt_id_import,
+                                    "kosztorys_id": str(projekt_id_import) if projekt_id_import else None,
                                     "nazwa": mat.get("nazwa", "Materiał"),
                                     "kategoria": projekt_import.get("nazwa_projektu", ""),
                                     "ilosc": float(mat.get("ilosc", 1) or 1),
