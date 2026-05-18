@@ -103,12 +103,23 @@ def _przycisk_pdf(typ_pdf, dane_pdf, prefix_pliku, key):
 
     if st.button("📄 Wygeneruj PDF", key=f"gen_{key}", use_container_width=True, type="primary"):
         try:
-            pdf_path = generuj_pdf(typ_pdf, dane_pdf)
-            with open(pdf_path, "rb") as f:
-                st.session_state[sesja_key] = f.read()
+            wynik_pdf = generuj_pdf(typ_pdf, dane_pdf or {})
+
+            if isinstance(wynik_pdf, (bytes, bytearray)):
+                st.session_state[sesja_key] = bytes(wynik_pdf)
+            else:
+                with open(wynik_pdf, "rb") as f:
+                    st.session_state[sesja_key] = f.read()
+
             st.success("✅ PDF gotowy. Możesz pobrać plik.")
+
         except Exception as e:
-            st.error(f"Błąd PDF: {e}")
+            import traceback
+
+            st.error(f"Błąd PDF: {type(e).__name__}: {repr(e)}")
+
+            with st.expander("Szczegóły techniczne błędu PDF"):
+                st.code(traceback.format_exc())
 
     if sesja_key in st.session_state:
         nazwa = _nazwa_pliku_pdf(dane_pdf.get("nazwa_projektu", prefix_pliku))
@@ -120,6 +131,7 @@ def _przycisk_pdf(typ_pdf, dane_pdf, prefix_pliku, key):
             key=f"download_{key}",
             use_container_width=True,
         )
+
 
 def _to_float(value, default=0.0):
     try:
@@ -3159,7 +3171,16 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 ],
             }
     
-    
+            dane_pdf_oferta["etapy"] = dane_pdf_oferta.get("etapy", []) or []
+            dane_pdf_oferta["materialy"] = dane_pdf_oferta.get("materialy", []) or []
+            dane_pdf_oferta["prace_dodatkowe"] = dane_pdf_oferta.get("prace_dodatkowe", []) or []
+            dane_pdf_oferta["klauzule"] = dane_pdf_oferta.get("klauzule", []) or []
+            dane_pdf_oferta["uwagi"] = dane_pdf_oferta.get("uwagi", []) or []
+            dane_pdf_oferta["kwota_koncowa"] = float(dane_pdf_oferta.get("kwota_koncowa", 0) or 0)
+            dane_pdf_oferta["koszt_robocizny"] = float(dane_pdf_oferta.get("koszt_robocizny", 0) or 0)
+            dane_pdf_oferta["koszt_materialow"] = float(dane_pdf_oferta.get("koszt_materialow", 0) or 0)
+
+            
             _przycisk_pdf(
                 "oferta",
                 dane_pdf_oferta,
