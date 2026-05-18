@@ -3231,139 +3231,139 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
         st.subheader("Porównanie ofert dla projektu")
 
-            try:
-                odp_porownanie = (
-                    supabase.table("zapytania_hurtownie")
-                    .select("*")
-                    .eq("user_id", st.session_state.user_id)
-                    .in_("status", ["Wycena otrzymana", "Zamówione"])
-                    .order("created_at", desc=True)
-                    .execute()
-                )
-                zapytania_porownanie = odp_porownanie.data or []
-            except Exception:
-                zapytania_porownanie = []
+        try:
+            odp_porownanie = (
+                supabase.table("zapytania_hurtownie")
+                .select("*")
+                .eq("user_id", st.session_state.user_id)
+                .in_("status", ["Wycena otrzymana", "Zamówione"])
+                .order("created_at", desc=True)
+                .execute()
+            )
+            zapytania_porownanie = odp_porownanie.data or []
+        except Exception:
+            zapytania_porownanie = []
+        
+        if not zapytania_porownanie:
+            st.info("Brak otrzymanych wycen do porównania.")
+        else:
+            projekty_porownanie = {}
+
+            for z in zapytania_porownanie:
+                kosztorys_id = str(z.get("kosztorys_id") or "brak_id")
+                nazwa_proj = z.get("nazwa_projektu", "Projekt")
             
-            if not zapytania_porownanie:
-                st.info("Brak otrzymanych wycen do porównania.")
+                if kosztorys_id not in projekty_porownanie:
+                    projekty_porownanie[kosztorys_id] = {
+                        "label": nazwa_proj,
+                        "oferty": []
+                    }
+            
+                projekty_porownanie[kosztorys_id]["oferty"].append(z)
+            
+            opcje_porownania = {
+                f"{v['label']} | ID: {k}": k
+                for k, v in projekty_porownanie.items()
+            }
+            
+            wybor_proj_porownanie = st.selectbox(
+                "Wybierz projekt do porównania ofert:",
+                list(opcje_porownania.keys()),
+                key="porownanie_hurtownie_projekt"
+            )
+            
+            wybrany_kosztorys_id = opcje_porownania.get(wybor_proj_porownanie)
+            oferty_proj = projekty_porownanie.get(wybrany_kosztorys_id, {}).get("oferty", [])
+
+        
+            if len(oferty_proj) < 2:
+                st.warning("Do pełnego porównania potrzebujesz co najmniej dwóch wycen dla tego projektu.")
             else:
-                projekty_porownanie = {}
-
-                for z in zapytania_porownanie:
-                    kosztorys_id = str(z.get("kosztorys_id") or "brak_id")
-                    nazwa_proj = z.get("nazwa_projektu", "Projekt")
-                
-                    if kosztorys_id not in projekty_porownanie:
-                        projekty_porownanie[kosztorys_id] = {
-                            "label": nazwa_proj,
-                            "oferty": []
-                        }
-                
-                    projekty_porownanie[kosztorys_id]["oferty"].append(z)
-                
-                opcje_porownania = {
-                    f"{v['label']} | ID: {k}": k
-                    for k, v in projekty_porownanie.items()
-                }
-                
-                wybor_proj_porownanie = st.selectbox(
-                    "Wybierz projekt do porównania ofert:",
-                    list(opcje_porownania.keys()),
-                    key="porownanie_hurtownie_projekt"
+                najtansza_brutto = min(
+                    [_to_float(o.get("kwota_brutto", 0)) for o in oferty_proj if _to_float(o.get("kwota_brutto", 0)) > 0],
+                    default=0
                 )
-                
-                wybrany_kosztorys_id = opcje_porownania.get(wybor_proj_porownanie)
-                oferty_proj = projekty_porownanie.get(wybrany_kosztorys_id, {}).get("oferty", [])
-
-            
-                if len(oferty_proj) < 2:
-                    st.warning("Do pełnego porównania potrzebujesz co najmniej dwóch wycen dla tego projektu.")
-                else:
-                    najtansza_brutto = min(
-                        [_to_float(o.get("kwota_brutto", 0)) for o in oferty_proj if _to_float(o.get("kwota_brutto", 0)) > 0],
-                        default=0
-                    )
-            
-                    najtansza_netto = min(
-                        [_to_float(o.get("kwota_netto", 0)) for o in oferty_proj if _to_float(o.get("kwota_netto", 0)) > 0],
-                        default=0
-                    )
-            
-                    m1, m2, m3 = st.columns(3)
-                    m1.metric("Liczba ofert", len(oferty_proj))
-                    m2.metric("Najniżej netto", f"{najtansza_netto:,.2f} zł".replace(",", " "))
-                    m3.metric("Najniżej brutto", f"{najtansza_brutto:,.2f} zł".replace(",", " "))
-            
+        
+                najtansza_netto = min(
+                    [_to_float(o.get("kwota_netto", 0)) for o in oferty_proj if _to_float(o.get("kwota_netto", 0)) > 0],
+                    default=0
+                )
+        
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Liczba ofert", len(oferty_proj))
+                m2.metric("Najniżej netto", f"{najtansza_netto:,.2f} zł".replace(",", " "))
+                m3.metric("Najniżej brutto", f"{najtansza_brutto:,.2f} zł".replace(",", " "))
+        
+            st.markdown("---")
+        
+            h1, h2, h3, h4, h5, h6 = st.columns([2.0, 1.2, 1.2, 1.2, 1.6, 1.2])
+            h1.markdown("**Oferta**")
+            h2.markdown("**Netto**")
+            h3.markdown("**Brutto**")
+            h4.markdown("**Różnica**")
+            h5.markdown("**Termin**")
+            h6.markdown("**Akcja**")
+        
+            st.markdown("---")
+        
+            for oferta in oferty_proj:
+                oferta_id = oferta.get("id")
+                kw_netto = _to_float(oferta.get("kwota_netto", 0))
+                kw_brutto = _to_float(oferta.get("kwota_brutto", 0))
+                roznica = kw_brutto - najtansza_brutto if najtansza_brutto else 0
+                status_oferty = oferta.get("status", "")
+        
+                c1, c2, c3, c4, c5, c6 = st.columns([2.0, 1.2, 1.2, 1.2, 1.6, 1.2])
+        
+                with c1:
+                    st.markdown(f"**{oferta.get('nazwa_projektu', 'Projekt')}**")
+                    st.caption(str(oferta.get("created_at", ""))[:10])
+                    if status_oferty == "Zamówione":
+                        st.success("Wybrana / zamówiona")
+        
+                with c2:
+                    st.write(f"{kw_netto:,.2f} zł".replace(",", " "))
+        
+                with c3:
+                    st.write(f"{kw_brutto:,.2f} zł".replace(",", " "))
+        
+                with c4:
+                    if roznica <= 0:
+                        st.success("Najtaniej")
+                    else:
+                        st.warning(f"+{roznica:,.2f} zł".replace(",", " "))
+        
+                with c5:
+                    st.write(oferta.get("termin_realizacji") or "-")
+        
+                with c6:
+                    if status_oferty == "Zamówione":
+                        st.success("Zamówione")
+                    else:
+                        if st.button("Wybierz", key=f"wybierz_hurt_{oferta_id}", type="primary", use_container_width=True):
+                            try:
+                                supabase.table("zapytania_hurtownie").update({
+                                    "status": "Zamówione"
+                                }).eq("id", oferta_id).execute()
+        
+                                st.success("Oferta oznaczona jako zamówiona.")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Błąd zmiany statusu: {e}")
+        
+                with st.expander(f"Szczegóły oferty {str(oferta_id)[:8]}", expanded=False):
+                    st.write(f"**Komentarz hurtowni:** {oferta.get('komentarz_hurtowni') or '-'}")
+        
+                    odpowiedz = oferta.get("odpowiedz", {}) or {}
+                    pozycje = odpowiedz.get("pozycje", [])
+        
+                    if pozycje:
+                        for poz in pozycje:
+                            st.write(
+                                f"- **{poz.get('nazwa', '')}** | netto: {poz.get('cena_netto', 0)} zł | brutto: {poz.get('cena_brutto', 0)} zł | zamiennik: {poz.get('zamiennik', '')}"
+                            )
+        
                 st.markdown("---")
-            
-                h1, h2, h3, h4, h5, h6 = st.columns([2.0, 1.2, 1.2, 1.2, 1.6, 1.2])
-                h1.markdown("**Oferta**")
-                h2.markdown("**Netto**")
-                h3.markdown("**Brutto**")
-                h4.markdown("**Różnica**")
-                h5.markdown("**Termin**")
-                h6.markdown("**Akcja**")
-            
-                st.markdown("---")
-            
-                for oferta in oferty_proj:
-                    oferta_id = oferta.get("id")
-                    kw_netto = _to_float(oferta.get("kwota_netto", 0))
-                    kw_brutto = _to_float(oferta.get("kwota_brutto", 0))
-                    roznica = kw_brutto - najtansza_brutto if najtansza_brutto else 0
-                    status_oferty = oferta.get("status", "")
-            
-                    c1, c2, c3, c4, c5, c6 = st.columns([2.0, 1.2, 1.2, 1.2, 1.6, 1.2])
-            
-                    with c1:
-                        st.markdown(f"**{oferta.get('nazwa_projektu', 'Projekt')}**")
-                        st.caption(str(oferta.get("created_at", ""))[:10])
-                        if status_oferty == "Zamówione":
-                            st.success("Wybrana / zamówiona")
-            
-                    with c2:
-                        st.write(f"{kw_netto:,.2f} zł".replace(",", " "))
-            
-                    with c3:
-                        st.write(f"{kw_brutto:,.2f} zł".replace(",", " "))
-            
-                    with c4:
-                        if roznica <= 0:
-                            st.success("Najtaniej")
-                        else:
-                            st.warning(f"+{roznica:,.2f} zł".replace(",", " "))
-            
-                    with c5:
-                        st.write(oferta.get("termin_realizacji") or "-")
-            
-                    with c6:
-                        if status_oferty == "Zamówione":
-                            st.success("Zamówione")
-                        else:
-                            if st.button("Wybierz", key=f"wybierz_hurt_{oferta_id}", type="primary", use_container_width=True):
-                                try:
-                                    supabase.table("zapytania_hurtownie").update({
-                                        "status": "Zamówione"
-                                    }).eq("id", oferta_id).execute()
-            
-                                    st.success("Oferta oznaczona jako zamówiona.")
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"Błąd zmiany statusu: {e}")
-            
-                    with st.expander(f"Szczegóły oferty {str(oferta_id)[:8]}", expanded=False):
-                        st.write(f"**Komentarz hurtowni:** {oferta.get('komentarz_hurtowni') or '-'}")
-            
-                        odpowiedz = oferta.get("odpowiedz", {}) or {}
-                        pozycje = odpowiedz.get("pozycje", [])
-            
-                        if pozycje:
-                            for poz in pozycje:
-                                st.write(
-                                    f"- **{poz.get('nazwa', '')}** | netto: {poz.get('cena_netto', 0)} zł | brutto: {poz.get('cena_brutto', 0)} zł | zamiennik: {poz.get('zamiennik', '')}"
-                                )
-            
-                    st.markdown("---")
 
         
         st.subheader("Zapytania i odpowiedzi hurtowni")
