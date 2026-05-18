@@ -2093,10 +2093,10 @@ if st.session_state.zalogowany:
         nav_item("Klienci", "◌", "side_klienci", panel="Mój Profil")
         nav_item("Kalendarz", "□", "side_kalendarz", main_nav="Harmonogram")
         nav_item("Zamówienia", "□", "side_zamowienia", panel="Mój Profil")
-        nav_item("Hurtownie", "▥", "side_hurtownie", main_nav="Panel Inwestora")
+        nav_item("Hurtownie", "□", "side_hurtownie", panel="Mój Profil")
         nav_item("Szablony", "▧", "side_szablony", panel="Mój Profil")
-        nav_item("Koszty", "◫", "side_koszty", main_nav="Panel Inwestora")
-        nav_item("Statystyki", "▥", "side_statystyki", main_nav="Panel Inwestora")
+        nav_item("Koszty", "◫", "side_koszty", main_nav="Mój Profil")
+        nav_item("Statystyki", "▥", "side_statystyki", main_nav="Mój Profil")
 
         st.markdown('<div class="side-section">Narzędzia</div>', unsafe_allow_html=True)
 
