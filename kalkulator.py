@@ -120,6 +120,27 @@ def _przycisk_pdf(typ_pdf, dane_pdf, prefix_pliku, key):
             key=f"download_{key}",
             use_container_width=True,
         )
+
+def _to_float(value, default=0.0):
+    try:
+        if value is None:
+            return default
+        return float(value)
+    except Exception:
+        return default
+
+
+def _zapisz_prace_dodatkowe_do_bazy(aktywny, prace_dodatkowe):
+    dane_bazy = dict(aktywny.get("dane_json", {}) or {})
+    dane_bazy["prace_dodatkowe"] = prace_dodatkowe
+
+    supabase.table("kosztorysy").update({
+        "dane_json": dane_bazy
+    }).eq("id", aktywny.get("id")).execute()
+
+    st.session_state["aktywny_projekt_do_pdf"]["dane_json"] = dane_bazy
+
+
 def wybierz_klienta_do_projektu(key_prefix="projekt"):
     if not st.session_state.get("zalogowany"):
         return {}
@@ -3145,31 +3166,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 "Oferta",
                 f"oferta_{aktyw.get('id')}"
             )
-            def _to_float(value, default=0.0):
-                try:
-                    if value is None:
-                        return default
-                    return float(value)
-                except Exception:
-                    return default
-            
-            
-            def _zapisz_prace_dodatkowe_do_bazy(aktywny, prace_dodatkowe):
-                dane_bazy = dict(aktywny.get("dane_json", {}) or {})
-                dane_bazy["prace_dodatkowe"] = prace_dodatkowe
-            
-                supabase.table("kosztorysy").update({
-                    "dane_json": dane_bazy
-                }).eq("id", aktywny.get("id")).execute()
-            
-                st.session_state["aktywny_projekt_do_pdf"]["dane_json"] = dane_bazy
 
-
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("✖️ Zamknij podgląd PDF", key="close_pdf", use_container_width=True):
-            del st.session_state['aktywny_projekt_do_pdf']
-            st.rerun()
 
    # --- TABELA Z LISTĄ PROJEKTÓW ---
     try:
