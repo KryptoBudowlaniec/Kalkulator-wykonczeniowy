@@ -1912,7 +1912,7 @@ if st.session_state.zalogowany:
         nav_item("Kalkulatory", "▤", "side_kalkulatory", main_nav="Kalkulatory", sub_nav="Malowanie")
         nav_item("Klienci", "◌", "side_klienci", panel="Mój Profil")
         nav_item("Kalendarz", "□", "side_kalendarz", main_nav="Harmonogram")
-        nav_item("Zamówienia", "▱", "side_zamowienia", main_nav="Panel Inwestora")
+        nav_item("Zamówienia", "□", "side_zamowienia", panel="Mój Profil")
         nav_item("Hurtownie", "▥", "side_hurtownie", main_nav="Panel Inwestora")
         nav_item("Szablony", "▧", "side_szablony", panel="Mój Profil")
         nav_item("Koszty", "◫", "side_koszty", main_nav="Panel Inwestora")
@@ -2634,7 +2634,224 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             st.error(f"Błąd wczytywania kosztów: {e}")
 
         st.stop()
-        
+
+    elif widok_sidebar == "Zamówienia":
+        st.header("Zamówienia")
+        st.caption("Materiały, dostawy i zakupy przypisane do projektów.")
+
+        statusy_zamowien = ["Do zamówienia", "Zamówione", "W drodze", "Dostarczone", "Anulowane"]
+
+        try:
+            odp_proj = (
+                supabase.table("kosztorysy")
+                .select("id,nazwa_projektu,dane_json")
+                .eq("uzytkownik_id", st.session_state.user_id)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            projekty_do_zamowien = odp_proj.data or []
+        except Exception:
+            projekty_do_zamowien = []
+
+        with st.expander("Dodaj zamówienie ręcznie", expanded=False):
+            with st.form("form_dodaj_zamowienie"):
+                c1, c2, c3 = st.columns([2, 1, 1])
+
+                nazwa_zam = c1.text_input("Nazwa materiału / usługi", placeholder="Np. Płyta GK, klej, farba, transport")
+                ilosc_zam = c2.number_input("Ilość", min_value=0.0, value=1.0, step=1.0)
+                jed_zam = c3.text_input("Jednostka", value="szt.")
+
+                c4, c5, c6 = st.columns(3)
+                kategoria_zam = c4.text_input("Kategoria", placeholder="Np. G-K, Łazienka, Podłogi")
+                dostawca_zam = c5.text_input("Dostawca", placeholder="Np. Castorama, hurtownia")
+                status_zam = c6.selectbox("Status", statusy_zamowien)
+
+                opcje_projektow = ["Bez projektu"] + [
+                    f"{p.get('nazwa_projektu', 'Projekt')} | {p.get('id')}"
+                    for p in projekty_do_zamowien
+                ]
+
+                wybor_projektu = st.selectbox("Przypisz do projektu", opcje_projektow)
+                termin_zam = st.date_input("Termin dostawy")
+                notatki_zam = st.text_area("Notatki", placeholder="Np. zamówić z zapasem, odbiór osobisty, faktura na firmę")
+
+                if st.form_submit_button("Zapisz zamówienie", type="primary", use_container_width=True):
+                    if not nazwa_zam.strip():
+                        st.error("Podaj nazwę zamówienia.")
+                    else:
+                        kosztorys_id = None
+                        if wybor_projektu != "Bez projektu":
+                            kosztorys_id = wybor_projektu.split("|")[-1].strip()
+
+                        try:
+                            supabase.table("zamowienia").insert({
+                                "user_id": st.session_state.user_id,
+                                "kosztorys_id": kosztorys_id,
+                                "nazwa": nazwa_zam,
+                                "kategoria": kategoria_zam,
+                                "ilosc": float(ilosc_zam),
+                                "jednostka": jed_zam,
+                                "dostawca": dostawca_zam,
+                                "termin_dostawy": str(termin_zam),
+                                "status": status_zam,
+                                "notatki": notatki_zam,
+                            }).execute()
+
+                            st.success("Zamówienie zapisane.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd zapisu zamówienia: {e}")
+
+        with st.expander("Utwórz zamówienia z listy materiałów projektu", expanded=False):
+            if not projekty_do_zamowien:
+                st.info("Brak projektów z materiałami.")
+            else:
+                wybor_import = st.selectbox(
+                    "Wybierz projekt:",
+                    [f"{p.get('nazwa_projektu', 'Projekt')} | {p.get('id')}" for p in projekty_do_zamowien],
+                    key="import_zamowien_projekt"
+                )
+
+                projekt_id_import = wybor_import.split("|")[-1].strip()
+                projekt_import = next((p for p in projekty_do_zamowien if str(p.get("id")) == projekt_id_import), None)
+                dane_import = projekt_import.get("dane_json", {}) if projekt_import else {}
+
+                materialy_import = []
+
+                if dane_import.get("zbiorcza_lista_zakupow"):
+                    materialy_import = dane_import.get("zbiorcza_lista_zakupow", [])
+                elif dane_import.get("materialy_lista"):
+                    materialy_import = dane_import.get("materialy_lista", [])
+                elif dane_import.get("etapy"):
+                    for etap in dane_import.get("etapy", []):
+                        for mat in etap.get("materialy_lista", []):
+                            materialy_import.append(mat)
+
+                if not materialy_import:
+                    st.warning("Ten projekt nie ma zapisanej listy materiałów.")
+                else:
+                    st.write(f"Znaleziono pozycji: **{len(materialy_import)}**")
+
+                    if st.button("Dodaj materiały jako zamówienia", use_container_width=True):
+                        try:
+                            rekordy = []
+                            for mat in materialy_import:
+                                rekordy.append({
+                                    "user_id": st.session_state.user_id,
+                                    "kosztorys_id": projekt_id_import,
+                                    "nazwa": mat.get("nazwa", "Materiał"),
+                                    "kategoria": projekt_import.get("nazwa_projektu", ""),
+                                    "ilosc": float(mat.get("ilosc", 1) or 1),
+                                    "jednostka": mat.get("jed", ""),
+                                    "status": "Do zamówienia",
+                                })
+
+                            if rekordy:
+                                supabase.table("zamowienia").insert(rekordy).execute()
+                                st.success("Materiały dodane do zamówień.")
+                                st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd importu materiałów: {e}")
+
+        try:
+            odp = (
+                supabase.table("zamowienia")
+                .select("*")
+                .eq("user_id", st.session_state.user_id)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            zamowienia = odp.data or []
+
+            if not zamowienia:
+                st.info("Nie masz jeszcze żadnych zamówień.")
+                st.stop()
+
+            suma_statusow = {}
+            for z in zamowienia:
+                status = z.get("status", "Do zamówienia")
+                suma_statusow[status] = suma_statusow.get(status, 0) + 1
+
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Wszystkie", len(zamowienia))
+            m2.metric("Do zamówienia", suma_statusow.get("Do zamówienia", 0))
+            m3.metric("W drodze", suma_statusow.get("W drodze", 0))
+            m4.metric("Dostarczone", suma_statusow.get("Dostarczone", 0))
+
+            st.markdown("---")
+
+            h1, h2, h3, h4, h5, h6, h7 = st.columns([2.2, 1.0, 1.2, 1.3, 1.2, 1.4, 0.7])
+            h1.markdown("**Pozycja**")
+            h2.markdown("**Ilość**")
+            h3.markdown("**Dostawca**")
+            h4.markdown("**Termin**")
+            h5.markdown("**Status**")
+            h6.markdown("**Zmień status**")
+            h7.markdown("**Usuń**")
+
+            st.markdown("---")
+
+            for z in zamowienia:
+                zam_id = z.get("id")
+
+                c1, c2, c3, c4, c5, c6, c7 = st.columns([2.2, 1.0, 1.2, 1.3, 1.2, 1.4, 0.7])
+
+                with c1:
+                    st.markdown(f"**{z.get('nazwa', '')}**")
+                    if z.get("kategoria"):
+                        st.caption(z.get("kategoria"))
+                    if z.get("notatki"):
+                        st.caption(z.get("notatki"))
+
+                with c2:
+                    st.write(f"{z.get('ilosc', '')} {z.get('jednostka', '')}")
+
+                with c3:
+                    st.write(z.get("dostawca") or "-")
+
+                with c4:
+                    st.write(str(z.get("termin_dostawy") or "")[:10])
+
+                with c5:
+                    status = z.get("status", "Do zamówienia")
+                    if status == "Dostarczone":
+                        st.success(status)
+                    elif status in ["Zamówione", "W drodze"]:
+                        st.info(status)
+                    elif status == "Anulowane":
+                        st.error(status)
+                    else:
+                        st.warning(status)
+
+                with c6:
+                    nowy_status = st.selectbox(
+                        "Status",
+                        statusy_zamowien,
+                        index=statusy_zamowien.index(status) if status in statusy_zamowien else 0,
+                        key=f"status_zam_{zam_id}",
+                        label_visibility="collapsed"
+                    )
+
+                    if nowy_status != status:
+                        if st.button("Zapisz", key=f"save_status_zam_{zam_id}", use_container_width=True):
+                            supabase.table("zamowienia").update({
+                                "status": nowy_status
+                            }).eq("id", zam_id).execute()
+                            st.rerun()
+
+                with c7:
+                    if st.button("Usuń", key=f"del_zam_{zam_id}", use_container_width=True):
+                        supabase.table("zamowienia").delete().eq("id", zam_id).execute()
+                        st.rerun()
+
+                st.markdown("---")
+
+        except Exception as e:
+            st.error(f"Błąd wczytywania zamówień: {e}")
+
+        st.stop()
+
+    
     elif widok_sidebar == "Statystyki":
         st.header("Statystyki")
         st.caption("Skuteczność ofert, wartość projektów, podpisy, zaliczki i koszty firmy.")
