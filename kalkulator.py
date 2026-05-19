@@ -10439,7 +10439,141 @@ elif opcja_boczna == "Aplikacja Główna":
             </div>
             """
     
-        st.markdown(f"""
+        harmonogram_html = f"""
+        <style>
+            body {{
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background: transparent;
+            }}
+            .schedule-layout {{
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 280px;
+                gap: 18px;
+            }}
+            .timeline-card, .side-card {{
+                background: white;
+                border: 1px solid #e5eaf0;
+                border-radius: 14px;
+                box-shadow: 0 14px 35px rgba(15, 23, 42, .06);
+                overflow: hidden;
+            }}
+            .timeline-scroll {{
+                overflow-x: auto;
+            }}
+            .timeline-grid {{
+                min-width: 980px;
+                display: grid;
+                grid-template-columns: 220px repeat(21, 44px);
+                position: relative;
+            }}
+            .day-head, .project-head {{
+                background: #f8fafc;
+                border-bottom: 1px solid #e5eaf0;
+                border-right: 1px solid #e5eaf0;
+                min-height: 58px;
+                padding: 10px;
+                color: #334155;
+                font-size: 12px;
+                text-align: center;
+                box-sizing: border-box;
+            }}
+            .project-head {{
+                text-align: left;
+                font-weight: 800;
+                color: #111827;
+            }}
+            .project-cell {{
+                border-right: 1px solid #e5eaf0;
+                border-bottom: 1px solid #edf2f7;
+                min-height: 92px;
+                padding: 14px;
+                box-sizing: border-box;
+            }}
+            .project-cell strong {{
+                display: block;
+                color: #111827;
+                font-size: 14px;
+                margin-bottom: 4px;
+            }}
+            .project-cell span {{
+                display: block;
+                color: #64748b;
+                font-size: 12px;
+            }}
+            .day-cell {{
+                border-right: 1px solid #edf2f7;
+                border-bottom: 1px solid #edf2f7;
+                min-height: 92px;
+                position: relative;
+                box-sizing: border-box;
+            }}
+            .task-bar {{
+                position: absolute;
+                height: 48px;
+                border-radius: 8px;
+                padding: 9px 10px;
+                font-size: 12px;
+                font-weight: 800;
+                line-height: 1.25;
+                z-index: 2;
+                overflow: hidden;
+                white-space: nowrap;
+                border: 1px solid;
+                box-sizing: border-box;
+            }}
+            .task-bar small {{
+                display: block;
+                font-weight: 500;
+                opacity: .82;
+                margin-top: 3px;
+            }}
+            .task-green {{ background: #dcfce7; color: #047857; border-color: #34d399; }}
+            .task-purple {{ background: #ede9fe; color: #6d28d9; border-color: #a78bfa; }}
+            .task-orange {{ background: #ffedd5; color: #c2410c; border-color: #fb923c; }}
+            .task-blue {{ background: #dbeafe; color: #1d4ed8; border-color: #60a5fa; }}
+            .task-gray {{ background: #f1f5f9; color: #475569; border-color: #cbd5e1; }}
+            .side-card {{
+                padding: 18px;
+                box-sizing: border-box;
+            }}
+            .side-card h3 {{
+                margin: 0 0 12px;
+                color: #111827;
+                font-size: 17px;
+            }}
+            .stat-grid {{
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 18px;
+            }}
+            .stat-box strong {{
+                display: block;
+                font-size: 24px;
+                color: #111827;
+            }}
+            .stat-box span {{
+                color: #64748b;
+                font-size: 12px;
+            }}
+            .mini-task {{
+                border-top: 1px solid #edf2f7;
+                padding: 12px 0;
+                color: #334155;
+                font-size: 13px;
+            }}
+            .mini-task strong {{
+                display: block;
+                color: #111827;
+            }}
+            @media (max-width: 1000px) {{
+                .schedule-layout {{
+                    grid-template-columns: 1fr;
+                }}
+            }}
+        </style>
+
         <div class="schedule-layout">
             <div class="timeline-card">
                 <div class="timeline-scroll">
@@ -10448,7 +10582,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     </div>
                 </div>
             </div>
-    
+
             <div>
                 <div class="side-card">
                     <h3>Podsumowanie</h3>
@@ -10459,14 +10593,18 @@ elif opcja_boczna == "Aplikacja Główna":
                         <div class="stat-box"><strong>{w_trakcie}</strong><span>W trakcie</span></div>
                     </div>
                 </div>
-    
+
                 <div class="side-card" style="margin-top:18px;">
                     <h3>Najbliższe zadania</h3>
                     {mini_tasks_html}
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """
+
+        wysokosc_harmonogramu = 220 + (len(projekty) * 92)
+        components.html(harmonogram_html, height=max(520, wysokosc_harmonogramu), scrolling=True)
+
     
         st.markdown("---")
         st.subheader("Lista etapów")
