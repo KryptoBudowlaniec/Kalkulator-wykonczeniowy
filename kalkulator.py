@@ -3283,16 +3283,20 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     [_to_float(o.get("kwota_brutto", 0)) for o in oferty_proj if _to_float(o.get("kwota_brutto", 0)) > 0],
                     default=0
                 )
-        
+                
                 najtansza_netto = min(
                     [_to_float(o.get("kwota_netto", 0)) for o in oferty_proj if _to_float(o.get("kwota_netto", 0)) > 0],
                     default=0
                 )
-        
+                
+                if len(oferty_proj) < 2:
+                    st.warning("Do pełnego porównania potrzebujesz co najmniej dwóch wycen dla tego projektu.")
+                
                 m1, m2, m3 = st.columns(3)
                 m1.metric("Liczba ofert", len(oferty_proj))
                 m2.metric("Najniżej netto", f"{najtansza_netto:,.2f} zł".replace(",", " "))
                 m3.metric("Najniżej brutto", f"{najtansza_brutto:,.2f} zł".replace(",", " "))
+
         
             st.markdown("---")
         
