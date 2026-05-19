@@ -10399,7 +10399,8 @@ elif opcja_boczna == "Aplikacja Główna":
 
         if widok_harmonogramu == "Tydzień":
             st.subheader("Prace w tym tygodniu")
-                dni_tygodnia_pl = [
+            
+            dni_tygodnia_pl = [
                 "Poniedziałek",
                 "Wtorek",
                 "Środa",
