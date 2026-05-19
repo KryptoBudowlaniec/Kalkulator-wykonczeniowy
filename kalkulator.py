@@ -10255,15 +10255,17 @@ elif opcja_boczna == "Aplikacja Główna":
                     <p>Zaplanowane prace i harmonogram remontów</p>
                 </div>
             </div>
-            <div class="schedule-tabs">
-                <div class="schedule-tab active">Harmonogram</div>
-                <div class="schedule-tab">Kalendarz</div>
-                <div class="schedule-tab">Tydzień</div>
-                <div class="schedule-tab">Miesiąc</div>
-                <div class="schedule-tab">Lista</div>
-            </div>
         </div>
         """, unsafe_allow_html=True)
+
+        widok_harmonogramu = st.pills(
+            "Widok harmonogramu:",
+            ["Harmonogram", "Kalendarz", "Tydzień", "Miesiąc", "Lista"],
+            selection_mode="single",
+            default="Harmonogram",
+            key="widok_harmonogramu"
+        )
+
     
         # ======================
         # FORMULARZ DODAWANIA
@@ -10353,284 +10355,455 @@ elif opcja_boczna == "Aplikacja Główna":
         if not zadania:
             st.info("Dodaj pierwszy etap, aby zobaczyć harmonogram.")
             st.stop()
-    
-        dzis = date.today()
-        start_okna = dzis - timedelta(days=5)
-        dni = [start_okna + timedelta(days=i) for i in range(21)]
-    
-        projekty = {}
-        for z in zadania:
-            nazwa = z.get("nazwa_projektu", "Projekt")
-            projekty.setdefault(nazwa, []).append(z)
-    
-        aktywne = sum(1 for z in zadania if z.get("status") in ["W trakcie", "Nie rozpoczęto"])
-        zakonczone = sum(1 for z in zadania if z.get("status") == "Zakończone")
-        opoznione = sum(1 for z in zadania if z.get("status") == "Opóźnione")
-        w_trakcie = sum(1 for z in zadania if z.get("status") == "W trakcie")
-    
-        # ======================
-        # TIMELINE HTML
-        # ======================
-        grid_html = ""
-        grid_html += "<div class='project-head'>Projekty</div>"
-    
-        for d in dni:
-            weekend = "color:#ef4444;" if d.weekday() >= 5 else ""
-            grid_html += f"<div class='day-head'><strong style='{weekend}'>{d.day}</strong><br>{d.strftime('%a')}</div>"
-    
-        for row_index, (projekt, etapy) in enumerate(projekty.items()):
-            lokalizacja_proj = next((e.get("lokalizacja", "") for e in etapy if e.get("lokalizacja")), "")
-            min_start = min(datetime.fromisoformat(e.get("data_start")).date() for e in etapy)
-            max_end = max(datetime.fromisoformat(e.get("data_koniec")).date() for e in etapy)
-            ile_dni = (max_end - min_start).days + 1
-    
-            grid_html += f"""
-            <div class='project-cell'>
-                <strong>{html_lib.escape(projekt)}</strong>
-                <span>{html_lib.escape(lokalizacja_proj or '')}</span>
-                <span>{ile_dni} dni</span>
-            </div>
-            """
-    
-            row_cells = ""
-            bars = ""
-    
-            for i, d in enumerate(dni):
-                row_cells += "<div class='day-cell'></div>"
-    
-            for etap in etapy:
-                s = datetime.fromisoformat(etap.get("data_start")).date()
-                k = datetime.fromisoformat(etap.get("data_koniec")).date()
-    
-                if k < dni[0] or s > dni[-1]:
-                    continue
-    
-                left_idx = max(0, (s - dni[0]).days)
-                right_idx = min(len(dni) - 1, (k - dni[0]).days)
-                span = right_idx - left_idx + 1
-    
-                left_px = 220 + left_idx * 44 + 6
-                width_px = span * 44 - 12
-                kolor = etap.get("kolor", "green")
-                top_px = 58 + (row_index * 92) + 24
-    
-                
-                bars += f"""
-                <div class='task-bar task-{kolor}' style='left:{left_px}px; top:{top_px}px; width:{width_px}px;'>
-                    {html_lib.escape(etap.get("nazwa_etapu", "Etap"))}
-                    <small>{s.strftime('%d.%m')} - {k.strftime('%d.%m')}</small>
+
+        def _parse_data_harm(value):
+            return datetime.fromisoformat(str(value)).date()
+        
+        
+        def _status_badge(status):
+            if status == "Zakończone":
+                st.success(status)
+            elif status == "Opóźnione":
+                st.error(status)
+            elif status == "W trakcie":
+                st.info(status)
+            else:
+                st.warning(status)
+
+        if widok_harmonogramu == "Kalendarz":
+            st.subheader("Kalendarz prac")
+        
+            zadania_sort = sorted(zadania, key=lambda x: x.get("data_start", ""))
+        
+            for z in zadania_sort:
+                data_s = _parse_data_harm(z.get("data_start"))
+                data_k = _parse_data_harm(z.get("data_koniec"))
+        
+                with st.container(border=True):
+                    c1, c2, c3 = st.columns([1.4, 2.4, 1.2])
+        
+                    with c1:
+                        st.markdown(f"### {data_s.strftime('%d.%m')} - {data_k.strftime('%d.%m')}")
+                        st.caption(f"{(data_k - data_s).days + 1} dni")
+        
+                    with c2:
+                        st.markdown(f"**{z.get('nazwa_projektu', 'Projekt')}**")
+                        st.write(z.get("nazwa_etapu", "Etap"))
+                        if z.get("lokalizacja"):
+                            st.caption(z.get("lokalizacja"))
+        
+                    with c3:
+                        _status_badge(z.get("status", "Nie rozpoczęto"))
+        
+            st.stop()
+
+        if widok_harmonogramu == "Tydzień":
+            st.subheader("Prace w tym tygodniu")
+        
+            dzis = date.today()
+            start_tyg = dzis - timedelta(days=dzis.weekday())
+            koniec_tyg = start_tyg + timedelta(days=6)
+        
+            st.caption(f"{start_tyg.strftime('%d.%m.%Y')} - {koniec_tyg.strftime('%d.%m.%Y')}")
+        
+            zadania_tyg = []
+            for z in zadania:
+                s = _parse_data_harm(z.get("data_start"))
+                k = _parse_data_harm(z.get("data_koniec"))
+        
+                if s <= koniec_tyg and k >= start_tyg:
+                    zadania_tyg.append(z)
+        
+            if not zadania_tyg:
+                st.info("Brak prac zaplanowanych na ten tydzień.")
+                st.stop()
+        
+            for i in range(7):
+                dzien = start_tyg + timedelta(days=i)
+                prace_dnia = []
+        
+                for z in zadania_tyg:
+                    s = _parse_data_harm(z.get("data_start"))
+                    k = _parse_data_harm(z.get("data_koniec"))
+        
+                    if s <= dzien <= k:
+                        prace_dnia.append(z)
+        
+                with st.container(border=True):
+                    st.markdown(f"### {dzien.strftime('%A')} | {dzien.strftime('%d.%m')}")
+        
+                    if not prace_dnia:
+                        st.caption("Brak prac")
+                    else:
+                        for z in prace_dnia:
+                            st.write(f"**{z.get('nazwa_etapu')}** - {z.get('nazwa_projektu')}")
+                            if z.get("lokalizacja"):
+                                st.caption(z.get("lokalizacja"))
+        
+            st.stop()
+
+        if widok_harmonogramu == "Miesiąc":
+            st.subheader("Podsumowanie miesiąca")
+        
+            dzis = date.today()
+            start_mies = dzis.replace(day=1)
+        
+            if dzis.month == 12:
+                next_month = dzis.replace(year=dzis.year + 1, month=1, day=1)
+            else:
+                next_month = dzis.replace(month=dzis.month + 1, day=1)
+        
+            koniec_mies = next_month - timedelta(days=1)
+        
+            zadania_mies = []
+            dni_zajete = set()
+        
+            for z in zadania:
+                s = _parse_data_harm(z.get("data_start"))
+                k = _parse_data_harm(z.get("data_koniec"))
+        
+                if s <= koniec_mies and k >= start_mies:
+                    zadania_mies.append(z)
+        
+                    d = max(s, start_mies)
+                    while d <= min(k, koniec_mies):
+                        dni_zajete.add(d)
+                        d += timedelta(days=1)
+        
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Zlecenia w miesiącu", len(zadania_mies))
+            m2.metric("Dni zajęte", len(dni_zajete))
+            m3.metric("Dni wolne", max(0, (koniec_mies - start_mies).days + 1 - len(dni_zajete)))
+        
+            st.markdown("---")
+        
+            if not zadania_mies:
+                st.info("Brak prac w tym miesiącu.")
+                st.stop()
+        
+            for z in sorted(zadania_mies, key=lambda x: x.get("data_start", "")):
+                with st.container(border=True):
+                    c1, c2, c3 = st.columns([2.2, 1.4, 1.2])
+        
+                    with c1:
+                        st.markdown(f"**{z.get('nazwa_projektu')}**")
+                        st.caption(z.get("nazwa_etapu"))
+        
+                    with c2:
+                        st.write(f"{z.get('data_start')} - {z.get('data_koniec')}")
+        
+                    with c3:
+                        _status_badge(z.get("status", "Nie rozpoczęto"))
+        
+            st.stop()
+
+        if widok_harmonogramu == "Lista":
+            st.subheader("Lista etapów")
+        
+            for z in zadania:
+                c1, c2, c3, c4, c5 = st.columns([2.2, 1.4, 1.2, 1.2, 0.8])
+        
+                with c1:
+                    st.markdown(f"**{z.get('nazwa_projektu')}**")
+                    st.caption(z.get("nazwa_etapu"))
+        
+                with c2:
+                    st.write(f"{z.get('data_start')} - {z.get('data_koniec')}")
+        
+                with c3:
+                    _status_badge(z.get("status", "Nie rozpoczęto"))
+        
+                with c4:
+                    st.write(z.get("lokalizacja") or "-")
+        
+                with c5:
+                    if st.button("Usuń", key=f"del_harm_{z.get('id')}", use_container_width=True):
+                        supabase.table("harmonogram").delete().eq("id", z.get("id")).execute()
+                        st.rerun()
+        
+                st.markdown("---")
+        
+            st.stop()
+
+        if widok_harmonogramu == "Harmonogram":
+            dzis = date.today()
+            start_okna = dzis - timedelta(days=5)
+            dni = [start_okna + timedelta(days=i) for i in range(21)]
+        
+            projekty = {}
+            for z in zadania:
+                nazwa = z.get("nazwa_projektu", "Projekt")
+                projekty.setdefault(nazwa, []).append(z)
+        
+            aktywne = sum(1 for z in zadania if z.get("status") in ["W trakcie", "Nie rozpoczęto"])
+            zakonczone = sum(1 for z in zadania if z.get("status") == "Zakończone")
+            opoznione = sum(1 for z in zadania if z.get("status") == "Opóźnione")
+            w_trakcie = sum(1 for z in zadania if z.get("status") == "W trakcie")
+        
+            # ======================
+            # TIMELINE HTML
+            # ======================
+            grid_html = ""
+            grid_html += "<div class='project-head'>Projekty</div>"
+        
+            for d in dni:
+                weekend = "color:#ef4444;" if d.weekday() >= 5 else ""
+                grid_html += f"<div class='day-head'><strong style='{weekend}'>{d.day}</strong><br>{d.strftime('%a')}</div>"
+        
+            for row_index, (projekt, etapy) in enumerate(projekty.items()):
+                lokalizacja_proj = next((e.get("lokalizacja", "") for e in etapy if e.get("lokalizacja")), "")
+                min_start = min(datetime.fromisoformat(e.get("data_start")).date() for e in etapy)
+                max_end = max(datetime.fromisoformat(e.get("data_koniec")).date() for e in etapy)
+                ile_dni = (max_end - min_start).days + 1
+        
+                grid_html += f"""
+                <div class='project-cell'>
+                    <strong>{html_lib.escape(projekt)}</strong>
+                    <span>{html_lib.escape(lokalizacja_proj or '')}</span>
+                    <span>{ile_dni} dni</span>
                 </div>
                 """
+        
+                row_cells = ""
+                bars = ""
+        
+                for i, d in enumerate(dni):
+                    row_cells += "<div class='day-cell'></div>"
+        
+                for etap in etapy:
+                    s = datetime.fromisoformat(etap.get("data_start")).date()
+                    k = datetime.fromisoformat(etap.get("data_koniec")).date()
+        
+                    if k < dni[0] or s > dni[-1]:
+                        continue
+        
+                    left_idx = max(0, (s - dni[0]).days)
+                    right_idx = min(len(dni) - 1, (k - dni[0]).days)
+                    span = right_idx - left_idx + 1
+        
+                    left_px = 220 + left_idx * 44 + 6
+                    width_px = span * 44 - 12
+                    kolor = etap.get("kolor", "green")
+                    top_px = 58 + (row_index * 92) + 24
+        
+                    
+                    bars += f"""
+                    <div class='task-bar task-{kolor}' style='left:{left_px}px; top:{top_px}px; width:{width_px}px;'>
+                        {html_lib.escape(etap.get("nazwa_etapu", "Etap"))}
+                        <small>{s.strftime('%d.%m')} - {k.strftime('%d.%m')}</small>
+                    </div>
+                    """
+        
+                grid_html += f"<div style='display:contents; position:relative;'>{row_cells}{bars}</div>"
+        
+            najblizsze = sorted(
+                zadania,
+                key=lambda x: x.get("data_start", "")
+            )[:5]
+        
+            mini_tasks_html = ""
+            for z in najblizsze:
+                mini_tasks_html += f"""
+                <div class="mini-task">
+                    <strong>{html_lib.escape(z.get("nazwa_etapu", ""))}</strong>
+                    {html_lib.escape(z.get("nazwa_projektu", ""))}<br>
+                    <span>{html_lib.escape(str(z.get("data_start", ""))[:10])}</span>
+                </div>
+                """
+        
+            harmonogram_html = f"""
+            <style>
+                body {{
+                    margin: 0;
+                    font-family: Arial, sans-serif;
+                    background: transparent;
+                }}
+                .schedule-layout {{
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) 280px;
+                    gap: 18px;
+                }}
+                .timeline-card, .side-card {{
+                    background: white;
+                    border: 1px solid #e5eaf0;
+                    border-radius: 14px;
+                    box-shadow: 0 14px 35px rgba(15, 23, 42, .06);
+                    overflow: hidden;
+                }}
+                .timeline-scroll {{
+                    overflow-x: auto;
+                }}
+                .timeline-grid {{
+                    min-width: 980px;
+                    display: grid;
+                    grid-template-columns: 220px repeat(21, 44px);
+                    position: relative;
+                }}
+                .day-head, .project-head {{
+                    background: #f8fafc;
+                    border-bottom: 1px solid #e5eaf0;
+                    border-right: 1px solid #e5eaf0;
+                    min-height: 58px;
+                    padding: 10px;
+                    color: #334155;
+                    font-size: 12px;
+                    text-align: center;
+                    box-sizing: border-box;
+                }}
+                .project-head {{
+                    text-align: left;
+                    font-weight: 800;
+                    color: #111827;
+                }}
+                .project-cell {{
+                    border-right: 1px solid #e5eaf0;
+                    border-bottom: 1px solid #edf2f7;
+                    min-height: 92px;
+                    padding: 14px;
+                    box-sizing: border-box;
+                }}
+                .project-cell strong {{
+                    display: block;
+                    color: #111827;
+                    font-size: 14px;
+                    margin-bottom: 4px;
+                }}
+                .project-cell span {{
+                    display: block;
+                    color: #64748b;
+                    font-size: 12px;
+                }}
+                .day-cell {{
+                    border-right: 1px solid #edf2f7;
+                    border-bottom: 1px solid #edf2f7;
+                    min-height: 92px;
+                    position: relative;
+                    box-sizing: border-box;
+                }}
+                .task-bar {{
+                    position: absolute;
+                    height: 48px;
+                    border-radius: 8px;
+                    padding: 9px 10px;
+                    font-size: 12px;
+                    font-weight: 800;
+                    line-height: 1.25;
+                    z-index: 2;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    border: 1px solid;
+                    box-sizing: border-box;
+                }}
+                .task-bar small {{
+                    display: block;
+                    font-weight: 500;
+                    opacity: .82;
+                    margin-top: 3px;
+                }}
+                .task-green {{ background: #dcfce7; color: #047857; border-color: #34d399; }}
+                .task-purple {{ background: #ede9fe; color: #6d28d9; border-color: #a78bfa; }}
+                .task-orange {{ background: #ffedd5; color: #c2410c; border-color: #fb923c; }}
+                .task-blue {{ background: #dbeafe; color: #1d4ed8; border-color: #60a5fa; }}
+                .task-gray {{ background: #f1f5f9; color: #475569; border-color: #cbd5e1; }}
+                .side-card {{
+                    padding: 18px;
+                    box-sizing: border-box;
+                }}
+                .side-card h3 {{
+                    margin: 0 0 12px;
+                    color: #111827;
+                    font-size: 17px;
+                }}
+                .stat-grid {{
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 12px;
+                    margin-bottom: 18px;
+                }}
+                .stat-box strong {{
+                    display: block;
+                    font-size: 24px;
+                    color: #111827;
+                }}
+                .stat-box span {{
+                    color: #64748b;
+                    font-size: 12px;
+                }}
+                .mini-task {{
+                    border-top: 1px solid #edf2f7;
+                    padding: 12px 0;
+                    color: #334155;
+                    font-size: 13px;
+                }}
+                .mini-task strong {{
+                    display: block;
+                    color: #111827;
+                }}
+                @media (max-width: 1000px) {{
+                    .schedule-layout {{
+                        grid-template-columns: 1fr;
+                    }}
+                }}
+            </style>
     
-            grid_html += f"<div style='display:contents; position:relative;'>{row_cells}{bars}</div>"
+            <div class="schedule-layout">
+                <div class="timeline-card">
+                    <div class="timeline-scroll">
+                        <div class="timeline-grid">
+                            {grid_html}
+                        </div>
+                    </div>
+                </div>
     
-        najblizsze = sorted(
-            zadania,
-            key=lambda x: x.get("data_start", "")
-        )[:5]
+                <div>
+                    <div class="side-card">
+                        <h3>Podsumowanie</h3>
+                        <div class="stat-grid">
+                            <div class="stat-box"><strong>{aktywne}</strong><span>Aktywnych</span></div>
+                            <div class="stat-box"><strong>{zakonczone}</strong><span>Zakończonych</span></div>
+                            <div class="stat-box"><strong>{opoznione}</strong><span>Opóźnionych</span></div>
+                            <div class="stat-box"><strong>{w_trakcie}</strong><span>W trakcie</span></div>
+                        </div>
+                    </div>
     
-        mini_tasks_html = ""
-        for z in najblizsze:
-            mini_tasks_html += f"""
-            <div class="mini-task">
-                <strong>{html_lib.escape(z.get("nazwa_etapu", ""))}</strong>
-                {html_lib.escape(z.get("nazwa_projektu", ""))}<br>
-                <span>{html_lib.escape(str(z.get("data_start", ""))[:10])}</span>
+                    <div class="side-card" style="margin-top:18px;">
+                        <h3>Najbliższe zadania</h3>
+                        {mini_tasks_html}
+                    </div>
+                </div>
             </div>
             """
     
-        harmonogram_html = f"""
-        <style>
-            body {{
-                margin: 0;
-                font-family: Arial, sans-serif;
-                background: transparent;
-            }}
-            .schedule-layout {{
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) 280px;
-                gap: 18px;
-            }}
-            .timeline-card, .side-card {{
-                background: white;
-                border: 1px solid #e5eaf0;
-                border-radius: 14px;
-                box-shadow: 0 14px 35px rgba(15, 23, 42, .06);
-                overflow: hidden;
-            }}
-            .timeline-scroll {{
-                overflow-x: auto;
-            }}
-            .timeline-grid {{
-                min-width: 980px;
-                display: grid;
-                grid-template-columns: 220px repeat(21, 44px);
-                position: relative;
-            }}
-            .day-head, .project-head {{
-                background: #f8fafc;
-                border-bottom: 1px solid #e5eaf0;
-                border-right: 1px solid #e5eaf0;
-                min-height: 58px;
-                padding: 10px;
-                color: #334155;
-                font-size: 12px;
-                text-align: center;
-                box-sizing: border-box;
-            }}
-            .project-head {{
-                text-align: left;
-                font-weight: 800;
-                color: #111827;
-            }}
-            .project-cell {{
-                border-right: 1px solid #e5eaf0;
-                border-bottom: 1px solid #edf2f7;
-                min-height: 92px;
-                padding: 14px;
-                box-sizing: border-box;
-            }}
-            .project-cell strong {{
-                display: block;
-                color: #111827;
-                font-size: 14px;
-                margin-bottom: 4px;
-            }}
-            .project-cell span {{
-                display: block;
-                color: #64748b;
-                font-size: 12px;
-            }}
-            .day-cell {{
-                border-right: 1px solid #edf2f7;
-                border-bottom: 1px solid #edf2f7;
-                min-height: 92px;
-                position: relative;
-                box-sizing: border-box;
-            }}
-            .task-bar {{
-                position: absolute;
-                height: 48px;
-                border-radius: 8px;
-                padding: 9px 10px;
-                font-size: 12px;
-                font-weight: 800;
-                line-height: 1.25;
-                z-index: 2;
-                overflow: hidden;
-                white-space: nowrap;
-                border: 1px solid;
-                box-sizing: border-box;
-            }}
-            .task-bar small {{
-                display: block;
-                font-weight: 500;
-                opacity: .82;
-                margin-top: 3px;
-            }}
-            .task-green {{ background: #dcfce7; color: #047857; border-color: #34d399; }}
-            .task-purple {{ background: #ede9fe; color: #6d28d9; border-color: #a78bfa; }}
-            .task-orange {{ background: #ffedd5; color: #c2410c; border-color: #fb923c; }}
-            .task-blue {{ background: #dbeafe; color: #1d4ed8; border-color: #60a5fa; }}
-            .task-gray {{ background: #f1f5f9; color: #475569; border-color: #cbd5e1; }}
-            .side-card {{
-                padding: 18px;
-                box-sizing: border-box;
-            }}
-            .side-card h3 {{
-                margin: 0 0 12px;
-                color: #111827;
-                font-size: 17px;
-            }}
-            .stat-grid {{
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
-                margin-bottom: 18px;
-            }}
-            .stat-box strong {{
-                display: block;
-                font-size: 24px;
-                color: #111827;
-            }}
-            .stat-box span {{
-                color: #64748b;
-                font-size: 12px;
-            }}
-            .mini-task {{
-                border-top: 1px solid #edf2f7;
-                padding: 12px 0;
-                color: #334155;
-                font-size: 13px;
-            }}
-            .mini-task strong {{
-                display: block;
-                color: #111827;
-            }}
-            @media (max-width: 1000px) {{
-                .schedule-layout {{
-                    grid-template-columns: 1fr;
-                }}
-            }}
-        </style>
-
-        <div class="schedule-layout">
-            <div class="timeline-card">
-                <div class="timeline-scroll">
-                    <div class="timeline-grid">
-                        {grid_html}
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <div class="side-card">
-                    <h3>Podsumowanie</h3>
-                    <div class="stat-grid">
-                        <div class="stat-box"><strong>{aktywne}</strong><span>Aktywnych</span></div>
-                        <div class="stat-box"><strong>{zakonczone}</strong><span>Zakończonych</span></div>
-                        <div class="stat-box"><strong>{opoznione}</strong><span>Opóźnionych</span></div>
-                        <div class="stat-box"><strong>{w_trakcie}</strong><span>W trakcie</span></div>
-                    </div>
-                </div>
-
-                <div class="side-card" style="margin-top:18px;">
-                    <h3>Najbliższe zadania</h3>
-                    {mini_tasks_html}
-                </div>
-            </div>
-        </div>
-        """
-
-        wysokosc_harmonogramu = 220 + (len(projekty) * 92)
-        components.html(harmonogram_html, height=max(520, wysokosc_harmonogramu), scrolling=True)
-
+            wysokosc_harmonogramu = 260 + (len(projekty) * 92)
+            components.html(harmonogram_html, height=max(620, wysokosc_harmonogramu), scrolling=True)
     
-        st.markdown("---")
-        st.subheader("Lista etapów")
-    
-        for z in zadania:
-            c1, c2, c3, c4, c5 = st.columns([2.2, 1.4, 1.2, 1.2, 0.8])
-    
-            with c1:
-                st.markdown(f"**{z.get('nazwa_projektu')}**")
-                st.caption(z.get("nazwa_etapu"))
-    
-            with c2:
-                st.write(f"{z.get('data_start')} - {z.get('data_koniec')}")
-    
-            with c3:
-                st.write(z.get("status"))
-    
-            with c4:
-                st.write(z.get("lokalizacja") or "-")
-    
-            with c5:
-                if st.button("Usuń", key=f"del_harm_{z.get('id')}", use_container_width=True):
-                    supabase.table("harmonogram").delete().eq("id", z.get("id")).execute()
-                    st.rerun()
-    
+        
             st.markdown("---")
+            st.subheader("Lista etapów")
+        
+            for z in zadania:
+                c1, c2, c3, c4, c5 = st.columns([2.2, 1.4, 1.2, 1.2, 0.8])
+        
+                with c1:
+                    st.markdown(f"**{z.get('nazwa_projektu')}**")
+                    st.caption(z.get("nazwa_etapu"))
+        
+                with c2:
+                    st.write(f"{z.get('data_start')} - {z.get('data_koniec')}")
+        
+                with c3:
+                    st.write(z.get("status"))
+        
+                with c4:
+                    st.write(z.get("lokalizacja") or "-")
+        
+                with c5:
+                    if st.button("Usuń", key=f"del_harm_{z.get('id')}", use_container_width=True):
+                        supabase.table("harmonogram").delete().eq("id", z.get("id")).execute()
+                        st.rerun()
+        
+                st.markdown("---")
+            st.stop()
 
     
     import base64
