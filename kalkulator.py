@@ -10399,6 +10399,17 @@ elif opcja_boczna == "Aplikacja Główna":
 
         if widok_harmonogramu == "Tydzień":
             st.subheader("Prace w tym tygodniu")
+                dni_tygodnia_pl = [
+                "Poniedziałek",
+                "Wtorek",
+                "Środa",
+                "Czwartek",
+                "Piątek",
+                "Sobota",
+                "Niedziela",
+            ]
+            
+            dzis = date.today()
         
             dzis = date.today()
             start_tyg = dzis - timedelta(days=dzis.weekday())
@@ -10430,7 +10441,9 @@ elif opcja_boczna == "Aplikacja Główna":
                         prace_dnia.append(z)
         
                 with st.container(border=True):
-                    st.markdown(f"### {dzien.strftime('%A')} | {dzien.strftime('%d.%m')}")
+                    nazwa_dnia = dni_tygodnia_pl[dzien.weekday()]
+                    st.markdown(f"### {nazwa_dnia} | {dzien.strftime('%d.%m')}")
+
         
                     if not prace_dnia:
                         st.caption("Brak prac")
