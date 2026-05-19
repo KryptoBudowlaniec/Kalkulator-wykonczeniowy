@@ -3309,7 +3309,27 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             h6.markdown("**Akcja**")
         
             st.markdown("---")
-        
+
+            najtansza_brutto = min(
+                [
+                    _to_float(o.get("kwota_brutto", 0))
+                    for o in oferty_proj
+                    if _to_float(o.get("kwota_brutto", 0)) > 0
+                ],
+                default=0
+            )
+
+            najtansza_netto = min(
+                [
+                    _to_float(o.get("kwota_netto", 0))
+                    for o in oferty_proj
+                    if _to_float(o.get("kwota_netto", 0)) > 0
+                ],
+                default=0
+            )
+
+
+    
             for oferta in oferty_proj:
                 oferta_id = oferta.get("id")
                 kw_netto = _to_float(oferta.get("kwota_netto", 0))
