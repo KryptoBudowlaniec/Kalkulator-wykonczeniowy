@@ -10074,49 +10074,426 @@ elif opcja_boczna == "Aplikacja Główna":
     # MODUŁ: HARMONOGRAM (GANTT LIVE)
     # ==========================================
     elif branza == "Harmonogram":
-        st.header("Harmonogram Prac Live PRO ")
-        st.write("Zarządzaj terminami i pokazuj postęp inwestorowi w czasie rzeczywistym.")
+        from datetime import date, timedelta, datetime
+        import html as html_lib
     
-        col_h1, col_h2 = st.columns([1, 2])
+        st.markdown("""
+        <style>
+            .schedule-shell {
+                background: #f8fafc;
+                border: 1px solid #e5eaf0;
+                border-radius: 18px;
+                padding: 22px;
+                margin-top: 12px;
+            }
+            .schedule-top {
+                display: flex;
+                justify-content: space-between;
+                gap: 18px;
+                align-items: flex-start;
+                margin-bottom: 18px;
+            }
+            .schedule-title h1 {
+                margin: 0;
+                font-size: 30px;
+                color: #111827;
+                letter-spacing: 0;
+            }
+            .schedule-title p {
+                margin: 6px 0 0;
+                color: #64748b;
+            }
+            .schedule-tabs {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin: 18px 0;
+            }
+            .schedule-tab {
+                border: 1px solid #dfe7ef;
+                background: white;
+                color: #334155;
+                border-radius: 9px;
+                padding: 9px 14px;
+                font-size: 14px;
+                font-weight: 700;
+            }
+            .schedule-tab.active {
+                background: #ecfdf5;
+                color: #009a63;
+                border-color: #99e9c5;
+            }
+            .schedule-layout {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 280px;
+                gap: 18px;
+            }
+            .timeline-card, .side-card {
+                background: white;
+                border: 1px solid #e5eaf0;
+                border-radius: 14px;
+                box-shadow: 0 14px 35px rgba(15, 23, 42, .06);
+                overflow: hidden;
+            }
+            .timeline-scroll {
+                overflow-x: auto;
+            }
+            .timeline-grid {
+                min-width: 980px;
+                display: grid;
+                grid-template-columns: 220px repeat(21, 44px);
+                position: relative;
+            }
+            .day-head, .project-head {
+                background: #f8fafc;
+                border-bottom: 1px solid #e5eaf0;
+                border-right: 1px solid #e5eaf0;
+                min-height: 58px;
+                padding: 10px;
+                color: #334155;
+                font-size: 12px;
+                text-align: center;
+            }
+            .project-head {
+                text-align: left;
+                font-weight: 800;
+                color: #111827;
+            }
+            .project-cell {
+                border-right: 1px solid #e5eaf0;
+                border-bottom: 1px solid #edf2f7;
+                min-height: 92px;
+                padding: 14px;
+            }
+            .project-cell strong {
+                display: block;
+                color: #111827;
+                font-size: 14px;
+                margin-bottom: 4px;
+            }
+            .project-cell span {
+                display: block;
+                color: #64748b;
+                font-size: 12px;
+            }
+            .day-cell {
+                border-right: 1px solid #edf2f7;
+                border-bottom: 1px solid #edf2f7;
+                min-height: 92px;
+                position: relative;
+            }
+            .task-bar {
+                position: absolute;
+                top: 24px;
+                height: 48px;
+                border-radius: 8px;
+                padding: 9px 10px;
+                font-size: 12px;
+                font-weight: 800;
+                line-height: 1.25;
+                z-index: 2;
+                overflow: hidden;
+                white-space: nowrap;
+                border: 1px solid;
+                box-sizing: border-box;
+            }
+            .task-bar small {
+                display: block;
+                font-weight: 500;
+                opacity: .82;
+                margin-top: 3px;
+            }
+            .task-green { background: #dcfce7; color: #047857; border-color: #34d399; }
+            .task-purple { background: #ede9fe; color: #6d28d9; border-color: #a78bfa; }
+            .task-orange { background: #ffedd5; color: #c2410c; border-color: #fb923c; }
+            .task-blue { background: #dbeafe; color: #1d4ed8; border-color: #60a5fa; }
+            .task-gray { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+            .side-card {
+                padding: 18px;
+            }
+            .side-card h3 {
+                margin: 0 0 12px;
+                color: #111827;
+                font-size: 17px;
+            }
+            .stat-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 18px;
+            }
+            .stat-box strong {
+                display: block;
+                font-size: 24px;
+                color: #111827;
+            }
+            .stat-box span {
+                color: #64748b;
+                font-size: 12px;
+            }
+            .mini-task {
+                border-top: 1px solid #edf2f7;
+                padding: 12px 0;
+                color: #334155;
+                font-size: 13px;
+            }
+            .mini-task strong {
+                display: block;
+                color: #111827;
+            }
+            @media (max-width: 1000px) {
+                .schedule-layout { grid-template-columns: 1fr; }
+            }
+        </style>
+        """, unsafe_allow_html=True)
     
-        with col_h1:
-            st.subheader("Edycja Etapów")
-            suma_dni = 0
-            suma_postepu = 0
-            
-            for i, etap in enumerate(st.session_state.etapy_projektu):
-                with st.expander(f"{etap['Zadanie']}"):
-                    etap['Dni'] = st.number_input(f"Dni trwania:", 1, 60, etap['Dni'], key=f"dni_{i}")
-                    etap['Postęp'] = st.slider(f"Postęp (%):", 0, 100, etap['Postęp'], key=f"pos_{i}")
+        st.markdown("""
+        <div class="schedule-shell">
+            <div class="schedule-top">
+                <div class="schedule-title">
+                    <h1>Kalendarz projektów</h1>
+                    <p>Zaplanowane prace i harmonogram remontów</p>
+                </div>
+            </div>
+            <div class="schedule-tabs">
+                <div class="schedule-tab active">Harmonogram</div>
+                <div class="schedule-tab">Kalendarz</div>
+                <div class="schedule-tab">Tydzień</div>
+                <div class="schedule-tab">Miesiąc</div>
+                <div class="schedule-tab">Lista</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+        # ======================
+        # FORMULARZ DODAWANIA
+        # ======================
+        with st.expander("Dodaj etap do harmonogramu", expanded=False):
+            try:
+                odp_proj_harm = (
+                    supabase.table("kosztorysy")
+                    .select("id,nazwa_projektu,klient_miasto")
+                    .eq("uzytkownik_id", st.session_state.user_id)
+                    .order("created_at", desc=True)
+                    .execute()
+                )
+                projekty_harm = odp_proj_harm.data or []
+            except Exception:
+                projekty_harm = []
+    
+            with st.form("form_harmonogram"):
+                c1, c2 = st.columns(2)
+    
+                opcje_projektow = {"Ręcznie wpisany projekt": None}
+                for p in projekty_harm:
+                    opcje_projektow[f"{p.get('nazwa_projektu', 'Projekt')} | {p.get('id')}"] = p
+    
+                wybor_proj = c1.selectbox("Projekt", list(opcje_projektow.keys()))
+                projekt_obj = opcje_projektow.get(wybor_proj)
+    
+                nazwa_reczna = c2.text_input("Nazwa projektu ręcznie", placeholder="Np. Malowanie Toruń")
+    
+                c3, c4, c5 = st.columns(3)
+                nazwa_etapu = c3.text_input("Etap", placeholder="Np. Malowanie")
+                data_start = c4.date_input("Start", value=date.today())
+                data_koniec = c5.date_input("Koniec", value=date.today() + timedelta(days=7))
+    
+                c6, c7, c8 = st.columns(3)
+                lokalizacja = c6.text_input("Lokalizacja", value=(projekt_obj.get("klient_miasto", "") if projekt_obj else ""))
+                status = c7.selectbox("Status", ["Nie rozpoczęto", "W trakcie", "Zakończone", "Opóźnione"])
+                kolor = c8.selectbox("Kolor", ["green", "purple", "orange", "blue", "gray"])
+    
+                notatki = st.text_area("Notatki")
+    
+                if st.form_submit_button("Dodaj do harmonogramu", type="primary", use_container_width=True):
+                    nazwa_projektu = projekt_obj.get("nazwa_projektu") if projekt_obj else nazwa_reczna
+    
+                    if not nazwa_projektu:
+                        st.error("Podaj projekt.")
+                    elif not nazwa_etapu:
+                        st.error("Podaj etap.")
+                    elif data_koniec < data_start:
+                        st.error("Data końca nie może być wcześniejsza niż start.")
+                    else:
+                        try:
+                            supabase.table("harmonogram").insert({
+                                "user_id": st.session_state.user_id,
+                                "kosztorys_id": str(projekt_obj.get("id")) if projekt_obj else None,
+                                "nazwa_projektu": nazwa_projektu,
+                                "lokalizacja": lokalizacja,
+                                "nazwa_etapu": nazwa_etapu,
+                                "data_start": str(data_start),
+                                "data_koniec": str(data_koniec),
+                                "status": status,
+                                "kolor": kolor,
+                                "notatki": notatki,
+                            }).execute()
+    
+                            st.success("Etap dodany do harmonogramu.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Błąd zapisu harmonogramu: {e}")
+    
+        # ======================
+        # POBRANIE DANYCH
+        # ======================
+        try:
+            odp_harmonogram = (
+                supabase.table("harmonogram")
+                .select("*")
+                .eq("user_id", st.session_state.user_id)
+                .order("data_start", desc=False)
+                .execute()
+            )
+            zadania = odp_harmonogram.data or []
+        except Exception as e:
+            st.error(f"Błąd wczytywania harmonogramu: {e}")
+            zadania = []
+    
+        if not zadania:
+            st.info("Dodaj pierwszy etap, aby zobaczyć harmonogram.")
+            st.stop()
+    
+        dzis = date.today()
+        start_okna = dzis - timedelta(days=5)
+        dni = [start_okna + timedelta(days=i) for i in range(21)]
+    
+        projekty = {}
+        for z in zadania:
+            nazwa = z.get("nazwa_projektu", "Projekt")
+            projekty.setdefault(nazwa, []).append(z)
+    
+        aktywne = sum(1 for z in zadania if z.get("status") in ["W trakcie", "Nie rozpoczęto"])
+        zakonczone = sum(1 for z in zadania if z.get("status") == "Zakończone")
+        opoznione = sum(1 for z in zadania if z.get("status") == "Opóźnione")
+        w_trakcie = sum(1 for z in zadania if z.get("status") == "W trakcie")
+    
+        # ======================
+        # TIMELINE HTML
+        # ======================
+        grid_html = ""
+        grid_html += "<div class='project-head'>Projekty</div>"
+    
+        for d in dni:
+            weekend = "color:#ef4444;" if d.weekday() >= 5 else ""
+            grid_html += f"<div class='day-head'><strong style='{weekend}'>{d.day}</strong><br>{d.strftime('%a')}</div>"
+    
+        for row_index, (projekt, etapy) in enumerate(projekty.items()):
+            lokalizacja_proj = next((e.get("lokalizacja", "") for e in etapy if e.get("lokalizacja")), "")
+            min_start = min(datetime.fromisoformat(e.get("data_start")).date() for e in etapy)
+            max_end = max(datetime.fromisoformat(e.get("data_koniec")).date() for e in etapy)
+            ile_dni = (max_end - min_start).days + 1
+    
+            grid_html += f"""
+            <div class='project-cell'>
+                <strong>{html_lib.escape(projekt)}</strong>
+                <span>{html_lib.escape(lokalizacja_proj or '')}</span>
+                <span>{ile_dni} dni</span>
+            </div>
+            """
+    
+            row_cells = ""
+            bars = ""
+    
+            for i, d in enumerate(dni):
+                row_cells += "<div class='day-cell'></div>"
+    
+            for etap in etapy:
+                s = datetime.fromisoformat(etap.get("data_start")).date()
+                k = datetime.fromisoformat(etap.get("data_koniec")).date()
+    
+                if k < dni[0] or s > dni[-1]:
+                    continue
+    
+                left_idx = max(0, (s - dni[0]).days)
+                right_idx = min(len(dni) - 1, (k - dni[0]).days)
+                span = right_idx - left_idx + 1
+    
+                left_px = 220 + left_idx * 44 + 6
+                width_px = span * 44 - 12
+                kolor = etap.get("kolor", "green")
+                top_px = 58 + (row_index * 92) + 24
+    
                 
-                suma_dni += etap['Dni']
-                suma_postepu += (etap['Postęp'] / 100) * etap['Dni']
+                bars += f"""
+                <div class='task-bar task-{kolor}' style='left:{left_px}px; top:{top_px}px; width:{width_px}px;'>
+                    {html_lib.escape(etap.get("nazwa_etapu", "Etap"))}
+                    <small>{s.strftime('%d.%m')} - {k.strftime('%d.%m')}</small>
+                </div>
+                """
     
-            calkowity_progres = (suma_postepu / suma_dni) * 100 if suma_dni > 0 else 0
+            grid_html += f"<div style='display:contents; position:relative;'>{row_cells}{bars}</div>"
     
-        with col_h2:
-            st.subheader("Wizualizacja Projektu")
-            st.metric("Całkowity czas remontu", f"{suma_dni} dni roboczych")
-            st.progress(calkowity_progres / 100)
-            st.write(f"Ogólny postęp inwestycji: **{round(calkowity_progres, 1)}%**")
+        najblizsze = sorted(
+            zadania,
+            key=lambda x: x.get("data_start", "")
+        )[:5]
     
-            st.markdown("<br>", unsafe_allow_html=True)
-            for etap in st.session_state.etapy_projektu:
-                szerokosc = (etap['Dni'] / suma_dni) * 100
-                progres_szerokosc = etap['Postęp']
-                
-                st.markdown(f"""
-                    <div style="margin-bottom: 10px;">
-                        <div style="font-size: 12px; font-weight: bold;">{etap['Zadanie']} ({etap['Dni']} dni)</div>
-                        <div style="background-color: #E9ECEF; border-radius: 5px; width: 100%; height: 20px;">
-                            <div style="background-color: #00D395; height: 20px; border-radius: 5px; width: {progres_szerokosc}%; text-align: center; color: white; font-size: 10px; line-height: 20px;">
-                                {etap['Postęp']}%
-                            </div>
-                        </div>
+        mini_tasks_html = ""
+        for z in najblizsze:
+            mini_tasks_html += f"""
+            <div class="mini-task">
+                <strong>{html_lib.escape(z.get("nazwa_etapu", ""))}</strong>
+                {html_lib.escape(z.get("nazwa_projektu", ""))}<br>
+                <span>{html_lib.escape(str(z.get("data_start", ""))[:10])}</span>
+            </div>
+            """
+    
+        st.markdown(f"""
+        <div class="schedule-layout">
+            <div class="timeline-card">
+                <div class="timeline-scroll">
+                    <div class="timeline-grid">
+                        {grid_html}
                     </div>
-                """, unsafe_allow_html=True)
+                </div>
+            </div>
     
-        st.info("💡 **WSKAZÓWKA:** Docelowo w Panelu Inwestora ten widok będzie zamrożony, aby klient mógł tylko śledzić postępy, które Ty tu ustawisz.")
+            <div>
+                <div class="side-card">
+                    <h3>Podsumowanie</h3>
+                    <div class="stat-grid">
+                        <div class="stat-box"><strong>{aktywne}</strong><span>Aktywnych</span></div>
+                        <div class="stat-box"><strong>{zakonczone}</strong><span>Zakończonych</span></div>
+                        <div class="stat-box"><strong>{opoznione}</strong><span>Opóźnionych</span></div>
+                        <div class="stat-box"><strong>{w_trakcie}</strong><span>W trakcie</span></div>
+                    </div>
+                </div>
+    
+                <div class="side-card" style="margin-top:18px;">
+                    <h3>Najbliższe zadania</h3>
+                    {mini_tasks_html}
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+        st.markdown("---")
+        st.subheader("Lista etapów")
+    
+        for z in zadania:
+            c1, c2, c3, c4, c5 = st.columns([2.2, 1.4, 1.2, 1.2, 0.8])
+    
+            with c1:
+                st.markdown(f"**{z.get('nazwa_projektu')}**")
+                st.caption(z.get("nazwa_etapu"))
+    
+            with c2:
+                st.write(f"{z.get('data_start')} - {z.get('data_koniec')}")
+    
+            with c3:
+                st.write(z.get("status"))
+    
+            with c4:
+                st.write(z.get("lokalizacja") or "-")
+    
+            with c5:
+                if st.button("Usuń", key=f"del_harm_{z.get('id')}", use_container_width=True):
+                    supabase.table("harmonogram").delete().eq("id", z.get("id")).execute()
+                    st.rerun()
+    
+            st.markdown("---")
+
     
     import base64
     
