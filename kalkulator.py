@@ -1912,11 +1912,11 @@ if st.session_state.zalogowany:
                 background: #ffffff;
                 border-right: 1px solid #e5eaf0;
             }
-
+        
             section[data-testid="stSidebar"] > div {
                 padding-top: 18px;
             }
-
+        
             .side-brand {
                 display: flex;
                 align-items: center;
@@ -1925,7 +1925,7 @@ if st.session_state.zalogowany:
                 border-bottom: 1px solid #eef2f7;
                 margin-bottom: 18px;
             }
-
+        
             .side-logo-mark {
                 width: 34px;
                 height: 34px;
@@ -1938,14 +1938,14 @@ if st.session_state.zalogowany:
                 font-weight: 900;
                 font-size: 16px;
             }
-
+        
             .side-brand-name {
                 font-size: 22px;
                 font-weight: 900;
                 color: #111827;
                 letter-spacing: -0.02em;
             }
-
+        
             .side-section {
                 font-size: 11px;
                 color: #8a97a8;
@@ -1954,55 +1954,81 @@ if st.session_state.zalogowany:
                 letter-spacing: .06em;
                 margin: 18px 0 8px 4px;
             }
-
-            .side-active {
+        
+            section[data-testid="stSidebar"] .stButton > button {
+                height: 38px !important;
+                min-height: 38px !important;
+                opacity: 0 !important;
+                margin-bottom: -38px !important;
+                position: relative !important;
+                z-index: 5 !important;
+                border: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+        
+            .side-nav-row {
+                height: 38px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 gap: 10px;
-                padding: 10px 12px;
-                border-radius: 8px;
-                background: #e9f8f1;
-                color: #00A876;
+                padding: 0 12px;
+                margin-bottom: 8px;
+                border-radius: 10px;
+                color: #475569;
+                font-weight: 600;
                 font-size: 14px;
-                font-weight: 700;
-                margin-bottom: 4px;
+                box-sizing: border-box;
+                pointer-events: none;
             }
-
+        
+            .side-nav-row.active {
+                background: #ecfdf5;
+                color: #00A876;
+            }
+        
             .side-active-left {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 11px;
+                min-width: 0;
             }
-
+        
+            .side-icon {
+                width: 20px;
+                height: 20px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                color: currentColor;
+                flex-shrink: 0;
+            }
+        
+            .side-icon svg {
+                width: 20px;
+                height: 20px;
+                display: block;
+            }
+        
+            .side-icon svg path,
+            .side-icon svg circle,
+            .side-icon svg rect,
+            .side-icon svg line,
+            .side-icon svg polyline,
+            .side-icon svg polygon {
+                stroke: currentColor;
+            }
+        
             .side-badge {
-                background: #c7f4df;
-                color: #00845d;
-                font-size: 11px;
-                font-weight: 800;
+                background: #bbf7d0;
+                color: #047857;
                 border-radius: 999px;
-                padding: 2px 7px;
+                padding: 2px 8px;
+                font-size: 12px;
+                font-weight: 800;
             }
-
-            section[data-testid="stSidebar"] div.stButton > button {
-                background: transparent !important;
-                color: #46566a !important;
-                border: 0 !important;
-                box-shadow: none !important;
-                justify-content: flex-start !important;
-                text-align: left !important;
-                height: 42px !important;
-                min-height: 42px !important;
-                border-radius: 8px !important;
-                padding: 0 12px !important;
-                font-weight: 600 !important;
-            }
-
-            section[data-testid="stSidebar"] div.stButton > button:hover {
-                background: #f4f7fa !important;
-                color: #0E172B !important;
-            }
-
+        
             .side-plan {
                 margin-top: 28px;
                 border: 1px solid #e2e8f0;
@@ -2010,31 +2036,31 @@ if st.session_state.zalogowany:
                 padding: 16px;
                 background: #ffffff;
             }
-
+        
             .side-plan-top {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 margin-bottom: 10px;
             }
-
+        
             .side-plan-title {
                 color: #0E172B;
                 font-weight: 900;
                 font-size: 14px;
             }
-
+        
             .side-plan-title span {
                 color: #00A876;
             }
-
+        
             .side-plan p {
                 margin: 0;
                 color: #66758a;
                 font-size: 12px;
                 line-height: 1.55;
             }
-
+        
             .side-account {
                 margin-top: 14px;
                 padding: 10px 12px;
@@ -2072,25 +2098,30 @@ if st.session_state.zalogowany:
 
         def nav_item(nazwa, ikona, key, main_nav=None, sub_nav=None, panel="Aplikacja Główna", badge=None):
             active = st.session_state.get("sidebar_active") == nazwa
-
-            if active:
-                badge_html = f'<span class="side-badge">{badge}</span>' if badge else ""
-                st.markdown(f"""
-                <div class="side-active">
-                    <div class="side-active-left">
-                        <span>{ikona}</span>
-                        <span>{nazwa}</span>
-                    </div>
-                    {badge_html}
-                </div>
-                """, unsafe_allow_html=True)
+            badge_html = f'<span class="side-badge">{badge}</span>' if badge else ""
+        
+            ikona_html = ikona or ""
+        
+            if ikona_html.strip().startswith("<svg"):
+                ikona_render = f'<span class="side-icon">{ikona_html}</span>'
             else:
-                label = f"{ikona}  {nazwa}"
-                if badge:
-                    label = f"{label}   {badge}"
-
-                if st.button(label, key=key, use_container_width=True):
-                    przejdz_sidebar(nazwa, main_nav=main_nav, sub_nav=sub_nav, panel=panel)
+                ikona_render = f'<span class="side-icon">{ikona_html}</span>'
+        
+            # Niewidzialny przycisk do klikania
+            if st.button(nazwa, key=key, use_container_width=True):
+                przejdz_sidebar(nazwa, main_nav=main_nav, sub_nav=sub_nav, panel=panel)
+        
+            active_class = " active" if active else ""
+        
+            st.markdown(f"""
+            <div class="side-nav-row{active_class}">
+                <div class="side-active-left">
+                    {ikona_render}
+                    <span>{nazwa}</span>
+                </div>
+                {badge_html}
+            </div>
+            """, unsafe_allow_html=True)
 
         st.markdown('<div class="side-section">Panel główny</div>', unsafe_allow_html=True)
         
