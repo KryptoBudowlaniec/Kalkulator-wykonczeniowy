@@ -2093,29 +2093,29 @@ if st.session_state.zalogowany:
                     przejdz_sidebar(nazwa, main_nav=main_nav, sub_nav=sub_nav, panel=panel)
 
         st.markdown('<div class="side-section">Panel główny</div>', unsafe_allow_html=True)
-
-        nav_item("Dashboard",  svg_icon("dashboard.svg"), "side_dashboard", main_nav="Start")
-        nav_item("Projekty",  svg_icon("projekty.svg"), "side_projekty", panel="Mój Profil")
-        nav_item("Kalkulatory",  svg_icon("kalkulator.svg"), "side_kalkulatory", main_nav="Kalkulatory", sub_nav="Malowanie")
+        
+        nav_item("Dashboard", svg_icon("dashboard.svg"), "side_dashboard", main_nav="Start")
+        nav_item("Projekty", svg_icon("projekty.svg"), "side_projekty", panel="Mój Profil")
+        nav_item("Kalkulatory", svg_icon("kalkulator.svg"), "side_kalkulatory", main_nav="Kalkulatory", sub_nav="Malowanie")
         nav_item("Klienci", svg_icon("klienci.svg"), "side_klienci", panel="Mój Profil")
         nav_item("Kalendarz", svg_icon("kalendarz.svg"), "side_kalendarz", main_nav="Harmonogram")
-        nav_item("Zamówienia",  svg_icon("zlecenia.svg"), "side_zamowienia", panel="Mój Profil")
-        nav_item("Hurtownie", "□", "side_hurtownie", panel="Mój Profil")
-        nav_item("Szablony",  svg_icon("szablony.svg"), "side_szablony", panel="Mój Profil")
-        nav_item("Koszty",  svg_icon("koszty.svg"), "side_koszty", main_nav="Mój Profil")
-        nav_item("Statystyki",  svg_icon("statystyki.svg"), "side_statystyki", main_nav="Mój Profil")
-
+        nav_item("Zamówienia", svg_icon("zlecenia.svg"), "side_zamowienia", panel="Mój Profil")
+        nav_item("Hurtownie", svg_icon("zlecenia.svg"), "side_hurtownie", panel="Mój Profil")
+        nav_item("Szablony", svg_icon("szablony.svg"), "side_szablony", panel="Mój Profil")
+        nav_item("Koszty", svg_icon("koszty.svg"), "side_koszty", panel="Mój Profil")
+        nav_item("Statystyki", svg_icon("statystyki.svg"), "side_statystyki", panel="Mój Profil")
+        
         st.markdown('<div class="side-section">Narzędzia</div>', unsafe_allow_html=True)
-
-        nav_item("Negocjacje",  svg_icon("negocjacje.svg"), "side_negocjacje", panel="Mój Profil")
-        nav_item("Podpisy",  svg_icon("podpis.svg"), "side_podpisy", panel="Mój Profil")
-        nav_item("Wiadomości",  svg_icon("wiadomości.svg"), "side_wiadomosci", panel="Mój Profil", badge="5")
-        nav_item("Pliki",  svg_icon("pliki.svg"), "side_pliki", panel="Mój Profil")
-
+        
+        nav_item("Negocjacje", svg_icon("negocjacje.svg"), "side_negocjacje", panel="Mój Profil")
+        nav_item("Podpisy", svg_icon("podpis.svg"), "side_podpisy", panel="Mój Profil")
+        nav_item("Wiadomości", svg_icon("wiadomosci.svg"), "side_wiadomosci", panel="Mój Profil", badge="5")
+        nav_item("Pliki", svg_icon("pliki.svg"), "side_pliki", panel="Mój Profil")
+        
         st.markdown('<div class="side-section">Ustawienia</div>', unsafe_allow_html=True)
-
-        nav_item("Ustawienia",  svg_icon("ustawienia.svg"), "side_ustawienia", panel="Mój Profil")
-        nav_item("Pomoc",  svg_icon("pomoc.svg"), "side_pomoc", main_nav="Kontakt")
+        
+        nav_item("Ustawienia", svg_icon("ustawienia.svg"), "side_ustawienia", panel="Mój Profil")
+        nav_item("Pomoc", svg_icon("pomoc.svg"), "side_pomoc", main_nav="Kontakt")
 
         st.markdown(f"""
         <div class="side-account">
