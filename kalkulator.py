@@ -59,7 +59,14 @@ from streamlit_drawable_canvas import st_canvas
 import base64
 from io import BytesIO
 
-
+def svg_icon(nazwa_pliku):
+    sciezka = f"assets/icons/{nazwa_pliku}"
+    try:
+        with open(sciezka, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return ""
+        
 def _nazwa_pliku_pdf(nazwa):
     mapa = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
     tekst = str(nazwa or "Kosztorys").translate(mapa)
@@ -2087,28 +2094,28 @@ if st.session_state.zalogowany:
 
         st.markdown('<div class="side-section">Panel główny</div>', unsafe_allow_html=True)
 
-        nav_item("Dashboard", "⌂", "side_dashboard", main_nav="Start")
-        nav_item("Projekty", "▣", "side_projekty", panel="Mój Profil")
-        nav_item("Kalkulatory", "▤", "side_kalkulatory", main_nav="Kalkulatory", sub_nav="Malowanie")
-        nav_item("Klienci", "◌", "side_klienci", panel="Mój Profil")
-        nav_item("Kalendarz", "□", "side_kalendarz", main_nav="Harmonogram")
-        nav_item("Zamówienia", "□", "side_zamowienia", panel="Mój Profil")
+        nav_item("Dashboard",  svg_icon("dashboard.svg"), "side_dashboard", main_nav="Start")
+        nav_item("Projekty",  svg_icon("projekty.svg"), "side_projekty", panel="Mój Profil")
+        nav_item("Kalkulatory",  svg_icon("kalkulator.svg"), "side_kalkulatory", main_nav="Kalkulatory", sub_nav="Malowanie")
+        nav_item("Klienci", svg_icon("klienci.svg"), "side_klienci", panel="Mój Profil")
+        nav_item("Kalendarz", svg_icon("kalendarz.svg"), "side_kalendarz", main_nav="Harmonogram")
+        nav_item("Zamówienia",  svg_icon("zlecenia.svg"), "side_zamowienia", panel="Mój Profil")
         nav_item("Hurtownie", "□", "side_hurtownie", panel="Mój Profil")
-        nav_item("Szablony", "▧", "side_szablony", panel="Mój Profil")
-        nav_item("Koszty", "◫", "side_koszty", main_nav="Mój Profil")
-        nav_item("Statystyki", "▥", "side_statystyki", main_nav="Mój Profil")
+        nav_item("Szablony",  svg_icon("szablony.svg"), "side_szablony", panel="Mój Profil")
+        nav_item("Koszty",  svg_icon("koszty.svg"), "side_koszty", main_nav="Mój Profil")
+        nav_item("Statystyki",  svg_icon("statystyki.svg"), "side_statystyki", main_nav="Mój Profil")
 
         st.markdown('<div class="side-section">Narzędzia</div>', unsafe_allow_html=True)
 
-        nav_item("Negocjacje", "◇", "side_negocjacje", panel="Mój Profil")
-        nav_item("Podpisy", "✎", "side_podpisy", panel="Mój Profil")
-        nav_item("Wiadomości", "◉", "side_wiadomosci", panel="Mój Profil", badge="5")
-        nav_item("Pliki", "▧", "side_pliki", panel="Mój Profil")
+        nav_item("Negocjacje",  svg_icon("negocjacje.svg"), "side_negocjacje", panel="Mój Profil")
+        nav_item("Podpisy",  svg_icon("podpis.svg"), "side_podpisy", panel="Mój Profil")
+        nav_item("Wiadomości",  svg_icon("wiadomości.svg"), "side_wiadomosci", panel="Mój Profil", badge="5")
+        nav_item("Pliki",  svg_icon("pliki.svg"), "side_pliki", panel="Mój Profil")
 
         st.markdown('<div class="side-section">Ustawienia</div>', unsafe_allow_html=True)
 
-        nav_item("Ustawienia", "⚙", "side_ustawienia", panel="Mój Profil")
-        nav_item("Pomoc", "?", "side_pomoc", main_nav="Kontakt")
+        nav_item("Ustawienia",  svg_icon("ustawienia.svg"), "side_ustawienia", panel="Mój Profil")
+        nav_item("Pomoc",  svg_icon("pomoc.svg"), "side_pomoc", main_nav="Kontakt")
 
         st.markdown(f"""
         <div class="side-account">
