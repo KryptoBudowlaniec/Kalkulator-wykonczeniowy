@@ -1954,18 +1954,23 @@ if st.session_state.zalogowany:
                 margin: 18px 0 8px 4px;
             }
         
+            section[data-testid="stSidebar"] .stButton {
+                margin-top: -46px !important;
+                margin-bottom: 8px !important;
+                position: relative !important;
+                z-index: 10 !important;
+            }
+            
             section[data-testid="stSidebar"] .stButton > button {
                 height: 38px !important;
                 min-height: 38px !important;
+                width: 100% !important;
                 opacity: 0 !important;
-                margin-bottom: -38px !important;
-                position: relative !important;
-                z-index: 5 !important;
                 border: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
             }
-        
+            
             .side-nav-row {
                 height: 38px;
                 display: flex;
@@ -1980,6 +1985,8 @@ if st.session_state.zalogowany:
                 font-size: 14px;
                 box-sizing: border-box;
                 pointer-events: none;
+                position: relative;
+                z-index: 2;
             }
         
             .side-nav-row.active {
@@ -2106,10 +2113,6 @@ if st.session_state.zalogowany:
             else:
                 ikona_render = f'<span class="side-icon">{ikona_html}</span>'
         
-            # Niewidzialny przycisk do klikania
-            if st.button(nazwa, key=key, use_container_width=True):
-                przejdz_sidebar(nazwa, main_nav=main_nav, sub_nav=sub_nav, panel=panel)
-        
             active_class = " active" if active else ""
         
             st.markdown(f"""
@@ -2121,6 +2124,9 @@ if st.session_state.zalogowany:
                 {badge_html}
             </div>
             """, unsafe_allow_html=True)
+        
+            if st.button(nazwa, key=key, use_container_width=True):
+                przejdz_sidebar(nazwa, main_nav=main_nav, sub_nav=sub_nav, panel=panel)
 
         st.markdown('<div class="side-section">Panel główny</div>', unsafe_allow_html=True)
         
