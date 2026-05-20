@@ -60,9 +60,8 @@ import base64
 from io import BytesIO
 
 def svg_icon(nazwa_pliku):
-    sciezka = f"assets/icons/{nazwa_pliku}"
     try:
-        with open(sciezka, "r", encoding="utf-8") as f:
+        with open(nazwa_pliku, "r", encoding="utf-8") as f:
             return f.read()
     except Exception:
         return ""
