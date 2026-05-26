@@ -381,19 +381,29 @@ body {{
 }}
 
 .footer {{
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: static;
     height: 12mm;
     background: #f5f7fa;
     border-top: 1px solid #dce4ed;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: table;
+    width: 100%;
     padding: 0 11mm;
     font-size: 8pt;
     color: #37516c;
+    box-sizing: border-box;
+}}
+
+.footer > div {{
+    display: table-cell;
+    vertical-align: middle;
+}}
+
+.footer > div:nth-child(2) {{
+    text-align: center;
+}}
+
+.footer > div:nth-child(3) {{
+    text-align: right;
 }}
 
 .page2 {{
@@ -449,19 +459,33 @@ body {{
 }}
 
 .dark-footer {{
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: static;
     height: 27mm;
     background: #082849;
     color: white;
-    display: grid;
-    grid-template-columns: 48mm 1fr 35mm 42mm;
-    align-items: center;
-    gap: 8mm;
+    display: table;
+    width: 100%;
     padding: 0 12mm;
     font-size: 9pt;
+    box-sizing: border-box;
+}}
+
+.dark-footer > * {{
+    display: table-cell;
+    vertical-align: middle;
+    padding-right: 8mm;
+}}
+
+.dark-footer img.logo-footer {{
+    max-width: 40mm;
+    max-height: 15mm;
+}}
+
+.dark-footer img.qr {{
+    width: 22mm;
+    height: 22mm;
+    background: white;
+    padding: 1.5mm;
 }}
 
 .dark-footer img.logo-footer {{
@@ -627,7 +651,7 @@ body {{
         </div>
         {"<img class='qr' src='" + qr + "'>" if qr else ""}
         <div>Zeskanuj kod QR<br>i zobacz kalkulator online</div>
-        <div style="position:absolute;right:8mm;bottom:4mm;font-size:8pt;">Strona 2 z 2</div>
+       <div style="font-size:8pt;text-align:right;">Strona 2 z 2</div>
     </div>
 </section>
 
