@@ -402,7 +402,7 @@ except:
 if url and key:
     try:
         # Wpinamy nasz tytanowy sejf ServerSideStorage!
-       options = ClientOptions(flow_type="pkce", storage=StreamlitSessionStorage())
+        options = ClientOptions(flow_type="pkce", storage=StreamlitSessionStorage())
         supabase: Client = create_client(url, key, options=options)
                 
     except Exception as e:
