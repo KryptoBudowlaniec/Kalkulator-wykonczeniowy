@@ -374,19 +374,41 @@ from supabase import create_client, Client, ClientOptions
 # =======================================================
 # 0. LEKARSTWO NA AMNEZJĘ (Globalna pamięć serwera dla PKCE)
 # =======================================================
-class StreamlitSessionStorage:
-    def __init__(self):
-        if "supabase_auth_storage" not in st.session_state:
-            st.session_state.supabase_auth_storage = {}
+import secrets
+
+@st.cache_resource
+def get_auth_flow_storage():
+    return {}
+
+AUTH_FLOW_STORAGE = get_auth_flow_storage()
+
+def get_auth_flow_id():
+    q = st.query_params
+
+    if "auth_flow" in q:
+        return q["auth_flow"]
+
+    if "auth_flow_id" not in st.session_state:
+        st.session_state.auth_flow_id = secrets.token_urlsafe(16)
+
+    return st.session_state.auth_flow_id
+
+
+class AuthFlowStorage:
+    def __init__(self, flow_id):
+        self.flow_id = flow_id
+
+        if self.flow_id not in AUTH_FLOW_STORAGE:
+            AUTH_FLOW_STORAGE[self.flow_id] = {}
 
     def get_item(self, key):
-        return st.session_state.supabase_auth_storage.get(key)
+        return AUTH_FLOW_STORAGE.get(self.flow_id, {}).get(key)
 
     def set_item(self, key, value):
-        st.session_state.supabase_auth_storage[key] = value
+        AUTH_FLOW_STORAGE.setdefault(self.flow_id, {})[key] = value
 
     def remove_item(self, key):
-        st.session_state.supabase_auth_storage.pop(key, None)
+        AUTH_FLOW_STORAGE.get(self.flow_id, {}).pop(key, None)
 
 supabase = None
 
@@ -402,7 +424,8 @@ except:
 if url and key:
     try:
         # Wpinamy nasz tytanowy sejf ServerSideStorage!
-        options = ClientOptions(flow_type="pkce", storage=StreamlitSessionStorage())
+        auth_flow_id = get_auth_flow_id()
+        options = ClientOptions(flow_type="pkce", storage=AuthFlowStorage(auth_flow_id))
         supabase: Client = create_client(url, key, options=options)
                 
     except Exception as e:
@@ -5056,7 +5079,7 @@ elif opcja_boczna == "Aplikacja Główna":
                         res = supabase.auth.sign_in_with_oauth({
                             "provider": "google",
                             "options": {
-                                "redirect_to": "https://procalc.pl",
+                                "redirect_to": f"https://app.procalc.pl/?auth_flow={st.session_state.auth_flow_id}",
                                 "skip_browser_redirect": True
                             }
                         })
