@@ -542,12 +542,15 @@ if st.session_state.get("zalogowany"):
                 
                 if data_akt_str:
                     data_aktywacji = datetime.fromisoformat(data_akt_str.replace('Z', '+00:00'))
-                    if dzisiaj < data_aktywacji + timedelta(days=365):
+                    dni_waznosci = int(dane_kodu.get("dni_waznosci", 365) or 365)
+                    data_wygasniecia = data_aktywacji + timedelta(days=dni_waznosci)
+                    
+                    if dzisiaj < data_wygasniecia:
                         st.session_state.pakiet = "PRO"
                         ma_aktywny_kod = True
-                        dni_do_konca = (data_aktywacji + timedelta(days=365) - dzisiaj).days
+                        dni_do_konca = (data_wygasniecia - dzisiaj).days
                         st.toast(f"💎 Pakiet PRO aktywny! Pozostało: {dni_do_konca} dni.")
-                        st.rerun() # Odświeżamy RAZ, aby odblokować funkcje
+                        st.rerun()
         except Exception as e:
             st.error(f"Błąd sprawdzania kodu rocznego: {e}")
 
@@ -582,9 +585,39 @@ if st.session_state.get("zalogowany"):
             
             # Miejsce na wpisanie kodu (pewnie już to masz, ale upewnij się, że jest tutaj)
             nowy_kod = st.text_input("Wpisz kod aktywacyjny:", key="input_kod_blokada")
+
             if st.button("Aktywuj dostęp"):
-                # Tutaj Twoja logika sprawdzania kodu...
-                pass
+                if nowy_kod:
+                    try:
+                        szukaj_kodu = (
+                            supabase.table("kody_aktywacyjne")
+                            .select("*")
+                            .eq("kod", nowy_kod.strip())
+                            .eq("zuzyty", False)
+                            .execute()
+                        )
+            
+                        if len(szukaj_kodu.data) > 0:
+                            kod_id = szukaj_kodu.data[0]["id"]
+                            teraz = datetime.now(timezone.utc).isoformat()
+            
+                            supabase.table("kody_aktywacyjne").update({
+                                "zuzyty": True,
+                                "uzytkownik_id": st.session_state.user_id,
+                                "data_aktywacji": teraz
+                            }).eq("id", kod_id).execute()
+            
+                            st.session_state.pakiet = "PRO"
+                            st.success("✅ Kod zaakceptowany! Pakiet PRO aktywny.")
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.error("❌ Kod nieprawidłowy albo został już wykorzystany.")
+            
+                    except Exception as e:
+                        st.error(f"Błąd aktywacji kodu: {e}")
+                else:
+                    st.error("Proszę wpisać kod.")
     
             # --- DRZWI EWAKUACYJNE (To, o co prosiłeś) ---
             st.markdown("---")
@@ -601,12 +634,12 @@ if st.session_state.get("zalogowany"):
                     
                 st.rerun()
     # 3. MODUŁ AKTYWACJI (Dla kont po trialu i bez ważnego kodu)
-    if st.session_state.get("pakiet") == "Podstawowy":
+    if st.session_state.get("pakiet") in ["Podstawowy", "FREE"]:
         st.warning("🔒 Twój darmowy okres próbny dobiegł końca. Aktywuj kod, aby odzyskać pełny dostęp na 365 dni!")
         
         with st.form("formularz_aktywacji"):
             wpisany_kod = st.text_input("Wpisz kod aktywacyjny (np. z OLX/Allegro):")
-            przycisk_aktywuj = st.form_submit_button("🚀 Aktywuj pakiet PRO")
+            przycisk_aktywuj = st.form_submit_button("Aktywuj pakiet PRO")
             
             if przycisk_aktywuj:
                 if wpisany_kod:
@@ -1751,6 +1784,7 @@ if st.session_state.get("zalogowany") and st.session_state.get("user_email") == 
         with kolumna_ustawien:
             ile_kodow = st.number_input("Ile kodów wygenerować?", min_value=1, max_value=500, value=30)
             prefix = st.text_input("Przedrostek kodu (np. OLX, ALLEGRO, VIP):", value="OLX")
+            dni_waznosci = st.selectbox("Ważność kodu:", [365, 30], index=0)
             
             if st.button("⚙️ Wygeneruj i dodaj do bazy", type="primary"):
                 with st.spinner("Trwa generowanie..."):
@@ -1762,7 +1796,11 @@ if st.session_state.get("zalogowany") and st.session_state.get("user_email") == 
                         losowe_znaki = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
                         pelny_kod = f"PRO-{prefix}-{losowe_znaki}"
                         
-                        nowe_kody_do_bazy.append({"kod": pelny_kod, "zuzyty": False})
+                        nowe_kody_do_bazy.append({
+                            "kod": pelny_kod,
+                            "zuzyty": False,
+                            "dni_waznosci": int(dni_waznosci)
+                        })
                         kody_do_wyswietlenia.append(pelny_kod)
                     
                     try:
