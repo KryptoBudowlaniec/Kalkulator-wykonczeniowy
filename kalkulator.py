@@ -5080,7 +5080,10 @@ elif opcja_boczna == "Aplikacja Główna":
                             "provider": "google",
                             "options": {
                                 "redirect_to": f"https://app.procalc.pl/?auth_flow={st.session_state.auth_flow_id}",
-                                "skip_browser_redirect": True
+                                "skip_browser_redirect": True,
+                                "query_params": {
+                                    "prompt": "select_account"
+                                }
                             }
                         })
                         
