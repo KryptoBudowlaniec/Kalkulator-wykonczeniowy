@@ -374,21 +374,19 @@ from supabase import create_client, Client, ClientOptions
 # =======================================================
 # 0. LEKARSTWO NA AMNEZJĘ (Globalna pamięć serwera dla PKCE)
 # =======================================================
-# To tworzy słownik bezpośrednio w pamięci serwera, który nigdy nie znika
-@st.cache_resource
-def get_server_storage():
-    return {}
+class StreamlitSessionStorage:
+    def __init__(self):
+        if "supabase_auth_storage" not in st.session_state:
+            st.session_state.supabase_auth_storage = {}
 
-SERVER_STORAGE = get_server_storage()
-
-class ServerSideStorage:
     def get_item(self, key):
-        return SERVER_STORAGE.get(key)
+        return st.session_state.supabase_auth_storage.get(key)
+
     def set_item(self, key, value):
-        SERVER_STORAGE[key] = value
+        st.session_state.supabase_auth_storage[key] = value
+
     def remove_item(self, key):
-        if key in SERVER_STORAGE:
-            del SERVER_STORAGE[key]
+        st.session_state.supabase_auth_storage.pop(key, None)
 
 supabase = None
 
@@ -404,7 +402,7 @@ except:
 if url and key:
     try:
         # Wpinamy nasz tytanowy sejf ServerSideStorage!
-        options = ClientOptions(flow_type="pkce", storage=ServerSideStorage())
+       options = ClientOptions(flow_type="pkce", storage=StreamlitSessionStorage())
         supabase: Client = create_client(url, key, options=options)
                 
     except Exception as e:
@@ -2222,6 +2220,8 @@ if st.session_state.zalogowany:
                     supabase.auth.sign_out()
                 except:
                     pass
+            st.session_state.pop("supabase_auth_storage", None)
+            
             st.rerun()
 
     opcja_boczna = st.session_state.get("globalny_sidebar", "Aplikacja Główna")
@@ -5062,7 +5062,11 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.session_state.pakiet = "Podstawowy"
                     st.session_state.user_email = ""
                     st.session_state.pop("user_id", None)
-                    if supabase: supabase.auth.sign_out()
+                    if supabase: 
+                        supabase.auth.sign_out()
+                        
+                    st.session_state.pop("supabase_auth_storage", None)
+                    
                     st.rerun()
                     
     # --- INICJALIZACJA STANU ---
