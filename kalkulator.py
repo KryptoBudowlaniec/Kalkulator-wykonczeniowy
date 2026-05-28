@@ -424,19 +424,19 @@ except:
 # --- 2. INICJALIZACJA BAZY (Z ZAINSTALOWANĄ GLOBALNĄ PAMIĘCIĄ) ---
 if url and key:
     try:
-        # Wpinamy nasz tytanowy sejf ServerSideStorage!
         auth_flow_id = get_auth_flow_id()
         options = ClientOptions(flow_type="pkce", storage=AuthFlowStorage(auth_flow_id))
         supabase: Client = create_client(url, key, options=options)
-if st.session_state.get("access_token") and st.session_state.get("refresh_token"):
-    try:
-        supabase.auth.set_session(
-            st.session_state.access_token,
-            st.session_state.refresh_token
-        )
-    except Exception:
-        pass
-                
+
+        if st.session_state.get("access_token") and st.session_state.get("refresh_token"):
+            try:
+                supabase.auth.set_session(
+                    st.session_state.access_token,
+                    st.session_state.refresh_token
+                )
+            except Exception:
+                pass
+
     except Exception as e:
         supabase = None
         st.warning(f"Błąd łączenia z Supabase: {e}")
