@@ -479,7 +479,7 @@ if 'pakiet' not in st.session_state:
 # 4. CZYSTY ŁAPACZ SESJI (PKCE CODE)
 # =======================================================
 
-if supabase and not st.session_state.get("zalogowany"):
+if supabase and ("code" in st.query_params or "error" in st.query_params):
     q = st.query_params
     
     # WYCHWYTYWANIE BŁĘDÓW
