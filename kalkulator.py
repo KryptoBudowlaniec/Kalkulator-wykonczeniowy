@@ -492,30 +492,34 @@ if supabase and not st.session_state.get("zalogowany"):
         st.stop()
 
     # WYCHWYTYWANIE KODU SUKCESU (?code=...)
-    elif "code" in q:
-        try:
-            kod = q.get("code")
-            # TUTAJ ZMIANA: Pakujemy kod w słownik {"auth_code": ...}, bo tak wymaga Supabase
-            session_res = supabase.auth.exchange_code_for_session({"auth_code": kod})
+elif "code" in q:
+    try:
+        kod = q.get("code")
 
-    if session_res and session_res.session:
-        st.session_state.access_token = session_res.session.access_token
-        st.session_state.refresh_token = session_res.session.refresh_token
-            
-            user_res = supabase.auth.get_user()
-            
-            if user_res and user_res.user:
-                st.session_state.user_email = user_res.user.email
-                st.session_state.user_id = user_res.user.id  
-                st.session_state.zalogowany = True
-                st.session_state.pakiet = "Podstawowy"
-                
-                st.query_params.clear() 
-                st.success("✅ Google: Autoryzacja udana! Wczytuję panel...")
-                st.rerun()
-        except Exception as e:
-            st.error(f"❌ Błąd logowania (Google Code): {e}")
+        session_res = supabase.auth.exchange_code_for_session({"auth_code": kod})
+
+        if session_res and session_res.session:
+            st.session_state.access_token = session_res.session.access_token
+            st.session_state.refresh_token = session_res.session.refresh_token
+
+        user_res = supabase.auth.get_user()
+
+        if user_res and user_res.user:
+            st.session_state.user_email = user_res.user.email
+            st.session_state.user_id = str(user_res.user.id)
+            st.session_state.zalogowany = True
+            st.session_state.pakiet = "Podstawowy"
+
+            st.query_params.clear()
+            st.success("✅ Google: Autoryzacja udana! Wczytuję panel...")
+            st.rerun()
+        else:
+            st.error("Nie udało się pobrać użytkownika po logowaniu Google.")
             st.stop()
+
+    except Exception as e:
+        st.error(f"❌ Błąd logowania (Google Code): {e}")
+        st.stop()
 
 # =======================================================
 # SYTUACJA C: PODTRZYMANIE SESJI ZALOGOWANEGO
