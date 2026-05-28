@@ -382,12 +382,14 @@ def get_auth_flow_storage():
 
 AUTH_FLOW_STORAGE = get_auth_flow_storage()
 
+
 def get_auth_flow_id():
     q = st.query_params
 
     if "auth_flow" in q:
-        st.session_state.auth_flow_id = q["auth_flow"]
-        return st.session_state.auth_flow_id
+        flow_id = str(q.get("auth_flow"))
+        st.session_state.auth_flow_id = flow_id
+        return flow_id
 
     if "auth_flow_id" not in st.session_state:
         st.session_state.auth_flow_id = secrets.token_urlsafe(16)
@@ -397,19 +399,17 @@ def get_auth_flow_id():
 
 class AuthFlowStorage:
     def __init__(self, flow_id):
-        self.flow_id = flow_id
-
-        if self.flow_id not in AUTH_FLOW_STORAGE:
-            AUTH_FLOW_STORAGE[self.flow_id] = {}
+        self.flow_id = str(flow_id)
+        AUTH_FLOW_STORAGE.setdefault(self.flow_id, {})
 
     def get_item(self, key):
-        return AUTH_FLOW_STORAGE.get(self.flow_id, {}).get(key)
+        return AUTH_FLOW_STORAGE.setdefault(self.flow_id, {}).get(key)
 
     def set_item(self, key, value):
         AUTH_FLOW_STORAGE.setdefault(self.flow_id, {})[key] = value
 
     def remove_item(self, key):
-        AUTH_FLOW_STORAGE.get(self.flow_id, {}).pop(key, None)
+        AUTH_FLOW_STORAGE.setdefault(self.flow_id, {}).pop(key, None)
 
 supabase = None
 
@@ -5095,10 +5095,12 @@ elif opcja_boczna == "Aplikacja Główna":
                 # --- ZAKTUALIZOWANY PRZYCISK GOOGLE (PKCE FLOW) ---
                 if supabase:
                     try:
+                        auth_flow_id = get_auth_flow_id()
+
                         res = supabase.auth.sign_in_with_oauth({
                             "provider": "google",
                             "options": {
-                                "redirect_to": f"https://app.procalc.pl/?auth_flow={st.session_state.auth_flow_id}",
+                                "redirect_to": f"https://app.procalc.pl/?auth_flow={auth_flow_id}",
                                 "skip_browser_redirect": True,
                                 "query_params": {
                                     "prompt": "select_account"
@@ -5106,7 +5108,6 @@ elif opcja_boczna == "Aplikacja Główna":
                             }
                         })
                         
-                        # Natywny przycisk Streamlit, który wywoła bezpieczny link od Supabase
                         st.link_button("🌐 Zaloguj przez Google", res.url, use_container_width=True)
                     
                     except Exception as e:
