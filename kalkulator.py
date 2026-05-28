@@ -386,7 +386,8 @@ def get_auth_flow_id():
     q = st.query_params
 
     if "auth_flow" in q:
-        return q["auth_flow"]
+        st.session_state.auth_flow_id = q["auth_flow"]
+        return st.session_state.auth_flow_id
 
     if "auth_flow_id" not in st.session_state:
         st.session_state.auth_flow_id = secrets.token_urlsafe(16)
@@ -427,6 +428,14 @@ if url and key:
         auth_flow_id = get_auth_flow_id()
         options = ClientOptions(flow_type="pkce", storage=AuthFlowStorage(auth_flow_id))
         supabase: Client = create_client(url, key, options=options)
+if st.session_state.get("access_token") and st.session_state.get("refresh_token"):
+    try:
+        supabase.auth.set_session(
+            st.session_state.access_token,
+            st.session_state.refresh_token
+        )
+    except Exception:
+        pass
                 
     except Exception as e:
         supabase = None
@@ -487,7 +496,11 @@ if supabase and not st.session_state.get("zalogowany"):
         try:
             kod = q.get("code")
             # TUTAJ ZMIANA: Pakujemy kod w słownik {"auth_code": ...}, bo tak wymaga Supabase
-            supabase.auth.exchange_code_for_session({"auth_code": kod})
+            session_res = supabase.auth.exchange_code_for_session({"auth_code": kod})
+
+    if session_res and session_res.session:
+        st.session_state.access_token = session_res.session.access_token
+        st.session_state.refresh_token = session_res.session.refresh_token
             
             user_res = supabase.auth.get_user()
             
