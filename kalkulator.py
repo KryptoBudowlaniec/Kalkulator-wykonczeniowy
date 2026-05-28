@@ -479,58 +479,60 @@ if 'pakiet' not in st.session_state:
 # 4. CZYSTY ŁAPACZ SESJI (PKCE CODE)
 # =======================================================
 
-if supabase and ("code" in st.query_params or "error" in st.query_params):
-    q = st.query_params
-    
-    # WYCHWYTYWANIE BŁĘDÓW
+q = st.query_params
+
+if supabase and ("code" in q or "error" in q):
+
     if "error" in q:
         opis_bledu = q.get("error_description", q.get("error"))
         st.error(f"❌ Autoryzacja odrzucona: {opis_bledu}")
+
         if st.button("Spróbuj ponownie"):
             st.query_params.clear()
             st.rerun()
+
         st.stop()
 
-    # WYCHWYTYWANIE KODU SUKCESU (?code=...)
-elif "code" in q:
-    try:
-        kod = q.get("code")
+    elif "code" in q:
+        try:
+            kod = q.get("code")
 
-        session_res = supabase.auth.exchange_code_for_session({"auth_code": kod})
+            session_res = supabase.auth.exchange_code_for_session({
+                "auth_code": kod
+            })
 
-        if session_res and session_res.session:
-            st.session_state.access_token = session_res.session.access_token
-            st.session_state.refresh_token = session_res.session.refresh_token
+            if session_res and session_res.session:
+                st.session_state.access_token = session_res.session.access_token
+                st.session_state.refresh_token = session_res.session.refresh_token
 
-        user_res = supabase.auth.get_user()
+            user_res = supabase.auth.get_user()
 
-        if user_res and user_res.user:
-            st.session_state.user_email = user_res.user.email
-            st.session_state.user_id = str(user_res.user.id)
-            st.session_state.zalogowany = True
-            st.session_state.pakiet = "Podstawowy"
+            if user_res and user_res.user:
+                st.session_state.user_email = user_res.user.email
+                st.session_state.user_id = str(user_res.user.id)
+                st.session_state.zalogowany = True
+                st.session_state.pakiet = "Podstawowy"
 
-            st.query_params.clear()
-            st.success("✅ Google: Autoryzacja udana! Wczytuję panel...")
-            st.rerun()
-        else:
-            st.error("Nie udało się pobrać użytkownika po logowaniu Google.")
+                st.query_params.clear()
+                st.success("✅ Google: Autoryzacja udana! Wczytuję panel...")
+                st.rerun()
+            else:
+                st.error("Nie udało się pobrać użytkownika po logowaniu Google.")
+                st.stop()
+
+        except Exception as e:
+            st.error(f"❌ Błąd logowania Google: {e}")
             st.stop()
-
-    except Exception as e:
-        st.error(f"❌ Błąd logowania (Google Code): {e}")
-        st.stop()
 
 # =======================================================
 # SYTUACJA C: PODTRZYMANIE SESJI ZALOGOWANEGO
 # =======================================================
 elif st.session_state.get("zalogowany") == True:
-    # USUNIĘTO: st.session_state.pakiet = "Podstawowy"
     if not st.session_state.get("user_id") and supabase:
         try:
             user_res = supabase.auth.get_user()
             if user_res and user_res.user:
-                st.session_state.user_id = user_res.user.id
+                st.session_state.user_id = str(user_res.user.id)
                 st.session_state.user_email = user_res.user.email
         except:
             pass
