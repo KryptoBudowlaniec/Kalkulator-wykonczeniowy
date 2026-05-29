@@ -5108,8 +5108,12 @@ elif opcja_boczna == "Aplikacja Główna":
                             }
                         })
                         
+                        with st.expander("Debug Google login", expanded=False):
+                            st.write("auth_flow_id:", auth_flow_id)
+                            st.write("storage:", AUTH_FLOW_STORAGE.get(auth_flow_id, {}))
+                        
                         st.link_button("🌐 Zaloguj przez Google", res.url, use_container_width=True)
-                    
+                                            
                     except Exception as e:
                         st.error(f"Błąd generowania linku: {e}")
                 
