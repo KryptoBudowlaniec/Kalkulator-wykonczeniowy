@@ -1266,7 +1266,12 @@ if "oferta" in query_params:
         prace_dodatkowe = dane.get("prace_dodatkowe", []) or []
         suma_rob_dodatkowe = sum(_to_float(p.get("robocizna", 0)) for p in prace_dodatkowe)
         
-        suma_rob = suma_rob + suma_rob_dodatkowe
+        # Jeśli suma_robocizna jest zapisana w dane_json, traktujemy ją jako kwotę końcową robocizny.
+        # Jeśli jej nie ma, liczymy z etapów i wtedy doliczamy prace dodatkowe.
+        if "suma_robocizna" in dane:
+            suma_rob = _to_float(dane.get("suma_robocizna", 0))
+        else:
+            suma_rob = suma_rob + suma_rob_dodatkowe
 
         do_zaplaty = suma_rob - rabat
         
