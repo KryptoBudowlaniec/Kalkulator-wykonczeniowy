@@ -268,6 +268,11 @@ def _edytor_zapisanego_kosztorysu():
             step=50.0,
         )
 
+        pokaz_materialy_w_ofercie = st.checkbox(
+            "Pokaż listę materiałów w linku oferty klienta",
+            value=bool(dane.get("pokaz_materialy_w_ofercie", False))
+        )
+
         prace_dodatkowe_txt = st.text_area(
             "Prace dodatkowe, format: nazwa | robocizna | materiały | opis",
             value=_prace_dodatkowe_na_tekst(dane.get("prace_dodatkowe", []) or []),
@@ -365,6 +370,7 @@ def _edytor_zapisanego_kosztorysu():
                 "robocizna_po_rabacie": robocizna_po_rabacie,
                 "prace_dodatkowe": prace_dodatkowe,
                 "zbiorcza_lista_zakupow": zbiorcze_materialy,
+                "pokaz_materialy_w_ofercie": pokaz_materialy_w_ofercie,
             })
 
             try:
@@ -1276,7 +1282,8 @@ if "oferta" in query_params:
                 pass
 
 
-        materialy = _zbierz_materialy(dane)
+        pokaz_materialy_w_ofercie = bool(dane.get("pokaz_materialy_w_ofercie", False))
+        materialy = _zbierz_materialy(dane) if pokaz_materialy_w_ofercie else []
 
         logo_uri = _asset_data_uri("logo2.png")
         hero_uri = _asset_data_uri("hero_remont.png")
@@ -1300,6 +1307,22 @@ if "oferta" in query_params:
             </tr>
             """
 
+        if prace_dodatkowe:
+            for praca in prace_dodatkowe:
+                nazwa_pracy = praca.get("nazwa", "Praca dodatkowa")
+                opis_pracy = praca.get("opis", "Pozycja dodana ręcznie")
+                koszt_pracy = _to_float(praca.get("robocizna", 0))
+        
+                etapy_html += f"""
+                <tr>
+                    <td>
+                        <div class="stage-name">{_safe_html(nazwa_pracy)}</div>
+                        <div class="stage-sub">{_safe_html(opis_pracy)}</div>
+                    </td>
+                    <td>{_money_html(koszt_pracy)}</td>
+                </tr>
+                """
+
         materialy_html = ""
         if materialy:
             for mat in materialy:
@@ -1321,8 +1344,8 @@ if "oferta" in query_params:
         else:
             materialy_html = """
             <div class="material-row">
-                <span>Materiały</span>
-                <strong>Do ustalenia</strong>
+                <span>Lista materiałów</span>
+                <strong>Ukryta w ofercie</strong>
             </div>
             """
         
