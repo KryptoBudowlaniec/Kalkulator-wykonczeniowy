@@ -2536,9 +2536,9 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
     if widok_sidebar == "Projekty":
         st.header("Projekty i kosztorysy")
 
-    if st.session_state.get("edytowany_kosztorys"):
-        _edytor_zapisanego_kosztorysu()
-        st.stop()
+        if st.session_state.get("edytowany_kosztorys"):
+            _edytor_zapisanego_kosztorysu()
+            st.stop()
 
     elif widok_sidebar == "Klienci":
         st.header("Klienci")
