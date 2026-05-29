@@ -167,6 +167,36 @@ def _materialy_na_tekst(materialy):
             linie.append(str(m))
     return "\n".join(linie)
 
+def _prace_dodatkowe_na_tekst(prace):
+    linie = []
+
+    for p in prace or []:
+        linie.append(
+            f"{p.get('nazwa', '')} | {p.get('robocizna', 0)} | {p.get('materialy', 0)} | {p.get('opis', '')}"
+        )
+
+    return "\n".join(linie)
+
+
+def _tekst_na_prace_dodatkowe(tekst):
+    prace = []
+
+    for linia in str(tekst or "").splitlines():
+        linia = linia.strip()
+
+        if not linia:
+            continue
+
+        czesci = [x.strip() for x in linia.split("|")]
+
+        prace.append({
+            "nazwa": czesci[0] if len(czesci) > 0 else "Praca dodatkowa",
+            "robocizna": _to_float(czesci[1], 0) if len(czesci) > 1 else 0,
+            "materialy": _to_float(czesci[2], 0) if len(czesci) > 2 else 0,
+            "opis": czesci[3] if len(czesci) > 3 else "",
+        })
+
+    return prace
 
 def _tekst_na_materialy(tekst):
     materialy = []
@@ -238,6 +268,12 @@ def _edytor_zapisanego_kosztorysu():
             step=50.0,
         )
 
+        prace_dodatkowe_txt = st.text_area(
+            "Prace dodatkowe, format: nazwa | robocizna | materiały | opis",
+            value=_prace_dodatkowe_na_tekst(dane.get("prace_dodatkowe", []) or []),
+            height=120,
+        )
+
         nowe_etapy = []
 
         st.markdown("### Etapy kosztorysu")
@@ -299,8 +335,17 @@ def _edytor_zapisanego_kosztorysu():
         zapisz = st.form_submit_button("💾 Zapisz zmiany", type="primary", use_container_width=True)
 
         if zapisz:
-            suma_robocizna = sum(float(e.get("koszt_robocizny", 0) or 0) for e in nowe_etapy)
-            suma_materialy = sum(float(e.get("koszt_materialow", 0) or 0) for e in nowe_etapy)
+            prace_dodatkowe = _tekst_na_prace_dodatkowe(prace_dodatkowe_txt)
+
+            suma_robocizna_etapy = sum(float(e.get("koszt_robocizny", 0) or 0) for e in nowe_etapy)
+            suma_materialy_etapy = sum(float(e.get("koszt_materialow", 0) or 0) for e in nowe_etapy)
+            
+            suma_rob_dodatkowe = sum(_to_float(p.get("robocizna", 0)) for p in prace_dodatkowe)
+            suma_mat_dodatkowe = sum(_to_float(p.get("materialy", 0)) for p in prace_dodatkowe)
+            
+            suma_robocizna = suma_robocizna_etapy + suma_rob_dodatkowe
+            suma_materialy = suma_materialy_etapy + suma_mat_dodatkowe
+            
             robocizna_po_rabacie = max(0, suma_robocizna - rabat_kwota)
 
             zbiorcze_materialy = []
@@ -318,6 +363,7 @@ def _edytor_zapisanego_kosztorysu():
                 "suma_materialy": suma_materialy,
                 "rabat_kwota": rabat_kwota,
                 "robocizna_po_rabacie": robocizna_po_rabacie,
+                "prace_dodatkowe": prace_dodatkowe,
                 "zbiorcza_lista_zakupow": zbiorcze_materialy,
             })
 
