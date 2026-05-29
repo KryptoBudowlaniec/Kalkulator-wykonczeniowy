@@ -1034,8 +1034,11 @@ if "oferta" in query_params:
         
         suma_rob = suma_rob + suma_rob_dodatkowe
 
-        if do_zaplaty <= 0:
-            do_zaplaty = suma_rob - rabat
+        do_zaplaty = suma_rob - rabat
+        
+        if do_zaplaty < 0:
+            do_zaplaty = 0
+        
         kwota_aktualna = projekt.get("kwota_aktualna")
 
         if kwota_aktualna is not None:
