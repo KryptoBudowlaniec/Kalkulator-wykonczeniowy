@@ -158,6 +158,188 @@ def _zapisz_prace_dodatkowe_do_bazy(aktywny, prace_dodatkowe):
 
     st.session_state["aktywny_projekt_do_pdf"]["dane_json"] = dane_bazy
 
+def _materialy_na_tekst(materialy):
+    linie = []
+    for m in materialy or []:
+        if isinstance(m, dict):
+            linie.append(f"{m.get('nazwa', '')} | {m.get('ilosc', '')} | {m.get('jed', '')}")
+        else:
+            linie.append(str(m))
+    return "\n".join(linie)
+
+
+def _tekst_na_materialy(tekst):
+    materialy = []
+
+    for linia in str(tekst or "").splitlines():
+        linia = linia.strip()
+        if not linia:
+            continue
+
+        czesci = [x.strip() for x in linia.split("|")]
+
+        if len(czesci) >= 3:
+            materialy.append({
+                "nazwa": czesci[0],
+                "ilosc": _to_float(czesci[1], czesci[1]),
+                "jed": czesci[2],
+            })
+        else:
+            materialy.append({
+                "nazwa": linia,
+                "ilosc": "",
+                "jed": "",
+            })
+
+    return materialy
+
+
+def _edytor_zapisanego_kosztorysu():
+    aktyw = st.session_state.get("edytowany_kosztorys")
+
+    if not aktyw:
+        return
+
+    dane = dict(aktyw.get("dane_json", {}) or {})
+    projekt_id = aktyw.get("id")
+
+    st.warning("Edytujesz zapisany kosztorys. Zmiany zapiszą się w chmurze i będą widoczne w linku oferty oraz PDF.")
+
+    if st.button("⬅️ Wróć do listy projektów", use_container_width=True):
+        st.session_state.pop("edytowany_kosztorys", None)
+        st.rerun()
+
+    st.markdown("---")
+
+    etapy_src = dane.get("etapy") if isinstance(dane.get("etapy"), list) else [dane]
+
+    with st.form(f"form_edytuj_kosztorys_{projekt_id}"):
+        nazwa_projektu = st.text_input(
+            "Nazwa projektu",
+            value=aktyw.get("nazwa_projektu", "")
+        )
+
+        status = st.selectbox(
+            "Status oferty",
+            ["Oczekująca", "Wysłano", "Otworzono", "Negocjacja", "Zaakceptowano", "Podpisano", "Zaliczka opłacona", "Odrzucono"],
+            index=0,
+        )
+
+        c1, c2 = st.columns(2)
+        klient_nazwa = c1.text_input("Klient", value=aktyw.get("klient_nazwa", "") or "")
+        klient_miasto = c2.text_input("Miasto", value=aktyw.get("klient_miasto", "") or "")
+        klient_telefon = c1.text_input("Telefon", value=aktyw.get("klient_telefon", "") or "")
+        klient_email = c2.text_input("E-mail", value=aktyw.get("klient_email", "") or "")
+
+        rabat_kwota = st.number_input(
+            "Rabat od robocizny",
+            min_value=0.0,
+            value=float(dane.get("rabat_kwota", 0) or 0),
+            step=50.0,
+        )
+
+        nowe_etapy = []
+
+        st.markdown("### Etapy kosztorysu")
+
+        for i, etap in enumerate(etapy_src):
+            st.markdown(f"#### Etap {i + 1}")
+
+            ec1, ec2 = st.columns(2)
+
+            nazwa_etapu = ec1.text_input(
+                "Nazwa etapu",
+                value=etap.get("nazwa_etapu", etap.get("branza", f"Etap {i + 1}")),
+                key=f"edit_etap_nazwa_{projekt_id}_{i}"
+            )
+
+            branza_etapu = ec2.text_input(
+                "Branża",
+                value=etap.get("branza", aktyw.get("branza", "")),
+                key=f"edit_etap_branza_{projekt_id}_{i}"
+            )
+
+            robocizna = ec1.number_input(
+                "Robocizna",
+                min_value=0.0,
+                value=float(etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0)) or 0),
+                step=50.0,
+                key=f"edit_etap_rob_{projekt_id}_{i}"
+            )
+
+            materialy_kwota = ec2.number_input(
+                "Materiały - kwota",
+                min_value=0.0,
+                value=float(etap.get("koszt_materialow", 0) or 0),
+                step=50.0,
+                key=f"edit_etap_mat_kwota_{projekt_id}_{i}"
+            )
+
+            materialy_txt = st.text_area(
+                "Materiały, format: nazwa | ilość | jednostka",
+                value=_materialy_na_tekst(etap.get("materialy_lista", [])),
+                height=130,
+                key=f"edit_etap_materialy_{projekt_id}_{i}"
+            )
+
+            nowy_etap = dict(etap)
+            nowy_etap.update({
+                "nazwa_etapu": nazwa_etapu,
+                "branza": branza_etapu,
+                "koszt_robocizny": float(robocizna),
+                "koszt_materialow": float(materialy_kwota),
+                "koszt_calkowity": float(robocizna) + float(materialy_kwota),
+                "materialy_lista": _tekst_na_materialy(materialy_txt),
+            })
+
+            nowe_etapy.append(nowy_etap)
+
+            st.markdown("---")
+
+        zapisz = st.form_submit_button("💾 Zapisz zmiany", type="primary", use_container_width=True)
+
+        if zapisz:
+            suma_robocizna = sum(float(e.get("koszt_robocizny", 0) or 0) for e in nowe_etapy)
+            suma_materialy = sum(float(e.get("koszt_materialow", 0) or 0) for e in nowe_etapy)
+            robocizna_po_rabacie = max(0, suma_robocizna - rabat_kwota)
+
+            zbiorcze_materialy = []
+            for e in nowe_etapy:
+                zbiorcze_materialy.extend(e.get("materialy_lista", []) or [])
+
+            if "etapy" in dane or len(nowe_etapy) > 1:
+                dane["etapy"] = nowe_etapy
+            else:
+                dane.update(nowe_etapy[0])
+
+            dane.update({
+                "koszt_calkowity_projektu": suma_robocizna + suma_materialy,
+                "suma_robocizna": suma_robocizna,
+                "suma_materialy": suma_materialy,
+                "rabat_kwota": rabat_kwota,
+                "robocizna_po_rabacie": robocizna_po_rabacie,
+                "zbiorcza_lista_zakupow": zbiorcze_materialy,
+            })
+
+            try:
+                supabase.table("kosztorysy").update({
+                    "nazwa_projektu": nazwa_projektu,
+                    "status": status,
+                    "klient_nazwa": klient_nazwa,
+                    "klient_miasto": klient_miasto,
+                    "klient_telefon": klient_telefon,
+                    "klient_email": klient_email,
+                    "kwota_aktualna": robocizna_po_rabacie,
+                    "dane_json": dane,
+                }).eq("id", projekt_id).eq("uzytkownik_id", st.session_state.user_id).execute()
+
+                st.session_state.pop("edytowany_kosztorys", None)
+                st.success("Kosztorys zaktualizowany.")
+                time.sleep(1)
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Błąd zapisu edycji: {e}")
 
 def wybierz_klienta_do_projektu(key_prefix="projekt"):
     if not st.session_state.get("zalogowany"):
@@ -2354,6 +2536,10 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
     if widok_sidebar == "Projekty":
         st.header("Projekty i kosztorysy")
 
+    if st.session_state.get("edytowany_kosztorys"):
+    _edytor_zapisanego_kosztorysu()
+    st.stop()
+
     elif widok_sidebar == "Klienci":
         st.header("Klienci")
         st.caption("Mini CRM: kontakty, statusy ofert i notatki do inwestycji.")
@@ -4274,6 +4460,10 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                         st.info("Oczekująca")
 
                 with col_pdf:
+                    if st.button("Edytuj", key=f"edit_{projekt_id}", use_container_width=True):
+                        st.session_state["edytowany_kosztorys"] = p
+                        st.rerun()
+                
                     if st.button("PDF", key=f"pdf_{projekt_id}", use_container_width=True):
                         st.session_state["aktywny_projekt_do_pdf"] = p
                         st.rerun()
