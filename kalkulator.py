@@ -375,12 +375,12 @@ from supabase import create_client, Client, ClientOptions
 # 0. LEKARSTWO NA AMNEZJĘ (Globalna pamięć serwera dla PKCE)
 # =======================================================
 import secrets
+import json
+import tempfile
+from pathlib import Path
 
-@st.cache_resource
-def get_auth_flow_storage():
-    return {}
-
-AUTH_FLOW_STORAGE = get_auth_flow_storage()
+AUTH_FLOW_DIR = Path(tempfile.gettempdir()) / "procalc_auth_flows"
+AUTH_FLOW_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def get_auth_flow_id():
@@ -400,16 +400,34 @@ def get_auth_flow_id():
 class AuthFlowStorage:
     def __init__(self, flow_id):
         self.flow_id = str(flow_id)
-        AUTH_FLOW_STORAGE.setdefault(self.flow_id, {})
+        self.path = AUTH_FLOW_DIR / f"{self.flow_id}.json"
+
+    def _load(self):
+        try:
+            if self.path.exists():
+                return json.loads(self.path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+        return {}
+
+    def _save(self, data):
+        try:
+            self.path.write_text(json.dumps(data), encoding="utf-8")
+        except Exception:
+            pass
 
     def get_item(self, key):
-        return AUTH_FLOW_STORAGE.setdefault(self.flow_id, {}).get(key)
+        return self._load().get(key)
 
     def set_item(self, key, value):
-        AUTH_FLOW_STORAGE.setdefault(self.flow_id, {})[key] = value
+        data = self._load()
+        data[key] = value
+        self._save(data)
 
     def remove_item(self, key):
-        AUTH_FLOW_STORAGE.setdefault(self.flow_id, {}).pop(key, None)
+        data = self._load()
+        data.pop(key, None)
+        self._save(data)
 
 supabase = None
 
