@@ -515,9 +515,24 @@ if supabase and ("code" in q or "error" in q):
         try:
             kod = q.get("code")
 
+            auth_flow_id = get_auth_flow_id()
+            flow_storage = AuthFlowStorage(auth_flow_id)
+            flow_data = flow_storage._load()
+            
+            code_verifier = flow_data.get("supabase.auth.token-code-verifier")
+            
+            if not code_verifier:
+                st.error("Brak code_verifier dla logowania Google. Rozpocznij logowanie od nowa.")
+                st.write("auth_flow_id:", auth_flow_id)
+                st.write("storage keys:", list(flow_data.keys()))
+                st.stop()
+            
             session_res = supabase.auth.exchange_code_for_session({
-                "auth_code": kod
+                "auth_code": kod,
+                "code_verifier": code_verifier
             })
+
+            flow_storage.remove_item("supabase.auth.token-code-verifier")
 
             if session_res and session_res.session:
                 st.session_state.access_token = session_res.session.access_token
