@@ -5395,9 +5395,17 @@ elif opcja_boczna == "Aplikacja Główna":
                 # --- ZAKTUALIZOWANY PRZYCISK GOOGLE (PKCE FLOW) ---
                 if supabase:
                     try:
-                        auth_flow_id = get_auth_flow_id()
-
-                        res = supabase.auth.sign_in_with_oauth({
+                        auth_flow_id = secrets.token_urlsafe(16)
+                        st.session_state.auth_flow_id = auth_flow_id
+                        
+                        options_google = ClientOptions(
+                            flow_type="pkce",
+                            storage=AuthFlowStorage(auth_flow_id)
+                        )
+                        
+                        supabase_google = create_client(url, key, options=options_google)
+                        
+                        res = supabase_google.auth.sign_in_with_oauth({
                             "provider": "google",
                             "options": {
                                 "redirect_to": f"https://app.procalc.pl/?auth_flow={auth_flow_id}",
@@ -5407,13 +5415,6 @@ elif opcja_boczna == "Aplikacja Główna":
                                 }
                             }
                         })
-                        
-                        debug_storage = AuthFlowStorage(auth_flow_id)._load()
-                        
-                        with st.expander("Debug Google login", expanded=False):
-                            st.write("auth_flow_id:", auth_flow_id)
-                            st.write("storage keys:", list(debug_storage.keys()))
-                            st.write("storage ma dane:", bool(debug_storage))
                         
                         st.link_button("🌐 Zaloguj przez Google", res.url, use_container_width=True)
                                                                     
