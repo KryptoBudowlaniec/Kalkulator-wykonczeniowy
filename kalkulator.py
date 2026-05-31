@@ -147,6 +147,51 @@ def _to_float(value, default=0.0):
     except Exception:
         return default
 
+def _oblicz_podsumowanie_oferty(dane):
+    dane = dane or {}
+    etapy = dane.get("etapy") or []
+
+    if not etapy:
+        etapy = [dane]
+
+    suma_robocizny_etapow = sum(
+        _to_float(etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0)))
+        for etap in etapy
+    )
+
+    suma_materialow = sum(
+        _to_float(etap.get("koszt_materialow", 0))
+        for etap in etapy
+    )
+
+    # Obsługa starszych zapisów, które nie posiadały pełnej listy etapów.
+    if suma_robocizny_etapow <= 0:
+        suma_robocizny_etapow = _to_float(dane.get("suma_robocizna", 0))
+
+    if suma_materialow <= 0:
+        suma_materialow = _to_float(dane.get("suma_materialy", 0))
+
+    prace_dodatkowe = dane.get("prace_dodatkowe", []) or []
+
+    suma_prac_dodatkowych = sum(
+        _to_float(praca.get("robocizna", 0))
+        for praca in prace_dodatkowe
+    )
+
+    suma_robocizny = suma_robocizny_etapow + suma_prac_dodatkowych
+    rabat = max(0.0, _to_float(dane.get("rabat_kwota", 0)))
+    do_zaplaty = max(0.0, suma_robocizny - rabat)
+
+    return {
+        "etapy": etapy,
+        "prace_dodatkowe": prace_dodatkowe,
+        "suma_robocizny": suma_robocizny,
+        "suma_materialow": suma_materialow,
+        "suma_prac_dodatkowych": suma_prac_dodatkowych,
+        "rabat": rabat,
+        "do_zaplaty": do_zaplaty,
+    }
+    
 def _aktywuj_kod_pro(kod):
     if not str(kod or "").strip():
         st.error("Proszę wpisać kod.")
@@ -483,7 +528,10 @@ def sprawdz_dostep_pro():
     ADMINI = ["biuro@procalc.pl", "pawelkubiak685@gmail.com"] 
     
     # 3. Sprawdzamy, czy użytkownik opłacił Stripe (domyślnie False)
-    is_pro = st.session_state.get('uzytkownik_premium', False)
+    is_pro = (
+        st.session_state.get("pakiet") == "PRO"
+        or st.session_state.get("uzytkownik_premium", False)
+    )
     
     # 4. LOGIKA: Wpuszczamy Admina LUB kogoś kto zapłacił
     if uzytkownik_email in ADMINI or is_pro:
@@ -892,6 +940,33 @@ if st.session_state.get("zalogowany") and st.session_state.get("user_email") == 
     st.session_state.pakiet = "PRO"
     # Nie robimy tutaj rerun, po prostu pozwalamy kodowi iść dalej 
     # z już ustawionym statusem PRO.
+# Okresowa kontrola ważności PRO podczas otwartej sesji
+if (
+    st.session_state.get("zalogowany")
+    and st.session_state.get("user_email") != "pawelkubiak685@gmail.com"
+    and st.session_state.get("pakiet") == "PRO"
+):
+    teraz_weryfikacji = time.time()
+    ostatnia_weryfikacja = st.session_state.get("ostatnia_weryfikacja_pro", 0)
+
+    if teraz_weryfikacji - float(ostatnia_weryfikacja or 0) >= 300:
+        try:
+            odp = supabase.rpc("get_my_pro_access").execute()
+            dane_dostepu = odp.data or {}
+
+            st.session_state["ostatnia_weryfikacja_pro"] = teraz_weryfikacji
+
+            if dane_dostepu.get("aktywny"):
+                st.session_state["dni_do_konca_pro"] = dane_dostepu.get(
+                    "dni_do_konca",
+                    0
+                )
+            else:
+                st.session_state.pakiet = "Podstawowy"
+                st.session_state.pop("dni_do_konca_pro", None)
+
+        except Exception:
+            pass
 
 if st.session_state.get("zalogowany"):
     
@@ -1250,48 +1325,14 @@ if "oferta" in query_params:
                 st.error(f"Błąd oznaczenia oferty jako otwartej: {e}")
 
 
-        rabat = float(dane.get("rabat_kwota", 0) or 0)
+        podsumowanie = _oblicz_podsumowanie_oferty(dane)
 
-        if "etapy" in dane:
-            etapy = dane.get("etapy", [])
-
-            suma_rob = float(
-                dane.get(
-                    "suma_robocizna",
-                    sum(
-                        float(e.get("koszt_robocizny", e.get("koszt_calkowity", 0)) or 0)
-                        for e in etapy
-                    )
-                ) or 0
-            )
-
-            suma_mat = float(
-                dane.get(
-                    "suma_materialy",
-                    sum(float(e.get("koszt_materialow", 0) or 0) for e in etapy)
-                ) or 0
-            )
-        else:
-            etapy = [dane]
-            suma_rob = float(dane.get("koszt_robocizny", dane.get("koszt_calkowity", 0)) or 0)
-            suma_mat = float(dane.get("koszt_materialow", 0) or 0)
-
-        prace_dodatkowe = dane.get("prace_dodatkowe", []) or []
-        suma_rob_dodatkowe = sum(_to_float(p.get("robocizna", 0)) for p in prace_dodatkowe)
-        
-        # Jeśli suma_robocizna jest zapisana w dane_json, traktujemy ją jako kwotę końcową robocizny.
-        # Jeśli jej nie ma, liczymy z etapów i wtedy doliczamy prace dodatkowe.
-        if "suma_robocizna" in dane:
-            suma_rob = _to_float(dane.get("suma_robocizna", 0))
-        else:
-            suma_rob = suma_rob + suma_rob_dodatkowe
-
-        do_zaplaty = suma_rob - rabat
-        
-        if do_zaplaty < 0:
-            do_zaplaty = 0
-        
-        kwota_aktualna = projekt.get("kwota_aktualna")
+        etapy = podsumowanie["etapy"]
+        prace_dodatkowe = podsumowanie["prace_dodatkowe"]
+        suma_rob = podsumowanie["suma_robocizny"]
+        suma_mat = podsumowanie["suma_materialow"]
+        rabat = podsumowanie["rabat"]
+        do_zaplaty = podsumowanie["do_zaplaty"]
 
         if kwota_aktualna is not None:
             try:
