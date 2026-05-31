@@ -936,35 +936,10 @@ if st.session_state.get("zalogowany"):
         
         with st.form("formularz_aktywacji"):
             wpisany_kod = st.text_input("Wpisz kod aktywacyjny (np. z OLX/Allegro):")
-            przycisk_aktywuj = st.form_submit_button("Aktywuj pakiet PRO")
+            przycisk_aktywuj = st.form_submit_button("🚀 Aktywuj pakiet PRO")
             
             if przycisk_aktywuj:
-                if wpisany_kod:
-                    try:
-                        # Szukamy wolnego kodu
-                        szukaj_kodu = supabase.table("kody_aktywacyjne").select("*").eq("kod", wpisany_kod).eq("zuzyty", False).execute()
-                        
-                        if len(szukaj_kodu.data) > 0:
-                            kod_id = szukaj_kodu.data[0]['id']
-                            teraz = datetime.now(timezone.utc).isoformat()
-                            
-                            supabase.table("kody_aktywacyjne").update({
-                                "zuzyty": True,
-                                "uzytkownik_id": st.session_state.user_id,
-                                "data_aktywacji": teraz
-                            }).eq("id", kod_id).execute()
-                            
-                            st.success("✅ Kod zaakceptowany! Pakiet PRO ważny przez 365 dni.")
-                            st.session_state.pakiet = "PRO"
-                            import time
-                            time.sleep(2)
-                            st.rerun()
-                        else:
-                            st.error("❌ Kod nieprawidłowy lub został już wykorzystany.")
-                    except Exception as e:
-                        st.error(f"Wystąpił błąd podczas aktywacji: {e}")
-                else:
-                    st.error("Proszę wpisać kod.")
+                _aktywuj_kod_pro(wpisany_kod)
         
         st.stop()
 
@@ -2095,8 +2070,12 @@ if st.session_state.get("zalogowany") and st.session_state.get("user_email") == 
         with kolumna_ustawien:
             ile_kodow = st.number_input("Ile kodów wygenerować?", min_value=1, max_value=500, value=30)
             prefix = st.text_input("Przedrostek kodu (np. OLX, ALLEGRO, VIP):", value="OLX")
-            dni_waznosci = st.selectbox("Ważność kodu:", [365, 30], index=0)
-            
+            dni_waznosci = st.selectbox(
+                "Ważność kodu:",
+                [365, 30],
+                format_func=lambda x: f"{x} dni"
+            )
+                        
             if st.button("⚙️ Wygeneruj i dodaj do bazy", type="primary"):
                 with st.spinner("Trwa generowanie..."):
                     try:
