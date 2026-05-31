@@ -973,7 +973,6 @@ if "hurtownia" in query_params:
         nazwa_projektu = zapytanie.get("nazwa_projektu", "Zapytanie materiałowe")
         status = zapytanie.get("status", "Wysłano")
 
-        st.set_page_config(page_title="Wycena materiałów | ProCalc", layout="wide")
 
         st.markdown("""
         <style>
@@ -5283,40 +5282,6 @@ elif opcja_boczna == "Aplikacja Główna":
         components.html(roadmap_html, height=1250, scrolling=False)
 
 
-    
-    
-    # ==========================================
-    # TUTAJ WCHODZI NASZ NOWY PANEL INWESTORA!
-    # ==========================================
-    elif branza == "Panel Inwestora":
-        st.markdown("<br>", unsafe_allow_html=True)
-        if not st.session_state.zalogowany:
-            st.warning("Ta sekcja dostępna jest wyłącznie dla zalogowanych użytkowników.")
-            st.info("Przejdź do zakładki 'Logowanie' w górnym menu, aby założyć darmowe konto.")
-        
-    
-            # Odpalamy Zawartość w zależności od wyboru w boczku
-            if opcja_boczna == "Nawigacja Główna":
-                st.header("Twoje Kosztorysy i Projekty")
-                st.info("Tutaj docelowo wyświetlą się Twoje wyceny i analiza ROI.")
-                
-            elif opcja_boczna == "Mój Profil":
-                st.header("Mój Profil Inwestora")
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.text_input("Imię i Nazwisko / Nazwa Firmy")
-                with c2:
-                    st.number_input("Domyślny narzut na materiały (%)", value=10)
-                    st.number_input("Twoja stawka za roboczogodzinę (PLN/h)", value=60)
-                if st.button("Zapisz ustawienia profilu"):
-                    st.success("Zapisano zmiany!")
-                    
-            elif opcja_boczna == "Język i Region":
-                st.header("Ustawienia Regionalne")
-                st.selectbox("Wybierz język", ["Polski", "English"])
-                st.selectbox("Domyślna waluta", ["PLN", "EUR", "USD"])
-                if st.button("Zapisz region"):
-                    st.success("Zapisano zmiany!")
     
     elif branza == "Kontakt":
         # ---------------- EKRAN KONTAKTU (Nietknięty!) ----------------
