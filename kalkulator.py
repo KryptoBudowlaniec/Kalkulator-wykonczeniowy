@@ -1207,16 +1207,20 @@ if "oferta" in query_params:
 
         return materialy
 
-    oferta_id = query_params["oferta"]
-
+    oferta_token = query_params["oferta"]
+    
     try:
-        res = supabase.table("kosztorysy").select("*").eq("id", oferta_id).execute()
-
+        res = supabase.rpc(
+            "get_public_offer",
+            {"p_token": oferta_token}
+        ).execute()
+    
         if not res.data:
             st.error("Nie znaleziono oferty.")
             st.stop()
-
-        projekt = res.data[0]
+    
+        projekt = res.data
+        oferta_id = projekt.get("id")
         dane = projekt.get("dane_json", {}) or {}
 
         nazwa_klienta = projekt.get("nazwa_projektu", "Wycena prac")
@@ -2809,7 +2813,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     or 0
                 )
     
-                link_do_oferty = f"{host_url}/?oferta={projekt_id}"
+                public_token = p.get("public_token")
+                link_do_oferty = f"{host_url}/?oferta={public_token}" if public_token else ""
     
                 c1, c2, c3, c4, c5 = st.columns([2.2, 1.2, 1.2, 1.2, 2.4])
     
@@ -2985,7 +2990,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     or 0
                 )
 
-                link_do_oferty = f"{host_url}/?oferta={projekt_id}"
+                public_token = p.get("public_token")
+                link_do_oferty = f"{host_url}/?oferta={public_token}" if public_token else ""
 
                 c1, c2, c3, c4, c5, c6 = st.columns([2.0, 1.1, 1.1, 1.2, 1.8, 1.3])
 
@@ -4504,7 +4510,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 status = p.get("status", "Oczekująca")
                 kwota = policz_kwote_robocizny(p)
                 kwota_format = f"{kwota:,.2f} zł".replace(",", " ")
-                link_do_oferty = f"{host_url}/?oferta={projekt_id}"
+                public_token = p.get("public_token")
+                link_do_oferty = f"{host_url}/?oferta={public_token}" if public_token else ""
 
                 col_nazwa, col_klient, col_kwota, col_status, col_pdf, col_link, col_usun = st.columns([2.2, 1.5, 1.1, 1.0, 1.0, 2.2, 0.7])
 
