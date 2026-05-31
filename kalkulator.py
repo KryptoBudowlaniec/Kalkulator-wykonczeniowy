@@ -1880,48 +1880,38 @@ if "oferta" in query_params:
             with col_k1:
                 if st.button("Akceptuję nową cenę", type="primary", use_container_width=True):
                     try:
-                        historia = projekt.get("historia_negocjacji") or []
-                        historia.append({
-                            "typ": "akceptacja_kontrpropozycji_wykonawcy",
-                            "kwota": float(propozycja_wykonawcy),
-                            "data": datetime.now().isoformat()
-                        })
-
-                        supabase.table("kosztorysy").update({
-                            "status": "Zaakceptowano",
-                            "kwota_aktualna": float(propozycja_wykonawcy),
-                            "propozycja_wykonawcy": None,
-                            "propozycja_klienta": None,
-                            "zaakceptowano_data": datetime.now().isoformat(),
-                            "historia_negocjacji": historia
-                        }).eq("id", oferta_id).execute()
-
+                        supabase.rpc(
+                            "public_offer_action",
+                            {
+                                "p_token": oferta_token,
+                                "p_action": "accept_contractor_offer",
+                                "p_payload": {}
+                            }
+                        ).execute()
+                
                         st.success("Nowa cena została zaakceptowana.")
                         time.sleep(1)
                         st.rerun()
+                
                     except Exception as e:
                         st.error(f"Nie udało się zaakceptować nowej ceny: {e}")
 
             with col_k2:
                 if st.button("Odrzucam nową cenę", use_container_width=True):
                     try:
-                        historia = projekt.get("historia_negocjacji") or []
-                        historia.append({
-                            "typ": "odrzucenie_kontrpropozycji_wykonawcy",
-                            "kwota": float(propozycja_wykonawcy),
-                            "data": datetime.now().isoformat()
-                        })
-
-                        supabase.table("kosztorysy").update({
-                            "status": "Odrzucono",
-                            "propozycja_wykonawcy": None,
-                            "propozycja_klienta": None,
-                            "historia_negocjacji": historia
-                        }).eq("id", oferta_id).execute()
-
+                        supabase.rpc(
+                            "public_offer_action",
+                            {
+                                "p_token": oferta_token,
+                                "p_action": "reject_contractor_offer",
+                                "p_payload": {}
+                            }
+                        ).execute()
+                
                         st.warning("Oferta została odrzucona.")
                         time.sleep(1)
                         st.rerun()
+                
                     except Exception as e:
                         st.error(f"Nie udało się odrzucić propozycji: {e}")
 
@@ -1985,20 +1975,17 @@ if "oferta" in query_params:
                             podpis_base64 = base64.b64encode(bufor.getvalue()).decode("utf-8")
                             podpis_data_uri = f"data:image/png;base64,{podpis_base64}"
 
-                            historia = projekt.get("historia_negocjacji") or []
-                            historia.append({
-                                "typ": "podpis_klienta",
-                                "imie_nazwisko": podpis_imie,
-                                "data": datetime.now().isoformat()
-                            })
-
-                            supabase.table("kosztorysy").update({
-                                "status": "Podpisano",
-                                "podpis_imie_nazwisko": podpis_imie,
-                                "podpis_klienta": podpis_data_uri,
-                                "podpis_data": datetime.now().isoformat(),
-                                "historia_negocjacji": historia
-                            }).eq("id", oferta_id).execute()
+                            supabase.rpc(
+                                "public_offer_action",
+                                {
+                                    "p_token": oferta_token,
+                                    "p_action": "sign",
+                                    "p_payload": {
+                                        "name": podpis_imie,
+                                        "signature": podpis_data_uri
+                                    }
+                                }
+                            ).execute()
 
                             st.success("Oferta została podpisana elektronicznie.")
                             time.sleep(1)
@@ -2024,23 +2011,19 @@ if "oferta" in query_params:
             with col_accept:
                 if st.button("Akceptuję ofertę", type="primary", use_container_width=True):
                     try:
-                        historia = projekt.get("historia_negocjacji") or []
-                        historia.append({
-                            "typ": "akceptacja_klienta",
-                            "kwota": do_zaplaty,
-                            "data": datetime.now().isoformat()
-                        })
-
-                        supabase.table("kosztorysy").update({
-                            "status": "Zaakceptowano",
-                            "kwota_aktualna": do_zaplaty,
-                            "zaakceptowano_data": datetime.now().isoformat(),
-                            "historia_negocjacji": historia
-                        }).eq("id", oferta_id).execute()
-
+                        supabase.rpc(
+                            "public_offer_action",
+                            {
+                                "p_token": oferta_token,
+                                "p_action": "accept",
+                                "p_payload": {}
+                            }
+                        ).execute()
+                
                         st.success("Oferta została zaakceptowana.")
                         time.sleep(1)
                         st.rerun()
+                
                     except Exception as e:
                         st.error(f"Nie udało się zaakceptować oferty: {e}")
 
@@ -2062,49 +2045,45 @@ if "oferta" in query_params:
 
                     if st.button("Wyślij propozycję", use_container_width=True):
                         try:
-                            historia = projekt.get("historia_negocjacji") or []
-                            historia.append({
-                                "typ": "propozycja_klienta",
-                                "kwota": propozycja,
-                                "komentarz": komentarz,
-                                "data": datetime.now().isoformat()
-                            })
-
-                            supabase.table("kosztorysy").update({
-                                "status": "Negocjacja",
-                                "propozycja_klienta": propozycja,
-                                "historia_negocjacji": historia
-                            }).eq("id", oferta_id).execute()
-
+                            supabase.rpc(
+                                "public_offer_action",
+                                {
+                                    "p_token": oferta_token,
+                                    "p_action": "client_offer",
+                                    "p_payload": {
+                                        "amount": float(propozycja),
+                                        "comment": komentarz
+                                    }
+                                }
+                            ).execute()
+                    
                             st.success("Propozycja została wysłana do wykonawcy.")
                             time.sleep(1)
                             st.rerun()
+                    
                         except Exception as e:
                             st.error(f"Nie udało się wysłać propozycji: {e}")
 
             with col_reject:
                 if st.button("Odrzuć ofertę", use_container_width=True):
                     try:
-                        historia = projekt.get("historia_negocjacji") or []
-                        historia.append({
-                            "typ": "odrzucenie_klienta",
-                            "data": datetime.now().isoformat()
-                        })
-
-                        supabase.table("kosztorysy").update({
-                            "status": "Odrzucono",
-                            "odrzucono_data": datetime.now().isoformat(),
-                            "historia_negocjacji": historia
-                        }).eq("id", oferta_id).execute()
-
+                        supabase.rpc(
+                            "public_offer_action",
+                            {
+                                "p_token": oferta_token,
+                                "p_action": "reject",
+                                "p_payload": {}
+                            }
+                        ).execute()
+                
                         st.warning("Oferta została odrzucona.")
                         time.sleep(1)
                         st.rerun()
+                
                     except Exception as e:
                         st.error(f"Nie udało się odrzucić oferty: {e}")
-
-
-        st.stop()
+                
+                        st.stop()
 
     except Exception as e:
         st.error(f"Błąd krytyczny: {e}")
