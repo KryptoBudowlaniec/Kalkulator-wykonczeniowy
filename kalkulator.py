@@ -2099,30 +2099,28 @@ if st.session_state.get("zalogowany") and st.session_state.get("user_email") == 
             
             if st.button("⚙️ Wygeneruj i dodaj do bazy", type="primary"):
                 with st.spinner("Trwa generowanie..."):
-                    nowe_kody_do_bazy = []
-                    kody_do_wyswietlenia = []
-                    
-                    for _ in range(ile_kodow):
-                        # Losuje 5 wielkich liter i cyfr (np. X7B9Q)
-                        losowe_znaki = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-                        pelny_kod = f"PRO-{prefix}-{losowe_znaki}"
-                        
-                        nowe_kody_do_bazy.append({
-                            "kod": pelny_kod,
-                            "zuzyty": False,
-                            "dni_waznosci": int(dni_waznosci)
-                        })
-                        kody_do_wyswietlenia.append(pelny_kod)
-                    
                     try:
-                        # Masowe wrzucenie wszystkich kodów do Supabase (jeden szybki strzał!)
-                        supabase.table("kody_aktywacyjne").insert(nowe_kody_do_bazy).execute()
-                        st.success(f"✅ Zapisano {ile_kodow} kodów w bazie!")
-                        
-                        # Zapisujemy wygenerowane kody do sesji, żeby pokazać je w oknie obok
-                        st.session_state['ostatnio_wygenerowane'] = "\n".join(kody_do_wyswietlenia)
+                        odp = supabase.rpc(
+                            "admin_generate_activation_codes",
+                            {
+                                "p_prefix": prefix,
+                                "p_ile": int(ile_kodow),
+                                "p_dni": int(dni_waznosci),
+                            }
+                        ).execute()
+            
+                        rekordy = odp.data or []
+                        kody_do_wyswietlenia = [
+                            r.get("wygenerowany_kod")
+                            for r in rekordy
+                            if r.get("wygenerowany_kod")
+                        ]
+            
+                        st.session_state["ostatnio_wygenerowane"] = "\n".join(kody_do_wyswietlenia)
+                        st.success(f"✅ Zapisano {len(kody_do_wyswietlenia)} kodów w bazie!")
+            
                     except Exception as e:
-                        st.error(f"Błąd dodawania do bazy: {e}")
+                        st.error(f"Błąd generowania kodów: {e}")
                         
         with kolumna_wynikow:
             if 'ostatnio_wygenerowane' in st.session_state:
