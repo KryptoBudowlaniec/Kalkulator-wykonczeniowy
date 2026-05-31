@@ -729,7 +729,10 @@ except:
 if url and key:
     try:
         auth_flow_id = get_auth_flow_id()
-        options = ClientOptions(flow_type="pkce", storage=AuthFlowStorage(auth_flow_id, url, key)
+        options = ClientOptions(
+            flow_type="pkce",
+            storage=AuthFlowStorage(auth_flow_id, url, key)
+        )
         supabase: Client = create_client(url, key, options=options)
 
         if st.session_state.get("access_token") and st.session_state.get("refresh_token"):
