@@ -1336,6 +1336,8 @@ if "oferta" in query_params:
         rabat = podsumowanie["rabat"]
         do_zaplaty = podsumowanie["do_zaplaty"]
 
+        kwota_aktualna = projekt.get("kwota_aktualna")
+        
         if kwota_aktualna is not None:
             try:
                 do_zaplaty = float(kwota_aktualna)
