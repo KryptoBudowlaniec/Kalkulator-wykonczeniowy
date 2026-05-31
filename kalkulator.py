@@ -147,6 +147,27 @@ def _to_float(value, default=0.0):
     except Exception:
         return default
 
+def _aktywuj_kod_pro(kod):
+    if not str(kod or "").strip():
+        st.error("Proszę wpisać kod.")
+        return
+
+    try:
+        odp = supabase.rpc(
+            "activate_pro_code",
+            {"p_kod": str(kod).strip()}
+        ).execute()
+
+        if odp.data and odp.data.get("ok"):
+            st.session_state.pakiet = "PRO"
+            st.success("✅ Kod zaakceptowany! Pakiet PRO aktywny.")
+            time.sleep(1)
+            st.rerun()
+
+        st.error("Kod nieprawidłowy lub został już wykorzystany.")
+
+    except Exception as e:
+        st.error(f"Nie udało się aktywować kodu: {e}")
 
 def _zapisz_prace_dodatkowe_do_bazy(aktywny, prace_dodatkowe):
     dane_bazy = dict(aktywny.get("dane_json", {}) or {})
@@ -841,27 +862,22 @@ if st.session_state.get("zalogowany"):
         ma_aktywny_kod = False
         dzisiaj = datetime.now(timezone.utc)
         
-        # 1. NAJPIERW SPRAWDZAMY KOD 365 DNI
+        
+        # 1. NAJPIERW SPRAWDZAMY AKTYWNY KOD PRO
         try:
-            odp = supabase.table("kody_aktywacyjne").select("*").eq("uzytkownik_id", st.session_state.user_id).execute()
-            
-            if len(odp.data) > 0:
-                dane_kodu = odp.data[0]
-                data_akt_str = dane_kodu.get("data_aktywacji")
-                
-                if data_akt_str:
-                    data_aktywacji = datetime.fromisoformat(data_akt_str.replace('Z', '+00:00'))
-                    dni_waznosci = int(dane_kodu.get("dni_waznosci", 365) or 365)
-                    data_wygasniecia = data_aktywacji + timedelta(days=dni_waznosci)
-                    
-                    if dzisiaj < data_wygasniecia:
-                        st.session_state.pakiet = "PRO"
-                        ma_aktywny_kod = True
-                        dni_do_konca = (data_wygasniecia - dzisiaj).days
-                        st.toast(f"💎 Pakiet PRO aktywny! Pozostało: {dni_do_konca} dni.")
-                        st.rerun()
+            odp = supabase.rpc("get_my_pro_access").execute()
+            dane_dostepu = odp.data or {}
+        
+            if dane_dostepu.get("aktywny"):
+                st.session_state.pakiet = "PRO"
+                ma_aktywny_kod = True
+        
+                dni_do_konca = dane_dostepu.get("dni_do_konca", 0)
+                st.toast(f"💎 Pakiet PRO aktywny! Pozostało: {dni_do_konca} dni.")
+                st.rerun()
+        
         except Exception as e:
-            st.error(f"Błąd sprawdzania kodu rocznego: {e}")
+            st.error(f"Błąd sprawdzania dostępu PRO: {e}")
 
         # 2. JEŚLI NIE MA KODU -> SPRAWDZAMY DARMOWY TRIAL (7 DNI)
         if not ma_aktywny_kod:
@@ -893,55 +909,27 @@ if st.session_state.get("zalogowany"):
             st.info("Aby korzystać z zaawansowanych funkcji kalkulatora, aktywuj pełną wersję kodem.")
             
             # Miejsce na wpisanie kodu (pewnie już to masz, ale upewnij się, że jest tutaj)
-            nowy_kod = st.text_input("Wpisz kod aktywacyjny:", key="input_kod_blokada")
-
+            nowy_kod = st.text_input(
+                "Wpisz kod aktywacyjny:",
+                key="input_kod_blokada"
+            )
+            
             if st.button("Aktywuj dostęp"):
-                if nowy_kod:
-                    try:
-                        szukaj_kodu = (
-                            supabase.table("kody_aktywacyjne")
-                            .select("*")
-                            .eq("kod", nowy_kod.strip())
-                            .eq("zuzyty", False)
-                            .execute()
-                        )
-            
-                        if len(szukaj_kodu.data) > 0:
-                            kod_id = szukaj_kodu.data[0]["id"]
-                            teraz = datetime.now(timezone.utc).isoformat()
-            
-                            supabase.table("kody_aktywacyjne").update({
-                                "zuzyty": True,
-                                "uzytkownik_id": st.session_state.user_id,
-                                "data_aktywacji": teraz
-                            }).eq("id", kod_id).execute()
-            
-                            st.session_state.pakiet = "PRO"
-                            st.success("✅ Kod zaakceptowany! Pakiet PRO aktywny.")
-                            time.sleep(1)
-                            st.rerun()
-                        else:
-                            st.error("❌ Kod nieprawidłowy albo został już wykorzystany.")
-            
-                    except Exception as e:
-                        st.error(f"Błąd aktywacji kodu: {e}")
-                else:
-                    st.error("Proszę wpisać kod.")
-    
+                _aktywuj_kod_pro(nowy_kod)
+                
             # --- DRZWI EWAKUACYJNE (To, o co prosiłeś) ---
             st.markdown("---")
             if st.button("🚪 Wyloguj się / Zmień konto", use_container_width=True):
-                # Czyścimy sesję
-                for key in list(st.session_state.keys()):
-                    del st.session_state[key]
-                
-                # Wylogowanie z bazy
                 try:
                     supabase.auth.sign_out()
-                except:
+                except Exception:
                     pass
-                    
+
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+
                 st.rerun()
+                
     # 3. MODUŁ AKTYWACJI (Dla kont po trialu i bez ważnego kodu)
     if st.session_state.get("pakiet") in ["Podstawowy", "FREE"]:
         st.warning("🔒 Twój darmowy okres próbny dobiegł końca. Aktywuj kod, aby odzyskać pełny dostęp na 365 dni!")
