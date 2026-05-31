@@ -1232,12 +1232,18 @@ if "oferta" in query_params:
 
         if status in ["Wysłano", "Oczekująca"]:
             try:
-                supabase.table("kosztorysy").update({
-                    "status": "Otworzono",
-                    "otworzono_data": datetime.now().isoformat()
-                }).eq("id", oferta_id).execute()
+                supabase.rpc(
+                    "public_offer_action",
+                    {
+                        "p_token": oferta_token,
+                        "p_action": "open",
+                        "p_payload": {}
+                    }
+                ).execute()
+        
                 status = "Otworzono"
-            except:
+        
+            except Exception:
                 pass
 
 
