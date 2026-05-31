@@ -164,10 +164,6 @@ def _oblicz_podsumowanie_oferty(dane):
         for etap in etapy
     )
 
-    # Obsługa starszych zapisów, które nie posiadały pełnej listy etapów.
-    if suma_robocizny_etapow <= 0:
-        suma_robocizny_etapow = _to_float(dane.get("suma_robocizna", 0))
-
     if suma_materialow <= 0:
         suma_materialow = _to_float(dane.get("suma_materialy", 0))
 
@@ -178,7 +174,13 @@ def _oblicz_podsumowanie_oferty(dane):
         for praca in prace_dodatkowe
     )
 
-    suma_robocizny = suma_robocizny_etapow + suma_prac_dodatkowych
+    # W starszych zapisach suma_robocizna zawiera już prace dodatkowe.
+    # Nie dodajemy ich ponownie, aby nie liczyć tej samej pozycji dwa razy.
+    if dane.get("suma_robocizna") is not None:
+        suma_robocizny = _to_float(dane.get("suma_robocizna", 0))
+    else:
+        suma_robocizny = suma_robocizny_etapow + suma_prac_dodatkowych
+
     rabat = max(0.0, _to_float(dane.get("rabat_kwota", 0)))
     do_zaplaty = max(0.0, suma_robocizny - rabat)
 
