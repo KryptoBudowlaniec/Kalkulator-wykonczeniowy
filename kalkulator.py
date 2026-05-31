@@ -2020,8 +2020,7 @@ if "oferta" in query_params:
                             }
                         ).execute()
                 
-                        st.success("Oferta została zaakceptowana.")
-                        time.sleep(1)
+                        st.session_state.pop("aktywny_projekt_do_pdf", None)
                         st.rerun()
                 
                     except Exception as e:
@@ -4521,8 +4520,20 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                     st.caption("Robocizna")
 
                 with col_status:
-                    if status == "Zaakceptowana":
-                        st.success("Zaakceptowana")
+                    if status == "Zaliczka opłacona":
+                        st.success("Zaliczka")
+                    elif status == "Podpisano":
+                        st.success("Podpisano")
+                    elif status == "Zaakceptowano":
+                        st.success("Zaakceptowano")
+                    elif status == "Negocjacja":
+                        st.warning("Negocjacja")
+                    elif status == "Odrzucono":
+                        st.error("Odrzucono")
+                    elif status == "Otworzono":
+                        st.info("Otworzono")
+                    elif status == "Wysłano":
+                        st.info("Wysłano")
                     else:
                         st.info("Oczekująca")
 
