@@ -873,6 +873,7 @@ if st.session_state.get("zalogowany"):
                 ma_aktywny_kod = True
         
                 dni_do_konca = dane_dostepu.get("dni_do_konca", 0)
+                st.session_state["dni_do_konca_pro"] = dni_do_konca
                 st.toast(f"💎 Pakiet PRO aktywny! Pozostało: {dni_do_konca} dni.")
                 st.rerun()
         
@@ -2485,14 +2486,22 @@ if st.session_state.zalogowany:
         """, unsafe_allow_html=True)
 
         if st.session_state.get("pakiet") == "PRO":
-            st.markdown("""
+            dni_pro = st.session_state.get("dni_do_konca_pro")
+
+            opis_waznosci = (
+                f"Pozostało: {dni_pro} dni"
+                if dni_pro is not None
+                else "Pełny dostęp administratora"
+            )
+            
+            st.markdown(f"""
             <div class="side-plan">
                 <div class="side-plan-top">
                     <div class="side-plan-title">PROCALC <span>PRO</span></div>
                     <div style="color:#00A876;font-weight:900;">♕</div>
                 </div>
                 <p>Masz aktywny plan Pro</p>
-                <p>Pełny dostęp do zapisu, PDF, koszyka i linków ofert.</p>
+                <p>{opis_waznosci}</p>
             </div>
             """, unsafe_allow_html=True)
         else:
