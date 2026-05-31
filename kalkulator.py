@@ -628,14 +628,9 @@ from supabase import create_client, Client, ClientOptions
 
 # =======================================================
 # 0. LEKARSTWO NA AMNEZJĘ (Globalna pamięć serwera dla PKCE)
-# =======================================================
 import secrets
 import json
-import tempfile
-from pathlib import Path
-
-AUTH_FLOW_DIR = Path(tempfile.gettempdir()) / "procalc_auth_flows"
-AUTH_FLOW_DIR.mkdir(parents=True, exist_ok=True)
+from urllib import request as urllib_request
 
 
 def get_auth_flow_id():
@@ -652,37 +647,73 @@ def get_auth_flow_id():
     return st.session_state.auth_flow_id
 
 
+def _pkce_rpc(supabase_url, supabase_key, funkcja, dane):
+    req = urllib_request.Request(
+        f"{supabase_url.rstrip('/')}/rest/v1/rpc/{funkcja}",
+        data=json.dumps(dane).encode("utf-8"),
+        headers={
+            "apikey": supabase_key,
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    with urllib_request.urlopen(req, timeout=10) as response:
+        tresc = response.read().decode("utf-8")
+
+    return json.loads(tresc) if tresc else None
+
+
 class AuthFlowStorage:
-    def __init__(self, flow_id):
+    VERIFIER_KEY = "supabase.auth.token-code-verifier"
+
+    def __init__(self, flow_id, supabase_url, supabase_key):
         self.flow_id = str(flow_id)
-        self.path = AUTH_FLOW_DIR / f"{self.flow_id}.json"
+        self.supabase_url = supabase_url
+        self.supabase_key = supabase_key
+        self.local_key = f"auth_flow_local_{self.flow_id}"
+        st.session_state.setdefault(self.local_key, {})
 
-    def _load(self):
-        try:
-            if self.path.exists():
-                return json.loads(self.path.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-        return {}
-
-    def _save(self, data):
-        try:
-            self.path.write_text(json.dumps(data), encoding="utf-8")
-        except Exception:
-            pass
+    def _local_data(self):
+        return st.session_state.setdefault(self.local_key, {})
 
     def get_item(self, key):
-        return self._load().get(key)
+        if key == self.VERIFIER_KEY:
+            return _pkce_rpc(
+                self.supabase_url,
+                self.supabase_key,
+                "load_auth_pkce_verifier",
+                {"p_flow_id": self.flow_id},
+            )
+
+        return self._local_data().get(key)
 
     def set_item(self, key, value):
-        data = self._load()
-        data[key] = value
-        self._save(data)
+        if key == self.VERIFIER_KEY:
+            _pkce_rpc(
+                self.supabase_url,
+                self.supabase_key,
+                "save_auth_pkce_verifier",
+                {
+                    "p_flow_id": self.flow_id,
+                    "p_code_verifier": value,
+                },
+            )
+            return
+
+        self._local_data()[key] = value
 
     def remove_item(self, key):
-        data = self._load()
-        data.pop(key, None)
-        self._save(data)
+        if key == self.VERIFIER_KEY:
+            _pkce_rpc(
+                self.supabase_url,
+                self.supabase_key,
+                "delete_auth_pkce_verifier",
+                {"p_flow_id": self.flow_id},
+            )
+            return
+
+        self._local_data().pop(key, None)
 
 supabase = None
 
@@ -698,7 +729,7 @@ except:
 if url and key:
     try:
         auth_flow_id = get_auth_flow_id()
-        options = ClientOptions(flow_type="pkce", storage=AuthFlowStorage(auth_flow_id))
+        options = ClientOptions(flow_type="pkce", storage=AuthFlowStorage(auth_flow_id, url, key)
         supabase: Client = create_client(url, key, options=options)
 
         if st.session_state.get("access_token") and st.session_state.get("refresh_token"):
@@ -771,15 +802,14 @@ if supabase and ("code" in q or "error" in q):
             kod = q.get("code")
 
             auth_flow_id = get_auth_flow_id()
-            flow_storage = AuthFlowStorage(auth_flow_id)
-            flow_data = flow_storage._load()
-            
-            code_verifier = flow_data.get("supabase.auth.token-code-verifier")
+            flow_storage = AuthFlowStorage(auth_flow_id, url, key)
+
+            code_verifier = flow_storage.get_item(
+                "supabase.auth.token-code-verifier"
+            )
             
             if not code_verifier:
                 st.error("Brak code_verifier dla logowania Google. Rozpocznij logowanie od nowa.")
-                st.write("auth_flow_id:", auth_flow_id)
-                st.write("storage keys:", list(flow_data.keys()))
                 st.stop()
             
             session_res = supabase.auth.exchange_code_for_session({
@@ -5343,7 +5373,7 @@ elif opcja_boczna == "Aplikacja Główna":
                         
                         options_google = ClientOptions(
                             flow_type="pkce",
-                            storage=AuthFlowStorage(auth_flow_id)
+                            storage=AuthFlowStorage(auth_flow_id, url, key)
                         )
                         
                         supabase_google = create_client(url, key, options=options_google)
