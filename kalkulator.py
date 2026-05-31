@@ -631,6 +631,7 @@ from supabase import create_client, Client, ClientOptions
 import secrets
 import json
 from urllib import request as urllib_request
+import re
 
 
 def get_auth_flow_id():
@@ -638,6 +639,11 @@ def get_auth_flow_id():
 
     if "auth_flow" in q:
         flow_id = str(q.get("auth_flow"))
+
+        if not re.fullmatch(r"[A-Za-z0-9_-]{20,200}", flow_id):
+            st.error("Nieprawidłowy identyfikator logowania Google.")
+            st.stop()
+
         st.session_state.auth_flow_id = flow_id
         return flow_id
 
