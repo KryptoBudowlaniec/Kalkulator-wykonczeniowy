@@ -1242,9 +1242,10 @@ if "oferta" in query_params:
                 ).execute()
         
                 status = "Otworzono"
+                projekt["status"] = "Otworzono"
         
-            except Exception:
-                pass
+            except Exception as e:
+                st.error(f"Błąd oznaczenia oferty jako otwartej: {e}")
 
 
         rabat = float(dane.get("rabat_kwota", 0) or 0)
