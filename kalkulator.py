@@ -8791,141 +8791,141 @@ elif opcja_boczna == "Aplikacja Główna":
                     if doplata_demontaz > 0: st.write(f"- Demontaż starych drzwi: {doplata_demontaz} PLN")
                     st.write(f"**Łącznie za 1 sztukę: {robocizna_jednostkowa} PLN**")
     
-            # ==========================================
-            # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - DRZWI
-            # ==========================================
-            st.markdown("---")
-            
-            # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA
-            lista_zakupow_etapu = []
-            for nazwa, ilosc in info_zakup:
-                # Wyciągamy same liczby ze stringa (np. "5 kpl.")
-                ilosc_str = str(ilosc).split(" ")[0].replace("~","")
-                try:
-                    num_ilosc = float(ilosc_str)
-                except ValueError:
-                    num_ilosc = 1.0 
-                    
-                jednostka = str(ilosc).replace(ilosc_str, "").strip()
-                if jednostka == "": jednostka = "szt."
+                # ==========================================
+                # 💾 ZAPISYWANIE I KOSZYK (MODEL HYBRYDOWY) - DRZWI
+                # ==========================================
+                st.markdown("---")
                 
-                lista_zakupow_etapu.append({
-                    "nazwa": nazwa,
-                    "ilosc": num_ilosc,
-                    "jed": jednostka
-                })
-    
-            jest_edycja = st.session_state.get('tryb_edycji', False)
-            
-            if jest_edycja:
-                st.subheader("✏️ Edytujesz zapisany kosztorys")
-            else:
-                st.subheader("💾 Opcje zapisu kosztorysu")
-    
-            # 2. PANEL ZAPISU (Tylko dla zalogowanych)
-            if st.session_state.get('zalogowany'):
-                nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Wymiana Drzwi Wewnętrznych):", key="nazwa_proj_drzwi_input")
-                
-                # 📦 BUDUJEMY WOREK Z DANYMI
-                dane_json = {
-                    "branza": "Drzwi",
-                    "nazwa_etapu": nazwa_projektu,
-                    "powierzchnia_scian": float(szt_drzwi), # Używamy sztuk dla logiki
-                    "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
-                    "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
-                    "koszt_calkowity": round(suma_calkowita, 2),
-                    "koszt_robocizny": round(total_robocizna, 2),
-                    "koszt_materialow": round(total_materialy, 2),
-                    "technologie": f"Model: {wybrany_model}",
-                    "materialy_lista": lista_zakupow_etapu,
-                    "detale": f"Mur: {szerokosc_muru} | Demontaż: {'Tak' if demontaz else 'Nie'}",
+                # 1. PRZYGOTOWANIE LISTY ZAKUPÓW DO KOSZYKA
+                lista_zakupow_etapu = []
+                for nazwa, ilosc in info_zakup:
+                    # Wyciągamy same liczby ze stringa (np. "5 kpl.")
+                    ilosc_str = str(ilosc).split(" ")[0].replace("~","")
+                    try:
+                        num_ilosc = float(ilosc_str)
+                    except ValueError:
+                        num_ilosc = 1.0 
+                        
+                    jednostka = str(ilosc).replace(ilosc_str, "").strip()
+                    if jednostka == "": jednostka = "szt."
                     
-                    # === SUWAKI DO EDYCJI (podstawa) ===
-                    "drzwi_pro": int(szt_drzwi),
-                    "stawka_montazu": float(stawka_montazu)
-                }
-    
-                col_save1, col_save2 = st.columns(2)
-    
-                # --- PRZYCISK A: DODAJ DO KOSZYKA ---
-                with col_save1:
-                    if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_drzwi_koszyk", use_container_width=True):
-                        if nazwa_projektu.strip() == "":
-                            st.error("Wpisz nazwę etapu!")
-                        else:
-                            st.session_state.koszyk_projektow.append(dane_json)
-                            st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
-                            import time
-                            time.sleep(1)
-                            st.rerun()
-    
-                # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
-                with col_save2:
-                    label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
-                    if st.button(label_przycisku, key="btn_drzwi_chmura", type="primary", use_container_width=True):
-                        if nazwa_projektu.strip() == "":
-                            st.error("Wpisz nazwę projektu!")
-                        else:
-                            try:
-                                dane_do_bazy = {
-                                    "koszt_calkowity_projektu": round(suma_calkowita, 2),
-                                    "etapy": [dane_json] 
-                                }
-                                
-                                if jest_edycja:
-                                    projekt_id = st.session_state.get('id_edytowanego_projektu')
-                                    supabase.table("kosztorysy").update({
-                                        "nazwa_projektu": nazwa_projektu,
-                                        "dane_json": dane_do_bazy
-                                    }).eq("id", projekt_id).execute()
-                                    st.success(f"✅ Zmiany zapisane!")
-                                    st.session_state['tryb_edycji'] = False
-                                    st.session_state['id_edytowanego_projektu'] = None
-                                else:
-                                    supabase.table("kosztorysy").insert({
-                                        "uzytkownik_id": st.session_state.user_id,
-                                        "nazwa_projektu": nazwa_projektu,
-                                        "branza": "Drzwi",
-                                        "dane_json": dane_do_bazy
-                                    }).execute()
-                                    st.success(f"✅ Projekt zapisany jako nowy!")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Błąd komunikacji z bazą: {e}")
-    
-                # --- PRZYCISK ANULOWANIA EDYCJI ---
+                    lista_zakupow_etapu.append({
+                        "nazwa": nazwa,
+                        "ilosc": num_ilosc,
+                        "jed": jednostka
+                    })
+        
+                jest_edycja = st.session_state.get('tryb_edycji', False)
+                
                 if jest_edycja:
-                    if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_drzwi_anuluj", use_container_width=True):
-                        st.session_state['tryb_edycji'] = False
-                        st.session_state['id_edytowanego_projektu'] = None
-                        st.rerun()
-            else:
-                st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
-    
-
+                    st.subheader("✏️ Edytujesz zapisany kosztorys")
+                else:
+                    st.subheader("💾 Opcje zapisu kosztorysu")
+        
+                # 2. PANEL ZAPISU (Tylko dla zalogowanych)
+                if st.session_state.get('zalogowany'):
+                    nazwa_projektu = st.text_input("Nazwa projektu / etapu (np. Wymiana Drzwi Wewnętrznych):", key="nazwa_proj_drzwi_input")
                     
-            st.markdown("---")
-            st.subheader("Generator PDF")
-
-            dane_pdf = _dane_pdf_z_etapu(
-                dane_json,
-                tytul="Kosztorys montażu drzwi",
-                parametry=[
-                    {"nazwa": "Liczba drzwi", "wartosc": f"{szt_drzwi} kpl."},
-                    {"nazwa": "Model drzwi", "wartosc": wybrany_model},
-                    {"nazwa": "Szerokość muru", "wartosc": szerokosc_muru},
-                    {"nazwa": "Stawka montażu", "wartosc": f"{stawka_montazu} zł/kpl."},
-                    {"nazwa": "Podcięcie wentylacyjne", "wartosc": "TAK" if podciecie else "NIE"},
-                    {"nazwa": "Demontaż starych drzwi", "wartosc": "TAK" if demontaz else "NIE"},
-                ],
-            )
-
-            _przycisk_pdf(
-                "drzwi",
-                dane_pdf,
-                "Kosztorys_Drzwi",
-                "pdf_drzwi"
-            )
+                    # 📦 BUDUJEMY WOREK Z DANYMI
+                    dane_json = {
+                        "branza": "Drzwi",
+                        "nazwa_etapu": nazwa_projektu,
+                        "powierzchnia_scian": float(szt_drzwi), # Używamy sztuk dla logiki
+                        "marza_op": st.session_state.get('globalny_mnoznik_op', 1.0),
+                        "mnoznik_utrudnien": st.session_state.get('globalny_mnoznik', 1.0),
+                        "koszt_calkowity": round(suma_calkowita, 2),
+                        "koszt_robocizny": round(total_robocizna, 2),
+                        "koszt_materialow": round(total_materialy, 2),
+                        "technologie": f"Model: {wybrany_model}",
+                        "materialy_lista": lista_zakupow_etapu,
+                        "detale": f"Mur: {szerokosc_muru} | Demontaż: {'Tak' if demontaz else 'Nie'}",
+                        
+                        # === SUWAKI DO EDYCJI (podstawa) ===
+                        "drzwi_pro": int(szt_drzwi),
+                        "stawka_montazu": float(stawka_montazu)
+                    }
+        
+                    col_save1, col_save2 = st.columns(2)
+        
+                    # --- PRZYCISK A: DODAJ DO KOSZYKA ---
+                    with col_save1:
+                        if st.button("🛒 Dodaj do wspólnego koszyka", key="btn_drzwi_koszyk", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę etapu!")
+                            else:
+                                st.session_state.koszyk_projektow.append(dane_json)
+                                st.success(f"✅ Etap '{nazwa_projektu}' dodany do koszyka!")
+                                import time
+                                time.sleep(1)
+                                st.rerun()
+        
+                    # --- PRZYCISK B: SZYBKI ZAPIS DO CHMURY ---
+                    with col_save2:
+                        label_przycisku = "💾 Zaktualizuj chmurę" if jest_edycja else "💾 Zapisz jako osobny projekt"
+                        if st.button(label_przycisku, key="btn_drzwi_chmura", type="primary", use_container_width=True):
+                            if nazwa_projektu.strip() == "":
+                                st.error("Wpisz nazwę projektu!")
+                            else:
+                                try:
+                                    dane_do_bazy = {
+                                        "koszt_calkowity_projektu": round(suma_calkowita, 2),
+                                        "etapy": [dane_json] 
+                                    }
+                                    
+                                    if jest_edycja:
+                                        projekt_id = st.session_state.get('id_edytowanego_projektu')
+                                        supabase.table("kosztorysy").update({
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "dane_json": dane_do_bazy
+                                        }).eq("id", projekt_id).execute()
+                                        st.success(f"✅ Zmiany zapisane!")
+                                        st.session_state['tryb_edycji'] = False
+                                        st.session_state['id_edytowanego_projektu'] = None
+                                    else:
+                                        supabase.table("kosztorysy").insert({
+                                            "uzytkownik_id": st.session_state.user_id,
+                                            "nazwa_projektu": nazwa_projektu,
+                                            "branza": "Drzwi",
+                                            "dane_json": dane_do_bazy
+                                        }).execute()
+                                        st.success(f"✅ Projekt zapisany jako nowy!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Błąd komunikacji z bazą: {e}")
+        
+                    # --- PRZYCISK ANULOWANIA EDYCJI ---
+                    if jest_edycja:
+                        if st.button("🆕 Anuluj edycję (Zapisz jako nowy)", key="btn_drzwi_anuluj", use_container_width=True):
+                            st.session_state['tryb_edycji'] = False
+                            st.session_state['id_edytowanego_projektu'] = None
+                            st.rerun()
+                else:
+                    st.info("Zaloguj się, aby zapisywać i zbierać kosztorysy w koszyku.")
+        
+    
+                        
+                st.markdown("---")
+                st.subheader("Generator PDF")
+    
+                dane_pdf = _dane_pdf_z_etapu(
+                    dane_json,
+                    tytul="Kosztorys montażu drzwi",
+                    parametry=[
+                        {"nazwa": "Liczba drzwi", "wartosc": f"{szt_drzwi} kpl."},
+                        {"nazwa": "Model drzwi", "wartosc": wybrany_model},
+                        {"nazwa": "Szerokość muru", "wartosc": szerokosc_muru},
+                        {"nazwa": "Stawka montażu", "wartosc": f"{stawka_montazu} zł/kpl."},
+                        {"nazwa": "Podcięcie wentylacyjne", "wartosc": "TAK" if podciecie else "NIE"},
+                        {"nazwa": "Demontaż starych drzwi", "wartosc": "TAK" if demontaz else "NIE"},
+                    ],
+                )
+    
+                _przycisk_pdf(
+                    "drzwi",
+                    dane_pdf,
+                    "Kosztorys_Drzwi",
+                    "pdf_drzwi"
+                )
     
     
     elif branza == "Tapetowanie":
@@ -9885,18 +9885,40 @@ elif opcja_boczna == "Aplikacja Główna":
             # --- NOWA ZAKŁADKA: TYNKI I GK ---
             with tab_tynki:
                 st.subheader("Tynkowanie i Suche Tynki (GK)")
-                metoda_tynku = st.radio("Metoda wykończenia ścian:", ["Wyklejanie płytami GK (Suche tynki)", "Tynk Maszynowy Gipsowy"], key="inv_tynki_metoda")
-                
+
+                metoda_tynku = st.radio(
+                    "Metoda wykończenia ścian:",
+                    ["Wyklejanie płytami GK (Suche tynki)", "Tynk Maszynowy Gipsowy"],
+                    key="inv_tynki_metoda"
+                )
+
+                pow_scian_gk = st.number_input(
+                    "Powierzchnia ścian do wykończenia (m2):",
+                    min_value=0,
+                    max_value=500,
+                    value=100,
+                    key="inv_gk_m2"
+                )
+
                 if "GK" in metoda_tynku:
-                    c_gk1, c_gk2 = st.columns(2)
-                    pow_scian_gk = c_gk1.number_input("Powierzchnia ścian do wyklejenia (m2):", 0, 500, 100, key="inv_gk_m2")
-                    rodzaj_plyty_sciana = c_gk2.selectbox("Wybierz płytę:", list(baza_gk_sciany.keys())[:2], key="inv_gk_typ_plyty")
-                    
-                    # Obliczenia
-                    liczba_plyt = math.ceil(pow_scian_gk / 3.12 * 1.05) # 5% zapasu
-                    worki_kleju_gk = math.ceil(pow_scian_gk / 4) # Średnio worek na 4m2
-                    
-                    st.success(f"Potrzeba: **{liczba_plyt} płyt** oraz **{worki_kleju_gk} worków** kleju.")
+                    rodzaj_plyty_sciana = st.selectbox(
+                        "Wybierz płytę:",
+                        list(baza_gk_sciany.keys())[:2],
+                        key="inv_gk_typ_plyty"
+                    )
+
+                    liczba_plyt = math.ceil(pow_scian_gk / 3.12 * 1.05)
+                    worki_kleju_gk = math.ceil(pow_scian_gk / 4)
+
+                    st.success(
+                        f"Potrzeba: **{liczba_plyt} płyt** oraz "
+                        f"**{worki_kleju_gk} worków** kleju."
+                    )
+                else:
+                    st.info(
+                        f"Tynk maszynowy zostanie policzony dla "
+                        f"**{pow_scian_gk} m2** ścian."
+                    )
     
             with tab_posadzki:
                 st.subheader("Posadzki Betonowe (Mixokret / Ręczne)")
