@@ -317,11 +317,32 @@ def _edytor_zapisanego_kosztorysu():
             value=aktyw.get("nazwa_projektu", "")
         )
 
+        statusy_oferty = [
+            "Oczekująca",
+            "Wysłano",
+            "Otworzono",
+            "Negocjacja",
+            "Zaakceptowano",
+            "Podpisano",
+            "Zaliczka opłacona",
+            "Odrzucono",
+        ]
+        
+        aktualny_status = aktywny.get("status") or "Oczekująca"
+        
+        if aktualny_status == "Zaakceptowana":
+            aktualny_status = "Zaakceptowano"
+        
+        if aktualny_status not in statusy_oferty:
+            statusy_oferty.insert(0, aktualny_status)
+        
         status = st.selectbox(
             "Status oferty",
-            ["Oczekująca", "Wysłano", "Otworzono", "Negocjacja", "Zaakceptowano", "Podpisano", "Zaliczka opłacona", "Odrzucono"],
-            index=0,
+            statusy_oferty,
+            index=statusy_oferty.index(aktualny_status),
+            key=f"edycja_status_{aktywny.get('id')}",
         )
+        
 
         c1, c2 = st.columns(2)
         klient_nazwa = c1.text_input("Klient", value=aktyw.get("klient_nazwa", "") or "")
