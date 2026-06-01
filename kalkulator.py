@@ -317,30 +317,32 @@ def _edytor_zapisanego_kosztorysu():
             value=aktyw.get("nazwa_projektu", "")
         )
 
-        statusy_oferty = [
-            "Oczekująca",
-            "Wysłano",
-            "Otworzono",
-            "Negocjacja",
-            "Zaakceptowano",
-            "Podpisano",
-            "Zaliczka opłacona",
-            "Odrzucono",
-        ]
-        
-        aktualny_status = aktywny.get("status") or "Oczekująca"
-        
-        if aktualny_status == "Zaakceptowana":
-            aktualny_status = "Zaakceptowano"
-        
-        if aktualny_status not in statusy_oferty:
-            statusy_oferty.insert(0, aktualny_status)
-        
-        status = st.selectbox(
-            "Status oferty",
-            statusy_oferty,
-            index=statusy_oferty.index(aktualny_status),
-            key=f"edycja_status_{aktywny.get('id')}",
+    aktualny_status = aktywny.get("status") or "Oczekująca"
+
+    if aktualny_status == "Zaakceptowana":
+        aktualny_status = "Zaakceptowano"
+
+    statusy_zablokowane = [
+        "Zaakceptowano",
+        "Podpisano",
+        "Zaliczka opłacona",
+    ]
+
+    if aktualny_status in statusy_zablokowane:
+        st.warning(
+            f"Oferta ma status: {aktualny_status}. "
+            "Nie można już edytować jej zakresu ani kwoty. "
+            "Utwórz nową ofertę, jeśli warunki mają się zmienić."
+        )
+        return
+
+    status = aktualny_status
+    st.info(f"Aktualny status oferty: **{status}**")
+
+    with st.form(f"form_edytuj_kosztorys_{projekt_id}"):
+        nazwa_projektu = st.text_input(
+            "Nazwa projektu",
+            value=aktywny.get("nazwa_projektu", "")
         )
         
 
