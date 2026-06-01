@@ -317,7 +317,7 @@ def _edytor_zapisanego_kosztorysu():
             value=aktyw.get("nazwa_projektu", "")
         )
 
-    aktualny_status = aktywny.get("status") or "Oczekująca"
+    aktualny_status = aktyw.get("status") or "Oczekująca"
 
     if aktualny_status == "Zaakceptowana":
         aktualny_status = "Zaakceptowano"
@@ -342,7 +342,7 @@ def _edytor_zapisanego_kosztorysu():
     with st.form(f"form_edytuj_kosztorys_{projekt_id}"):
         nazwa_projektu = st.text_input(
             "Nazwa projektu",
-            value=aktywny.get("nazwa_projektu", "")
+            value=aktyw.get("nazwa_projektu", "")
         )
         
 
