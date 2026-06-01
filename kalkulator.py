@@ -309,7 +309,7 @@ def _edytor_zapisanego_kosztorysu():
 
     st.markdown("---")
 
-        etapy_src = dane.get("etapy") if isinstance(dane.get("etapy"), list) else [dane]
+    etapy_src = dane.get("etapy") if isinstance(dane.get("etapy"), list) else [dane]
 
     aktualny_status = aktyw.get("status") or "Oczekująca"
 
