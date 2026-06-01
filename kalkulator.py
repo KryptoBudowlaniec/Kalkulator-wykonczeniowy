@@ -16,7 +16,7 @@ def dodaj_tarcze_ochronna(pdf, font_exists=True):
     
     # Gotowe klauzule psychologiczno-prawne (bez polskich znaków dla bezpieczeństwa FPDF)
     klauzule = [
-        "1. WAZNOSC OFERTY: Niniejszy kosztorys ma charakter szacunkowy i jest wazny przez 14 dni od daty wystawienia.",
+        "1. WAZNOSC OFERTY: Niniejszy kosztorys ma charakter szacunkowy i jest wazny przez 7 dni od daty wystawienia.",
         "2. ZAPAS MATERIALOWY: Wyliczone ilosci materialow (w tym np. plytek, paneli, profili) zawieraja standardowy",
         "   zapas technologiczny (zwykle 10-15%). Uwzglednia on scinki, docinki przy scianach oraz uszkodzenia transportowe.",
         "3. PRACE UKRYTE: Kosztorys nie obejmuje napraw ukrytych wad budynku (np. pekajacych scian pod stara tapeta",
@@ -11052,8 +11052,8 @@ elif opcja_boczna == "Aplikacja Główna":
 
         if widok_harmonogramu == "Harmonogram":
             dzis = date.today()
-            start_okna = dzis - timedelta(days=5)
-            dni = [start_okna + timedelta(days=i) for i in range(21)]
+            start_okna = dzis - timedelta(days=7)
+            dni = [start_okna + timedelta(days=i) for i in range(42)]
         
             projekty = {}
             for z in zadania:
@@ -11159,9 +11159,9 @@ elif opcja_boczna == "Aplikacja Główna":
                     overflow-x: auto;
                 }}
                 .timeline-grid {{
-                    min-width: 980px;
+                    min-width: {220 + len(dni) * 44}px;
                     display: grid;
-                    grid-template-columns: 220px repeat(21, 44px);
+                    grid-template-columns: 220px repeat({len(dni)}, 44px);
                     position: relative;
                 }}
                 .day-head, .project-head {{
