@@ -309,13 +309,7 @@ def _edytor_zapisanego_kosztorysu():
 
     st.markdown("---")
 
-    etapy_src = dane.get("etapy") if isinstance(dane.get("etapy"), list) else [dane]
-
-    with st.form(f"form_edytuj_kosztorys_{projekt_id}"):
-        nazwa_projektu = st.text_input(
-            "Nazwa projektu",
-            value=aktyw.get("nazwa_projektu", "")
-        )
+        etapy_src = dane.get("etapy") if isinstance(dane.get("etapy"), list) else [dane]
 
     aktualny_status = aktyw.get("status") or "Oczekująca"
 
@@ -344,7 +338,6 @@ def _edytor_zapisanego_kosztorysu():
             "Nazwa projektu",
             value=aktyw.get("nazwa_projektu", "")
         )
-        
 
         c1, c2 = st.columns(2)
         klient_nazwa = c1.text_input("Klient", value=aktyw.get("klient_nazwa", "") or "")
