@@ -1367,9 +1367,15 @@ if "oferta" in query_params:
             except Exception:
                 pass
 
+        pokaz_materialy_w_ofercie = bool(
+            dane.get("pokaz_materialy_w_ofercie", False)
+        )
 
-        pokaz_materialy_w_ofercie = bool(dane.get("pokaz_materialy_w_ofercie", False))
-        materialy = _zbierz_materialy(dane) if pokaz_materialy_w_ofercie else []
+        materialy = (
+            _zbierz_materialy(dane)
+            if pokaz_materialy_w_ofercie
+            else []
+        )
 
         logo_uri = _asset_data_uri("logo2.png")
         hero_uri = _asset_data_uri("hero_remont.png")
