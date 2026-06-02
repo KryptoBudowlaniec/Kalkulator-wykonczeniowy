@@ -106,7 +106,8 @@ def _param_rows(parametry):
 
 
 def generuj_pdf(typ_pdf, dane):
-    logo = _asset("logo2.png")
+    logo_procalc = _asset("logo2.png")
+    logo_firmy = dane.get("firma_logo_path") or logo_procalc
     hero = _asset("hero_remont.png")
     qr = _asset("QR.png") or _asset("qr.png")
 
@@ -526,7 +527,7 @@ body {{
     <div class="grid">
         <div class="left">
             <div class="hero">
-                {"<img class='logo' src='" + logo + "'>" if logo else ""}
+                {"<img class='logo' src='" + logo_firmy + "'>" if logo_firmy else ""}
                 <h1>Oferta<br>Kosztorysowa</h1>
                 <div class="hero-date">
                     Data wystawienia:<br>
@@ -658,10 +659,10 @@ body {{
     </div>
 
     <div class="dark-footer">
-        {"<img class='logo-footer' src='" + logo + "'>" if logo else "<b>PROCALC</b>"}
+        {"<img class='logo-footer' src='" + logo_procalc + "'>" if logo_procalc else "<b>PROCALC</b>"}
         <div>
-            <b>Masz pytania? Skontaktuj się z nami!</b><br>
-            +48 600 123 456 &nbsp;&nbsp; kontakt@procalc.pl &nbsp;&nbsp; procalc.pl
+            <b>Dokument wygenerowany w systemie ProCalc</b><br>
+            {_safe(dane.get("firma_kontakt", ""))} &nbsp;&nbsp; | &nbsp;&nbsp; procalc.pl
         </div>
         {"<img class='qr' src='" + qr + "'>" if qr else ""}
         <div>Zeskanuj kod QR<br>i zobacz kalkulator online</div>
