@@ -1688,7 +1688,19 @@ if "oferta" in query_params:
             else []
         )
 
-        logo_uri = _asset_data_uri("logo2.png")
+        from urllib.parse import quote
+
+        logo_procalc_uri = _asset_data_uri("logo2.png")
+        firma_logo_path = projekt.get("firma_logo_path", "")
+
+        logo_firmy_uri = (
+            f"{url.rstrip('/')}/storage/v1/object/public/"
+            f"firm-logos/{quote(firma_logo_path, safe='/')}"
+            if firma_logo_path
+            else ""
+        )
+
+        logo_header_uri = logo_firmy_uri or logo_procalc_uri
         hero_uri = _asset_data_uri("hero_remont.png")
         qr_uri = _asset_data_uri("QR.png") or _asset_data_uri("qr.png")
 
@@ -2117,7 +2129,7 @@ if "oferta" in query_params:
 
     <section class="offer-hero">
         <div>
-            {"<img class='offer-logo' src='" + logo_uri + "'>" if logo_uri else "<strong>PROCALC</strong>"}
+            {"<img class='offer-logo' src='" + logo_header_uri + "'>" if logo_header_uri else "<strong>PROCALC</strong>"}
             <h1>Oferta<br>Kosztorysowa</h1>
         </div>
 
@@ -2235,7 +2247,7 @@ if "oferta" in query_params:
     </section>
 
     <footer class="offer-footer">
-        {"<img class='logo-footer' src='" + logo_uri + "'>" if logo_uri else "<strong>PROCALC</strong>"}
+        {"<img class='logo-footer' src='" + logo_procalc_uri + "'>" if logo_procalc_uri else "<strong>PROCALC</strong>"}
         <div>
             <strong>Masz pytania? Skontaktuj się z nami.</strong><br>
             kontakt@procalc.pl &nbsp;&nbsp; | &nbsp;&nbsp; procalc.pl
