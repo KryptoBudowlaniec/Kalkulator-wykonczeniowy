@@ -1209,7 +1209,11 @@ if "hurtownia" in query_params:
         kwota_netto = c_sum1.number_input(
             "Łączna kwota netto",
             min_value=0.0,
-            value=sum(float(x.get("cena_netto", 0) or 0) for x in odpowiedzi_materialow),
+            value=sum(
+                _to_float(x.get("cena_netto", 0))
+                * _to_float(x.get("ilosc", 0))
+                for x in odpowiedzi_materialow
+            ),
             step=10.0,
             key="hurt_kwota_netto"
         )
@@ -1217,7 +1221,11 @@ if "hurtownia" in query_params:
         kwota_brutto = c_sum2.number_input(
             "Łączna kwota brutto",
             min_value=0.0,
-            value=sum(float(x.get("cena_brutto", 0) or 0) for x in odpowiedzi_materialow),
+            value=sum(
+                _to_float(x.get("cena_brutto", 0))
+                * _to_float(x.get("ilosc", 0))
+                for x in odpowiedzi_materialow
+            ),
             step=10.0,
             key="hurt_kwota_brutto"
         )
