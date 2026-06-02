@@ -117,6 +117,10 @@ def generuj_pdf(typ_pdf, dane):
     klient_miasto = dane.get("klient_miasto", "")
     klient_telefon = dane.get("klient_telefon", "")
     klient_email = dane.get("klient_email", "")
+    firma_nazwa = dane.get("firma_nazwa", "PROCALC")
+    firma_adres = dane.get("firma_adres", "")
+    firma_nip = dane.get("firma_nip", "")
+    firma_kontakt = dane.get("firma_kontakt", "")
 
     etapy = dane.get("etapy")
     if not etapy:
@@ -240,9 +244,12 @@ body {{
 }}
 
 .logo {{
-    height: 16mm;
+    width: auto;
+    max-width: 62mm;
+    height: 25mm;
     object-fit: contain;
-    margin-bottom: 20mm;
+    object-position: left center;
+    margin-bottom: 10mm;
 }}
 
 .hero h1 {{
@@ -556,6 +563,22 @@ body {{
                     <div class="info-pair">
                         <span>Lokalizacja:</span>
                         <b>{_safe(klient_miasto or "Do ustalenia")}</b>
+                    </div>
+                    <div class="info-pair">
+                        <span>Wykonawca:</span>
+                        <b>{_safe(firma_nazwa)}</b>
+                    </div>
+                    <div class="info-pair">
+                        <span>Kontakt:</span>
+                        <b>{_safe(firma_kontakt or "Do ustalenia")}</b>
+                    </div>
+                    <div class="info-pair">
+                        <span>Adres firmy:</span>
+                        <b>{_safe(firma_adres or "Nie podano")}</b>
+                    </div>
+                    <div class="info-pair">
+                        <span>NIP:</span>
+                        <b>{_safe(firma_nip or "Nie podano")}</b>
                     </div>
                     {_param_rows(dane.get("parametry", [])[:4])}
                 </div>
