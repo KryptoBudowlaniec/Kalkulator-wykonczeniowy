@@ -147,6 +147,43 @@ def _to_float(value, default=0.0):
     except Exception:
         return default
 
+def _wydajnosc_farby_m2_l(produkt):
+    nazwa = str(produkt or "").lower()
+
+    # Farby kolorowe premium: praktyczna norma robocza.
+    if "magnat ceramic" in nazwa:
+        return 14.5
+
+    if "beckers designer colour" in nazwa:
+        return 14.5
+
+    if "tikkurila optiva 5" in nazwa:
+        return 14.5
+
+    # Farby białe premium.
+    if "magnat ultra matt" in nazwa:
+        return 13.0
+
+    if "beckers designer white" in nazwa:
+        return 13.0
+
+    # Antyrefleksyjna farba sufitowa ma niższą wydajność.
+    if "tikkurila anti-reflex" in nazwa:
+        return 10.0
+
+    # Bezpieczna wartość domyślna dla pozostałych produktów.
+    return 10.0
+
+
+def _litry_farby(powierzchnia_m2, liczba_warstw, produkt):
+    wydajnosc = _wydajnosc_farby_m2_l(produkt)
+
+    return math.ceil(
+        max(0.0, _to_float(powierzchnia_m2))
+        * max(1, int(liczba_warstw))
+        / wydajnosc
+    )    
+
 def _oblicz_podsumowanie_oferty(dane):
     dane = dane or {}
     etapy = dane.get("etapy") or []
@@ -5818,8 +5855,17 @@ elif opcja_boczna == "Aplikacja Główna":
                 m2_razem = m2_sufit + m2_sciany
                 mnoznik = 1.0 if stan_f == "Deweloperski" else 1.3
     
-                l_biala = (m2_sufit / 10) * 2
-                l_kolor = (m2_sciany / 10) * 2
+                l_biala = _litry_farby(
+                    m2_sufit,
+                    2,
+                    f_biala
+                )
+
+                l_kolor = _litry_farby(
+                    m2_sciany,
+                    2,
+                    f_kolor
+                )
                 l_grunt = m2_razem * 0.065
                 szt_akryl = m_uzytkowy / 12
                 szt_tasma = (m_uzytkowy / 15) * mnoznik
@@ -5873,6 +5919,11 @@ elif opcja_boczna == "Aplikacja Główna":
                     st.write(f"- Biała ({f_biala}): **{round(l_biala, 1)}L**")
                     st.write(f"- Kolor ({f_kolor}): **{round(l_kolor, 1)}L**")
                     st.write(f"- Grunt ({f_grunt}): **{round(l_grunt, 1)}L**")
+                    st.caption(
+                        f"Przyjęta wydajność: biała "
+                        f"{_wydajnosc_farby_m2_l(f_biala)} m²/L, "
+                        f"kolor {_wydajnosc_farby_m2_l(f_kolor)} m²/L."
+                    )
                     
                     st.write(f"**Akcesoria:**")
                     st.write(f"- Taśma ({f_tasma}): **{round(szt_tasma + 0.5)} szt.**")
@@ -10599,13 +10650,21 @@ elif opcja_boczna == "Aplikacja Główna":
                     zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Grunt ({wybrany_grunt}): {op_gruntu} banki 5L")
                     
                     # Farba biała (Sufity - m2 podłogi to m2 sufitu)
-                    litry_biala = math.ceil(m2_total * 0.2) # 0.2L na m2 (2 warstwy)
+                    litry_biala = _litry_farby(
+                        m2_total,
+                        liczba_warstw_mal,
+                        produkt_biala
+                    )
                     zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Farba biala sufitowa ({produkt_biala}): ~{math.ceil(litry_biala)} L")
     
                     # Farba kolorowa (Ściany - m2 ścian minus łazienka)
                     # Odejmujemy m2 łazienki (zakładając, że tam są płytki/specjalna farba)
                     m2_scian_kolor = pow_scian_total - m2_total - (m2_laz * 2 if do_laz_inv else 0)
-                    litry_kolor = math.ceil(max(0, m2_scian_kolor) * 0.2)
+                    litry_kolor = _litry_farby(
+                        max(0, m2_scian_kolor),
+                        liczba_warstw_mal,
+                        produkt_kolor
+                    )
                     
                     if litry_kolor > 0:
                         zakupy["ŚCIANY (GŁADZIE I MALOWANIE)"].append(f"Farba kolorowa na sciany ({produkt_kolor}): ~{math.ceil(litry_kolor)} L")
