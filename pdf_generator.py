@@ -171,6 +171,9 @@ def generuj_pdf(typ_pdf, dane):
     # Materiały pozostają listą logistyczną bez doliczania do należności.
     if dane.get("etapy"):
         razem = max(0.0, suma_rob - rabat)
+
+    if dane.get("tryb_oferty") == "pelny":
+        razem += suma_mat
     else:
         razem = float(
             dane.get(
