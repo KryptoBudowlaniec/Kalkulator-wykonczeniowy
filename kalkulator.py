@@ -4852,53 +4852,38 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
             # Przygotowanie danych do wspólnego generatora PDF
             prace_dodatkowe_pdf = st.session_state.prace_dodatkowe_pdf.get(aktyw_id, dane_proj.get("prace_dodatkowe", []) or [])
             
-            if "etapy" in dane_proj:
-                etapy_pdf = dane_proj.get("etapy", []) or []
-            
-                kwota_robocizny = _to_float(
-                    dane_proj.get(
-                        "robocizna_po_rabacie",
-                        dane_proj.get("suma_robocizna", 0)
-                    )
-                )
-            
-                if kwota_robocizny <= 0:
-                    kwota_robocizny = sum(
-                        _to_float(e.get("koszt_robocizny", e.get("koszt_calkowity", 0)))
-                        for e in etapy_pdf
-                    )
-            
-                kwota_materialow = 0 if tryb_wybrany == "robocizna" else _to_float(dane_proj.get("suma_materialy", 0))
-            
-                if kwota_materialow <= 0 and tryb_wybrany == "pelny":
-                    kwota_materialow = sum(
-                        _to_float(e.get("koszt_materialow", 0))
-                        for e in etapy_pdf
-                    )
-            
-                materialy_pdf = dane_proj.get("zbiorcza_lista_zakupow", []) or []
-            
-            else:
-                etapy_pdf = [dane_proj]
-            
-                kwota_robocizny = _to_float(
-                    dane_proj.get("koszt_robocizny", dane_proj.get("koszt_calkowity", 0))
-                )
-            
-                kwota_materialow = 0 if tryb_wybrany == "robocizna" else _to_float(dane_proj.get("koszt_materialow", 0))
-                materialy_pdf = dane_proj.get("materialy_lista", []) or []
-            
-            suma_rob_dodatkowe = sum(_to_float(p.get("robocizna", 0)) for p in prace_dodatkowe_pdf)
-            suma_mat_dodatkowe = sum(_to_float(p.get("materialy", 0)) for p in prace_dodatkowe_pdf)
-            
-            kwota_robocizny = _to_float(kwota_robocizny) + suma_rob_dodatkowe
-            
+            podsumowanie_pdf = _oblicz_podsumowanie_oferty(dane_proj)
+
+            etapy_pdf = podsumowanie_pdf["etapy"]
+            rabat_pdf = podsumowanie_pdf["rabat"]
+
+            # Kwota przed rabatem, wyświetlana jako suma robocizny.
+            kwota_robocizny = podsumowanie_pdf["suma_robocizny"]
+
+            materialy_pdf = (
+                dane_proj.get("zbiorcza_lista_zakupow")
+                or dane_proj.get("materialy_lista")
+                or []
+            )
+
+            suma_mat_dodatkowe = sum(
+                _to_float(p.get("materialy", 0))
+                for p in prace_dodatkowe_pdf
+            )
+
             if tryb_wybrany == "pelny":
-                kwota_materialow = _to_float(kwota_materialow) + suma_mat_dodatkowe
+                kwota_materialow = (
+                    podsumowanie_pdf["suma_materialow"]
+                    + suma_mat_dodatkowe
+                )
             else:
                 kwota_materialow = 0
-            
-            kwota_koncowa = kwota_robocizny + kwota_materialow
+
+            # Rabat dotyczy wyłącznie robocizny.
+            kwota_koncowa = (
+                max(0.0, kwota_robocizny - rabat_pdf)
+                + kwota_materialow
+            )
 
     
             dane_pdf_oferta = {
@@ -4912,7 +4897,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 "klient_email": aktyw.get("klient_email", ""),
                 "koszt_robocizny": kwota_robocizny,
                 "koszt_materialow": kwota_materialow,
-                "rabat_kwota": _to_float(dane_proj.get("rabat_kwota", 0)),
+                "rabat_kwota": rabat_pdf,
                 "tryb_oferty": tryb_wybrany,
                 "kwota_koncowa": kwota_koncowa,
                 "materialy": materialy_pdf,
@@ -4922,7 +4907,7 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 "uwagi": [dodatkowe_uwagi_pdf] if dodatkowe_uwagi_pdf.strip() else [],
                 "parametry": [
                     {"nazwa": "Tryb oferty", "wartosc": "Tylko robocizna" if tryb_wybrany == "robocizna" else "Robocizna + materiały"},
-                    {"nazwa": "Rabat", "wartosc": f"{dane_proj.get('rabat_kwota', 0):,.2f} zł".replace(",", " ")},
+                    {"nazwa": "Rabat", "wartosc": f"{rabat_pdf:,.2f} zł".replace(",", " ")},
                     {"nazwa": "Liczba etapów", "wartosc": len(etapy_pdf)},
                     {"nazwa": "Prace dodatkowe", "wartosc": len(prace_dodatkowe_pdf)},
                 ],
