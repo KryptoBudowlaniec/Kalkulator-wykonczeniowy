@@ -58,6 +58,7 @@ from pdf_generator import generuj_pdf
 from streamlit_drawable_canvas import st_canvas
 import base64
 from io import BytesIO
+import tempfile
 
 def svg_icon(nazwa_pliku):
     try:
@@ -79,6 +80,7 @@ def _dane_firmy_pdf():
         "firma_adres": st.session_state.get("firma_adres", ""),
         "firma_nip": st.session_state.get("firma_nip", ""),
         "firma_kontakt": st.session_state.get("firma_kontakt", ""),
+        "firma_logo_path": _pobierz_logo_firmy_do_pdf(),
     }
 def _wczytaj_profil_firmy():
     if not supabase or not st.session_state.get("zalogowany"):
@@ -140,6 +142,79 @@ def _zapisz_profil_firmy():
 
     except Exception as e:
         st.error(f"Nie udało się zapisać danych firmy: {e}")
+
+def _rozszerzenie_logo(uploaded_file):
+    mapa = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+    }
+
+    return mapa.get(getattr(uploaded_file, "type", ""), "png")
+
+
+def _zapisz_logo_firmy(uploaded_file):
+    if not uploaded_file:
+        return
+
+    user_id = st.session_state.get("user_id")
+
+    if not supabase or not user_id:
+        st.error("Zaloguj się ponownie, aby zapisać logo.")
+        return
+
+    try:
+        rozszerzenie = _rozszerzenie_logo(uploaded_file)
+        sciezka = f"{user_id}/logo.{rozszerzenie}"
+        dane_pliku = uploaded_file.getvalue()
+
+        (
+            supabase.storage
+            .from_("firm-logos")
+            .upload(
+                sciezka,
+                dane_pliku,
+                {
+                    "content-type": uploaded_file.type,
+                    "upsert": "true",
+                }
+            )
+        )
+
+        st.session_state["firma_logo_path"] = sciezka
+        _zapisz_profil_firmy()
+        st.success("Logo firmy zapisane w chmurze.")
+
+    except Exception as e:
+        st.error(f"Nie udało się zapisać logo: {e}")
+
+
+def _pobierz_logo_firmy_do_pdf():
+    sciezka = st.session_state.get("firma_logo_path")
+
+    if not supabase or not sciezka:
+        return ""
+
+    try:
+        dane_pliku = (
+            supabase.storage
+            .from_("firm-logos")
+            .download(sciezka)
+        )
+
+        rozszerzenie = os.path.splitext(sciezka)[1] or ".png"
+        lokalna_sciezka = os.path.join(
+            tempfile.gettempdir(),
+            f"procalc_logo_{st.session_state.get('user_id', 'firma')}{rozszerzenie}"
+        )
+
+        with open(lokalna_sciezka, "wb") as plik:
+            plik.write(dane_pliku)
+
+        return lokalna_sciezka
+
+    except Exception:
+        return ""
 
 def _dane_pdf_z_etapu(dane_json, tytul=None, parametry=None):
     dane_pdf = dict(dane_json or {})
@@ -4508,6 +4583,12 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 "Kontakt",
                 key="firma_kontakt",
                 placeholder="Np. telefon, e-mail lub strona internetowa"
+                
+            )
+            nowe_logo = st.file_uploader(
+                "Logo firmy",
+                type=["png", "jpg", "jpeg", "webp"],
+                help="Maksymalny rozmiar pliku: 2 MB."
             )
 
             if st.form_submit_button(
@@ -4516,6 +4597,9 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 use_container_width=True
             ):
                 _zapisz_profil_firmy()
+
+                if nowe_logo:
+                    _zapisz_logo_firmy(nowe_logo)
 
         st.stop()
 
