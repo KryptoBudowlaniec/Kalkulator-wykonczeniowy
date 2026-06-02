@@ -1085,6 +1085,54 @@ query_params = st.query_params
 # LINK DLA HURTOWNI - WYCENA MATERIAŁÓW
 # =======================================================
 
+def _ilosc_hurtownia(value):
+    try:
+        return float(str(value).replace(",", "."))
+    except Exception:
+        return 0.0
+
+
+def _opcje_opakowan_hurtownia(jednostka):
+    jed = str(jednostka or "").lower().replace(".", "").strip()
+
+    if jed in ["l", "litr", "litry", "litrow", "litrów"]:
+        return [0.75, 1, 2.5, 3, 5, 9, 10, 11.5, 15]
+
+    if jed in ["kg", "kilogram", "kilogramy"]:
+        return [1, 2, 5, 10, 15, 20, 25]
+
+    if jed in ["m2", "m²"]:
+        return [1, 5, 10]
+
+    return [1, 2, 5, 10]
+
+
+def _wybierz_pojemnosc_hurtownia(kontener, etykieta, jednostka, key):
+    opcje = _opcje_opakowan_hurtownia(jednostka)
+    wartosci = [f"{x:g}" for x in opcje] + ["Inna pojemność"]
+
+    jed = str(jednostka or "").lower().replace(".", "").strip()
+    preferowana = 10 if jed in ["l", "litr", "litry", "litrow", "litrów"] else 25
+    domyslny_index = opcje.index(preferowana) if preferowana in opcje else 0
+
+    wybor = kontener.selectbox(
+        etykieta,
+        wartosci,
+        index=domyslny_index,
+        key=key
+    )
+
+    if wybor == "Inna pojemność":
+        return kontener.number_input(
+            "Wpisz pojemność",
+            min_value=0.01,
+            value=1.0,
+            step=0.1,
+            key=f"{key}_inna"
+        )
+
+    return float(wybor)
+
 if "hurtownia" in query_params:
     token_hurtowni = query_params["hurtownia"]
 
@@ -1168,25 +1216,103 @@ if "hurtownia" in query_params:
                 st.markdown(f"**{i + 1}. {nazwa_mat}**")
                 st.caption(f"Ilość: {ilosc_mat} {jed_mat}")
 
-                c1, c2, c3 = st.columns([1, 1, 2])
+                ilosc_wymagana = _ilosc_hurtownia(ilosc_mat)
 
-                cena_netto = c1.number_input(
-                    "Cena netto",
+                st.markdown("**Opakowanie podstawowe**")
+                
+                p1, p2, p3, p4 = st.columns([1.2, 0.8, 1, 1])
+
+                pojemnosc_1 = _wybierz_pojemnosc_hurtownia(
+                    p1,
+                    f"Pojemność ({jed_mat})",
+                    jed_mat,
+                    f"h_pojemnosc_1_{i}"
+                )
+
+                liczba_op_1 = p2.number_input(
+                    "Liczba op.",
+                    min_value=0,
+                    value=max(1, math.ceil(ilosc_wymagana / pojemnosc_1)),
+                    step=1,
+                    key=f"h_liczba_op_1_{i}"
+                )
+
+                cena_netto_1 = p3.number_input(
+                    "Netto / op.",
                     min_value=0.0,
                     value=0.0,
                     step=1.0,
-                    key=f"h_cena_netto_{i}"
+                    key=f"h_netto_1_{i}"
                 )
 
-                cena_brutto = c2.number_input(
-                    "Cena brutto",
+                cena_brutto_1 = p4.number_input(
+                    "Brutto / op.",
                     min_value=0.0,
                     value=0.0,
                     step=1.0,
-                    key=f"h_cena_brutto_{i}"
+                    key=f"h_brutto_1_{i}"
                 )
 
-                zamiennik = c3.text_input(
+                st.markdown("**Drugie opakowanie — opcjonalnie**")
+                d1, d2, d3, d4 = st.columns([1.2, 0.8, 1, 1])
+
+                pojemnosc_2 = _wybierz_pojemnosc_hurtownia(
+                    d1,
+                    f"Pojemność dodatkowa ({jed_mat})",
+                    jed_mat,
+                    f"h_pojemnosc_2_{i}"
+                )
+
+                liczba_op_2 = d2.number_input(
+                    "Liczba op. dodatkowych",
+                    min_value=0,
+                    value=0,
+                    step=1,
+                    key=f"h_liczba_op_2_{i}"
+                )
+
+                cena_netto_2 = d3.number_input(
+                    "Netto / op. dodatkowe",
+                    min_value=0.0,
+                    value=0.0,
+                    step=1.0,
+                    key=f"h_netto_2_{i}"
+                )
+
+                cena_brutto_2 = d4.number_input(
+                    "Brutto / op. dodatkowe",
+                    min_value=0.0,
+                    value=0.0,
+                    step=1.0,
+                    key=f"h_brutto_2_{i}"
+                )
+
+                ilosc_zaproponowana = (
+                    pojemnosc_1 * liczba_op_1
+                    + pojemnosc_2 * liczba_op_2
+                )
+
+                wartosc_netto = (
+                    liczba_op_1 * cena_netto_1
+                    + liczba_op_2 * cena_netto_2
+                )
+
+                wartosc_brutto = (
+                    liczba_op_1 * cena_brutto_1
+                    + liczba_op_2 * cena_brutto_2
+                )
+
+                if ilosc_zaproponowana >= ilosc_wymagana:
+                    st.success(
+                        f"Pokrycie zapotrzebowania: {ilosc_zaproponowana:g} "
+                        f"{jed_mat} z wymaganych {ilosc_wymagana:g} {jed_mat}"
+                    )
+                else:
+                    st.warning(
+                        f"Brakuje {ilosc_wymagana - ilosc_zaproponowana:g} {jed_mat}"
+                    )
+
+                zamiennik = st.text_input(
                     "Zamiennik / uwagi do pozycji",
                     key=f"h_zamiennik_{i}",
                     placeholder="Np. produkt alternatywny, dostępność, marka"
@@ -1196,8 +1322,23 @@ if "hurtownia" in query_params:
                     "nazwa": nazwa_mat,
                     "ilosc": ilosc_mat,
                     "jed": jed_mat,
-                    "cena_netto": cena_netto,
-                    "cena_brutto": cena_brutto,
+                    "opakowania": [
+                        {
+                            "pojemnosc": pojemnosc_1,
+                            "liczba_opakowan": liczba_op_1,
+                            "cena_netto_opakowania": cena_netto_1,
+                            "cena_brutto_opakowania": cena_brutto_1,
+                        },
+                        {
+                            "pojemnosc": pojemnosc_2,
+                            "liczba_opakowan": liczba_op_2,
+                            "cena_netto_opakowania": cena_netto_2,
+                            "cena_brutto_opakowania": cena_brutto_2,
+                        },
+                    ],
+                    "ilosc_zaproponowana": ilosc_zaproponowana,
+                    "wartosc_netto": wartosc_netto,
+                    "wartosc_brutto": wartosc_brutto,
                     "zamiennik": zamiennik,
                 })
 
@@ -1210,8 +1351,7 @@ if "hurtownia" in query_params:
             "Łączna kwota netto",
             min_value=0.0,
             value=sum(
-                _to_float(x.get("cena_netto", 0))
-                * _to_float(x.get("ilosc", 0))
+                _to_float(x.get("wartosc_netto", 0))
                 for x in odpowiedzi_materialow
             ),
             step=10.0,
@@ -1222,8 +1362,7 @@ if "hurtownia" in query_params:
             "Łączna kwota brutto",
             min_value=0.0,
             value=sum(
-                _to_float(x.get("cena_brutto", 0))
-                * _to_float(x.get("ilosc", 0))
+                _to_float(x.get("wartosc_brutto", 0))
                 for x in odpowiedzi_materialow
             ),
             step=10.0,
