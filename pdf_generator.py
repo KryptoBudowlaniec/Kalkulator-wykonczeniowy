@@ -141,51 +141,25 @@ def generuj_pdf(typ_pdf, dane):
     uwagi = dane.get("uwagi", []) or []
 
 
-    suma_rob_etapy = sum(
-        float(etap.get("koszt_robocizny", etap.get("koszt_calkowity", 0)) or 0)
-        for etap in etapy
+    suma_rob = float(
+        dane.get("koszt_robocizny", dane.get("suma_robocizna", 0)) or 0
     )
 
-    suma_mat_etapy = sum(
-        float(etap.get("koszt_materialow", 0) or 0)
-        for etap in etapy
+    suma_mat = float(
+        dane.get("koszt_materialow", dane.get("suma_materialy", 0)) or 0
     )
 
-    suma_prac_dodatkowych = sum(
-        float(praca.get("robocizna", 0) or 0)
-        for praca in prace_dodatkowe
+    rabat = max(
+        0.0,
+        float(dane.get("rabat_kwota", 0) or 0)
     )
 
-    # Starsze kosztorysy mają już prace dodatkowe w zapisanej sumie.
-    if dane.get("suma_robocizna") is not None:
-        suma_rob = float(dane.get("suma_robocizna", 0) or 0)
-    else:
-        suma_rob = suma_rob_etapy + suma_prac_dodatkowych
-
-    if dane.get("suma_materialy") is not None:
-        suma_mat = float(dane.get("suma_materialy", 0) or 0)
-    elif dane.get("koszt_materialow") is not None:
-        suma_mat = float(dane.get("koszt_materialow", 0) or 0)
-    else:
-        suma_mat = suma_mat_etapy
-
-    rabat = max(0.0, float(dane.get("rabat_kwota", 0) or 0))
-
-    # Oferta wieloetapowa dla klienta pokazuje robociznę po rabacie.
-    # Materiały pozostają listą logistyczną bez doliczania do należności.
-    if dane.get("etapy"):
-        razem = max(0.0, suma_rob - rabat)
-
-    if dane.get("tryb_oferty") == "pelny":
-        razem += suma_mat
-    else:
-        razem = float(
-            dane.get(
-                "kwota_koncowa",
-                dane.get("koszt_calkowity", suma_rob + suma_mat)
-            ) or 0
-        )
-        razem = max(0.0, razem - rabat)
+    razem = float(
+        dane.get(
+            "kwota_koncowa",
+            max(0.0, suma_rob - rabat) + suma_mat
+        ) or 0
+    )
 
 
     data_wyst = datetime.now()
