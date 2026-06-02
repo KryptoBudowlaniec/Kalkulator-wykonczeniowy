@@ -80,7 +80,66 @@ def _dane_firmy_pdf():
         "firma_nip": st.session_state.get("firma_nip", ""),
         "firma_kontakt": st.session_state.get("firma_kontakt", ""),
     }
+def _wczytaj_profil_firmy():
+    if not supabase or not st.session_state.get("zalogowany"):
+        return
 
+    if st.session_state.get("profil_firmy_wczytany"):
+        return
+
+    user_id = st.session_state.get("user_id")
+
+    if not user_id:
+        return
+
+    try:
+        odp = (
+            supabase.table("profile_firmy")
+            .select("*")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        profil = odp.data[0] if odp.data else {}
+
+        st.session_state["firma_nazwa"] = profil.get("firma_nazwa", "PROCALC")
+        st.session_state["firma_adres"] = profil.get("firma_adres", "")
+        st.session_state["firma_nip"] = profil.get("firma_nip", "")
+        st.session_state["firma_kontakt"] = profil.get("firma_kontakt", "")
+        st.session_state["firma_logo_path"] = profil.get("logo_path", "")
+        st.session_state["profil_firmy_wczytany"] = True
+
+    except Exception as e:
+        st.warning(f"Nie udało się wczytać danych firmy: {e}")
+
+
+def _zapisz_profil_firmy():
+    if not supabase or not st.session_state.get("user_id"):
+        st.error("Zaloguj się ponownie, aby zapisać dane firmy.")
+        return
+
+    dane = {
+        "user_id": st.session_state.user_id,
+        "firma_nazwa": st.session_state.get("firma_nazwa", "PROCALC"),
+        "firma_adres": st.session_state.get("firma_adres", ""),
+        "firma_nip": st.session_state.get("firma_nip", ""),
+        "firma_kontakt": st.session_state.get("firma_kontakt", ""),
+        "logo_path": st.session_state.get("firma_logo_path") or None,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    try:
+        (
+            supabase.table("profile_firmy")
+            .upsert(dane, on_conflict="user_id")
+            .execute()
+        )
+
+        st.success("Dane firmy zapisane w chmurze.")
+
+    except Exception as e:
+        st.error(f"Nie udało się zapisać danych firmy: {e}")
 
 def _dane_pdf_z_etapu(dane_json, tytul=None, parametry=None):
     dane_pdf = dict(dane_json or {})
@@ -2341,7 +2400,7 @@ if "oferta" in query_params:
         st.error(f"Błąd krytyczny: {e}")
         st.stop()
 
-        
+_wczytaj_profil_firmy()
 
 
 # =======================================================
@@ -4426,7 +4485,39 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
         st.stop()
 
     elif widok_sidebar == "Ustawienia":
-        st.header("Ustawienia konta i firmy")
+        st.header("Ustawienia firmy")
+        st.caption("Dane używane w ofertach i dokumentach PDF.")
+
+        with st.form("form_ustawienia_firmy"):
+            st.text_input(
+                "Nazwa firmy",
+                key="firma_nazwa"
+            )
+
+            st.text_input(
+                "Adres firmy",
+                key="firma_adres"
+            )
+
+            st.text_input(
+                "NIP",
+                key="firma_nip"
+            )
+
+            st.text_input(
+                "Kontakt",
+                key="firma_kontakt",
+                placeholder="Np. telefon, e-mail lub strona internetowa"
+            )
+
+            if st.form_submit_button(
+                "Zapisz dane firmy",
+                type="primary",
+                use_container_width=True
+            ):
+                _zapisz_profil_firmy()
+
+        st.stop()
 
     else:
         st.header("Projekty i kosztorysy")
