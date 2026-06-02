@@ -4847,6 +4847,8 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
                 "klient_email": aktyw.get("klient_email", ""),
                 "koszt_robocizny": kwota_robocizny,
                 "koszt_materialow": kwota_materialow,
+                "rabat_kwota": _to_float(dane_proj.get("rabat_kwota", 0)),
+                "tryb_oferty": tryb_wybrany,
                 "kwota_koncowa": kwota_koncowa,
                 "materialy": materialy_pdf,
                 "etapy": etapy_pdf,
