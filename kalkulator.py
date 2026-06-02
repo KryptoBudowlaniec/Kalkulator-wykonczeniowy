@@ -187,7 +187,39 @@ def _zapisz_logo_firmy(uploaded_file):
 
     except Exception as e:
         st.error(f"Nie udało się zapisać logo: {e}")
+        
+def _usun_logo_firmy():
+    sciezka = st.session_state.get("firma_logo_path")
 
+    if not supabase or not sciezka:
+        st.info("Nie masz zapisanego logo firmy.")
+        return
+
+    try:
+        (
+            supabase.storage
+            .from_("firm-logos")
+            .remove([sciezka])
+        )
+
+        st.session_state["firma_logo_path"] = ""
+        _zapisz_profil_firmy()
+        st.success("Logo firmy zostało usunięte.")
+        st.rerun()
+
+    except Exception as e:
+        st.error(f"Nie udało się usunąć logo: {e}")
+
+
+def _wyczysc_dane_firmy():
+    st.session_state["firma_nazwa"] = "PROCALC"
+    st.session_state["firma_adres"] = ""
+    st.session_state["firma_nip"] = ""
+    st.session_state["firma_kontakt"] = ""
+
+    _zapisz_profil_firmy()
+    st.success("Dane firmy zostały wyczyszczone.")
+    st.rerun()
 
 def _pobierz_logo_firmy_do_pdf():
     sciezka = st.session_state.get("firma_logo_path")
@@ -4612,6 +4644,27 @@ if st.session_state.zalogowany and opcja_boczna == "Mój Profil":
 
                 if nowe_logo:
                     _zapisz_logo_firmy(nowe_logo)
+
+        st.markdown("---")
+        st.subheader("Usuń dane")
+
+        col_usun1, col_usun2 = st.columns(2)
+
+        with col_usun1:
+            if st.button(
+                "Usuń logo firmy",
+                key="usun_logo_firmy",
+                use_container_width=True
+            ):
+                _usun_logo_firmy()
+
+        with col_usun2:
+            if st.button(
+                "Wyczyść dane firmy",
+                key="wyczysc_dane_firmy",
+                use_container_width=True
+            ):
+                _wyczysc_dane_firmy()
 
         st.stop()
 
