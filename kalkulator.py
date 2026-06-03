@@ -2517,6 +2517,10 @@ if "oferta" in query_params:
 
         st.stop()
 
+    except Exception as e:
+            st.error(f"Błąd krytyczny: {e}")
+            st.stop()
+
 _wczytaj_profil_firmy()
 
 
