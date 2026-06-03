@@ -10273,21 +10273,75 @@ elif opcja_boczna == "Aplikacja Główna":
                     if not zapisane_projekty:
                         st.info("Nie masz jeszcze żadnych zapisanych projektów w chmurze. Skonfiguruj projekt poniżej i zapisz go na ostatniej zakładce!")
                     else:
-                        col_h1, col_h2, col_h3, col_h4 = st.columns([3, 2, 1, 1])
+                        col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([2.4, 1.2, 1, 1, 1])
                         col_h1.caption("Nazwa projektu")
                         col_h2.caption("Data")
+                        col_h3.caption("Podgląd")
+                        col_h4.caption("Edytuj")
+                        col_h5.caption("Usuń")
                         
                         for proj in zapisane_projekty:
-                            c1, c2, c3, c4 = st.columns([3, 2, 1, 1])
-                            c1.write(f"**{proj['nazwa_projektu']}**")
-                            c2.write(proj['data_stworzenia'][:10])
-                            
-                            if c3.button("Podgląd", key=f"view_{proj['id']}"):
-                                st.json(proj['dane_json'])
-                                
-                            if c4.button("Usuń", key=f"del_{proj['id']}"):
-                                supabase.table("projekty").delete().eq("id", proj['id']).execute()
-                                st.rerun()
+                            dane_proj_inv = proj.get("dane_json", {}) or {}
+
+                            c1, c2, c3, c4, c5 = st.columns([2.4, 1.2, 1, 1, 1])
+
+                            with c1:
+                                st.write(f"**{proj.get('nazwa_projektu', 'Bez nazwy')}**")
+                                st.caption(proj.get("branza", ""))
+
+                            with c2:
+                                st.write(str(proj.get("data_stworzenia", ""))[:10])
+
+                            with c3:
+                                if st.button("Podgląd", key=f"view_{proj.get('id')}"):
+                                    st.session_state["podglad_projektu_inwestora"] = proj.get("id")
+
+                            with c4:
+                                if st.button("Edytuj", key=f"edit_inv_{proj.get('id')}"):
+                                    st.session_state["edytowany_projekt_inwestora"] = proj
+                                    st.success("Projekt otwarty do edycji. Przejdź niżej do formularza.")
+                                    st.rerun()
+
+                            with c5:
+                                if st.button("Usuń", key=f"del_{proj.get('id')}"):
+                                    supabase.table("projekty").delete().eq("id", proj.get("id")).execute()
+                                    st.rerun()
+
+                            if st.session_state.get("podglad_projektu_inwestora") == proj.get("id"):
+                                with st.container(border=True):
+                                    st.subheader(proj.get("nazwa_projektu", "Projekt"))
+
+                                    p1, p2, p3 = st.columns(3)
+
+                                    p1.metric(
+                                        "Koszt całkowity",
+                                        f"{_to_float(dane_proj_inv.get('suma_calkowita', dane_proj_inv.get('koszt_calkowity_projektu', 0))):,.0f} zł".replace(",", " ")
+                                    )
+
+                                    p2.metric(
+                                        "Zysk brutto",
+                                        f"{_to_float(dane_proj_inv.get('zysk_brutto', 0)):,.0f} zł".replace(",", " ")
+                                    )
+
+                                    p3.metric(
+                                        "ROI",
+                                        f"{_to_float(dane_proj_inv.get('roi_procent', 0)):.1f}%"
+                                    )
+
+                                    lista_zakupow = dane_proj_inv.get("lista_zakupow", {}) or {}
+
+                                    if lista_zakupow:
+                                        st.markdown("**Lista zakupów:**")
+                                        for kategoria, pozycje in lista_zakupow.items():
+                                            with st.expander(kategoria, expanded=False):
+                                                for pozycja in pozycje:
+                                                    st.write(f"- {pozycja}")
+
+                                    if st.button("Zamknij podgląd", key=f"close_view_{proj.get('id')}"):
+                                        st.session_state.pop("podglad_projektu_inwestora", None)
+                                        st.rerun()
+
+                            st.markdown("---")
                 except Exception as e:
                     st.error(f"Błąd wczytywania projektów: {e}")
             else:
