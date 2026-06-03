@@ -2429,10 +2429,6 @@ if "oferta" in query_params:
             st.success("Oferta podpisana, zaliczka opłacona.")
 
 
-        elif status == "Zaliczka opłacona":
-            st.success("Oferta podpisana, zaliczka opłacona.")
-
-
         elif status == "Odrzucono":
             st.error("Oferta została odrzucona.")
 
@@ -2512,11 +2508,13 @@ if "oferta" in query_params:
                 
                     except Exception as e:
                         st.error(f"Nie udało się odrzucić oferty: {e}")
-                
-                        st.stop()
 
-    except Exception as e:
-        st.error(f"Błąd krytyczny: {e}")
+        st.markdown("---")
+        st.caption(
+            "Dokument wygenerowano w ProCalc. "
+            "Jeśli chcesz poznać program do kosztorysowania remontów, odwiedź procalc.pl."
+        )
+
         st.stop()
 
 _wczytaj_profil_firmy()
