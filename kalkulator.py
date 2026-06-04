@@ -10574,12 +10574,13 @@ elif opcja_boczna == "Aplikacja Główna":
     
             with tab_posadzki:
                 st.subheader("Posadzki Betonowe (Mixokret / Ręczne)")
-                    na_gruncie = st.checkbox(
+
+                na_gruncie = st.checkbox(
                     "Posadzka na parterze (wymaga izolacji)",
                     value=bool(ustawienia_inv_edit.get("na_gruncie", True)),
                     key="inv_na_gruncie"
                 )
-                
+
                 m2_posadzki = st.number_input(
                     "Metraż posadzki (m2):",
                     0,
@@ -10587,6 +10588,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     int(ustawienia_inv_edit.get("m2_posadzki", 50)),
                     key="inv_m2_posadzki"
                 )
+
                 grubosc_betonu = st.slider(
                     "Grubość wylewki (cm):",
                     4,
@@ -10594,7 +10596,7 @@ elif opcja_boczna == "Aplikacja Główna":
                     int(ustawienia_inv_edit.get("grubosc_betonu", 6)),
                     key="inv_grubosc_betonu"
                 )
-                
+
                 if na_gruncie:
                     grubosc_styro = st.slider(
                         "Grubość styropianu (cm):",
@@ -10603,15 +10605,18 @@ elif opcja_boczna == "Aplikacja Główna":
                         int(ustawienia_inv_edit.get("grubosc_styro", 5)),
                         key="inv_grubosc_styro"
                     )
-                    m3_styro = math.ceil((m2_posadzki * (grubosc_styro/100)) * 1.05)
+                    m3_styro = math.ceil((m2_posadzki * (grubosc_styro / 100)) * 1.05)
                     st.info(f"Potrzeba ok. **{m3_styro} m3** styropianu podłogowego.")
-    
+
                 # Obliczenia betonu (tradycyjny mix: 1 porcja cementu na 3 piasku)
-                m3_betonu = (m2_posadzki * (grubosc_betonu/100))
-                tony_piasku = math.ceil(m3_betonu * 1.8) # 1m3 betonu to ok 1.8t piasku
-                worki_cementu = math.ceil(m3_betonu * 12) # ok 300kg cementu na m3 = 12 worków
-                
-                st.warning(f"Logistyka: Do przywiezienia **{tony_piasku} ton piasku** i **{worki_cementu} worków cementu**.")
+                m3_betonu = m2_posadzki * (grubosc_betonu / 100)
+                tony_piasku = math.ceil(m3_betonu * 1.8)
+                worki_cementu = math.ceil(m3_betonu * 12)
+
+                st.warning(
+                    f"Logistyka: Do przywiezienia **{tony_piasku} ton piasku** "
+                    f"i **{worki_cementu} worków cementu**."
+                )
             
             # --- ZAKŁADKA 2: PRACE SUCHE ---
             with tab_suche:
