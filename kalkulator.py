@@ -10516,9 +10516,22 @@ elif opcja_boczna == "Aplikacja Główna":
             with tab_tynki:
                 st.subheader("Tynkowanie i Suche Tynki (GK)")
 
+                opcje_metoda_tynku = [
+                    "Wyklejanie płytami GK (Suche tynki)",
+                    "Tynk Maszynowy Gipsowy"
+                ]
+
+                metoda_tynku_saved = ustawienia_inv_edit.get(
+                    "metoda_tynku",
+                    "Wyklejanie płytami GK (Suche tynki)"
+                )
+
                 metoda_tynku = st.radio(
                     "Metoda wykończenia ścian:",
-                    ["Wyklejanie płytami GK (Suche tynki)", "Tynk Maszynowy Gipsowy"],
+                    opcje_metoda_tynku,
+                    index=opcje_metoda_tynku.index(metoda_tynku_saved)
+                    if metoda_tynku_saved in opcje_metoda_tynku
+                    else 0,
                     key="inv_tynki_metoda"
                 )
 
@@ -10526,14 +10539,23 @@ elif opcja_boczna == "Aplikacja Główna":
                     "Powierzchnia ścian do wykończenia (m2):",
                     min_value=0,
                     max_value=500,
-                    value=100,
+                    value=int(ustawienia_inv_edit.get("pow_scian_gk", 100)),
                     key="inv_gk_m2"
                 )
 
                 if "GK" in metoda_tynku:
+                    opcje_plyty_sciana = list(baza_gk_sciany.keys())[:2]
+                    plyta_saved = ustawienia_inv_edit.get(
+                        "rodzaj_plyty_sciana",
+                        opcje_plyty_sciana[0]
+                    )
+
                     rodzaj_plyty_sciana = st.selectbox(
                         "Wybierz płytę:",
-                        list(baza_gk_sciany.keys())[:2],
+                        opcje_plyty_sciana,
+                        index=opcje_plyty_sciana.index(plyta_saved)
+                        if plyta_saved in opcje_plyty_sciana
+                        else 0,
                         key="inv_gk_typ_plyty"
                     )
 
@@ -10552,13 +10574,35 @@ elif opcja_boczna == "Aplikacja Główna":
     
             with tab_posadzki:
                 st.subheader("Posadzki Betonowe (Mixokret / Ręczne)")
-                na_gruncie = st.checkbox("Posadzka na parterze (wymaga izolacji)", value=True)
+                    na_gruncie = st.checkbox(
+                    "Posadzka na parterze (wymaga izolacji)",
+                    value=bool(ustawienia_inv_edit.get("na_gruncie", True)),
+                    key="inv_na_gruncie"
+                )
                 
-                m2_posadzki = st.number_input("Metraż posadzki (m2):", 0, 200, 50)
-                grubosc_betonu = st.slider("Grubość wylewki (cm):", 4, 10, 6)
+                m2_posadzki = st.number_input(
+                    "Metraż posadzki (m2):",
+                    0,
+                    200,
+                    int(ustawienia_inv_edit.get("m2_posadzki", 50)),
+                    key="inv_m2_posadzki"
+                )
+                grubosc_betonu = st.slider(
+                    "Grubość wylewki (cm):",
+                    4,
+                    10,
+                    int(ustawienia_inv_edit.get("grubosc_betonu", 6)),
+                    key="inv_grubosc_betonu"
+                )
                 
                 if na_gruncie:
-                    grubosc_styro = st.slider("Grubość styropianu (cm):", 2, 15, 5)
+                    grubosc_styro = st.slider(
+                        "Grubość styropianu (cm):",
+                        2,
+                        15,
+                        int(ustawienia_inv_edit.get("grubosc_styro", 5)),
+                        key="inv_grubosc_styro"
+                    )
                     m3_styro = math.ceil((m2_posadzki * (grubosc_styro/100)) * 1.05)
                     st.info(f"Potrzeba ok. **{m3_styro} m3** styropianu podłogowego.")
     
@@ -11086,6 +11130,7 @@ elif opcja_boczna == "Aplikacja Główna":
                         else:
                             try:
                                 ustawienia_formularza = {
+                                    # ROI
                                     "nazwa_inwestycji": nazwa_inwestycji,
                                     "m2_total": float(m2_total),
                                     "cena_zakupu": int(cena_zakupu),
@@ -11095,6 +11140,74 @@ elif opcja_boczna == "Aplikacja Główna":
                                     "media_mc": int(media_mc),
                                     "czas_operacji": int(czas_operacji),
                                     "standard": standard,
+                                
+                                    # Tynki i GK
+                                    "metoda_tynku": metoda_tynku,
+                                    "pow_scian_gk": float(pow_scian_gk),
+                                    "rodzaj_plyty_sciana": locals().get("rodzaj_plyty_sciana", ""),
+                                
+                                    # Posadzki
+                                    "na_gruncie": bool(na_gruncie),
+                                    "m2_posadzki": int(m2_posadzki),
+                                    "grubosc_betonu": int(grubosc_betonu),
+                                    "grubosc_styro": int(locals().get("grubosc_styro", 5)),
+                                
+                                    # Prace suche
+                                    "do_gk_inv": bool(do_gk_inv),
+                                    "rodzaj_stelaza": locals().get("rodzaj_stelaza", "Pojedynczy (Standard)"),
+                                    "system_laczen": locals().get("system_laczen", "Taśma z włókna"),
+                                    "rodzaj_plyty": locals().get("rodzaj_plyty", "Zwykła GKB"),
+                                    "welna_izolacja": bool(locals().get("welna_izolacja", False)),
+                                    "do_szpach_inv": bool(do_szpach_inv),
+                                    "typ_gl_radio": locals().get("typ_gl_radio", "Sypka (Worki)"),
+                                    "produkt_gl": locals().get("produkt_gl", ""),
+                                    "liczba_warstw_gl": int(locals().get("liczba_warstw_gl", 2)),
+                                    "mocny_start": bool(locals().get("mocny_start", False)),
+                                    "produkt_start": locals().get("produkt_start", ""),
+                                    "do_mal_inv": bool(do_mal_inv),
+                                    "wybrany_grunt": locals().get("wybrany_grunt", ""),
+                                    "produkt_biala": locals().get("produkt_biala", ""),
+                                    "produkt_kolor": locals().get("produkt_kolor", ""),
+                                    "liczba_warstw_mal": int(locals().get("liczba_warstw_mal", 2)),
+                                
+                                    # Łazienka
+                                    "do_laz_inv": bool(do_laz_inv),
+                                    "m2_laz": float(locals().get("m2_laz", 5.0)),
+                                    "format_plytek_laz": locals().get("format_plytek_laz", "Standard (do 60x60)"),
+                                    "styl_lazienki": locals().get("styl_lazienki", "Klasyczny (Płytki na wszystkich ścianach pod sufit)"),
+                                    "typ_hydro": locals().get("typ_hydro", "Folia w płynie"),
+                                    "m2_hydro": float(locals().get("m2_hydro", 8.0)),
+                                    "produkt_hydro": locals().get("produkt_hydro", ""),
+                                    "wybrany_klej": locals().get("wybrany_klej", ""),
+                                    "rodzaj_fugi_laz": locals().get("rodzaj_fugi_laz", "Cementowa"),
+                                    "odplyw_liniowy": bool(locals().get("odplyw_liniowy", True)),
+                                
+                                    # Elektryka
+                                    "do_elek_inv": bool(do_elek_inv),
+                                    "std_osprzet": locals().get("std_osprzet", "Budżet (np. Kontakt Simon 10)"),
+                                    "gniazda_poj": int(locals().get("gniazda_poj", 15)),
+                                    "gniazda_podw": int(locals().get("gniazda_podw", 10)),
+                                    "wlacznik_poj": int(locals().get("wlacznik_poj", 5)),
+                                    "wlacznik_podw": int(locals().get("wlacznik_podw", 5)),
+                                
+                                    # Podłogi i drzwi
+                                    "zrywanie_podlogi": bool(zrywanie_podlogi),
+                                    "wylewka_samopoz": bool(wylewka_samopoz),
+                                    "wybrana_wylewka": locals().get("wybrana_wylewka", ""),
+                                    "grubosc_wyl": int(locals().get("grubosc_wyl", 5)),
+                                    "do_podl_fin": bool(do_podl_fin),
+                                    "typ_p": locals().get("typ_p", "Panele Laminowane"),
+                                    "do_drzwi": bool(locals().get("do_drzwi", True)),
+                                    "szt_d_wew": int(locals().get("szt_d_wew", 3)),
+                                    "typ_d_wew": locals().get("typ_d_wew", "Przylgowe (Budżet)"),
+                                    "wymiana_wej": bool(locals().get("wymiana_wej", False)),
+                                    "typ_d_wej": locals().get("typ_d_wej", "Marketowe (ok. 1200 zł)"),
+                                
+                                    # Meble
+                                    "kuchnia_inv": int(kuchnia_inv),
+                                    "szafy_inv": int(szafy_inv),
+                                    "laz_stolarz": int(laz_stolarz),
+
                                 }
                                 
                                 dane_do_zapisu = {
