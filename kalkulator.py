@@ -10480,16 +10480,16 @@ elif opcja_boczna == "Aplikacja Główna":
                         key="inv_cena_sprzedazy"
                     )
                     opcje_stan_lokalu = ["Deweloperski", "Rynek Wtórny (Do remontu)"]
-                        stan_lokalu_saved = ustawienia_inv_edit.get("stan_lokalu", "Deweloperski")
-                        
-                        stan_lokalu = st.radio(
-                            "Stan lokalu:",
-                            opcje_stan_lokalu,
-                            index=opcje_stan_lokalu.index(stan_lokalu_saved)
-                            if stan_lokalu_saved in opcje_stan_lokalu
-                            else 0,
-                            key="inv_stan"
-                        )
+                    stan_lokalu_saved = ustawienia_inv_edit.get("stan_lokalu", "Deweloperski")
+                    
+                    stan_lokalu = st.radio(
+                        "Stan lokalu:",
+                        opcje_stan_lokalu,
+                        index=opcje_stan_lokalu.index(stan_lokalu_saved)
+                        if stan_lokalu_saved in opcje_stan_lokalu
+                        else 0,
+                        key="inv_stan"
+                    )
     
                     st.markdown("##### Koszty Utrzymania (W trakcie flipa)")
                     c_utr1, c_utr2, c_utr3 = st.columns(3)
