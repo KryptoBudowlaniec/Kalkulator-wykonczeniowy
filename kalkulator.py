@@ -10349,6 +10349,20 @@ elif opcja_boczna == "Aplikacja Główna":
             
             st.markdown("---")
             st.write("### Skonfiguruj nowy kosztorys:")
+            
+            projekt_inv_edit = st.session_state.get("edytowany_projekt_inwestora")
+            dane_inv_edit = {}
+
+            if projekt_inv_edit:
+                dane_inv_edit = projekt_inv_edit.get("dane_json", {}) or {}
+                ustawienia_inv_edit = dane_inv_edit.get("ustawienia_formularza", {}) or {}
+
+                st.info(
+                    f"Edytujesz projekt: "
+                    f"**{projekt_inv_edit.get('nazwa_projektu', 'Projekt')}**"
+                )
+            else:
+                ustawienia_inv_edit = {}
             # --- KONIEC: SEKCJA TWOJE PROJEKTY ---
     
             # Dodajemy tab_tynki i tab_posadzki do listy po lewej i do nazw w nawiasie
@@ -10442,11 +10456,40 @@ elif opcja_boczna == "Aplikacja Główna":
                 st.subheader("Parametry Lokalu i Koszty Stałe")
                 col_params, col_check = st.columns([1.2, 1])
                 with col_params:
-                    nazwa_inwestycji = st.text_input("Nazwa Inwestycji:", value="Kawalerka na Start", key="inv_nazwa")
-                    m2_total = st.number_input("Metraż całkowity (m2):", min_value=1.0, value=50.0, key="inv_m2_total")
-                    cena_zakupu = st.number_input("Cena zakupu (PLN):", value=350000, step=5000, key="inv_cena_zakupu")
-                    cena_sprzedazy = st.number_input("Cena sprzedaży (PLN):", value=550000, step=5000, key="inv_cena_sprzedazy")
-                    stan_lokalu = st.radio("Stan lokalu:", ["Deweloperski", "Rynek Wtórny (Do remontu)"], key="inv_stan")
+                    nazwa_inwestycji = st.text_input(
+                        "Nazwa Inwestycji:",
+                        value=ustawienia_inv_edit.get("nazwa_inwestycji", "Kawalerka na Start"),
+                        key="inv_nazwa"
+                    )
+                    m2_total = st.number_input(
+                        "Metraż całkowity (m2):",
+                        min_value=1.0,
+                        value=float(ustawienia_inv_edit.get("m2_total", 50.0)),
+                        key="inv_m2_total"
+                    )
+                    cena_zakupu = st.number_input(
+                        "Cena zakupu (PLN):",
+                        value=int(ustawienia_inv_edit.get("cena_zakupu", 350000)),
+                        step=5000,
+                        key="inv_cena_zakupu"
+                    )
+                    cena_sprzedazy = st.number_input(
+                        "Cena sprzedaży (PLN):",
+                        value=int(ustawienia_inv_edit.get("cena_sprzedazy", 550000)),
+                        step=5000,
+                        key="inv_cena_sprzedazy"
+                    )
+                    opcje_stan_lokalu = ["Deweloperski", "Rynek Wtórny (Do remontu)"]
+                        stan_lokalu_saved = ustawienia_inv_edit.get("stan_lokalu", "Deweloperski")
+                        
+                        stan_lokalu = st.radio(
+                            "Stan lokalu:",
+                            opcje_stan_lokalu,
+                            index=opcje_stan_lokalu.index(stan_lokalu_saved)
+                            if stan_lokalu_saved in opcje_stan_lokalu
+                            else 0,
+                            key="inv_stan"
+                        )
     
                     st.markdown("##### Koszty Utrzymania (W trakcie flipa)")
                     c_utr1, c_utr2, c_utr3 = st.columns(3)
