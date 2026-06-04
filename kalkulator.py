@@ -11085,21 +11085,44 @@ elif opcja_boczna == "Aplikacja Główna":
                             st.warning("Podaj nazwę inwestycji na samej górze panelu, aby zapisać projekt.")
                         else:
                             try:
+                                ustawienia_formularza = {
+                                    "nazwa_inwestycji": nazwa_inwestycji,
+                                    "m2_total": float(m2_total),
+                                    "cena_zakupu": int(cena_zakupu),
+                                    "cena_sprzedazy": int(cena_sprzedazy),
+                                    "stan_lokalu": stan_lokalu,
+                                    "czynsz_mc": int(czynsz_mc),
+                                    "media_mc": int(media_mc),
+                                    "czas_operacji": int(czas_operacji),
+                                    "standard": standard,
+                                }
+                                
                                 dane_do_zapisu = {
                                     "suma_calkowita": round(calkowity_koszt_projektu),
                                     "zysk_brutto": round(zysk_brutto),
                                     "roi_procent": round(roi, 1),
-                                    "lista_zakupow": zakupy
+                                    "lista_zakupow": zakupy,
+                                    "ustawienia_formularza": ustawienia_formularza,
                                 }
 
-                                supabase.table("projekty").insert({
-                                    "user_id": u_id,
-                                    "nazwa_projektu": nazwa_inwestycji,
-                                    "branza": "Kompleksowy Flip",
-                                    "dane_json": dane_do_zapisu
-                                }).execute()
-
-                                st.success("Projekt został bezpiecznie zapisany w chmurze!")
+                                if projekt_inv_edit:
+                                    supabase.table("projekty").update({
+                                        "nazwa_projektu": nazwa_inwestycji,
+                                        "branza": "Kompleksowy Flip",
+                                        "dane_json": dane_do_zapisu
+                                    }).eq("id", projekt_inv_edit.get("id")).execute()
+                                
+                                    st.session_state.pop("edytowany_projekt_inwestora", None)
+                                    st.success("Projekt został zaktualizowany.")
+                                else:
+                                    supabase.table("projekty").insert({
+                                        "user_id": u_id,
+                                        "nazwa_projektu": nazwa_inwestycji,
+                                        "branza": "Kompleksowy Flip",
+                                        "dane_json": dane_do_zapisu
+                                    }).execute()
+                                
+                                    st.success("Projekt został bezpiecznie zapisany w chmurze!")
 
                             except Exception as e:
                                 st.error(f"Błąd zapisu: {e}")
