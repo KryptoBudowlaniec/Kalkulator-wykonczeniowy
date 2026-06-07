@@ -842,31 +842,7 @@ if "p" in params:
             st.query_params.clear()
             st.rerun()
         st.stop()
-manifest = {
-    "name": "ProCalc - Kalkulator Remontowy",
-    "short_name": "ProCalc",
-    "start_url": "https://app.procalc.pl/",
-    "scope": "https://app.procalc.pl/",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#00D395",
-    "icons": [
-        {
-            "src": "https://app.procalc.pl/app/static/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "https://app.procalc.pl/app/static/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        }
-    ]
-}
 
-manifest_url = "data:application/manifest+json," + quote(
-    json.dumps(manifest)
-)
 # --- ZAAWANSOWANE SEO (Meta Tagi wstrzykiwane do <head>) ---
 components.html(f"""
     <script>
@@ -894,7 +870,7 @@ components.html(f"""
         if (!head.querySelector('link[rel="manifest"]')) {{
             const manifest = document.createElement("link");
             manifest.rel = "manifest";
-            manifest.href = "{manifest_url}";
+            manifest.href = "https://app.procalc.pl/app/static/manifest.json";
             head.appendChild(manifest);
         }}
 
