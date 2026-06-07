@@ -59,6 +59,8 @@ from streamlit_drawable_canvas import st_canvas
 import base64
 from io import BytesIO
 import tempfile
+import json
+from urllib.parse import quote
 
 def svg_icon(nazwa_pliku):
     try:
@@ -840,15 +842,39 @@ if "p" in params:
             st.query_params.clear()
             st.rerun()
         st.stop()
+manifest = {
+    "name": "ProCalc - Kalkulator Remontowy",
+    "short_name": "ProCalc",
+    "start_url": "https://app.procalc.pl/",
+    "scope": "https://app.procalc.pl/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#00D395",
+    "icons": [
+        {
+            "src": "https://app.procalc.pl/app/static/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://app.procalc.pl/app/static/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
 
+manifest_url = "data:application/manifest+json," + quote(
+    json.dumps(manifest)
+)
 # --- ZAAWANSOWANE SEO (Meta Tagi wstrzykiwane do <head>) ---
-components.html("""
+components.html(f"""
     <script>
         // Pobieramy "głowę" (head) głównego dokumentu
         const head = window.parent.document.head;
         
         // Sprawdzamy, czy tagi już tam są (żeby nie dublować przy odświeżaniu)
-        if (!head.querySelector('meta[name="description"]')) {
+        if (!head.querySelector('meta[name="description"]')) {{
             const metaTags = `
                 <meta name="description" content="ProCalc - Profesjonalny kalkulator remontowy dla Inwestorów i Ekip. Precyzyjne listy materiałowe, kosztorysy PDF i analiza ROI flippów.">
                 <meta name="keywords" content="kalkulator remontowy, kosztorys wykończenia, wycena remontu, kalkulator malowania, kalkulator szpachlowania, ROI flip, budowa, wykończenia">
@@ -863,7 +889,42 @@ components.html("""
             `;
             // Wklejamy wszystkie Twoje tagi prosto do <head>
             head.insertAdjacentHTML('beforeend', metaTags);
-        }
+        }}
+
+        if (!head.querySelector('link[rel="manifest"]')) {{
+            const manifest = document.createElement("link");
+            manifest.rel = "manifest";
+            manifest.href = "{manifest_url}";
+            head.appendChild(manifest);
+        }}
+
+        if (!head.querySelector('meta[name="theme-color"]')) {{
+            const theme = document.createElement("meta");
+            theme.name = "theme-color";
+            theme.content = "#00D395";
+            head.appendChild(theme);
+        }}
+
+        if (!head.querySelector('link[rel="apple-touch-icon"]')) {{
+            const appleIcon = document.createElement("link");
+            appleIcon.rel = "apple-touch-icon";
+            appleIcon.href = "https://app.procalc.pl/app/static/apple-touch-icon.png";
+            head.appendChild(appleIcon);
+        }}
+
+        if (!head.querySelector('meta[name="apple-mobile-web-app-capable"]')) {{
+            const appleCapable = document.createElement("meta");
+            appleCapable.name = "apple-mobile-web-app-capable";
+            appleCapable.content = "yes";
+            head.appendChild(appleCapable);
+        }}
+
+        if (!head.querySelector('meta[name="apple-mobile-web-app-title"]')) {{
+            const appleTitle = document.createElement("meta");
+            appleTitle.name = "apple-mobile-web-app-title";
+            appleTitle.content = "ProCalc";
+            head.appendChild(appleTitle);
+        }}
     </script>
 """, height=0)
 
