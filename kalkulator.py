@@ -10977,16 +10977,31 @@ elif opcja_boczna == "Aplikacja Główna":
             # --- ZAKŁADKA 4: ELEKTRYKA ---
             with tab_ele:
                 st.subheader("Instalacja Elektryczna ⚡")
-                do_elek_inv = st.checkbox("Wlicz nową instalację elektryczną (okablowanie i osprzęt)", value=True, key="inv_do_elek")
+                do_elek_inv = st.checkbox(
+                    "Wlicz nową instalację elektryczną (okablowanie i osprzęt)",
+                    value=bool(ustawienia_inv_edit.get("do_elek_inv", True)),
+                    key="inv_do_elek"
+                )
                 
                 # --- ZABEZPIECZENIE (Brak tego wywołał błąd) ---
                 koszt_ele_total = 0 
                 
                 if do_elek_inv:
                     st.markdown("#### 1. Wybór standardu")
+                    opcje_std_osprzet = [
+                        "Budżet (np. Kontakt Simon 10)",
+                        "Standard (np. Simon 54, Ospel Aria)",
+                        "Premium (np. Legrand Celiane, Ramki Szklane)",
+                    ]
+                    
+                    std_saved = ustawienia_inv_edit.get("std_osprzet", opcje_std_osprzet[0])
+                    
                     std_osprzet = st.selectbox(
-                        "Standard osprzętu (gniazdka/włączniki):", 
-                        ["Budżet (np. Kontakt Simon 10)", "Standard (np. Simon 54, Ospel Aria)", "Premium (np. Legrand Celiane, Ramki Szklane)"], 
+                        "Standard osprzętu (gniazdka/włączniki):",
+                        opcje_std_osprzet,
+                        index=opcje_std_osprzet.index(std_saved)
+                        if std_saved in opcje_std_osprzet
+                        else 0,
                         key="inv_ele_std"
                     )
                     
@@ -10996,13 +11011,41 @@ elif opcja_boczna == "Aplikacja Główna":
                     
                     with c_e1:
                         st.write("**Gniazdka zasilające (230V)**")
-                        gniazda_poj = st.number_input("Pojedyncze:", min_value=0, max_value=150, value=15, step=1, key="inv_ele_gn_poj")
-                        gniazda_podw = st.number_input("Podwójne:", min_value=0, max_value=150, value=10, step=1, key="inv_ele_gn_podw")
+                        gniazda_poj = st.number_input(
+                            "Pojedyncze:",
+                            min_value=0,
+                            max_value=150,
+                            value=int(ustawienia_inv_edit.get("gniazda_poj", 15)),
+                            step=1,
+                            key="inv_ele_gn_poj"
+                        )
+                        gniazda_podw = st.number_input(
+                            "Podwójne:",
+                            min_value=0,
+                            max_value=150,
+                            value=int(ustawienia_inv_edit.get("gniazda_podw", 10)),
+                            step=1,
+                            key="inv_ele_gn_podw"
+                        )
                     
                     with c_e2:
                         st.write("**Włączniki oświetlenia**")
-                        wlacznik_poj = st.number_input("Pojedyncze (1-klawiszowe):", min_value=0, max_value=50, value=5, step=1, key="inv_ele_wl_poj")
-                        wlacznik_podw = st.number_input("Podwójne (2-klawiszowe/schodowe):", min_value=0, max_value=50, value=5, step=1, key="inv_ele_wl_podw")
+                        wlacznik_poj = st.number_input(
+                            "Pojedyncze (1-klawiszowe):",
+                            min_value=0,
+                            max_value=50,
+                            value=int(ustawienia_inv_edit.get("wlacznik_poj", 5)),
+                            step=1,
+                            key="inv_ele_wl_poj"
+                        )
+                        wlacznik_podw = st.number_input(
+                            "Podwójne (2-klawiszowe/schodowe):",
+                            min_value=0,
+                            max_value=50,
+                            value=int(ustawienia_inv_edit.get("wlacznik_podw", 5)),
+                            step=1,
+                            key="inv_ele_wl_podw"
+                        )
     
                     # Sumowanie punktów
                     szt_punktow = gniazda_poj + gniazda_podw + wlacznik_poj + wlacznik_podw
@@ -11021,8 +11064,16 @@ elif opcja_boczna == "Aplikacja Główna":
                 # --- 1. WYLEWKI ---
                 st.markdown("##### 1. Przygotowanie podłoża i Wylewki")
                 c_p1, c_p2 = st.columns(2)
-                zrywanie_podlogi = c_p1.checkbox("Zrywanie starego parkietu / płytek", key="inv_zrywanie")
-                wylewka_samopoz = c_p2.checkbox("Wylewka samopoziomująca", key="inv_wylewka")
+                zrywanie_podlogi = c_p1.checkbox(
+                    "Zrywanie starego parkietu / płytek",
+                    value=bool(ustawienia_inv_edit.get("zrywanie_podlogi", False)),
+                    key="inv_zrywanie"
+                )
+                wylewka_samopoz = c_p2.checkbox(
+                    "Wylewka samopoziomująca",
+                    value=bool(ustawienia_inv_edit.get("wylewka_samopoz", False)),
+                    key="inv_wylewka"
+                )
                 
                 koszt_podloze_total = 0
                 
@@ -11033,8 +11084,24 @@ elif opcja_boczna == "Aplikacja Główna":
                 
                 if wylewka_samopoz:
                     col_w1, col_w2 = st.columns(2)
-                    wybrana_wylewka = col_w1.selectbox("Produkt:", list(baza_wylewek.keys()), key="inv_wyl_produkt")
-                    grubosc_wyl = col_w2.slider("Średnia grubość (mm):", 2, 20, 5, key="inv_wyl_grub")
+                    opcje_wylewki = list(baza_wylewek.keys())
+                    wylewka_saved = ustawienia_inv_edit.get("wybrana_wylewka", opcje_wylewki[0])
+                    
+                    wybrana_wylewka = col_w1.selectbox(
+                        "Produkt:",
+                        opcje_wylewki,
+                        index=opcje_wylewki.index(wylewka_saved)
+                        if wylewka_saved in opcje_wylewki
+                        else 0,
+                        key="inv_wyl_produkt"
+                    )
+                    grubosc_wyl = col_w2.slider(
+                        "Średnia grubość (mm):",
+                        2,
+                        20,
+                        int(ustawienia_inv_edit.get("grubosc_wyl", 5)),
+                        key="inv_wyl_grub"
+                    )
                     
                     # Obliczenia techniczne
                     zuzycie_kg_na_mm = 1.6 # średnio 1.6kg na 1mm/m2
@@ -11054,9 +11121,23 @@ elif opcja_boczna == "Aplikacja Główna":
                 
                 # --- 2. WYKOŃCZENIE PODŁÓG ---
                 st.markdown("##### 2. Wykończenie Podłóg")
-                do_podl_fin = st.checkbox("Układanie nowej podłogi", value=True, key="inv_podl_fin")
+                do_podl_fin = st.checkbox(
+                    "Układanie nowej podłogi",
+                    value=bool(ustawienia_inv_edit.get("do_podl_fin", True)),
+                    key="inv_podl_fin"
+                )
                 if do_podl_fin:
-                    typ_p = st.selectbox("Materiał:", ["Panele Laminowane", "Winyle (SPC/LVT)", "Deska/Parkiet"], key="inv_p_typ")
+                    opcje_typ_p = ["Panele Laminowane", "Winyle (SPC/LVT)", "Deska/Parkiet"]
+                    typ_p_saved = ustawienia_inv_edit.get("typ_p", opcje_typ_p[0])
+                    
+                    typ_p = st.selectbox(
+                        "Materiał:",
+                        opcje_typ_p,
+                        index=opcje_typ_p.index(typ_p_saved)
+                        if typ_p_saved in opcje_typ_p
+                        else 0,
+                        key="inv_p_typ"
+                    )
                 
                 st.markdown("---")
                 
@@ -11066,19 +11147,61 @@ elif opcja_boczna == "Aplikacja Główna":
                 
                 with col_d1:
                     st.markdown("**Drzwi Wewnętrzne**")
-                    do_drzwi = st.checkbox("Montaż nowych drzwi", value=True, key="inv_do_drzwi_wew_ch")
+                    do_drzwi = st.checkbox(
+                        "Montaż nowych drzwi",
+                        value=bool(ustawienia_inv_edit.get("do_drzwi", True)),
+                        key="inv_do_drzwi_wew_ch"
+                    )
                     if do_drzwi:
-                        szt_d_wew = st.number_input("Ilość (szt):", 1, 10, 3, key="inv_d_wew_szt")
-                        typ_d_wew = st.selectbox("Rodzaj:", ["Przylgowe (Budżet)", "Bezprzylgowe (Standard)", "Ukryta ościeżnica (Premium)"], key="inv_d_wew_typ")
+                        szt_d_wew = st.number_input(
+                            "Ilość (szt):",
+                            1,
+                            10,
+                            int(ustawienia_inv_edit.get("szt_d_wew", 3)),
+                            key="inv_d_wew_szt"
+                        )
+                        opcje_typ_d_wew = [
+                            "Przylgowe (Budżet)",
+                            "Bezprzylgowe (Standard)",
+                            "Ukryta ościeżnica (Premium)",
+                        ]
+                        typ_d_wew_saved = ustawienia_inv_edit.get("typ_d_wew", opcje_typ_d_wew[0])
+                        
+                        typ_d_wew = st.selectbox(
+                            "Rodzaj:",
+                            opcje_typ_d_wew,
+                            index=opcje_typ_d_wew.index(typ_d_wew_saved)
+                            if typ_d_wew_saved in opcje_typ_d_wew
+                            else 0,
+                            key="inv_d_wew_typ"
+                        )
                         koszt_drzwi_wew = szt_d_wew * (1000 if "Przylgowe" in typ_d_wew else (2500 if "Ukryta" in typ_d_wew else 1600))
                     else:
                         koszt_drzwi_wew = 0
                 
                 with col_d2:
                     st.markdown("**Drzwi Wejściowe**")
-                    wymiana_wej = st.checkbox("Wymień drzwi wejściowe", key="inv_d_wej_do")
+                    wymiana_wej = st.checkbox(
+                        "Wymień drzwi wejściowe",
+                        value=bool(ustawienia_inv_edit.get("wymiana_wej", False)),
+                        key="inv_d_wej_do"
+                    )
                     if wymiana_wej:
-                        typ_d_wej = st.selectbox("Standard:", ["Marketowe (ok. 1200 zł)", "Standard (Porta/KrCenter)", "Premium (Gerda)"], key="inv_d_wej_typ")
+                        opcje_typ_d_wej = [
+                            "Marketowe (ok. 1200 zł)",
+                            "Standard (Porta/KrCenter)",
+                            "Premium (Gerda)",
+                        ]
+                        typ_d_wej_saved = ustawienia_inv_edit.get("typ_d_wej", opcje_typ_d_wej[0])
+                        
+                        typ_d_wej = st.selectbox(
+                            "Standard:",
+                            opcje_typ_d_wej,
+                            index=opcje_typ_d_wej.index(typ_d_wej_saved)
+                            if typ_d_wej_saved in opcje_typ_d_wej
+                            else 0,
+                            key="inv_d_wej_typ"
+                        )
                         koszt_drzwi_wej = 1200 if "Marketowe" in typ_d_wej else (4500 if "Premium" in typ_d_wej else 2800)
                     else:
                         koszt_drzwi_wej = 0
@@ -11103,9 +11226,30 @@ elif opcja_boczna == "Aplikacja Główna":
             with tab_meble:
                 st.subheader("Meble na wymiar i zabudowy 🪚")
                 c_m1, c_m2 = st.columns(2)
-                kuchnia_inv = c_m1.number_input("Budżet na kuchnię (PLN):", 0, 100000, 20000, step=1000, key="inv_k_budzet")
-                szafy_inv = c_m2.number_input("Budżet na szafy/wnęki (PLN):", 0, 50000, 4500, step=500, key="inv_s_budzet")
-                laz_stolarz = st.number_input("Szafka umywalkowa / Zabudowa pralki (PLN):", 0, 15000, 1500, step=100, key="inv_l_budzet")
+                kuchnia_inv = c_m1.number_input(
+                    "Budżet na kuchnię (PLN):",
+                    0,
+                    100000,
+                    int(ustawienia_inv_edit.get("kuchnia_inv", 20000)),
+                    step=1000,
+                    key="inv_k_budzet"
+                )
+                szafy_inv = c_m2.number_input(
+                    "Budżet na szafy/wnęki (PLN):",
+                    0,
+                    50000,
+                    int(ustawienia_inv_edit.get("szafy_inv", 4500)),
+                    step=500,
+                    key="inv_s_budzet"
+                )
+                laz_stolarz = st.number_input(
+                    "Szafka umywalkowa / Zabudowa pralki (PLN):",
+                    0,
+                    15000,
+                    int(ustawienia_inv_edit.get("laz_stolarz", 1500)),
+                    step=100,
+                    key="inv_l_budzet"
+                )
                 
                 koszt_mebli_total = kuchnia_inv + szafy_inv + laz_stolarz
     
