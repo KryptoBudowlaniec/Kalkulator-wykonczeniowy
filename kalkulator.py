@@ -10624,14 +10624,52 @@ elif opcja_boczna == "Aplikacja Główna":
                 
                 # --- SEKCJA 1: GK ---
                 st.markdown("#### 1. Konstrukcje GK")
-                do_gk_inv = st.checkbox("Wlicz Sufity Podwieszane GK", value=False, key="inv_do_gk")
+                do_gk_inv = st.checkbox(
+                    "Wlicz Sufity Podwieszane GK",
+                    value=bool(ustawienia_inv_edit.get("do_gk_inv", False)),
+                    key="inv_do_gk"
+                )
                 if do_gk_inv:
                     c_gk1, c_gk2 = st.columns(2)
-                    rodzaj_stelaza = c_gk1.radio("Konstrukcja stelaża:", ["Pojedynczy (Standard)", "Krzyżowy (Mniej spękań)"], key="inv_gk_stelaz")
-                    system_laczen = c_gk2.selectbox("System łączeń płyt:", ["Taśma z włókna", "Taśma TUFF-TAPE (Premium)", "Flizelina"], key="inv_gk_laczenia")
+                    opcje_stelaz = ["Pojedynczy (Standard)", "Krzyżowy (Mniej spękań)"]
+                    stelaz_saved = ustawienia_inv_edit.get("rodzaj_stelaza", opcje_stelaz[0])
+                    
+                    rodzaj_stelaza = c_gk1.radio(
+                        "Konstrukcja stelaża:",
+                        opcje_stelaz,
+                        index=opcje_stelaz.index(stelaz_saved)
+                        if stelaz_saved in opcje_stelaz
+                        else 0,
+                        key="inv_gk_stelaz"
+                    )
+                    opcje_laczen = ["Taśma z włókna", "Taśma TUFF-TAPE (Premium)", "Flizelina"]
+                    laczenia_saved = ustawienia_inv_edit.get("system_laczen", opcje_laczen[0])
+                    
+                    system_laczen = c_gk2.selectbox(
+                        "System łączeń płyt:",
+                        opcje_laczen,
+                        index=opcje_laczen.index(laczenia_saved)
+                        if laczenia_saved in opcje_laczen
+                        else 0,
+                        key="inv_gk_laczenia"
+                    )
                     c_gk3, c_gk4 = st.columns(2)
-                    rodzaj_plyty = c_gk3.selectbox("Rodzaj płyty:", ["Zwykła GKB", "Impregnowana GKBI (Zielona)"], key="inv_gk_plyta")
-                    welna_izolacja = c_gk4.checkbox("Dodaj wełnę mineralną", key="inv_gk_welna")
+                    opcje_plyt_gk = ["Zwykła GKB", "Impregnowana GKBI (Zielona)"]
+                    plyta_gk_saved = ustawienia_inv_edit.get("rodzaj_plyty", opcje_plyt_gk[0])
+                    
+                    rodzaj_plyty = c_gk3.selectbox(
+                        "Rodzaj płyty:",
+                        opcje_plyt_gk,
+                        index=opcje_plyt_gk.index(plyta_gk_saved)
+                        if plyta_gk_saved in opcje_plyt_gk
+                        else 0,
+                        key="inv_gk_plyta"
+                    )
+                    welna_izolacja = c_gk4.checkbox(
+                        "Dodaj wełnę mineralną",
+                        value=bool(ustawienia_inv_edit.get("welna_izolacja", False)),
+                        key="inv_gk_welna"
+                    )
                 
                 st.markdown("---")
                 
@@ -10641,47 +10679,138 @@ elif opcja_boczna == "Aplikacja Główna":
                 
                 if do_szpach_inv:
                     c_sz1, c_sz2 = st.columns(2)
-                    typ_gl_radio = c_sz1.radio("Typ gładzi:", ["Sypka (Worki)", "Gotowa (Wiadra)"], horizontal=True, key="inv_szpach_typ_radio")
+                    opcje_typ_gl = ["Sypka (Worki)", "Gotowa (Wiadra)"]
+                    typ_gl_saved = ustawienia_inv_edit.get("typ_gl_radio", opcje_typ_gl[0])
+                    
+                    typ_gl_radio = c_sz1.radio(
+                        "Typ gładzi:",
+                        opcje_typ_gl,
+                        index=opcje_typ_gl.index(typ_gl_saved)
+                        if typ_gl_saved in opcje_typ_gl
+                        else 0,
+                        horizontal=True,
+                        key="inv_szpach_typ_radio"
+                    )
                     
                     # Wybór konkretnego produktu na podstawie typu (Bazy są teraz globalne)
                     if "Sypka" in typ_gl_radio:
-                        produkt_gl = c_sz2.selectbox("Wybierz gładź sypką:", list(baza_sypka.keys()), key="inv_gl_produkt_sypka")
+                        opcje_sypka = list(baza_sypka.keys())
+                        produkt_gl_saved = ustawienia_inv_edit.get("produkt_gl", opcje_sypka[0])
+                        
+                        produkt_gl = c_sz2.selectbox(
+                            "Wybierz gładź sypką:",
+                            opcje_sypka,
+                            index=opcje_sypka.index(produkt_gl_saved)
+                            if produkt_gl_saved in opcje_sypka
+                            else 0,
+                            key="inv_gl_produkt_sypka"
+                        )
                         dane_materialu = baza_sypka[produkt_gl]
                     else:
-                        produkt_gl = c_sz2.selectbox("Wybierz gładź gotową:", list(baza_gotowa.keys()), key="inv_gl_produkt_gotowa")
+                        opcje_gotowa = list(baza_gotowa.keys())
+                        produkt_gl_saved = ustawienia_inv_edit.get("produkt_gl", opcje_gotowa[0])
+                        
+                        produkt_gl = c_sz2.selectbox(
+                            "Wybierz gładź gotową:",
+                            opcje_gotowa,
+                            index=opcje_gotowa.index(produkt_gl_saved)
+                            if produkt_gl_saved in opcje_gotowa
+                            else 0,
+                            key="inv_gl_produkt_gotowa"
+                        )
                         dane_materialu = baza_gotowa[produkt_gl]
     
                     c_sz3, c_sz4 = st.columns(2)
-                    liczba_warstw_gl = c_sz3.slider("Liczba warstw gładzi:", 1, 3, 2, key="inv_szpach_warstwy")
+                    liczba_warstw_gl = c_sz3.slider(
+                        "Liczba warstw gładzi:",
+                        1,
+                        3,
+                        int(ustawienia_inv_edit.get("liczba_warstw_gl", 2)),
+                        key="inv_szpach_warstwy"
+                    )
                     
                     # Opcjonalny gips startowy
-                    mocny_start = c_sz4.checkbox("Wlicz gips startowy (równanie)", key="inv_szpach_start")
+                    mocny_start = c_sz4.checkbox(
+                        "Wlicz gips startowy (równanie)",
+                        value=bool(ustawienia_inv_edit.get("mocny_start", False)),
+                        key="inv_szpach_start"
+                    )
                     if mocny_start:
-                        produkt_start = st.selectbox("Wybierz gips startowy:", list(baza_start.keys()), key="inv_gl_start_produkt")
+                        opcje_start = list(baza_start.keys())
+                        produkt_start_saved = ustawienia_inv_edit.get("produkt_start", opcje_start[0])
+                        
+                        produkt_start = st.selectbox(
+                            "Wybierz gips startowy:",
+                            opcje_start,
+                            index=opcje_start.index(produkt_start_saved)
+                            if produkt_start_saved in opcje_start
+                            else 0,
+                            key="inv_gl_start_produkt"
+                        )
                         dane_startu = baza_start[produkt_start]
                     
                 st.markdown("---")
                 
                 # --- SEKCJA 3: MALOWANIE ---
                 st.markdown("#### 3. Gruntowanie i Malowanie")
-                do_mal_inv = st.checkbox("Wlicz Gruntowanie i Malowanie", value=True, key="inv_do_mal")
+                do_mal_inv = st.checkbox(
+                    "Wlicz Gruntowanie i Malowanie",
+                    value=bool(ustawienia_inv_edit.get("do_mal_inv", True)),
+                    key="inv_do_mal"
+                )
                 
                 if do_mal_inv:
                     st.markdown("##### Gruntowanie")
-                    wybrany_grunt = st.selectbox("Wybierz grunt:", list(baza_grunty.keys()), key="inv_grunt_wybor")
+                    opcje_grunty = list(baza_grunty.keys())
+                    grunt_saved = ustawienia_inv_edit.get("wybrany_grunt", opcje_grunty[0])
+                    
+                    wybrany_grunt = st.selectbox(
+                        "Wybierz grunt:",
+                        opcje_grunty,
+                        index=opcje_grunty.index(grunt_saved)
+                        if grunt_saved in opcje_grunty
+                        else 0,
+                        key="inv_grunt_wybor"
+                    )
                     
                     st.markdown("##### Farby")
                     c_m1, c_m2 = st.columns(2)
                     
                     with c_m1:
                         st.write("**Sufity (Biała)**")
-                        produkt_biala = st.selectbox("Farba na sufit:", list(baza_biale.keys()), key="inv_paint_white")
+                        opcje_biale = list(baza_biale.keys())
+                        biala_saved = ustawienia_inv_edit.get("produkt_biala", opcje_biale[0])
+                        
+                        produkt_biala = st.selectbox(
+                            "Farba na sufit:",
+                            opcje_biale,
+                            index=opcje_biale.index(biala_saved)
+                            if biala_saved in opcje_biale
+                            else 0,
+                            key="inv_paint_white"
+                        )
                     
                     with c_m2:
                         st.write("**Ściany (Kolor)**")
-                        produkt_kolor = st.selectbox("Farba na ściany:", list(baza_kolory.keys()), key="inv_paint_color")
+                        opcje_kolory = list(baza_kolory.keys())
+                        kolor_saved = ustawienia_inv_edit.get("produkt_kolor", opcje_kolory[0])
+                        
+                        produkt_kolor = st.selectbox(
+                            "Farba na ściany:",
+                            opcje_kolory,
+                            index=opcje_kolory.index(kolor_saved)
+                            if kolor_saved in opcje_kolory
+                            else 0,
+                            key="inv_paint_color"
+                        )
     
-                    liczba_warstw_mal = st.slider("Liczba warstw farby (łącznie):", 1, 3, 2, key="inv_mal_warstwy")
+                    liczba_warstw_mal = st.slider(
+                        "Liczba warstw farby (łącznie):",
+                        1,
+                        3,
+                        int(ustawienia_inv_edit.get("liczba_warstw_mal", 2)),
+                        key="inv_mal_warstwy"
+                    )
                     
             # --- ZAKŁADKA 3: KONFIGURACJA ŁAZIENKI ---
             with tab_mokre:
