@@ -10815,20 +10815,59 @@ elif opcja_boczna == "Aplikacja Główna":
             # --- ZAKŁADKA 3: KONFIGURACJA ŁAZIENKI ---
             with tab_mokre:
                 st.subheader("Konfiguracja Łazienki 🚿")
-                do_laz_inv = st.checkbox("Wlicz Remont Łazienki", value=True, key="inv_do_laz")
+                do_laz_inv = st.checkbox(
+                    "Wlicz Remont Łazienki",
+                    value=bool(ustawienia_inv_edit.get("do_laz_inv", True)),
+                    key="inv_do_laz"
+                )
                 
                 if do_laz_inv:
                     # --- INTERFEJS ---
                     st.markdown("#### 1. Wymiary i Wykończenie Ścian")
                     c_l1, c_l2 = st.columns(2)
-                    m2_laz = c_l1.number_input("Powierzchnia łazienki (m2 podłogi):", 1.0, 30.0, 5.0, key="inv_laz_m2")
-                    format_plytek_laz = c_l2.selectbox("Format płytek:", ["Standard (do 60x60)", "Wielki Format (120x60)", "Spiek / Mega Format"], key="inv_laz_format")
+                    m2_laz = c_l1.number_input(
+                        "Powierzchnia łazienki (m2 podłogi):",
+                        1.0,
+                        30.0,
+                        float(ustawienia_inv_edit.get("m2_laz", 5.0)),
+                        key="inv_laz_m2"
+                    )
+                    opcje_format_plytek = [
+                        "Standard (do 60x60)",
+                        "Wielki Format (120x60)",
+                        "Spiek / Mega Format"
+                    ]
+                    format_saved = ustawienia_inv_edit.get(
+                        "format_plytek_laz",
+                        opcje_format_plytek[0]
+                    )
+                    
+                    format_plytek_laz = c_l2.selectbox(
+                        "Format płytek:",
+                        opcje_format_plytek,
+                        index=opcje_format_plytek.index(format_saved)
+                        if format_saved in opcje_format_plytek
+                        else 0,
+                        key="inv_laz_format"
+                    )
                     
                     # --- TO JEST TEN ZGUBIONY PRZYCISK! ---
+                    opcje_styl_lazienki = [
+                        "Klasyczny (Płytki na wszystkich ścianach pod sufit)",
+                        "Nowoczesna Hybryda (ok. 50% ścian w płytkach, reszta to gładź i farba)"
+                    ]
+                    
+                    styl_saved = ustawienia_inv_edit.get(
+                        "styl_lazienki",
+                        opcje_styl_lazienki[0]
+                    )
+                    
                     styl_lazienki = st.radio(
-                        "Projekt wykończenia ścian:", 
-                        ["Klasyczny (Płytki na wszystkich ścianach pod sufit)", 
-                         "Nowoczesna Hybryda (ok. 50% ścian w płytkach, reszta to gładź i farba)"], 
+                        "Projekt wykończenia ścian:",
+                        opcje_styl_lazienki,
+                        index=opcje_styl_lazienki.index(styl_saved)
+                        if styl_saved in opcje_styl_lazienki
+                        else 0,
                         key="inv_laz_styl"
                     )
                     
@@ -10837,16 +10876,62 @@ elif opcja_boczna == "Aplikacja Główna":
                     c_l3, c_l4 = st.columns([1, 2])
                     
                     # Wybór technologii
-                    typ_hydro = c_l3.radio("System ochrony:", ["Folia w płynie", "Mata Uszczelniająca", "Masa 2K (Szlam)"], key="inv_laz_hydro_tech")
-                    m2_hydro = c_l4.number_input("Metraż hydroizolacji (m2 ścian i podłóg):", 2.0, 50.0, 8.0, key="inv_laz_hydro_m2")
+                    opcje_hydro = ["Folia w płynie", "Mata Uszczelniająca", "Masa 2K (Szlam)"]
+                    hydro_saved = ustawienia_inv_edit.get("typ_hydro", opcje_hydro[0])
+                    
+                    typ_hydro = c_l3.radio(
+                        "System ochrony:",
+                        opcje_hydro,
+                        index=opcje_hydro.index(hydro_saved)
+                        if hydro_saved in opcje_hydro
+                        else 0,
+                        key="inv_laz_hydro_tech"
+                    )
+                    m2_hydro = c_l4.number_input(
+                        "Metraż hydroizolacji (m2 ścian i podłóg):",
+                        2.0,
+                        50.0,
+                        float(ustawienia_inv_edit.get("m2_hydro", 8.0)),
+                        key="inv_laz_hydro_m2"
+                    )
                     
                     # Wybór konkretnego produktu na podstawie technologii (Bazy są globalne)
                     if "Folia" in typ_hydro:
-                        produkt_hydro = st.selectbox("Wybierz folię w płynie:", list(baza_folie.keys()), key="inv_laz_prod_folia")
+                        opcje_folie = list(baza_folie.keys())
+                        hydro_prod_saved = ustawienia_inv_edit.get("produkt_hydro", opcje_folie[0])
+                        
+                        produkt_hydro = st.selectbox(
+                            "Wybierz folię w płynie:",
+                            opcje_folie,
+                            index=opcje_folie.index(hydro_prod_saved)
+                            if hydro_prod_saved in opcje_folie
+                            else 0,
+                            key="inv_laz_prod_folia"
+                        )
                     elif "Mata" in typ_hydro:
-                        produkt_hydro = st.selectbox("Wybierz matę uszczelniającą:", list(baza_maty.keys()), key="inv_laz_prod_mata")
+                        opcje_maty = list(baza_maty.keys())
+                        hydro_prod_saved = ustawienia_inv_edit.get("produkt_hydro", opcje_maty[0])
+                        
+                        produkt_hydro = st.selectbox(
+                            "Wybierz matę uszczelniającą:",
+                            opcje_maty,
+                            index=opcje_maty.index(hydro_prod_saved)
+                            if hydro_prod_saved in opcje_maty
+                            else 0,
+                            key="inv_laz_prod_mata"
+                        )
                     else:
-                        produkt_hydro = st.selectbox("Wybierz masę 2K:", list(baza_masy_2k.keys()), key="inv_laz_prod_2k")
+                        opcje_masy_2k = list(baza_masy_2k.keys())
+                        hydro_prod_saved = ustawienia_inv_edit.get("produkt_hydro", opcje_masy_2k[0])
+                        
+                        produkt_hydro = st.selectbox(
+                            "Wybierz masę 2K:",
+                            opcje_masy_2k,
+                            index=opcje_masy_2k.index(hydro_prod_saved)
+                            if hydro_prod_saved in opcje_masy_2k
+                            else 0,
+                            key="inv_laz_prod_2k"
+                        )
     
                     st.markdown("---")
                     st.markdown("#### 3. Klejenie i Fugowanie")
@@ -10854,12 +10939,36 @@ elif opcja_boczna == "Aplikacja Główna":
                     
                     # Inteligentna podpowiedź kleju
                     rekomendacja_kleju = list(baza_kleje.keys())[1] if "Wielki" in format_plytek_laz else list(baza_kleje.keys())[0]
-                    wybrany_klej = c_l5.selectbox("Wybierz klej:", list(baza_kleje.keys()), index=list(baza_kleje.keys()).index(rekomendacja_kleju), key="inv_laz_klej_wybor")
+                    opcje_kleje = list(baza_kleje.keys())
+                    klej_saved = ustawienia_inv_edit.get("wybrany_klej", rekomendacja_kleju)
                     
-                    rodzaj_fugi_laz = c_l6.radio("Rodzaj fugi:", ["Cementowa", "Epoksydowa (Szczelna/Premium)"], key="inv_laz_fuga")
+                    wybrany_klej = c_l5.selectbox(
+                        "Wybierz klej:",
+                        opcje_kleje,
+                        index=opcje_kleje.index(klej_saved)
+                        if klej_saved in opcje_kleje
+                        else opcje_kleje.index(rekomendacja_kleju),
+                        key="inv_laz_klej_wybor"
+                    )
+                    
+                    opcje_fuga = ["Cementowa", "Epoksydowa (Szczelna/Premium)"]
+                    fuga_saved = ustawienia_inv_edit.get("rodzaj_fugi_laz", opcje_fuga[0])
+                    
+                    rodzaj_fugi_laz = c_l6.radio(
+                        "Rodzaj fugi:",
+                        opcje_fuga,
+                        index=opcje_fuga.index(fuga_saved)
+                        if fuga_saved in opcje_fuga
+                        else 0,
+                        key="inv_laz_fuga"
+                    )
                     
                     st.markdown("#### 4. Dodatki")
-                    odplyw_liniowy = st.checkbox("Odpływ liniowy (wymaga spadków/koperty)", value=True, key="inv_laz_odplyw")
+                    odplyw_liniowy = st.checkbox(
+                        "Odpływ liniowy (wymaga spadków/koperty)",
+                        value=bool(ustawienia_inv_edit.get("odplyw_liniowy", True)),
+                        key="inv_laz_odplyw"
+                    )
                     if odplyw_liniowy:
                         st.info("💡 Pamiętaj: Odpływ liniowy wymaga użycia masy 2K lub maty wokół rynny dla pełnej szczelności.")
     
