@@ -1,0 +1,21 @@
+{
+  "name": "ProCalc - Kalkulator Remontowy",
+  "short_name": "ProCalc",
+  "start_url": "https://app.procalc.pl/",
+  "scope": "https://app.procalc.pl/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00D395",
+  "icons": [
+    {
+      "src": "https://app.procalc.pl/app/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://app.procalc.pl/app/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
